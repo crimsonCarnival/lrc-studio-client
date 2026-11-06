@@ -166,6 +166,11 @@ export default {
     hintMark: "mark word",
   },
   markLineNumber: "Mark line {{number}}",
+  markEndNumber: "Mark end of line {{number}}",
+  phone: {
+    tabs: "Editor views",
+    editPlaceholder: "Line-by-line editing on phones is on its way. Meanwhile you can edit the lyrics as text.",
+  },
   linesTimedCount: "{{timed}}/{{total}} lines timed",
   wordProgressLabel: "Timed words in this line",
   lineList: "Lyric lines",

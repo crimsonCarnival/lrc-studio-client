@@ -1,8 +1,6 @@
-import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import Editor from './core/Editor';
-import MobileEditorLayout from './mobile/MobileEditorLayout';
 import type { EditorLine } from '@/features/editor/editor.types';
-import { usePresenceView } from '@/features/collab/collab-presence-context';
 
 interface EditorPageProps {
   activeLineIndex?: number;
@@ -23,45 +21,18 @@ interface EditorPageProps {
 }
 
 /**
- * EditorPage wrapper that conditionally renders mobile or desktop layout based on input method
+ * Picks the editor layout by width, not by input method: below `lg` the phone layout,
+ * otherwise the desktop one. A touch tablet at `lg` or wider gets the desktop editor and a
+ * narrow mouse window gets the phone one. Either way it is the same Editor, so both share
+ * one useEditor and one set of behaviours.
  */
 export default function EditorPage(props: EditorPageProps) {
-  const inputMethod = useInputMethod();
+  const isLg = useBreakpoint('lg');
+  // Words keeps the existing rendering below lg until it has a phone view of its own.
+  const phone = !isLg && props.editorMode !== 'words';
 
-  // Mobile layout when touch input (touch-only device)
-  const isMobileLayout = inputMethod === 'touch';
-  // The desktop Editor publishes 'editor' / 'words-focus' itself.
-  usePresenceView(isMobileLayout ? 'mobile' : null);
-
-  // Editor and MobileEditorLayout are still untyped JS; cast the passthrough props.
-  // Editor and MobileEditorLayout are still untyped JS; cast the passthrough props.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Mobile = MobileEditorLayout as any;
+  // AppRouter passes a loose, untyped prop bag (its editorProps are cast to these props).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Full = Editor as any;
-
-  // For mobile, use simplified layout; for desktop/hybrid, use full editor
-  if (isMobileLayout) {
-    return (
-      <Mobile
-        activeLineIndex={props.activeLineIndex}
-        setActiveLineIndex={props.setActiveLineIndex}
-        lines={props.lines}
-        setLines={props.setLines}
-        playbackPosition={props.playbackPosition}
-        playerRef={props.playerRef}
-        undo={props.undo}
-        canUndo={props.canUndo}
-        syncMode={props.syncMode}
-        setSyncMode={props.setSyncMode}
-        editorMode={props.editorMode}
-        setEditorMode={props.setEditorMode}
-        duration={props.duration}
-        isPlaying={props.isPlaying}
-      />
-    );
-  }
-
-  // Desktop layout - render full editor
-  return <Full {...props} />;
+  return <Full {...props} phone={phone} />;
 }

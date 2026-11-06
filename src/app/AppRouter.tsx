@@ -15,7 +15,6 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { isStaff } from '@/features/auth/permissions';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
-import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
@@ -356,6 +355,7 @@ export function AppRouter({
     loadError,
     handleSetupComplete,
     setShowKeyboardHelp,
+    hasUnsavedChanges,
     buildProjectPayload,
     restoredMedia,
     uploadedAudio,
@@ -423,7 +423,7 @@ export function AppRouter({
       : null
   );
 
-  const { mobileTab, setMobileTab, setShowNamingModal } = layoutState;
+  const { mobileTab, setMobileTab, setShowNamingModal, setUnsavedModalTarget } = layoutState;
 
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the
   // phone tab bar already writes, so both ways of switching stay in step.
@@ -443,14 +443,19 @@ export function AppRouter({
   }, [routerPathname]);
 
   const isLgRouter = useBreakpoint('lg');
-  const routerInputMethod = useInputMethod();
   const playerSlot = usePlayerSlot({
     hideEditor: view === 'preview',
     hidePreview: false,
     focusMode: 'default',
     isLg: isLgRouter,
-    isTouch: routerInputMethod === 'touch',
   });
+
+  // The phone editor's back button: same destination and unsaved-changes guard as the
+  // app header's logo, which that layout hides.
+  const handleExitEditor = useCallback(() => {
+    if (hasUnsavedChanges()) setUnsavedModalTarget('/');
+    else navigate('/');
+  }, [hasUnsavedChanges, setUnsavedModalTarget, navigate]);
 
   const handleNewProject = useCallback(() => navigate('/project/new'), [navigate]);
   const handleToggleKeyboardHelp = useCallback(() => {
@@ -495,6 +500,7 @@ export function AppRouter({
     declaredSingers: projectMetadata?.singers || EMPTY_STRING_ARRAY,
     playerSlot,
     onShowPreview: showPreviewView,
+    onExit: handleExitEditor,
     uploadedAudio,
     hasMedia,
     activepublicId: editorPublicId,
@@ -525,6 +531,7 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
+    handleExitEditor,
     uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner,
     mediaTitle, projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, activepublicId,
   ]);

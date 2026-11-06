@@ -4,6 +4,7 @@ export default {
   youtube: "YouTube",
   remove: "Remove media",
   changeSong: "Change media",
+  addMedia: "Add audio",
   clearUrl: "Back to file upload",
   dropAudio: "Drop audio here, or click to browse",
   emptyTitle: "Load a song to start",

@@ -169,6 +169,11 @@ export default {
     hintMark: "marcar palabra",
   },
   markLineNumber: "Marcar línea {{number}}",
+  markEndNumber: "Marcar fin de la línea {{number}}",
+  phone: {
+    tabs: "Vistas del editor",
+    editPlaceholder: "La edición línea por línea en el móvil está en camino. Mientras tanto puedes editar la letra como texto.",
+  },
   linesTimedCount: "{{timed}}/{{total}} líneas con tiempo",
   wordProgressLabel: "Palabras con tiempo en esta línea",
   lineList: "Líneas de la letra",

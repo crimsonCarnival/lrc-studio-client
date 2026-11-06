@@ -4,6 +4,7 @@ export default {
   youtube: "YouTube",
   remove: "Eliminar multimedia",
   changeSong: "Cambiar canción",
+  addMedia: "Añadir audio",
   clearUrl: "Volver a cargar archivo",
   dropAudio: "Suelta o haz clic para cargar un archivo de audio",
   emptyTitle: "Carga una canción para empezar",
