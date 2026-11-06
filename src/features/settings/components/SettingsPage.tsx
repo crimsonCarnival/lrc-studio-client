@@ -97,6 +97,7 @@ const RESET_PATHS: Record<string, string[]> = {
   editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt'],
   export: ['export'],
   shortcuts: ['shortcuts'],
+  advanced: ['advanced'],
   interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'editor.display', 'editor.scroll'],
 };
 
@@ -132,7 +133,6 @@ export default function SettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [hasResults, setHasResults] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
-  const autoSaveRef = useRef<Settings | null>(null);
   const savedSettingsRef = useRef<Settings>(globalSettings || DEFAULT_SETTINGS);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const pendingNavRef = useRef<(() => void) | null>(null);
@@ -172,9 +172,6 @@ export default function SettingsPage() {
         cur = cur[keys[i]];
       }
       cur[keys[keys.length - 1]] = value;
-      if (next.advanced?.autoSave?.enabled || prev.advanced?.autoSave?.enabled) {
-        autoSaveRef.current = next;
-      }
       return next;
     });
 
@@ -192,13 +189,6 @@ export default function SettingsPage() {
 
 
 
-  useEffect(() => {
-    if (autoSaveRef.current) {
-      updateAllSettings(autoSaveRef.current);
-      autoSaveRef.current = null;
-    }
-  });
-
   // Lazy-load heavy profile fields (bio, emailHistory, stats, streak, etc.)
   // that were omitted from the startup meCore query.
   useEffect(() => {
@@ -208,13 +198,11 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if ((isDirty && !settings.advanced?.autoSave?.enabled) || panelDirty) {
-        e.preventDefault();
-      }
+      if (isDirty || panelDirty) e.preventDefault();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty, panelDirty, settings.advanced?.autoSave?.enabled]);
+  }, [isDirty, panelDirty]);
 
   useLayoutEffect(() => {
     if (!searchTerm) {
@@ -235,12 +223,6 @@ export default function SettingsPage() {
     return true;
   }, [settings.shortcuts]);
 
-  const handleReset = useCallback(() => {
-    setSettings(DEFAULT_SETTINGS);
-    savedSettingsRef.current = DEFAULT_SETTINGS;
-    updateAllSettings(DEFAULT_SETTINGS);
-  }, [updateAllSettings]);
-
   const handleApply = () => {
     const toApply = {
       ...settings,
@@ -252,6 +234,8 @@ export default function SettingsPage() {
       },
     };
     updateAllSettings(toApply);
+    // Local state follows what was committed, so the bar clears even when the theme came from global.
+    setSettings(toApply);
     savedSettingsRef.current = toApply;
   };
 
@@ -263,7 +247,7 @@ export default function SettingsPage() {
   };
 
   const guardedNavigate = (target: string | number) => {
-    if ((isDirty && !settings.advanced?.autoSave?.enabled) || panelDraftRef.current?.isDirty) {
+    if (isDirty || panelDraftRef.current?.isDirty) {
       pendingNavRef.current = () => navAny(target);
       setShowLeaveModal(true);
     } else {
@@ -487,7 +471,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Floating centered save pill — only shown when there are unsaved changes */}
-            {isDirty && !settings.advanced?.autoSave?.enabled && (
+            {isDirty && (
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 pointer-events-none z-20">
                 <div className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/60 rounded-2xl shadow-2xl px-4 py-2.5 pointer-events-auto animate-slide-up-fade">
                   <span className="text-xs text-zinc-400 mr-1">
@@ -496,7 +480,8 @@ export default function SettingsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleReset}
+                    onClick={handleResetSection}
+                    disabled={!canReset}
                     className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 h-8 px-3 rounded-lg text-xs"
                   >
                     {t('settings.reset')}
