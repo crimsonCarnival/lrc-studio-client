@@ -381,7 +381,7 @@ export default {
     steps: {
       sync: {
         title: "Sincroniza tu letra",
-        body: "Reproduce el audio y presiona Enter (o tu tecla de marca) para marcar la línea activa con el tiempo actual. La siguiente línea se selecciona automáticamente."
+        body: "Reproduce el audio y presiona Enter (o tu tecla de marca) para marcar la línea activa con el tiempo actual. La siguiente línea se selecciona automáticamente, salvo que desactives el avance automático en Ajustes."
       },
       player: {
         title: "Controles del reproductor",

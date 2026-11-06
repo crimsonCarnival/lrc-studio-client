@@ -354,7 +354,7 @@ export default {
     steps: {
       sync: {
         title: "Sync your lyrics",
-        body: "Play the audio and press Enter (or your mark key) to stamp the active line with the current time. The next line is selected automatically."
+        body: "Play the audio and press Enter (or your mark key) to stamp the active line with the current time. The next line is selected automatically, unless Auto-Advance is off in Settings."
       },
       player: {
         title: "Player controls",

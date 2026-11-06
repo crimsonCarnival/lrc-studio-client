@@ -788,7 +788,8 @@ export function useEditor({
 
       if (matchKey(e, settings.shortcuts?.mark?.[0] || 'Enter')) {
         e.preventDefault();
-        handleMark({ forceAdvance: true });
+        // Advances per the auto-advance setting, like every other way of marking.
+        handleMark();
       } else if (matchKey(e, settings.shortcuts?.nudgeLeftFine?.[0] || 'Shift+ArrowLeft')) {
         e.preventDefault();
         handleNudge(-(settings.editor?.nudge?.fine || 0.01));
@@ -828,7 +829,7 @@ export function useEditor({
   // Listen for touch-driven mark events dispatched by MiniPlayer / gesture handler
   useEffect(() => {
     if (!syncMode) return;
-    const handler = () => handleMark({ forceAdvance: true });
+    const handler = () => handleMark();
     window.addEventListener('editor:mark', handler);
     return () => window.removeEventListener('editor:mark', handler);
   }, [syncMode, handleMark]);

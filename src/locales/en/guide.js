@@ -16,7 +16,7 @@ export default {
     sync: {
       title: "Syncing your lyrics",
       body1: "Paste or import your lyrics, load audio, then press \"Start Syncing\". Each line becomes active in turn — play the audio and press Enter (or your configured mark key) to stamp the current playback time onto it.",
-      body2: "After a mark, the next line is selected automatically so you can keep syncing without touching the mouse. In SRT mode, a second mark on the same line sets its end time. In Words mode, marks stamp individual words for karaoke-style timing.",
+      body2: "After a mark, the next line is selected automatically so you can keep syncing without touching the mouse (turn Auto-Advance off in Settings to stay on the line instead). In SRT mode, a second mark on the same line sets its end time. In Words mode, marks stamp individual words for karaoke-style timing.",
       shot: "Screenshot: the line list mid-sync, showing timestamps filling in and the active line highlighted.",
     },
     player: {

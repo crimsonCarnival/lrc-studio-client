@@ -16,7 +16,7 @@ export default {
     sync: {
       title: "Sincroniza tu letra",
       body1: "Pega o importa tu letra, carga el audio y presiona \"Empezar a sincronizar\". Cada línea se activa por turnos — reproduce el audio y presiona Enter (o tu tecla de marca configurada) para marcar el tiempo actual en ella.",
-      body2: "Tras cada marca, la siguiente línea se selecciona automáticamente para seguir sincronizando sin tocar el ratón. En modo SRT, una segunda marca en la misma línea fija su tiempo final. En modo Palabras, las marcas fijan cada palabra individualmente para un efecto karaoke.",
+      body2: "Tras cada marca, la siguiente línea se selecciona automáticamente para seguir sincronizando sin tocar el ratón (desactiva el avance automático en Ajustes para quedarte en la misma línea). En modo SRT, una segunda marca en la misma línea fija su tiempo final. En modo Palabras, las marcas fijan cada palabra individualmente para un efecto karaoke.",
       shot: "Captura: la lista de líneas a mitad de sincronización, con marcas de tiempo llenándose y la línea activa resaltada.",
     },
     player: {
