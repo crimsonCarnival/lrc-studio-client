@@ -35,8 +35,10 @@ export function useGlobalShortcuts({
 
   // ——— App + player shortcuts ———
   useEffect(() => {
-    // The public project view runs its own player and handles these keys itself (PublicShortcuts);
-    // the editor's player, still mounted above the routes, must not answer them.
+    // The editor's player stays mounted above every route, so these keys must be gated by route:
+    // they drive it only on an editor page. The public project view has its own player and
+    // handles its keys itself (PublicShortcuts).
+    const onEditorPage = isEditorPath(location.pathname);
     const onPublicView = isProjectViewPath(location.pathname);
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -50,18 +52,18 @@ export function useGlobalShortcuts({
       } else if (matchKey(e, settings.shortcuts?.showHelp?.[0] || '?')) {
         setShowKeyboardHelp((prev) => !prev);
         // ——— Player shortcuts ———
-      } else if (!onPublicView && matchKey(e, settings.shortcuts?.playPause?.[0] || 'Space')) {
+      } else if (onEditorPage && matchKey(e, settings.shortcuts?.playPause?.[0] || 'Space')) {
         e.preventDefault();
         playerRef.current?.togglePlay?.();
-      } else if (!onPublicView && matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
+      } else if (onEditorPage && matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
         e.preventDefault();
         const cur = playerRef.current?.getCurrentTime?.() ?? 0;
         playerRef.current?.seek?.(Math.max(0, cur - (settings.playback?.seekTime ?? 5)));
-      } else if (!onPublicView && matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
+      } else if (onEditorPage && matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
         e.preventDefault();
         const cur = playerRef.current?.getCurrentTime?.() ?? 0;
         playerRef.current?.seek?.(cur + (settings.playback?.seekTime ?? 5));
-      } else if (matchKey(e, settings.shortcuts?.mute?.[0] || 'm')) {
+      } else if ((onEditorPage || onPublicView) && matchKey(e, settings.shortcuts?.mute?.[0] || 'm')) {
         e.preventDefault();
         updateSetting('playback.muted', !settings.playback?.muted);
       } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
