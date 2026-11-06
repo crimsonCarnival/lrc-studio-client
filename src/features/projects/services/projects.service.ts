@@ -367,8 +367,11 @@ interface RequestOpts {
 }
 
 export const projectsService = {
+  // Every create is explicitly private. A current server ignores this field, but a rolled-back
+  // one would otherwise fall back to its preference default and publish. Visibility changes only
+  // through update, from PublishDialog.
   async create(input: CreateProjectInput): Promise<Project> {
-    const data = await gqlRequest<{ createProject: Project }>(CREATE_PROJECT, { input: normalizeInput(input) });
+    const data = await gqlRequest<{ createProject: Project }>(CREATE_PROJECT, { input: { ...normalizeInput(input), public: false } });
     projectsChanged();
     return data.createProject;
   },
