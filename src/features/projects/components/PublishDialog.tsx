@@ -37,12 +37,12 @@ type PublishDialogProps = {
 
 type FetchedLines = { status: 'loading' } | { status: 'error' } | { status: 'ready'; lines: EditorLine[] };
 
-const MISSING_KEY: Record<PublishMissing, string> = {
+const MISSING_KEY = {
   title: 'project.publishMissingTitle',
   lines: 'project.publishMissingLines',
   artist: 'project.publishMissingArtist',
   cover: 'project.publishMissingCover',
-};
+} as const satisfies Record<PublishMissing, string>;
 
 /**
  * The only way a project becomes public or private again. Publishing is always an explicit,

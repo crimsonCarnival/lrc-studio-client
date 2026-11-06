@@ -350,6 +350,9 @@ export function AppRouter({
     playbackSpeed,
     pendingProject,
     projectMetadata,
+    projectCoverImage,
+    projectIsPublic,
+    setProjectVisibility,
     loadError,
     handleSetupComplete,
     setShowKeyboardHelp,
@@ -390,6 +393,9 @@ export function AppRouter({
     navigate(projectEditPath({ publicId: editorPublicId }, ownerAccountName) ?? '/library');
   }, [editorPublicId, navigate, ownerAccountName]);
   const ownsSavedProject = signedInUserId !== null && !!activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && projectUserId === signedInUserId;
+  // The visibility chip belongs to the owner. A guest sees it too (the dialog sends them to sign in);
+  // someone else's project does not (an unknown owner is a project this session just created).
+  const canChangeVisibility = signedInUserId === null || projectUserId === null || projectUserId === signedInUserId;
   const sessionOwner = useMemo<SessionOwnerControl | undefined>(() => {
     if (signedInUserId === null) return undefined;
     if (sessionPublicId !== null) return collabIsOwner ? { publicId: sessionPublicId, live: true, onEnded: handleSessionEnded } : undefined;
@@ -496,6 +502,11 @@ export function AppRouter({
     isPlaying,
     collab,
     sessionOwner,
+    mediaTitle,
+    coverImage: projectCoverImage,
+    isPublic: projectIsPublic,
+    onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean) => setProjectVisibility(activepublicId, next) : undefined,
+    canChangeVisibility,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -515,6 +526,7 @@ export function AppRouter({
     playerSlot,
     showPreviewView,
     uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner,
+    mediaTitle, projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, activepublicId,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -533,6 +545,9 @@ export function AppRouter({
     songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || EMPTY_STRING_ARRAY,
     playerSlot,
+    coverImage: projectCoverImage,
+    isPublic: projectIsPublic,
+    onVisibilityChange: activepublicId ? (next: boolean) => setProjectVisibility(activepublicId, next) : undefined,
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
@@ -543,6 +558,7 @@ export function AppRouter({
     pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
     playerSlot, collabViewer, sessionPublicId,
+    projectCoverImage, projectIsPublic, setProjectVisibility,
   ]);
 
   const adminPage = (

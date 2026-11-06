@@ -24,6 +24,11 @@ import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
 import TaggingToolbar from './TaggingToolbar';
 import AutoStampModal from './AutoStampModal';
+import { VisibilityChip } from '@/features/projects/components/VisibilityChip';
+import { PublishDialog } from '@/features/projects/components/PublishDialog';
+import { PublishPrompt } from '@/features/projects/components/PublishPrompt';
+import { usePublishPrompt } from '@/features/projects/hooks/usePublishPrompt';
+import { getPublishReadiness } from '@/features/projects/publish-readiness';
 import { tabAudioSupported } from '@/features/visualizer/audio-source';
 import FuriganaModal from '../line/FuriganaModal';
 import SecondaryLyricsModal from '../line/SecondaryLyricsModal';
@@ -143,6 +148,14 @@ interface EditorProps {
   collab?: CollabLockInput;
   /** Set only for the owner of a saved project: shows Start / Manage session. */
   sessionOwner?: SessionOwnerControl;
+  /** Project title and cover, for the publish confirmation and its readiness check. */
+  mediaTitle?: string;
+  coverImage?: string;
+  isPublic?: boolean;
+  /** Reports a visibility change the server accepted. */
+  onVisibilityChange?: (isPublic: boolean) => void;
+  /** False on someone else's project: no visibility chip. */
+  canChangeVisibility?: boolean;
 }
 
 export default function Editor({
@@ -186,6 +199,11 @@ export default function Editor({
   isPlaying,
   collab,
   sessionOwner,
+  mediaTitle,
+  coverImage,
+  isPublic = false,
+  onVisibilityChange,
+  canChangeVisibility = true,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -534,6 +552,13 @@ export default function Editor({
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
   const statusSlot = useHeaderSlot('status');
+  const [publishOpen, setPublishOpen] = useState(false);
+  const serverProjectId = activepublicId && activepublicId !== 'local' && activepublicId !== 'new' ? activepublicId : null;
+  const readiness = useMemo(
+    () => getPublishReadiness(lines, { title: mediaTitle, artists: songArtists, coverImage }),
+    [lines, mediaTitle, songArtists, coverImage],
+  );
+  const publishPrompt = usePublishPrompt(serverProjectId, readiness.complete && !isPublic && !!user && !user.isGuest && canChangeVisibility && !inSession);
   const actionsSlot = useHeaderSlot('actions');
 
   // 'failed' only while there is still something unsaved: a later autosave that gets the
@@ -790,6 +815,9 @@ export default function Editor({
       )}
       {actionsSlot && createPortal(
         <>
+          {canChangeVisibility && !inSession && (
+            <VisibilityChip isPublic={isPublic} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
+          )}
           {syncMode && lines.length > 0 && (
             <div data-tour="editor-undo-redo" className="flex items-center gap-2">
               <Tip content={t('editor.undoTitle')}>
@@ -945,6 +973,19 @@ export default function Editor({
       )}
 
       <ChangeMediaDialog open={changeMediaOpen} onOpenChange={setChangeMediaOpen} />
+
+      {canChangeVisibility && !inSession && (
+        <PublishDialog
+          open={publishOpen}
+          onOpenChange={setPublishOpen}
+          project={{ publicId: serverProjectId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines }}
+          onPublished={onVisibilityChange}
+        />
+      )}
+
+      {publishPrompt.show && !publishOpen && (
+        <PublishPrompt onPublish={() => { publishPrompt.dismiss(); setPublishOpen(true); }} onDismiss={publishPrompt.dismiss} />
+      )}
 
       {playerPosition === 'top' && (!wordsFocus || !hasMedia) && playerDock}
 
