@@ -22,7 +22,7 @@ export function VisibilityChip({ isPublic, onOpen, className }: VisibilityChipPr
       aria-label={t('project.visibilityChipLabel', { state })}
       data-visibility={isPublic ? 'public' : 'private'}
       className={cn(
-        'inline-flex h-10 coarse:h-11 shrink-0 items-center gap-1.5 rounded-pill px-3 text-[13px] font-semibold whitespace-nowrap transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
+        'inline-flex h-10 coarse:h-11 shrink-0 items-center justify-center gap-1.5 rounded-pill px-3 max-[420px]:w-10 max-[420px]:px-0 text-[13px] font-semibold whitespace-nowrap transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
         isPublic
           ? 'bg-foam-soft text-foam-ink inset-ring inset-ring-foam'
           : 'bg-raised text-subtle inset-ring inset-ring-hl hover:bg-overlay hover:text-foreground',
@@ -30,7 +30,8 @@ export function VisibilityChip({ isPublic, onOpen, className }: VisibilityChipPr
       )}
     >
       <Icon name={isPublic ? 'public' : 'lock'} size={14} />
-      {state}
+      {/* Narrow headers keep the icon and the colour; the state stays in the accessible name. */}
+      <span className="max-[420px]:sr-only">{state}</span>
     </button>
   );
 }
