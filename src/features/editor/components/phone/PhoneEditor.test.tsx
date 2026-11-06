@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { TooltipProvider } from '@ui/tooltip';
 import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
 import Editor from '../core/Editor';
+import EditorPage from '../EditorPage';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 
@@ -46,41 +47,52 @@ type HarnessProps = {
   playbackPosition?: number;
   collab?: CollabLockInput;
   activeLineIndex?: number;
+  isPlaying?: boolean;
+  playerRef?: { current: unknown };
+  /** Render through EditorPage, which picks the layout from the (stubbed) viewport width. */
+  viaPage?: boolean;
 };
 
-let latest: { lines: EditorLine[]; activeLineIndex: number } = { lines: [], activeLineIndex: 0 };
+let latest: { lines: EditorLine[]; activeLineIndex: number; syncMode: boolean; history: number } = {
+  lines: [], activeLineIndex: 0, syncMode: true, history: 0,
+};
 
-function Harness({ initialLines, editorMode = 'lrc', playbackPosition = 12.5, collab, activeLineIndex: controlledIndex }: HarnessProps) {
-  const [lines, setLines] = useState(initialLines);
+function Harness({
+  initialLines, editorMode = 'lrc', playbackPosition = 12.5, collab, activeLineIndex: controlledIndex,
+  isPlaying = false, playerRef, viaPage = false,
+}: HarnessProps) {
+  const [lines, setLinesState] = useState(initialLines);
+  // A minimal undo stack standing in for useHistory, owned above the editor like the real one.
+  const [past, setPast] = useState<EditorLine[][]>([]);
+  const setLines = (next: EditorLine[] | ((prev: EditorLine[]) => EditorLine[])) => {
+    setLinesState((prev) => {
+      const value = typeof next === 'function' ? next(prev) : next;
+      if (value !== prev) setPast((p) => [...p, prev]);
+      return value;
+    });
+  };
+  const undo = () => {
+    if (!past.length) return;
+    setLinesState(past[past.length - 1]);
+    setPast(past.slice(0, -1));
+  };
   const [activeLineIndex, setActiveLineIndex] = useState(controlledIndex ?? 0);
+  const [syncMode, setSyncMode] = useState(true);
   const [mode, setMode] = useState(editorMode);
+  const [ref] = useState(() => playerRef ?? { current: null });
   const index = controlledIndex ?? activeLineIndex;
-  useEffect(() => { latest = { lines, activeLineIndex: index }; });
+  useEffect(() => { latest = { lines, activeLineIndex: index, syncMode, history: past.length }; });
+  const props = {
+    lines, setLines, syncMode, setSyncMode,
+    activeLineIndex: index, setActiveLineIndex, playbackPosition, playerRef: ref,
+    undo, redo: vi.fn(), canUndo: past.length > 0, canRedo: false, clearHistory: vi.fn(),
+    editorMode: mode, setEditorMode: setMode, handleRemoveAllLyrics: vi.fn(), onNewProject: vi.fn(),
+    collab, mediaTitle: 'Song', isPlaying,
+  };
   return (
     <MemoryRouter>
       <TooltipProvider>
-        <Editor
-          phone
-          lines={lines}
-          setLines={setLines}
-          syncMode
-          setSyncMode={vi.fn()}
-          activeLineIndex={index}
-          setActiveLineIndex={setActiveLineIndex}
-          playbackPosition={playbackPosition}
-          playerRef={{ current: null }}
-          undo={vi.fn()}
-          redo={vi.fn()}
-          canUndo={false}
-          canRedo={false}
-          clearHistory={vi.fn()}
-          editorMode={mode}
-          setEditorMode={setMode}
-          handleRemoveAllLyrics={vi.fn()}
-          onNewProject={vi.fn()}
-          collab={collab}
-          mediaTitle="Song"
-        />
+        {viaPage ? <EditorPage {...props} /> : <Editor phone {...props} />}
       </TooltipProvider>
     </MemoryRouter>
   );
@@ -173,6 +185,79 @@ describe('Phone editor lyric list', () => {
     rerender(<Harness initialLines={makeLines(500)} activeLineIndex={300} />);
     await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     // Row 300 sits thousands of pixels down; the list must scroll there, not stay at the top.
+    const tops = scrollTo.mock.calls.map((c) => (c[0] as ScrollToOptions).top ?? 0);
+    expect(Math.max(0, ...tops)).toBeGreaterThan(1000);
+  });
+});
+
+describe('Crossing the lg breakpoint on a mounted editor', () => {
+  // A matchMedia whose width can change while mounted, firing 'change' like a real resize.
+  let width = 360;
+  const listeners = new Map<string, Set<(e: { matches: boolean }) => void>>();
+  const matches = (query: string) => {
+    const m = /min-width:\s*([\d.]+)(rem|px)/.exec(query);
+    return m ? width >= parseFloat(m[1]) * (m[2] === 'rem' ? 16 : 1) : false;
+  };
+  const originalMatchMedia = window.matchMedia;
+  const resize = (next: number) => {
+    width = next;
+    act(() => { listeners.forEach((set, query) => set.forEach((fn) => fn({ matches: matches(query) }))); });
+  };
+  const sizes = { clientHeight: 600, clientWidth: 360, offsetHeight: 56, offsetWidth: 360, scrollHeight: 40000 };
+  const props = Object.keys(sizes) as (keyof typeof sizes)[];
+  const saved = props.map((p) => Object.getOwnPropertyDescriptor(HTMLElement.prototype, p));
+  beforeEach(() => {
+    width = 360;
+    listeners.clear();
+    window.matchMedia = vi.fn((query: string) => ({
+      get matches() { return matches(query); }, media: query, onchange: null,
+      addEventListener: (_: string, fn: (e: { matches: boolean }) => void) => {
+        if (!listeners.has(query)) listeners.set(query, new Set());
+        listeners.get(query)!.add(fn);
+      },
+      removeEventListener: (_: string, fn: (e: { matches: boolean }) => void) => { listeners.get(query)?.delete(fn); },
+      addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn(),
+    })) as unknown as typeof window.matchMedia;
+    props.forEach((p) => Object.defineProperty(HTMLElement.prototype, p, { configurable: true, get: () => sizes[p] }));
+  });
+  afterEach(() => {
+    window.matchMedia = originalMatchMedia;
+    props.forEach((p, i) => { const d = saved[i]; if (d) Object.defineProperty(HTMLElement.prototype, p, d); });
+  });
+
+  it('keeps lines, cursor, sync mode and undo history across phone -> desktop -> phone', () => {
+    render(<Harness viaPage initialLines={makeLines(5)} />);
+    tapMark(/mark line 1/i);
+    tapMark(/mark line 2/i);
+    expect(latest.activeLineIndex).toBe(2);
+    expect(latest.history).toBe(2);
+
+    resize(1280);
+    expect(document.querySelector('[data-phone-editor]')).toBeNull();
+    expect(latest.lines[0].timestamp).toBe(12.5);
+    expect(latest.lines[1].timestamp).toBe(12.5);
+    expect(latest.activeLineIndex).toBe(2);
+    expect(latest.syncMode).toBe(true);
+    expect(latest.history).toBe(2);
+
+    resize(360);
+    expect(document.querySelector('[data-phone-editor]')).not.toBeNull();
+    expect(screen.getByRole('button', { name: /mark line 3/i })).toBeInTheDocument();
+    // The undo history survived both crossings: undo still steps back through the marks.
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(latest.lines[1].timestamp).toBeNull();
+    expect(latest.lines[0].timestamp).toBe(12.5);
+  });
+
+  it('scrolls the cursor line into view when the list remounts on a crossing', async () => {
+    mockSettings = withEditor({ scroll: { mode: 'auto', alignment: 'center' } });
+    const scrollTo = vi.fn();
+    Element.prototype.scrollTo = scrollTo;
+    width = 1280;
+    render(<Harness viaPage initialLines={makeLines(500)} activeLineIndex={300} />);
+    scrollTo.mockClear();
+    resize(360);
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
     const tops = scrollTo.mock.calls.map((c) => (c[0] as ScrollToOptions).top ?? 0);
     expect(Math.max(0, ...tops)).toBeGreaterThan(1000);
   });
