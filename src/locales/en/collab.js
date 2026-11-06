@@ -65,7 +65,7 @@ export default {
   },
   // Owner controls: start, manage and end a session.
   settings: {
-    start: 'Start session',
+    start: 'Edit this project with someone else',
     starting: 'Starting…',
     manage: 'Manage session',
     startFailed: 'Could not start the session. Try again.',

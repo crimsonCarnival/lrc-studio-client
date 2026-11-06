@@ -65,7 +65,7 @@ export default {
   },
   // Controles del propietario: iniciar, gestionar y terminar una sesión.
   settings: {
-    start: 'Iniciar sesión en vivo',
+    start: 'Edita este proyecto con alguien más',
     starting: 'Iniciando…',
     manage: 'Gestionar sesión',
     startFailed: 'No se pudo iniciar la sesión. Inténtalo de nuevo.',
