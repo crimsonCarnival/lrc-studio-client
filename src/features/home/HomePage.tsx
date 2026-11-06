@@ -384,11 +384,11 @@ export default function HomePage() {
           onConfirm={async (data: {
             name?: string; description?: string; tags?: string[];
             songName?: string; artists?: ArtistCredit[]; artistsChanged?: boolean; songAlbum?: string; songYear?: string | number;
-            coverImage?: string; isPublic?: boolean; singerColors?: string[]; singers?: string[];
+            coverImage?: string; singerColors?: string[]; singers?: string[];
           }) => {
             if (!editingProject) return;
             try {
-              const { name: title, description, tags, songName, songAlbum, songYear, coverImage, isPublic, singerColors, singers } = data;
+              const { name: title, description, tags, songName, songAlbum, songYear, coverImage, singerColors, singers } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -403,13 +403,12 @@ export default function HomePage() {
               await projects.patch(editingProject.publicId, {
                 title,
                 coverImage,
-                public: isPublic,
                 metadata: updatedMetadata
               } as Parameters<typeof projects.patch>[1]);
               // Update local state
               setItems(prev => prev.map(p =>
                 p.publicId === editingProject.publicId
-                  ? { ...p, title, coverImage, public: isPublic, metadata: updatedMetadata }
+                  ? { ...p, title, coverImage, metadata: updatedMetadata }
                   : p
               ));
               setEditingProject(null);
@@ -426,6 +425,8 @@ export default function HomePage() {
           initialSongYear={editingProject?.metadata?.songYear || ''}
           initialCoverImage={editingProject?.coverImage || ''}
           initialIsPublic={editingProject?.public || false}
+          publicId={editingProject?.publicId}
+          onVisibilityChange={(next: boolean) => setItems(prev => prev.map(p => p.publicId === editingProject?.publicId ? { ...p, public: next } : p))}
           initialSingerColors={editingProject?.metadata?.singerColors ?? EMPTY_LIST}
           initialSingers={editingProject?.metadata?.singers ?? EMPTY_LIST}
           initialAlbumArt={''}
