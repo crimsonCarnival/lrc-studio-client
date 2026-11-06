@@ -600,19 +600,11 @@ export function useAppState(user?: AuthUserType | null) {
     setRestoredPosition,
     setRestoredSpeed,
     setIsProjectLoading,
-    setActivepublicId,
     setShareModal: undefined, // hook owns its own state
-    setProjectVisibility,
     activepublicIdRef,
     lines,
-    editorMode,
-    syncMode,
-    mediaTitle,
-    projectMetadata,
-    duration,
     projectYtUrl,
     uploadedAudio,
-    restoredMedia,
   });
 
   // In a session a viewer's edits are dropped here: the server refuses them, and

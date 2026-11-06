@@ -29,6 +29,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import { artistRoster } from '@/features/artists/artist-credits';
+import { useShareFlow } from '@/features/sharing/hooks/useShareFlow';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
 
 interface PreviewLineLite {
@@ -98,7 +99,6 @@ export default function Preview(props: PreviewProps) {
       setForksEnabled(project.forksEnabled !== false);
     }
   }, [project]);
-  const [publishOpen, setPublishOpen] = useState(false);
 
   const handleForksEnabledChange = async (enabled: boolean) => {
     setForksEnabled(enabled);
@@ -180,6 +180,12 @@ export default function Preview(props: PreviewProps) {
 
   const { lines, isPublic = false, onVisibilityChange, coverImage, mediaTitle, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, sessionMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
 
+  // Share never publishes on its own: a private project is confirmed in PublishDialog first.
+  const handleManualSave = props.handleManualSave as (() => Promise<boolean>) | undefined;
+  const { publishOpen, setPublishOpen, requestShare, onPublished } = useShareFlow({
+    publicId: activepublicId, isPublic, showLink: exportToUrl, save: handleManualSave, onVisibilityChange,
+  });
+
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
   const [shareAnchor, setShareAnchor] = useState<{ top: number; right: number } | null>(null);
@@ -208,8 +214,9 @@ export default function Preview(props: PreviewProps) {
       const rect = shareTriggerRef.current.getBoundingClientRect();
       setShareAnchor({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
     }
-    exportToUrl();
-  }, [shareModal, setShareModal, exportToUrl]);
+    // Someone else's shared project is only ever shown, never published from here.
+    if (isSharedProject) exportToUrl(); else requestShare();
+  }, [shareModal, setShareModal, requestShare, isSharedProject, exportToUrl]);
 
   const { user } = useAuthContext();
 
@@ -613,8 +620,8 @@ export default function Preview(props: PreviewProps) {
           open={publishOpen}
           onOpenChange={setPublishOpen}
           project={{ publicId: activepublicId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines: lines as EditorLine[] }}
-          onPublished={onVisibilityChange}
-          onSave={props.handleManualSave as (() => Promise<boolean>) | undefined}
+          onPublished={onPublished}
+          onSave={handleManualSave}
         />
       )}
     </>
