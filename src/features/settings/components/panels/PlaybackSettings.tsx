@@ -3,6 +3,7 @@ import { Section, SettingRow, Toggle, UnitInput } from '../shared';
 import { usePlaybackSettings } from '../../hooks/usePlaybackSettings';
 import { DEFAULT_SETTINGS } from '../../settings-defaults';
 import type { AppSettings } from '@/features/settings/settings.types';
+import { Tip } from '@ui/tip';
 
 const MAX_PRESETS = 6;
 // Offered in this order when "Add" is pressed: the first one not already present and inside
@@ -70,22 +71,23 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
         >
           <div className="flex flex-wrap justify-end gap-1.5">
             {presets.map((v) => (
-              <span
-                key={v}
-                // The player drops presets outside the allowed range; show them as inactive, not gone.
-                title={inRange(v) ? undefined : t('settings.playback.presetOutOfRange')}
-                className={`flex items-center h-[34px] pl-3 rounded-pill bg-zinc-800 text-zinc-100 font-mono text-[13px] ${inRange(v) ? '' : 'opacity-50 line-through'}`}
-              >
-                {formatSpeed(v)}
-                <button
-                  type="button"
-                  aria-label={t('settings.playback.removePreset', { value: formatSpeed(v) })}
-                  onClick={() => setPresets(presets.filter((x) => x !== v))}
-                  className="w-[30px] h-[34px] text-zinc-400 hover:text-zinc-100 text-[15px]"
+              <Tip content={inRange(v) ? undefined : t('settings.playback.presetOutOfRange')}>
+                <span
+                  key={v}
+                  // The player drops presets outside the allowed range; show them as inactive, not gone.
+                  className={`flex items-center h-[34px] pl-3 rounded-pill bg-zinc-800 text-zinc-100 font-mono text-[13px] ${inRange(v) ? '' : 'opacity-50 line-through'}`}
                 >
-                  ×
-                </button>
-              </span>
+                  {formatSpeed(v)}
+                  <button
+                    type="button"
+                    aria-label={t('settings.playback.removePreset', { value: formatSpeed(v) })}
+                    onClick={() => setPresets(presets.filter((x) => x !== v))}
+                    className="w-[30px] h-[34px] text-zinc-400 hover:text-zinc-100 text-[15px]"
+                  >
+                    ×
+                  </button>
+                </span>
+              </Tip>
             ))}
             {presets.length < MAX_PRESETS && nextPreset !== undefined && (
               <button

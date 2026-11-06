@@ -9,7 +9,7 @@ interface BadgeEmblemProps {
   rarity?: string;
   /** Not earned yet: drawn grey and faint. */
   locked?: boolean;
-  /** Shape and colour only, for rows of small emblems. */
+  /** Shape, colour and glyph without rarity frames or pips, for rows of small emblems. */
   mini?: boolean;
   /** Just earned: pops in with a ring burst, once. */
   unlock?: boolean;
@@ -43,7 +43,13 @@ export function BadgeEmblem({ id, size = 68, color, rarity, locked = false, mini
       }}
     >
       {mini ? (
-        <path d={shape.outer} fill="currentColor" fillOpacity=".3" stroke="currentColor" strokeWidth="5" strokeLinejoin="round" />
+        <>
+          <path d={shape.outer} fill="currentColor" fillOpacity=".3" stroke="currentColor" strokeWidth="5" strokeLinejoin="round" />
+          {/* The glyph, enlarged and drawn heavier so it still reads at 18-22px. */}
+          <g transform="translate(36 36) scale(1.45) translate(-12 -12)" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d={emblem.glyph} />
+          </g>
+        </>
       ) : (
         <>
           {unlock && <circle className="emblem-burst" cx="36" cy="36" r="30" fill="none" stroke="currentColor" strokeWidth="2" />}

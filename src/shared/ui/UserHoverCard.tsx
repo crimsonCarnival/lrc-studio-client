@@ -241,7 +241,7 @@ export function UserHoverCard({ accountName, userId, children, className }: User
                       <InitialsAvatar name={displayName} handle={accountName} className="size-14 rounded-2xl text-[26px]" />
                     )}
                   </StaffRing>
-                  {isOnline && <span title={t('common.online')} className="absolute -right-[3px] -bottom-[3px] size-3.5 rounded-full bg-emerald-400 border-[3px] border-zinc-900" />}
+                  {isOnline && <Tip content={t('common.online')}><span className="absolute -right-[3px] -bottom-[3px] size-3.5 rounded-full bg-emerald-400 border-[3px] border-zinc-900" /></Tip>}
                 </Link>
 
                 <div className="min-w-0 flex-1">
@@ -251,12 +251,14 @@ export function UserHoverCard({ accountName, userId, children, className }: User
                     </Link>
                     {profile.isVerified && <Icon name="verified" size={16} className="text-primary shrink-0" aria-label={t('profile.verified')} />}
                   </div>
-                  <div className="font-mono text-[13px] text-zinc-400 mt-0.5" title={lastSeen ?? undefined}>
-                    {accountName}
-                    {isFollowingMe && (
-                      <span className="ml-1 px-1.5 py-px rounded-md bg-zinc-800 font-sans text-[11px] font-semibold text-zinc-100">{t('profile.followsYou')}</span>
-                    )}
-                  </div>
+                  <Tip content={lastSeen ?? undefined}>
+                    <div className="font-mono text-[13px] text-zinc-400 mt-0.5">
+                      {accountName}
+                      {isFollowingMe && (
+                        <span className="ml-1 px-1.5 py-px rounded-md bg-zinc-800 font-sans text-[11px] font-semibold text-zinc-100">{t('profile.followsYou')}</span>
+                      )}
+                    </div>
+                  </Tip>
                   <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[13px] text-zinc-400">
                     {profile.country && (
                       <span className="flex items-center gap-1.5"><CountryFlag countryCode={profile.country} />{countryName}</span>

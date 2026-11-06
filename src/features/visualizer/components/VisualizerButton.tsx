@@ -224,12 +224,13 @@ export function VisualizerButton() {
                       <span className="block text-xs font-semibold text-foreground truncate">
                         {t(`projectView.visualizer.kinds.${option}.label`)}
                       </span>
-                      <span
-                        className="block text-[11px] text-muted-foreground truncate"
-                        title={t(`projectView.visualizer.kinds.${option}.hint`)}
-                      >
-                        {t(`projectView.visualizer.kinds.${option}.hint`)}
-                      </span>
+                      <Tip content={t(`projectView.visualizer.kinds.${option}.hint`)}>
+                        <span
+                          className="block text-[11px] text-muted-foreground truncate"
+                        >
+                          {t(`projectView.visualizer.kinds.${option}.hint`)}
+                        </span>
+                      </Tip>
                     </span>
                   </button>
                 );

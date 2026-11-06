@@ -167,12 +167,13 @@ export const WordsFocusLine = memo(function WordsFocusLine({
         onPointerLeave={presence ? handlePointerLeave : undefined}
       >
         {remoteHere && (
-          <span
-            aria-hidden
-            title={t('collab.presence.onLine', { name: remoteHere.name })}
-            className="pointer-events-none absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] border border-dashed"
-            style={{ borderColor: collabColor(remoteHere.colorIndex) }}
-          />
+          <Tip content={t('collab.presence.onLine', { name: remoteHere.name })}>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] border border-dashed"
+              style={{ borderColor: collabColor(remoteHere.colorIndex) }}
+            />
+          </Tip>
         )}
         {presence && <RemotePointers scrollRef={frameRef} />}
         <div

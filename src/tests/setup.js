@@ -10,3 +10,13 @@ import { i18nReady } from '@/app/i18n';
 beforeAll(async () => {
   await i18nReady;
 });
+
+// jsdom has no ResizeObserver, and Radix measures tooltip/popover content with one. Without
+// this, a tooltip that happens to open mid-test (a focused <Tip> trigger) throws and blanks the tree.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

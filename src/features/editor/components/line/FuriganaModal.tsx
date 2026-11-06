@@ -7,6 +7,7 @@ import { ReadingInput } from './ReadingInput';
 import { toHiragana, toKatakana, rubyRatioClass, splitOkurigana, rubyFitStyle } from '@/shared/utils/furigana';
 import { collectFuriganaTargets, setTextAtomReading } from '@/features/editor/utils/furigana-targets';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { Tip } from '@ui/tip';
 
 interface FuriganaModalProps {
   open: boolean;
@@ -168,12 +169,13 @@ export function FuriganaModal({
 
             {/* Romaji, when the two layers pair up */}
             {romajiShown && (
-              <p
-                className={`font-mono text-[12px] text-center ${romajiIsWholeLine ? 'text-subtle/70' : 'text-subtle'}`}
-                title={romajiIsWholeLine ? t('editor.furigana.romajiLine') : undefined}
-              >
-                {romajiShown}
-              </p>
+              <Tip content={romajiIsWholeLine ? t('editor.furigana.romajiLine') : undefined}>
+                <p
+                  className={`font-mono text-[12px] text-center ${romajiIsWholeLine ? 'text-subtle/70' : 'text-subtle'}`}
+                >
+                  {romajiShown}
+                </p>
+              </Tip>
             )}
 
             <button

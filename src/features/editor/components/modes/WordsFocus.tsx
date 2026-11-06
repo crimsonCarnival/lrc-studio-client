@@ -7,6 +7,7 @@ import { formatTime } from '@/shared/utils/format-time';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { useRemoteActiveLines } from '@/features/collab/collab-presence-context';
 import { collabColor } from '@/features/collab/collab-color';
+import { Tip } from '@ui/tip';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
 /** Smallest gap kept between two neighbouring word starts while dragging. */
@@ -65,13 +66,14 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
             <span className="flex justify-between gap-2">
               <span className="flex min-w-0 items-center gap-1.5">
                 {remote && (
-                  <span
-                    role="img"
-                    aria-label={t('collab.presence.onLine', { name: remote.name })}
-                    title={t('collab.presence.onLine', { name: remote.name })}
-                    className="size-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: collabColor(remote.colorIndex) }}
-                  />
+                  <Tip content={t('collab.presence.onLine', { name: remote.name })}>
+                    <span
+                      role="img"
+                      aria-label={t('collab.presence.onLine', { name: remote.name })}
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: collabColor(remote.colorIndex) }}
+                    />
+                  </Tip>
                 )}
                 <span className="truncate">{item.text}</span>
               </span>
@@ -208,26 +210,27 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
           // neighbour, so it is called out in gold (redesign sheet 14).
           const tooShort = seg.timed && seg.to - seg.from < TOO_SHORT;
           return (
-            <span
-              key={i}
-              title={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: (seg.to - seg.from).toFixed(2) }) : undefined}
-              // @container: the label hides itself once the block is narrower than 36px.
-              className={`@container absolute inset-y-0 flex items-center rounded-lg text-sm font-semibold overflow-hidden whitespace-nowrap ${isNow
-                ? 'bg-primary text-primary-foreground'
-                : tooShort
-                  ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
-                  : seg.timed ? 'bg-raised text-foreground inset-ring inset-ring-hl' : 'bg-card text-faint inset-ring inset-ring-hl'}`}
-              style={{
-                left: `calc(${((seg.from - start) / span) * 100}% + 2px)`,
-                width: `max(0px, calc(${((seg.to - seg.from) / span) * 100}% - 4px))`,
-              }}
-            >
-              {/* Left grip: the edge you drag to move where the word starts. */}
-              {seg.timed && !tooShort && (
-                <span aria-hidden className={`absolute left-0 inset-y-1.5 w-[3px] rounded-sm ${isNow ? 'bg-primary-foreground/50' : 'bg-faint'}`} />
-              )}
-              <span className="hidden pl-2.5 @[36px]:inline">{seg.word}</span>
-            </span>
+            <Tip content={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: (seg.to - seg.from).toFixed(2) }) : undefined}>
+              <span
+                key={i}
+                // @container: the label hides itself once the block is narrower than 36px.
+                className={`@container absolute inset-y-0 flex items-center rounded-lg text-sm font-semibold overflow-hidden whitespace-nowrap ${isNow
+                  ? 'bg-primary text-primary-foreground'
+                  : tooShort
+                    ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
+                    : seg.timed ? 'bg-raised text-foreground inset-ring inset-ring-hl' : 'bg-card text-faint inset-ring inset-ring-hl'}`}
+                style={{
+                  left: `calc(${((seg.from - start) / span) * 100}% + 2px)`,
+                  width: `max(0px, calc(${((seg.to - seg.from) / span) * 100}% - 4px))`,
+                }}
+              >
+                {/* Left grip: the edge you drag to move where the word starts. */}
+                {seg.timed && !tooShort && (
+                  <span aria-hidden className={`absolute left-0 inset-y-1.5 w-[3px] rounded-sm ${isNow ? 'bg-primary-foreground/50' : 'bg-faint'}`} />
+                )}
+                <span className="hidden pl-2.5 @[36px]:inline">{seg.word}</span>
+              </span>
+            </Tip>
           );
         })}
         </div>

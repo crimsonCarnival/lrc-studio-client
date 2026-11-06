@@ -312,16 +312,17 @@ export default function LeaderboardPage() {
                 sort could be undone only by reloading, since the view is written
                 with `replace` and Back does not step through it. */}
             {!isDefaultView && (
-              <button
-                type="button"
-                onClick={resetView}
-                title={t('badges.leaderboard.resetView')}
-                aria-label={t('badges.leaderboard.resetView')}
-                className="ml-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 coarse:py-3 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 text-sm font-medium rounded-md border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-              >
-                <Icon name="restart_alt" size={16} />
-                <span className="hidden sm:inline">{t('badges.leaderboard.resetView')}</span>
-              </button>
+              <Tip content={t('badges.leaderboard.resetView')}>
+                <button
+                  type="button"
+                  onClick={resetView}
+                  aria-label={t('badges.leaderboard.resetView')}
+                  className="ml-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 coarse:py-3 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 text-sm font-medium rounded-md border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                >
+                  <Icon name="restart_alt" size={16} />
+                  <span className="hidden sm:inline">{t('badges.leaderboard.resetView')}</span>
+                </button>
+              </Tip>
             )}
           </div>
         </div>
@@ -373,7 +374,6 @@ export default function LeaderboardPage() {
                   type="button"
                   onClick={() => setView({ dir: sortDir === 'DESC' ? 'ASC' : 'DESC' })}
                   aria-label={dirLabel}
-                  title={dirLabel}
                   className="ml-auto inline-flex items-center justify-center size-11 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
                 >
                   <Icon name={sortDir === 'ASC' ? 'expand_less' : 'expand_more'} size={18} />

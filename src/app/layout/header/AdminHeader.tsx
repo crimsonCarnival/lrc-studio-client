@@ -9,6 +9,7 @@ import { useAdminTabs } from '@/features/admin/useAdminTabs';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { UserMenu } from './UserMenu';
+import { Tip } from '@ui/tip';
 
 interface AdminHeaderProps {
   user?: AuthUser | null;
@@ -53,26 +54,27 @@ export function AdminHeader({ user, logout, settings, updateSetting, i18n, navTo
 
         <nav ref={navRef} aria-label={t('admin.header.nav')} className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto no-scrollbar">
           {tabs.map(tab => (
-            <Link
-              key={tab.id}
-              to={adminPath(tab.id)}
-              aria-current={activeTab === tab.id ? 'page' : undefined}
-              title={tab.label}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 2xl:px-3 h-9 coarse:h-11 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-                activeTab === tab.id
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50'
-              }`}
-            >
-              <Icon name={tab.icon} size={14} className="shrink-0" />
-              {/* Below 2xl only the open tab keeps its label; the rest shrink to icons so all of them fit. */}
-              <span className={activeTab === tab.id ? undefined : 'max-2xl:sr-only'}>{tab.label}</span>
-              {!!tab.count && (
-                <span aria-label={t('admin.header.pending', { count: tab.count })} className="grid h-4 min-w-4 place-items-center rounded-pill bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums">
-                  {tab.count > 99 ? '99+' : tab.count}
-                </span>
-              )}
-            </Link>
+            <Tip content={tab.label}>
+              <Link
+                key={tab.id}
+                to={adminPath(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 2xl:px-3 h-9 coarse:h-11 text-xs font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                  activeTab === tab.id
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50'
+                }`}
+              >
+                <Icon name={tab.icon} size={14} className="shrink-0" />
+                {/* Below 2xl only the open tab keeps its label; the rest shrink to icons so all of them fit. */}
+                <span className={activeTab === tab.id ? undefined : 'max-2xl:sr-only'}>{tab.label}</span>
+                {!!tab.count && (
+                  <span aria-label={t('admin.header.pending', { count: tab.count })} className="grid h-4 min-w-4 place-items-center rounded-pill bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums">
+                    {tab.count > 99 ? '99+' : tab.count}
+                  </span>
+                )}
+              </Link>
+            </Tip>
           ))}
         </nav>
 

@@ -10,6 +10,7 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { artistDisplay, type ArtistCredit } from '@/features/artists/artist-credits';
 import { projectPath } from '@/features/projects/project-path';
 import { profilePath } from '@/features/profile/profile-path';
+import { Tip } from '@ui/tip';
 
 interface MiniProject {
   publicId: string;
@@ -165,8 +166,12 @@ export function ProjectHoverCard({ publicId, children }: { publicId: string; chi
                 {project.upload?.duration ? <span className="inline-flex h-6 items-center rounded-pill bg-zinc-800 px-2 tabular-nums">{clock(project.upload.duration)}</span> : null}
               </div>
               <div className="flex items-center gap-3 border-t border-zinc-800 pt-2.5 font-mono text-xs tabular-nums text-zinc-400">
-                <span className="flex items-center gap-1" title={t('projectView.statStars')}><Icon name="star" size={13} />{project.starCount ?? 0}</span>
-                <span className="flex items-center gap-1" title={t('projectView.statViews')}><Icon name="visibility" size={13} />{project.viewCount ?? 0}</span>
+                <Tip content={t('projectView.statStars')}>
+                  <span className="flex items-center gap-1"><Icon name="star" size={13} />{project.starCount ?? 0}</span>
+                </Tip>
+                <Tip content={t('projectView.statViews')}>
+                  <span className="flex items-center gap-1"><Icon name="visibility" size={13} />{project.viewCount ?? 0}</span>
+                </Tip>
               </div>
             </>
           )}

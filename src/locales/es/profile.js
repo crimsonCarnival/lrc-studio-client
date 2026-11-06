@@ -135,7 +135,7 @@ export default {
     community: "Comunidad",
     communityValue: "{{stars}} estrellas · {{forks}} copias",
     publicProjectsCount: "{{count}} proyectos públicos",
-    addictionLevel: "Nivel de adicción",
+    addictionLevel: "Nivel de Melómano",
     ladder: {
       title_one: "Escalera de niveles · {{count}} nivel",
       title_other: "Escalera de niveles · {{count}} niveles",

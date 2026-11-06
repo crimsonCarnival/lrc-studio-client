@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { featuredNames, joinNames, primaryNames } from '@/shared/utils/artists';
 import { cn } from '@/shared/utils/utils';
 import { artistDisplay, creditsOf, type ArtistMetadata } from './artist-credits';
+import { Tip } from '@ui/tip';
 
 interface ArtistTextProps {
   metadata: ArtistMetadata | null | undefined;
@@ -26,14 +27,16 @@ export function ArtistText({ metadata, className, featuredClassName, fallback }:
   const feat = joinNames(featuredNames(credits));
 
   if (credits.length === 0 || !feat) {
-    return <span className={className} title={display}>{display}</span>;
+    return <Tip content={display}><span className={className}>{display}</span></Tip>;
   }
 
   return (
-    <span className={className} title={display}>
-      {main}
-      {main ? ' ' : ''}
-      <span className={cn('font-normal text-subtle', featuredClassName)}>feat. {feat}</span>
-    </span>
+    <Tip content={display}>
+      <span className={className}>
+        {main}
+        {main ? ' ' : ''}
+        <span className={cn('font-normal text-subtle', featuredClassName)}>feat. {feat}</span>
+      </span>
+    </Tip>
   );
 }

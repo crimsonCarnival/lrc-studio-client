@@ -216,20 +216,21 @@ export function WordsModeLayerControl({
         { key: 'secondary', glyph: 'ロ', label: t('editor.stampLayerSecondaryShort'), hint: t('editor.stampLayerSecondary') },
         { key: 'both', glyph: null, label: t('editor.stampLayerBoth'), hint: t('editor.stampLayerBothHint') },
       ] as const).map(({ key, glyph, label, hint }) => (
-        <button
-          key={key}
-          type="button"
-          title={hint}
-          aria-pressed={stampTarget === key}
-          onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
-          className={`inline-flex items-center gap-1 rounded-xs px-1.5 py-0.5 text-[10px] font-semibold leading-none transition-all ${stampTarget === key
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-subtle hover:text-foreground'
-            }`}
-        >
-          {glyph && <span aria-hidden="true" className="font-bold">{glyph}</span>}
-          {label}
-        </button>
+        <Tip content={hint}>
+          <button
+            key={key}
+            type="button"
+            aria-pressed={stampTarget === key}
+            onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
+            className={`inline-flex items-center gap-1 rounded-xs px-1.5 py-0.5 text-[10px] font-semibold leading-none transition-all ${stampTarget === key
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-subtle hover:text-foreground'
+              }`}
+          >
+            {glyph && <span aria-hidden="true" className="font-bold">{glyph}</span>}
+            {label}
+          </button>
+        </Tip>
       ))}
     </div>
   );

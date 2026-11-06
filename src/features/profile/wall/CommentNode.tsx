@@ -67,6 +67,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
   const answeringThis = w.replyingTo === comment.id;
   const editingThis = w.editingId === comment.id;
   const language = i18n.resolvedLanguage || i18n.language;
+  const levelTitle = language?.startsWith('es') ? (author.addictionTitle?.es || author.addictionTitle?.en) : (author.addictionTitle?.en || author.addictionTitle?.es);
 
   const collapsed = w.collapsed.has(comment.id);
   const visibleReplies = collapsed ? [] : comment.replies;
@@ -225,6 +226,11 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
               )}
             </span>
           </p>
+          {levelTitle && (
+            <Tip content={(t as (key: string) => string)('profile.stats.addictionLevel')}>
+              <p className="w-fit cursor-default text-xs font-medium leading-tight text-primary-ink">{levelTitle}</p>
+            </Tip>
+          )}
           {comment.replyToMissing && (
             <p className="mt-0.5 flex items-center gap-1 text-xs italic text-zinc-500">
               <Icon name="reply" size={12} /> {t('profile.wall.replyToMissing')}
@@ -346,7 +352,8 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
       {collapsed && (
         // Sits in the replies' column: the thread line curves into it like into a reply.
         <div className="relative ml-4 pl-4 pt-3">
-          <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(ownLineActive))} />
+          {/* This box starts at the thread's left edge (no reply li inside it, whose own pl-4 the -17px assumes), so -1px lines the curve up with the line above. */}
+          <span aria-hidden className={cn('pointer-events-none absolute -left-px top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(ownLineActive))} />
           <button
             type="button"
             onClick={() => w.toggleCollapsed(comment.id)}

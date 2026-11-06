@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { collabColor } from '../collab-color'
 import { usePresencePeers } from '../collab-presence-context'
 import { extrapolate } from '../useAwareness'
+import { Tip } from '@ui/tip';
 
 const TICK_MS = 100
 
@@ -43,27 +44,28 @@ export function RemotePlayheads({ duration, onSeek }: { duration: number; onSeek
               />
             )}
             {time !== null && time >= 0 && time <= duration && (
-              <button
-                type="button"
-                title={t('collab.presence.playhead', { name: p.name })}
-                aria-label={t('collab.presence.playhead', { name: p.name })}
-                className={`group pointer-events-auto absolute inset-y-0 w-3 -translate-x-1/2 cursor-pointer ${p.playhead?.playing ? 'transition-[left] duration-100 ease-linear' : ''}`}
-                style={{ left: `${(time / duration) * 100}%` }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onSeek?.(time)
-                }}
-              >
-                <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-sm" style={{ backgroundColor: color }} />
-                <span
-                  className="absolute left-1/2 top-0 hidden -translate-x-1/2 whitespace-nowrap rounded-pill px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background group-hover:block group-focus-visible:block"
-                  style={{ backgroundColor: color }}
+              <Tip content={t('collab.presence.playhead', { name: p.name })}>
+                <button
+                  type="button"
+                  aria-label={t('collab.presence.playhead', { name: p.name })}
+                  className={`group pointer-events-auto absolute inset-y-0 w-3 -translate-x-1/2 cursor-pointer ${p.playhead?.playing ? 'transition-[left] duration-100 ease-linear' : ''}`}
+                  style={{ left: `${(time / duration) * 100}%` }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSeek?.(time)
+                  }}
                 >
-                  {p.name}
-                </span>
-              </button>
+                  <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-sm" style={{ backgroundColor: color }} />
+                  <span
+                    className="absolute left-1/2 top-0 hidden -translate-x-1/2 whitespace-nowrap rounded-pill px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background group-hover:block group-focus-visible:block"
+                    style={{ backgroundColor: color }}
+                  >
+                    {p.name}
+                  </span>
+                </button>
+              </Tip>
             )}
           </div>
         )

@@ -195,7 +195,8 @@ export function ProfileHeader({
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
   const presence = usePresence();
-  const isOnline = presence.isOnline(profile.id);
+  // Your own page: you are here, whatever the presence list says about your own connection.
+  const isOnline = isOwner || presence.isOnline(profile.id);
 
   const { needed, pct: xpPct } = xpProgress(level, xp);
   const showXp = isOwner || profile.showXpProgress === true;

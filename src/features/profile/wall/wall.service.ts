@@ -8,6 +8,8 @@ export interface WallAuthor {
   staffRole: string | null;
   /** False when this author switched tagging off. */
   allowsTags: boolean;
+  /** Title of their Melomaniac Level (addiction level), per language. */
+  addictionTitle?: { en?: string | null; es?: string | null } | null;
 }
 
 export interface WallMention {
@@ -77,7 +79,7 @@ export const WALL_MAX_LENGTH = 500;
 
 const COMMENT_FIELDS = `id body createdAt editedAt depth canDelete canEdit pinned likeCount likedByMe
   replyToId replyToMissing replyCount descendantCount deleted
-  author { id accountName displayName avatarUrl staffRole allowsTags }
+  author { id accountName displayName avatarUrl staffRole allowsTags addictionTitle { en es } }
   mentions { id accountName displayName }
   projectRefs { publicId title slug coverImage ownerAccountName }`;
 

@@ -665,12 +665,13 @@ const EditorLineItem = React.memo(({
       >
         {lockHolder && <LineLockBadge holder={lockHolder} />}
         {remoteActive && !lockHolder && (
-          <span
-            aria-hidden
-            title={t('collab.presence.onLine', { name: remoteActive.name })}
-            className="pointer-events-none absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] border border-dashed"
-            style={{ borderColor: collabColor(remoteActive.colorIndex) }}
-          />
+          <Tip content={t('collab.presence.onLine', { name: remoteActive.name })}>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] border border-dashed"
+              style={{ borderColor: collabColor(remoteActive.colorIndex) }}
+            />
+          </Tip>
         )}
 
         {/* Lock/unlock indicator */}
