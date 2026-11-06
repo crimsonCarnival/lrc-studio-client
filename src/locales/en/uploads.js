@@ -46,7 +46,7 @@ export default {
   startNewProject: "Start a new project from the Setup screen.",
   youtube: "YouTube",
   audioFile: "Audio File",
-  cloudAudio: "Cloud Audio",
+  cloudAudio: "File",
   noFiles: "No files selected",
   uploadProgress: "Upload progress: {{progress}}%",
   invalidFile: "Invalid file: {{name}} is not an audio file",

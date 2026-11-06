@@ -28,7 +28,7 @@ export default {
   readOnlyTitle: "Read-only — click to edit your copy",
   editingTitle: "Editing personal copy",
   youtubeIncluded: "YouTube",
-  mediaIncluded: "Cloud Audio",
+  mediaIncluded: "Audio file",
   noYoutube: "No Media",
   noMedia: "No Media",
   syncedLines: "synced lines",

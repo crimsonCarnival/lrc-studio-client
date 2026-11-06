@@ -140,13 +140,14 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
         <div className="relative h-32 bg-zinc-800/50 overflow-hidden px-5">
           {hasCover && (
             <>
-              <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
+              <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover opacity-90 dark:opacity-40 group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
+              {/* Dimming the cover only makes sense on dark themes; on light ones it washes it out to grey. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/25 dark:from-zinc-950/70 to-transparent" />
             </>
           )}
           {/* The waveform is the placeholder art; a real cover replaces it. */}
           {!hasCover && <WaveformBars seed={title || publicId} count={26} minHeight={20} className="relative" />}
-          <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-300' : 'text-blue-300'}`}>
+          <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300'}`}>
             {isYoutube ? t('uploads.youtube') : t('uploads.cloudAudio')}
           </span>
           <div className="absolute right-3 top-3 flex items-center gap-1.5 z-10">
