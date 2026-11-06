@@ -141,14 +141,14 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
           )}
           {/* The waveform is the placeholder art; a real cover replaces it. */}
           {!hasCover && <WaveformBars seed={title || publicId} count={26} minHeight={20} className="relative" />}
-          <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-full bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-300' : 'text-blue-300'}`}>
+          <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-300' : 'text-blue-300'}`}>
             {isYoutube ? t('uploads.youtube') : t('uploads.cloudAudio')}
           </span>
           <div className="absolute right-3 top-3 flex items-center gap-1.5 z-10">
             {isPrivate && (
               <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
             )}
-            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${complete ? 'bg-teal-900/60 text-teal-300' : 'bg-zinc-950/80 text-zinc-100'}`}>
+            <span className={`px-2.5 py-1 rounded-pill text-[11px] font-bold ${complete ? 'bg-teal-900/60 text-teal-300' : 'bg-zinc-950/80 text-zinc-100'}`}>
               {complete ? t('profile.projectComplete') : `${percent}%`}
             </span>
           </div>
@@ -161,8 +161,8 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
               {title || t('library.untitled')}
             </h3>
             <ArtistText metadata={meta} className="block text-[13px] text-zinc-400 truncate mt-0.5" />
-            <div className="h-1 rounded-full bg-zinc-800 mt-3 overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-              <div className={`h-full rounded-full ${complete ? 'bg-teal-400' : 'bg-primary'}`} style={{ width: `${percent}%` }} />
+            <div className="h-1 rounded-pill bg-zinc-800 mt-3 overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+              <div className={`h-full rounded-pill ${complete ? 'bg-teal-400' : 'bg-primary'}`} style={{ width: `${percent}%` }} />
             </div>
             <div className="flex items-center justify-between gap-2 mt-2 text-xs text-zinc-400">
               <span className="font-mono">{t('profile.projectLines', { done: synced, total })}</span>
@@ -757,8 +757,8 @@ export default function ProfilePage() {
                       {t('profile.badges.count', { count: allBadgeIds.length, total: 18 })}
                     </span>
                   </div>
-                  <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
-                    <div className="h-full rounded-full bg-teal-400" style={{ width: `${Math.min(100, Math.round((allBadgeIds.length / 18) * 100))}%` }} />
+                  <div className="h-1 rounded-pill bg-zinc-800 overflow-hidden">
+                    <div className="h-full rounded-pill bg-teal-400" style={{ width: `${Math.min(100, Math.round((allBadgeIds.length / 18) * 100))}%` }} />
                   </div>
                   <div className="flex flex-col gap-2">
                     {allBadgeIds.map(id => (

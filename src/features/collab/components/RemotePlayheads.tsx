@@ -58,7 +58,7 @@ export function RemotePlayheads({ duration, onSeek }: { duration: number; onSeek
               >
                 <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-sm" style={{ backgroundColor: color }} />
                 <span
-                  className="absolute left-1/2 top-0 hidden -translate-x-1/2 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background group-hover:block group-focus-visible:block"
+                  className="absolute left-1/2 top-0 hidden -translate-x-1/2 whitespace-nowrap rounded-pill px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background group-hover:block group-focus-visible:block"
                   style={{ backgroundColor: color }}
                 >
                   {p.name}

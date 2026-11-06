@@ -210,7 +210,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
               <button
                 key={s}
                 onClick={() => setStep(s)}
-                className={`flex-1 h-1 rounded-full transition-colors ${step === s ? 'bg-primary' : 'bg-border'}`}
+                className={`flex-1 h-1 rounded-pill transition-colors ${step === s ? 'bg-primary' : 'bg-border'}`}
               />
             ))}
           </div>
@@ -272,7 +272,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                 <label className="text-xs text-muted-foreground">{t('playlists.modal.tags')}</label>
                 <div className="flex flex-wrap gap-1.5 bg-zinc-800/50 border border-border rounded-lg px-3 py-2 min-h-[40px]">
                   {form.tags.map(tag => (
-                    <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+                    <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-pill bg-primary/15 text-primary">
                       {tag}
                       <button onClick={() => removeTag(tag)}><Icon name="close" size={12} /></button>
                     </span>
@@ -334,7 +334,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                       disabled={togglingIds.has(p.id)}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selected ? 'bg-primary/10' : 'hover:bg-white/5'}`}
                     >
-                      <span className={`size-4 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
+                      <span className={`size-4 rounded-xs border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
                         {selected && <Icon name="check" size={12} className="text-zinc-950" />}
                       </span>
                       <span className="flex-1 min-w-0">

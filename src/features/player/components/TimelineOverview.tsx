@@ -67,7 +67,7 @@ export const LineMarkers = memo(function LineMarkers({ lines, duration }: { line
       {marks.map((time, i) => (
         <span
           key={`${time}-${i}`}
-          className="absolute top-0 h-2 w-0.5 -translate-x-1/2 rounded-[1px] bg-iris opacity-70"
+          className="absolute top-0 h-2 w-0.5 -translate-x-1/2 rounded-[calc(var(--radius)*0.1)] bg-iris opacity-70"
           style={{ left: `${(time / duration) * 100}%` }}
         />
       ))}

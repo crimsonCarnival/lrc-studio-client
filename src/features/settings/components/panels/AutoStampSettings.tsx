@@ -47,12 +47,12 @@ export default function AutoStampSettings({ settings, updateSetting, searchTerm 
             return (
               <div key={pct} className="flex items-center gap-3 text-sm">
                 <span className="flex-1 min-w-0 truncate text-zinc-100">{t('settings.autoStamp.sampleLine', { n: i + 1 })}</span>
-                <span className="hidden sm:block w-[120px] h-1.5 rounded-full bg-zinc-800 overflow-hidden shrink-0">
+                <span className="hidden sm:block w-[120px] h-1.5 rounded-pill bg-zinc-800 overflow-hidden shrink-0">
                   <span className={cn('block h-full', applied ? 'bg-teal-400' : 'bg-amber-400')} style={{ width: `${pct}%` }} />
                 </span>
                 <span className="w-10 text-right font-mono text-xs text-zinc-400 shrink-0">{pct}%</span>
                 <span className={cn(
-                  'w-[72px] py-[3px] text-center rounded-full text-xs font-bold shrink-0',
+                  'w-[72px] py-[3px] text-center rounded-pill text-xs font-bold shrink-0',
                   applied ? 'bg-teal-950 text-teal-300' : 'bg-amber-950 text-amber-300',
                 )}>
                   {applied ? t('settings.autoStamp.sampleApplied') : t('settings.autoStamp.sampleReview')}

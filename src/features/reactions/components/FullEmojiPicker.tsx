@@ -20,7 +20,7 @@ function Emoji({ emoji, ...props }: EmojiPickerListEmojiProps) {
   return (
     <button
       {...props}
-      className={cn('grid size-9 place-items-center rounded-[10px] text-xl leading-none', emoji.isActive && 'bg-primary-soft')}
+      className={cn('grid size-9 place-items-center rounded-[calc(var(--radius)*1)] text-xl leading-none', emoji.isActive && 'bg-primary-soft')}
     >
       {emoji.emoji}
     </button>

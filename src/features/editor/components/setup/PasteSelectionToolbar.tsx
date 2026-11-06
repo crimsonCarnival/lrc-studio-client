@@ -59,11 +59,11 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
     setSingerDraft(draft.includes(name) ? draft.filter((s) => s !== name) : [...draft, name]);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-zinc-700/70 bg-zinc-900/95 px-2 py-1 shadow-lg shadow-black/40 backdrop-blur-sm">
+    <div className="flex flex-wrap items-center gap-1.5 rounded-pill border border-zinc-700/70 bg-zinc-900/95 px-2 py-1 shadow-lg shadow-black/40 backdrop-blur-sm">
       {/* Insert a section before the selected line(s) */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm" className="rounded-full">
+          <Button type="button" variant="outline" size="sm" className="rounded-pill">
             <Icon name="add" size={14} /> {t('editor.insertSectionAbove')}
           </Button>
         </PopoverTrigger>
@@ -119,7 +119,7 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
           {!rosterEmpty && (
             <Popover onOpenChange={(open) => setSingerDraft(open ? (targetHeader.singers ?? []) : null)}>
               <PopoverTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="rounded-full">
+                <Button type="button" variant="outline" size="sm" className="rounded-pill">
                   <Icon name="group" size={14} /> {t('editor.assignSinger')}
                 </Button>
               </PopoverTrigger>

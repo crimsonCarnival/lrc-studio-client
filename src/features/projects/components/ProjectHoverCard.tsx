@@ -121,8 +121,8 @@ export function ProjectHoverCard({ publicId, children }: { publicId: string; chi
             <div className="flex gap-3" aria-hidden>
               <div className="size-16 shrink-0 animate-pulse rounded-xl bg-zinc-800" />
               <div className="flex flex-1 flex-col gap-2 pt-1">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-800" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-zinc-800" />
+                <div className="h-4 w-3/4 animate-pulse rounded-xs bg-zinc-800" />
+                <div className="h-3 w-1/2 animate-pulse rounded-xs bg-zinc-800" />
               </div>
             </div>
           ) : !project ? (
@@ -157,12 +157,12 @@ export function ProjectHoverCard({ publicId, children }: { publicId: string; chi
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] font-medium text-zinc-400">
-                <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2 ${project.hasWordSync ? 'bg-primary-soft text-primary-ink' : 'bg-zinc-800'}`}>
+                <span className={`inline-flex h-6 items-center gap-1 rounded-pill px-2 ${project.hasWordSync ? 'bg-primary-soft text-primary-ink' : 'bg-zinc-800'}`}>
                   <Icon name={project.hasWordSync ? 'view_week' : 'subject'} size={12} />
                   {project.hasWordSync ? t('projectView.syncByWord') : t('projectView.syncByLine')}
                 </span>
-                {project.lineCount ? <span className="inline-flex h-6 items-center rounded-full bg-zinc-800 px-2">{t('projectView.lineCount', { count: project.lineCount })}</span> : null}
-                {project.upload?.duration ? <span className="inline-flex h-6 items-center rounded-full bg-zinc-800 px-2 tabular-nums">{clock(project.upload.duration)}</span> : null}
+                {project.lineCount ? <span className="inline-flex h-6 items-center rounded-pill bg-zinc-800 px-2">{t('projectView.lineCount', { count: project.lineCount })}</span> : null}
+                {project.upload?.duration ? <span className="inline-flex h-6 items-center rounded-pill bg-zinc-800 px-2 tabular-nums">{clock(project.upload.duration)}</span> : null}
               </div>
               <div className="flex items-center gap-3 border-t border-zinc-800 pt-2.5 font-mono text-xs tabular-nums text-zinc-400">
                 <span className="flex items-center gap-1" title={t('projectView.statStars')}><Icon name="star" size={13} />{project.starCount ?? 0}</span>

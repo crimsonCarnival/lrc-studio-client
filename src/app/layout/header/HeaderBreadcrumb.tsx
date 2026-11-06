@@ -107,7 +107,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
               <LazyImage
                 src={projectCoverImage}
                 alt=""
-                className="size-6 rounded object-cover border border-zinc-700/50 shrink-0"
+                className="size-6 rounded-xs object-cover border border-zinc-700/50 shrink-0"
               />
             )}
             {onProjectSettings && (
@@ -158,7 +158,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
             )}
             {forkedFrom?.publicId && (
               <Tip content={forkedFrom.accountName ? t('share.forkedFrom', { accountName: forkedFrom.accountName }) : t('share.forkedProject')}>
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent-blue/10 border border-accent-blue/20 text-[9px] font-bold text-accent-blue uppercase shrink-0 cursor-help transition-colors hover:bg-accent-blue/20">
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-accent-blue/10 border border-accent-blue/20 text-[9px] font-bold text-accent-blue uppercase shrink-0 cursor-help transition-colors hover:bg-accent-blue/20">
                   <Icon name="open_in_new" size={10} />
                   <span className="hidden xs:inline">{t('share.forkedBadge')}</span>
                 </div>

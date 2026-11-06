@@ -105,7 +105,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           <div
             role="radiogroup"
             aria-label={t('settings.interface.toastPosition')}
-            className="grid grid-cols-3 gap-1 w-[150px] h-[72px] p-1 rounded-[10px] border border-zinc-700 bg-zinc-950"
+            className="grid grid-cols-3 gap-1 w-[150px] h-[72px] p-1 rounded-[calc(var(--radius)*1)] border border-zinc-700 bg-zinc-950"
           >
             {TOAST_POSITIONS.map((p) => {
               const on = toastPosition === p.value;
@@ -120,7 +120,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
                     onClick={() => handleToastPositionChange({ target: { value: p.value } })}
                     className={cn('flex p-1 rounded-md', p.v, p.h, on ? 'bg-zinc-800' : 'hover:bg-zinc-900')}
                   >
-                    <span className={cn('block w-[18px] h-2 rounded-[3px]', on ? 'bg-primary' : 'bg-zinc-700')} />
+                    <span className={cn('block w-[18px] h-2 rounded-[calc(var(--radius)*0.3)]', on ? 'bg-primary' : 'bg-zinc-700')} />
                   </button>
                 </Tip>
               );

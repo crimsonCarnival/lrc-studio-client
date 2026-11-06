@@ -9,7 +9,7 @@ import { ProjectHoverCard } from '@/features/projects/components/ProjectHoverCar
 import type { WallComment } from './wall.service';
 
 // A pill that reads as part of the sentence: tinted, not boxed, sitting on the text's baseline.
-const CARD_CLASS = 'mx-0.5 inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary-soft py-0.5 pl-0.5 pr-2.5 align-[-0.3em] text-[13px] font-semibold text-primary-ink ring-1 ring-inset ring-primary/25';
+const CARD_CLASS = 'mx-0.5 inline-flex max-w-full items-center gap-1.5 rounded-pill bg-primary-soft py-0.5 pl-0.5 pr-2.5 align-[-0.3em] text-[13px] font-semibold text-primary-ink ring-1 ring-inset ring-primary/25';
 
 /** A tagged project as an inline pill: its cover (or a note glyph), its title and, when known, its owner. */
 export function ProjectTagCard({ title, coverImage, owner, href }: { title: string; coverImage: string | null; owner?: string; href?: string | null }) {

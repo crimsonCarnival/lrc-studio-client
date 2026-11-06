@@ -158,7 +158,7 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         {!searchTerm && (
-          <div role="tablist" aria-label={tk('settings.shortcuts.filterLabel')} className="flex gap-0.5 p-[3px] rounded-[10px] bg-zinc-950 border border-zinc-700">
+          <div role="tablist" aria-label={tk('settings.shortcuts.filterLabel')} className="flex gap-0.5 p-[3px] rounded-[calc(var(--radius)*1)] bg-zinc-950 border border-zinc-700">
             {tabs.map((tb) => (
               <button
                 key={tb.id}
@@ -213,7 +213,7 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
                   onKeyDown={isRec ? (e) => handleKeyDown(e, def) : undefined}
                   onBlur={() => isRec && setRecording(null)}
                   className={cn(
-                    'flex items-center justify-end gap-1.5 min-w-[120px] h-11 px-2.5 rounded-[10px] border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+                    'flex items-center justify-end gap-1.5 min-w-[120px] h-11 px-2.5 rounded-[calc(var(--radius)*1)] border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                     isRec ? 'border-primary bg-zinc-800' : conflict ? 'border-amber-500/60' : 'border-transparent hover:bg-zinc-800/60',
                   )}
                 >

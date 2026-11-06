@@ -249,7 +249,7 @@ export default function PublicPlaybackBar({
             return (
               <span
                 key={i}
-                className="basis-0 min-w-0 h-full rounded-full bg-zinc-700 overflow-hidden"
+                className="basis-0 min-w-0 h-full rounded-pill bg-zinc-700 overflow-hidden"
                 style={{ flexGrow: span || 1 }}
               >
                 <span className="block h-full bg-primary" style={{ width: `${filled * 100}%` }} />
@@ -273,7 +273,7 @@ export default function PublicPlaybackBar({
                 className="absolute inset-y-0 w-4 coarse:w-11 -translate-x-1/2 grid place-items-center cursor-ew-resize touch-none"
                 style={{ left: `${((which === 'a' ? loopA : loopB) / duration) * 100}%` }}
               >
-                <span className="w-1.5 h-4 rounded-full bg-accent-purple" />
+                <span className="w-1.5 h-4 rounded-pill bg-accent-purple" />
               </span>
             ))}
           </>

@@ -32,7 +32,7 @@ export function TimestampBadge({ value, isSynced, isFocused, isActive, isPlaying
         {isSynced ? formatTimestamp(value ?? 0, precision) : '—:—'}
       </button>
       {nudgeIndicator && (
-        <span className="absolute left-full ml-1 z-10 rounded bg-background px-1 font-mono text-[10px] text-primary-ink animate-fade-in pointer-events-none whitespace-nowrap">
+        <span className="absolute left-full ml-1 z-10 rounded-xs bg-background px-1 font-mono text-[10px] text-primary-ink animate-fade-in pointer-events-none whitespace-nowrap">
           {nudgeIndicator}
         </span>
       )}

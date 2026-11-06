@@ -142,7 +142,7 @@ export default function PlaybackProgress({
           if (e.key === 'ArrowRight') onSeek?.(Math.min(duration, playbackPosition + 5));
           else if (e.key === 'ArrowLeft') onSeek?.(Math.max(0, playbackPosition - 5));
         }}
-        className="w-full h-8 relative rounded-[10px] overflow-hidden bg-card inset-ring inset-ring-hl cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+        className="w-full h-8 relative rounded-[calc(var(--radius)*1)] overflow-hidden bg-card inset-ring inset-ring-hl cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
       >
         {/* Progress fill overlay */}
         <div
@@ -166,7 +166,7 @@ export default function PlaybackProgress({
             style={{ left: `${loopAPct}%` }}
             onMouseDown={(e) => handleLoopHandleDrag('A', e)}
           >
-            <div className="w-1.5 h-6 bg-violet-400 rounded-full group-hover/handle:bg-violet-300 transition-colors shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+            <div className="w-1.5 h-6 bg-violet-400 rounded-pill group-hover/handle:bg-violet-300 transition-colors shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
           </div>
         )}
 
@@ -178,7 +178,7 @@ export default function PlaybackProgress({
             style={{ left: `${loopBPct}%` }}
             onMouseDown={(e) => handleLoopHandleDrag('B', e)}
           >
-            <div className="w-1.5 h-6 bg-violet-400 rounded-full group-hover/handle:bg-violet-300 transition-colors shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+            <div className="w-1.5 h-6 bg-violet-400 rounded-pill group-hover/handle:bg-violet-300 transition-colors shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
           </div>
         )}
 

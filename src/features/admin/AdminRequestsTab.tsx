@@ -143,7 +143,7 @@ function RequestRow({ req, children }: { req: StaffRequest; children?: ReactNode
         {req.decisionNote && <p className="text-[11px] text-zinc-400 mt-1">{t('admin.requests.decisionNote', { note: req.decisionNote })}</p>}
         {req.error && <p className="text-[11px] text-red-400 mt-1">{req.error}</p>}
       </div>
-      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[req.status] ?? ''}`}>
+      <span className={`shrink-0 px-2 py-0.5 rounded-pill text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[req.status] ?? ''}`}>
         {tk(`admin.requests.status.${req.status}`)}
       </span>
       {children}

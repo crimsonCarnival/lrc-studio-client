@@ -207,7 +207,7 @@ export function SharePanel({
         <Button
           variant={privacy === 'public' ? 'outline' : 'secondary'}
           size="sm"
-          className={`h-7 flex items-center gap-1.5 px-3 rounded-full text-[10px] font-bold transition-all duration-300 ${privacy === 'public'
+          className={`h-7 flex items-center gap-1.5 px-3 rounded-pill text-[10px] font-bold transition-all duration-300 ${privacy === 'public'
             ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.1)]'
             : 'text-zinc-400 border-zinc-700 bg-zinc-800 hover:bg-zinc-700'}`}
           onClick={handlePrivacyToggle}

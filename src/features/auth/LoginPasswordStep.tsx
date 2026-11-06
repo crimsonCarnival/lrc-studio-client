@@ -76,7 +76,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
   return (
     <div className="animate-fade-in flex flex-col gap-6">
       {/* Account card: who is signing in, with the way back to pick another account. */}
-      <div className="flex items-center gap-3.5 rounded-[14px] bg-background px-3.5 py-3 inset-ring inset-ring-hl">
+      <div className="flex items-center gap-3.5 rounded-[calc(var(--radius)*1.4)] bg-background px-3.5 py-3 inset-ring inset-ring-hl">
         <AvatarBadge accountName={identifierData.accountName || identifierData.identifier} avatarUrl={identifierData.avatarUrl} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <h1 className="truncate font-heading text-xl font-bold tracking-tight text-foreground">
@@ -140,7 +140,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
-                  className="p-3 rounded-[10px] bg-destructive/10 border border-destructive/30 text-sm text-destructive"
+                  className="p-3 rounded-[calc(var(--radius)*1)] bg-destructive/10 border border-destructive/30 text-sm text-destructive"
                 >
                   {error}
                 </m.div>

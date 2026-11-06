@@ -445,13 +445,13 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
             REQ_FIELDS.filter(f => (level.requirements?.[f.key] ?? 0) > 0).map(f => (
               <span
                 key={f.key}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-[10px] font-medium bg-primary/10 text-primary border border-primary/20"
               >
                 {(t as TkFn)(`admin.levels.req.${f.key}`)} ≥ {(level.requirements?.[f.key] ?? 0).toLocaleString()}
               </span>
             ))
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] text-zinc-500 border border-zinc-800">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[10px] text-zinc-500 border border-zinc-800">
               {t('admin.levels.alwaysShown')}
             </span>
           )}

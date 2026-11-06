@@ -108,7 +108,7 @@ export function SettingSelect({ value, onValueChange, label, children, className
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         aria-label={label}
-        className={cn('bg-zinc-950 border-zinc-700 text-sm text-zinc-100 focus:border-primary/50 h-11 w-auto min-w-[170px] rounded-[10px]', className)}
+        className={cn('bg-zinc-950 border-zinc-700 text-sm text-zinc-100 focus:border-primary/50 h-11 w-auto min-w-[170px] rounded-[calc(var(--radius)*1)]', className)}
       >
         <SelectValue />
       </SelectTrigger>
@@ -145,7 +145,7 @@ export function IconRow({ icon, iconClassName, title, badge, description, childr
 /** Small pill used next to row titles ("Conectado", "Este dispositivo"). */
 export function Chip({ children, tone = 'violet' }: { children: ReactNode; tone?: 'violet' | 'teal' }) {
   return (
-    <span className={cn('px-2 py-0.5 rounded-full text-[11px] font-bold', tone === 'teal' ? 'bg-teal-950 text-teal-300' : 'bg-zinc-800 text-violet-200')}>
+    <span className={cn('px-2 py-0.5 rounded-pill text-[11px] font-bold', tone === 'teal' ? 'bg-teal-950 text-teal-300' : 'bg-zinc-800 text-violet-200')}>
       {children}
     </span>
   );
@@ -171,7 +171,7 @@ export function SegmentedControl<T extends string>({ value, options, onChange, l
   disabled?: boolean;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className={cn('flex gap-0.5 p-[3px] rounded-[10px] bg-zinc-950 border border-zinc-700', disabled && 'opacity-50 pointer-events-none')}>
+    <div role="radiogroup" aria-label={label} className={cn('flex gap-0.5 p-[3px] rounded-[calc(var(--radius)*1)] bg-zinc-950 border border-zinc-700', disabled && 'opacity-50 pointer-events-none')}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -216,7 +216,7 @@ export function UnitInput({ value, onChange, unit, label, min, max, step = 1, di
     setDraft(null);
   };
   return (
-    <label className={cn('flex items-center gap-1.5 h-11 w-[104px] px-3 rounded-[10px] bg-zinc-950 border border-zinc-700 text-zinc-400 focus-within:border-primary/60', disabled && 'opacity-50', className)}>
+    <label className={cn('flex items-center gap-1.5 h-11 w-[104px] px-3 rounded-[calc(var(--radius)*1)] bg-zinc-950 border border-zinc-700 text-zinc-400 focus-within:border-primary/60', disabled && 'opacity-50', className)}>
       <span className="sr-only">{label}</span>
       <input
         type="text"

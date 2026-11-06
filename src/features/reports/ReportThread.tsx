@@ -96,10 +96,10 @@ function MessageRow({ message, moderatorView, onReply }: {
           <span className="font-semibold text-foreground">{name}</span>
           {/* Who's who in the conversation: moderators see who reported; everyone sees who moderates. */}
           {message.fromReporter && moderatorView && (
-            <span className="rounded-full bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-300">{t('reports.thread.reporterBadge')}</span>
+            <span className="rounded-pill bg-zinc-800 px-1.5 py-px text-[10px] font-semibold text-zinc-300">{t('reports.thread.reporterBadge')}</span>
           )}
           {!message.fromReporter && !anonymousModerator && (
-            <span className="rounded-full bg-primary-soft px-1.5 py-px text-[10px] font-semibold text-primary-ink">{t('reports.thread.moderatorBadge')}</span>
+            <span className="rounded-pill bg-primary-soft px-1.5 py-px text-[10px] font-semibold text-primary-ink">{t('reports.thread.moderatorBadge')}</span>
           )}
           <span className="text-subtle">{formatTimeAgo(message.createdAt, t, settings.advanced?.timezone, i18n.language)}</span>
         </p>
@@ -108,7 +108,7 @@ function MessageRow({ message, moderatorView, onReply }: {
           <button
             type="button"
             onClick={onReply}
-            className="mt-1 inline-flex items-center gap-1 rounded text-xs text-subtle hover:text-primary focus-visible:outline-2 focus-visible:outline-focus coarse:min-h-11"
+            className="mt-1 inline-flex items-center gap-1 rounded-xs text-xs text-subtle hover:text-primary focus-visible:outline-2 focus-visible:outline-focus coarse:min-h-11"
           >
             <Icon name="reply" size={13} /> {t('reports.thread.reply')}
           </button>

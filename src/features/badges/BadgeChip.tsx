@@ -53,7 +53,7 @@ export function BadgeChip({ id, className = '' }: { id: string; className?: stri
   return (
     <Tip content={tip || undefined} side="bottom">
       <span
-        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10.5px] font-medium tracking-wide border whitespace-nowrap select-none transition-transform hover:scale-105 cursor-default ${colorCls} ${className}`}
+        className={`inline-flex items-center px-1.5 py-0.5 rounded-pill text-[10.5px] font-medium tracking-wide border whitespace-nowrap select-none transition-transform hover:scale-105 cursor-default ${colorCls} ${className}`}
       >
         {isShimmer ? (
           <span className="badge-shimmer-txt">{t(`badges.${id}.label`, { defaultValue: labelText })}</span>

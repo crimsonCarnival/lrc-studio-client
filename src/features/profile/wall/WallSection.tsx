@@ -410,7 +410,7 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
         <button
           type="button"
           onClick={() => void goToPage(0)}
-          className="flex w-fit items-center gap-1.5 self-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+          className="flex w-fit items-center gap-1.5 self-center rounded-pill border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
         >
           <Icon name="arrow_upward" size={14} />
           {t('profile.wall.newComments', { count: newOnFirstPage })}

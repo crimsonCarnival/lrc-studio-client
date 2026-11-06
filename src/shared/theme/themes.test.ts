@@ -32,6 +32,8 @@ describe('theme shapes', () => {
     expect(shapeOf('matrix')).toBe('sharp')
     expect(by('matrix')['--radius']).toBe('0px')
     expect(by('matrix')['--radius-card']).toBe('0px')
+    expect(by('matrix')['--radius-pill']).toBe('0px')
+    expect(by('sakura')['--radius-pill']).toBeUndefined()
     expect(shapeOf('sakura')).toBe('round')
     expect(by('sakura')['--radius']).toBe('1rem')
     expect(shapeOf('dracula')).toBe('soft')

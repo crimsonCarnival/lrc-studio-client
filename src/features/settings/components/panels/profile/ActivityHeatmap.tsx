@@ -195,7 +195,7 @@ export default function ActivityHeatmap({
     { range: t('profile.heatmap.tip4'), cls: 'bg-primary-ink' },
   ];
 
-  const STAT_CARD = 'flex flex-col gap-1 rounded-[14px] bg-background p-3.5 inset-ring inset-ring-hl';
+  const STAT_CARD = 'flex flex-col gap-1 rounded-[calc(var(--radius)*1.4)] bg-background p-3.5 inset-ring inset-ring-hl';
   const STAT_VALUE = 'font-heading text-[28px] font-bold leading-[1.15] text-foreground';
 
   return (
@@ -257,7 +257,7 @@ export default function ActivityHeatmap({
                     onMouseEnter={() => !day.isFuture && setHovered(day)}
                     onMouseLeave={() => setHovered(null)}
                     style={{ width: cellSize, height: cellSize }}
-                    className={`rounded-[4px] ${day.isFuture ? 'bg-transparent' : intensityClass(day.count)} transition-colors`}
+                    className={`rounded-[calc(var(--radius)*0.4)] ${day.isFuture ? 'bg-transparent' : intensityClass(day.count)} transition-colors`}
                   />
                 </Tip>
               ))}
@@ -276,7 +276,7 @@ export default function ActivityHeatmap({
           <span>{t('profile.heatmap.less')}</span>
           {legend.map((l) => (
             <Tip key={l.cls} content={l.range}>
-              <div className={`size-3.5 rounded-[4px] ${l.cls}`} />
+              <div className={`size-3.5 rounded-[calc(var(--radius)*0.4)] ${l.cls}`} />
             </Tip>
           ))}
           <span>{t('profile.heatmap.more')}</span>

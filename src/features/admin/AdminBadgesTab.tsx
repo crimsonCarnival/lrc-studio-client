@@ -125,7 +125,7 @@ function LivePreview({ form }: { form: BadgeForm }) {
   const label = form.label?.en || '—';
   if (!form.label?.en) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-full border border-zinc-800 text-zinc-700 text-xs">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-pill border border-zinc-800 text-zinc-700 text-xs">
         <span>—</span>
         <span>{t('admin.badges.preview')}</span>
       </div>
@@ -136,7 +136,7 @@ function LivePreview({ form }: { form: BadgeForm }) {
   const isShimmer = form.color === 'shimmer';
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-pill text-[11px] font-medium border ${
       isShimmer
         ? 'border-amber-400/30 bg-gradient-to-r from-warning/10 via-primary/10 to-accent-blue/10'
         : `${colorConf.text} bg-zinc-900 ${colorConf.border}`
@@ -361,7 +361,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                       key={r}
                       type="button"
                       onClick={() => set('rarity', r)}
-                      className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all
+                      className={`px-2 py-1 rounded-pill text-[10px] font-bold uppercase tracking-wider border transition-all
                         ${form.rarity === r ? RARITY_COLORS[r] : 'border-zinc-800 text-zinc-700 hover:border-zinc-700'}`}
                     >
                       {r}
@@ -417,7 +417,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
               {/* Auto-grant toggle */}
               <label className="flex items-center gap-3 cursor-pointer select-none mt-2">
                 <div
-                  className={`relative w-9 h-5 rounded-full transition-colors ${form.autoGrant ? 'bg-primary' : 'bg-zinc-700'}`}
+                  className={`relative w-9 h-5 rounded-pill transition-colors ${form.autoGrant ? 'bg-primary' : 'bg-zinc-700'}`}
                   onClick={() => set('autoGrant', !form.autoGrant)}
                 >
                   <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.autoGrant ? 'translate-x-4' : 'translate-x-0.5'}`} />
@@ -486,7 +486,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
             <div className="flex items-center gap-2">
               <BadgeChip id={def.id} />
               {def.isBuiltin && (
-                <span className="text-[9px] text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded uppercase tracking-widest">{t('admin.badges.builtInLabel')}</span>
+                <span className="text-[9px] text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded-xs uppercase tracking-widest">{t('admin.badges.builtInLabel')}</span>
               )}
             </div>
             <p className="text-[10px] text-zinc-600 mt-0.5">{descriptionText}</p>
@@ -506,7 +506,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
 
       {/* Stats */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${RARITY_COLORS[def.rarity ?? 'common'] ?? RARITY_COLORS.common}`}>
+        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-pill border ${RARITY_COLORS[def.rarity ?? 'common'] ?? RARITY_COLORS.common}`}>
           {def.rarity ?? 'common'}
         </span>
         <span className="text-[10px] text-zinc-600 flex items-center gap-1">

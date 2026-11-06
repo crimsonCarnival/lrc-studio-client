@@ -127,7 +127,7 @@ function ShowcaseSlot({ badge, index, onRemove, onChoose, onDragStart, onDragOve
         size="icon-xs"
         aria-label={t('badges.showcase.removeFrom', { name: label })}
         onClick={() => onRemove(badge.id)}
-        className="absolute right-1 top-1 rounded-full opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
+        className="absolute right-1 top-1 rounded-pill opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
       >
         <Icon name="close" size={14} />
       </Button>

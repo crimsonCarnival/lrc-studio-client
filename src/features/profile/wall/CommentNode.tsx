@@ -28,7 +28,7 @@ const lineColor = (active: boolean) => (active ? 'border-primary/70' : 'border-z
 const lineFill = (active: boolean) => (active ? 'bg-primary/70' : 'bg-zinc-700');
 
 // Shared by the comment actions: a press shrinks the button slightly.
-const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
+const ACTION_BUTTON = 'rounded-pill transition-[color,background-color,transform] active:scale-90';
 // Corner actions stay quiet until the row is hovered or focused, so they don't compete with the text.
 const CORNER_BUTTON = cn(ACTION_BUTTON, 'text-zinc-600 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100');
 

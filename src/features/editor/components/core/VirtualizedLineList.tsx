@@ -730,21 +730,21 @@ export default function VirtualizedLineList({
                   className="absolute right-0 w-3 min-h-2 pointer-events-auto flex justify-end"
                   style={{ top: `${m.top * 100}%`, height: `${m.height * 100}%` }}
                 >
-                  <span className="h-full w-[3px] min-h-[3px] rounded-full bg-warning/80" />
+                  <span className="h-full w-[3px] min-h-[3px] rounded-pill bg-warning/80" />
                 </span>
               </Tip>
             ))}
             {railMarks.sections.map((m, k) => (
               <Tip key={`s${k}`} side="left" content={m.label}>
                 <span className="absolute right-0 w-3 h-2.5 -translate-y-1/2 pointer-events-auto flex items-center justify-end" style={{ top: `${m.top * 100}%` }}>
-                  <span className="w-[5px] h-[3px] rounded-full bg-success" />
+                  <span className="w-[5px] h-[3px] rounded-pill bg-success" />
                 </span>
               </Tip>
             ))}
             {railMarks.cursor != null && (
               <Tip side="left" content={t('editor.rail.cursor', { line: railMarks.cursor.line })}>
                 <span className="absolute inset-x-0 h-2.5 -translate-y-1/2 pointer-events-auto flex items-center" style={{ top: `${railMarks.cursor.top * 100}%` }}>
-                  <span className="h-[3px] w-full rounded-full bg-primary" />
+                  <span className="h-[3px] w-full rounded-pill bg-primary" />
                 </span>
               </Tip>
             )}

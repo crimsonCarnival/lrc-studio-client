@@ -59,7 +59,7 @@ export default function ActionDrawer({
             className="fixed bottom-0 left-0 right-0 z-[201] bg-zinc-950 border-t border-zinc-800 rounded-t-[2rem] shadow-2xl safe-area-pb"
           >
             {/* Drag Handle Indicator */}
-            <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-3 mb-1" />
+            <div className="w-12 h-1.5 bg-zinc-800 rounded-pill mx-auto mt-3 mb-1" />
 
             <div className="px-6 pb-8 pt-2">
               <div className="flex items-center justify-between mb-6">
@@ -70,7 +70,7 @@ export default function ActionDrawer({
                     size="icon-lg"
                     onClick={onClose}
                     aria-label={t('common.close')}
-                    className="-mr-2 rounded-full"
+                    className="-mr-2 rounded-pill"
                   >
                     <Icon name="close" size={20} />
                   </Button>

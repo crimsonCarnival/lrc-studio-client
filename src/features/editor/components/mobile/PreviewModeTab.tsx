@@ -78,8 +78,8 @@ export default function PreviewModeTab({
             {isPlaying ? t('editor.playing') : t('editor.paused')}
           </span>
         </div>
-        <div data-testid="progress-indicator" className="h-1 rounded-full bg-zinc-800 overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${total ? (timed / total) * 100 : 0}%` }} />
+        <div data-testid="progress-indicator" className="h-1 rounded-pill bg-zinc-800 overflow-hidden">
+          <div className="h-full rounded-pill bg-primary transition-[width] duration-300 ease-out" style={{ width: `${total ? (timed / total) * 100 : 0}%` }} />
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export default function PreviewModeTab({
         <button
           type="button"
           onClick={() => onSelectLine?.(firstUntimed)}
-          className="flex items-center gap-2 min-h-11 px-3 py-2.5 rounded-[10px] border border-warning/35 bg-warning/10 text-left text-[13px] font-medium text-foreground active:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          className="flex items-center gap-2 min-h-11 px-3 py-2.5 rounded-[calc(var(--radius)*1)] border border-warning/35 bg-warning/10 text-left text-[13px] font-medium text-foreground active:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         >
           <span className="flex-1">{t('preview.untimedJump', { count: untimed })}</span>
           <Icon name="arrow_forward" size={16} />
@@ -113,7 +113,7 @@ export default function PreviewModeTab({
               key={line.id ?? i}
               ref={isActive ? activeRef : undefined}
               aria-current={isActive ? 'true' : undefined}
-              className={`flex gap-2 px-2 py-[7px] rounded-[10px] leading-snug ${
+              className={`flex gap-2 px-2 py-[7px] rounded-[calc(var(--radius)*1)] leading-snug ${
                 isActive
                   ? 'bg-zinc-800 shadow-[inset_3px_0_0_var(--color-primary)] text-lg font-bold text-foreground'
                   : `text-[15px] ${i > activeLineIndex && !pending ? 'text-foreground/85' : 'text-foreground/55'}`

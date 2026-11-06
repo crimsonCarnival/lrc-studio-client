@@ -127,7 +127,7 @@ export default function ExportPanel({
     <Dialog open={showExportPanel} onOpenChange={setShowExportPanel}>
       <DialogContent
         showCloseButton={false}
-        className="flex flex-col gap-0 p-0 overflow-hidden rounded-[20px] sm:max-w-[960px] max-h-[calc(100dvh-2rem)] font-sans text-left select-none"
+        className="flex flex-col gap-0 p-0 overflow-hidden rounded-[calc(var(--radius)*2)] sm:max-w-[960px] max-h-[calc(100dvh-2rem)] font-sans text-left select-none"
       >
         <div className="flex items-center justify-between gap-4 px-5 sm:px-6 py-5 border-b border-zinc-800">
           <div className="flex flex-col gap-1 min-w-0">
@@ -139,7 +139,7 @@ export default function ExportPanel({
             size="icon"
             onClick={() => setShowExportPanel(false)}
             aria-label={t('common.close')}
-            className="size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent shrink-0"
+            className="size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent shrink-0"
           >
             <Icon name="close" size={18} />
           </Button>
@@ -292,20 +292,20 @@ export default function ExportPanel({
           <Button
             variant="ghost"
             onClick={() => setShowExportPanel(false)}
-            className="h-11 lg:h-11 px-4 lg:px-4 text-sm lg:text-sm rounded-[10px] font-semibold text-foreground/65 hover:text-foreground"
+            className="h-11 lg:h-11 px-4 lg:px-4 text-sm lg:text-sm rounded-[calc(var(--radius)*1)] font-semibold text-foreground/65 hover:text-foreground"
           >
             {t('common.cancel')}
           </Button>
           <Button
             variant="outline"
             onClick={handleCopy}
-            className="h-11 lg:h-11 px-4 lg:px-4 text-sm lg:text-sm rounded-[10px] bg-transparent border-zinc-700 font-semibold text-foreground"
+            className="h-11 lg:h-11 px-4 lg:px-4 text-sm lg:text-sm rounded-[calc(var(--radius)*1)] bg-transparent border-zinc-700 font-semibold text-foreground"
           >
             {wasCopied ? t('common.copied') : t('export.copy')}
           </Button>
           <Button
             onClick={handleExport}
-            className="h-11 lg:h-11 px-[18px] lg:px-[18px] text-sm lg:text-sm gap-2 rounded-[10px] bg-primary hover:bg-primary-dim text-zinc-950 font-bold"
+            className="h-11 lg:h-11 px-[18px] lg:px-[18px] text-sm lg:text-sm gap-2 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 font-bold"
           >
             <Icon name="download" size={18} />
             {t('export.downloadAs', { ext: exportFormat })}

@@ -44,7 +44,7 @@ function SessionRow({ session, onOpen, onEnded }: { session: CollabSessionSummar
       <div className="flex flex-col gap-1 flex-[1_1_220px] min-w-0">
         <span className="font-semibold text-zinc-100 truncate">{name}</span>
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-zinc-500">
-          <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-semibold">{tk(`collab.presence.role.${session.role}`)}</span>
+          <span className="px-2 py-0.5 rounded-pill bg-zinc-800 text-zinc-300 font-semibold">{tk(`collab.presence.role.${session.role}`)}</span>
           <span>{tk('collab.sessions.members', { count: session.memberCount })}</span>
           <span>{t('collab.sessions.active', { time: formatTimeAgo(session.lastActivityAt, t, settings.advanced?.timezone, i18n.language) })}</span>
         </p>

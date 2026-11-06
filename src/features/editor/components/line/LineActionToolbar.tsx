@@ -143,7 +143,7 @@ const LineActionToolbar = memo(({
         </Tip>
       )}
 
-      <div className="flex items-center gap-0 p-0.5 rounded-full bg-zinc-800/40 backdrop-blur-md border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm">
+      <div className="flex items-center gap-0 p-0.5 rounded-pill bg-zinc-800/40 backdrop-blur-md border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm">
         {isSynced && (
           <>
             <Tip content={t('editor.jumpSync')}>
@@ -378,7 +378,7 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: 
                 key={idx}
                 type="button"
                 onClick={() => setSelectedSlot(idx)}
-                className={`flex-1 py-0.5 rounded text-[10px] transition-colors ${selectedSlot === idx ? 'bg-primary/20 text-primary' : 'text-zinc-500 hover:text-zinc-300'} ${role.className}`}
+                className={`flex-1 py-0.5 rounded-xs text-[10px] transition-colors ${selectedSlot === idx ? 'bg-primary/20 text-primary' : 'text-zinc-500 hover:text-zinc-300'} ${role.className}`}
               >
                 {idx + 1}
               </button>
@@ -398,9 +398,9 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: 
               onChange={(e) => setCustom(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && custom.trim()) assignName(custom.trim()); }}
               placeholder={t('editor.singerCustomPlaceholder')}
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xs px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
             />
-            <button type="button" onClick={() => { if (custom.trim()) assignName(custom.trim()); }} className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
+            <button type="button" onClick={() => { if (custom.trim()) assignName(custom.trim()); }} className="px-2 py-1 rounded-xs bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
           </div>
           <button type="button" onClick={() => { handleAssignSinger('', indices, selectedSlot); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
             {t('editor.clearSingers')}

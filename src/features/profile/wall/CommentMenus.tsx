@@ -15,7 +15,7 @@ import { profilePath } from '../profile-path';
 import { getWallLikers } from './wall.service';
 import type { WallAuthor } from './wall.service';
 
-const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
+const ACTION_BUTTON = 'rounded-pill transition-[color,background-color,transform] active:scale-90';
 // Corner actions stay quiet until the row is hovered or focused, as in CommentNode.
 const CORNER_BUTTON = cn(ACTION_BUTTON, 'text-zinc-600 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100');
 
@@ -126,7 +126,7 @@ export function LikersPopover({ commentId, count }: { commentId: string; count: 
         <button
           type="button"
           aria-label={t('profile.wall.likedBy', { count })}
-          className="rounded px-0.5 text-xs tabular-nums text-zinc-500 transition-colors hover:text-zinc-200 hover:underline"
+          className="rounded-xs px-0.5 text-xs tabular-nums text-zinc-500 transition-colors hover:text-zinc-200 hover:underline"
         >
           {count}
         </button>

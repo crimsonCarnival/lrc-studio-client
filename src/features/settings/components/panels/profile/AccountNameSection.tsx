@@ -47,7 +47,7 @@ export default function AccountNameSection({ value, error: serverError, onChange
           placeholder={t('profile.accountNamePlaceholder')}
           disabled={accountNameCooldownDaysLeft > 0}
           maxLength={30}
-          className={`bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px] ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
+          className={`bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] h-11 text-[15px] ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
         />
       </div>
       {error ? (

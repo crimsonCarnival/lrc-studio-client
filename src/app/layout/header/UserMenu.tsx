@@ -150,11 +150,11 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
             </Link></PopoverItem>
             <PopoverItem asChild><Link to="/library" onClick={(e) => guardedLinkClick(e, () => navTo('/library'))} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="menu_book" size={16} className="text-zinc-400" />{t('library.title')}</span>
-              {counts.library > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.library}</span>}
+              {counts.library > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-pill text-[10px] tabular-nums font-bold">{counts.library}</span>}
             </Link></PopoverItem>
             <PopoverItem asChild><Link to="/uploads" onClick={(e) => guardedLinkClick(e, () => navTo('/uploads'))} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="cloud_upload" size={16} className="text-zinc-400" />{t('uploads.title')}</span>
-              {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
+              {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-pill text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
             </Link></PopoverItem>
             <PopoverItem asChild><Link to="/leaderboard" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="emoji_events" size={16} className="text-warning" />{t('badges.leaderboard.title')}</span>
@@ -209,7 +209,7 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
               className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2"
             >
               <span className="flex items-center gap-2"><Icon name="language" size={16} className="text-zinc-400" />{t('settings.interface.language')}</span>
-              <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold uppercase">{currentLang}</span>
+              <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-pill text-[10px] tabular-nums font-bold uppercase">{currentLang}</span>
             </PopoverItem>
           </div>
 

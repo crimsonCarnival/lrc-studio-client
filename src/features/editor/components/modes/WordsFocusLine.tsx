@@ -162,7 +162,7 @@ export const WordsFocusLine = memo(function WordsFocusLine({
     >
       <div
         ref={frameRef}
-        className="group relative flex items-start gap-2 min-h-14 px-3 py-2.5 rounded-[14px]"
+        className="group relative flex items-start gap-2 min-h-14 px-3 py-2.5 rounded-[calc(var(--radius)*1.4)]"
         onPointerMove={presence ? handlePointerMove : undefined}
         onPointerLeave={presence ? handlePointerLeave : undefined}
       >
@@ -170,7 +170,7 @@ export const WordsFocusLine = memo(function WordsFocusLine({
           <span
             aria-hidden
             title={t('collab.presence.onLine', { name: remoteHere.name })}
-            className="pointer-events-none absolute inset-0 z-10 rounded-[14px] border border-dashed"
+            className="pointer-events-none absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] border border-dashed"
             style={{ borderColor: collabColor(remoteHere.colorIndex) }}
           />
         )}

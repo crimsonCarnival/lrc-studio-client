@@ -330,7 +330,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
                     ? <img src={s.image} alt="" referrerPolicy="no-referrer" className="size-6 shrink-0 rounded-full object-cover" />
                     : <InitialsAvatar name={s.label} handle={s.sub.slice(1)} className="size-6 shrink-0 rounded-full text-[10px]" />
                 ) : (
-                  s.image && <img src={s.image} alt="" referrerPolicy="no-referrer" className="size-6 shrink-0 rounded object-cover" />
+                  s.image && <img src={s.image} alt="" referrerPolicy="no-referrer" className="size-6 shrink-0 rounded-xs object-cover" />
                 )}
                 <span className="min-w-0 flex-1 truncate">{s.label}</span>
                 <span className="shrink-0 text-xs text-zinc-500">{s.sub}</span>

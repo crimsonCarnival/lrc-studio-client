@@ -12,7 +12,7 @@ import LandingSteps, { Kbd } from './LandingSteps';
 const SECTION = 'max-w-[1280px] mx-auto px-6';
 const H2 = 'font-extrabold leading-[1.05] tracking-[-0.03em]';
 const H2_SIZE = { fontSize: 'clamp(32px, 4vw, 48px)' };
-const CTA_PRIMARY = 'h-12 px-[22px] inline-flex items-center gap-2.5 rounded-[10px] bg-primary hover:bg-primary-dim text-primary-foreground font-bold transition-colors';
+const CTA_PRIMARY = 'h-12 px-[22px] inline-flex items-center gap-2.5 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-primary-foreground font-bold transition-colors';
 
 // Sample export output for one demo line — file contents, not UI copy.
 const EXPORT_LINE = 'Midnight echoes through the empty halls';
@@ -106,7 +106,7 @@ export default function GuestLanding() {
                 <Link to="/project/new" className={CTA_PRIMARY}>
                   {t('landing.ctaOpen')}<Icon name="arrow_forward" size={16} />
                 </Link>
-                <Link to="/auth/signin" className="h-12 px-[18px] inline-flex items-center rounded-[10px] font-medium hover:bg-zinc-900 transition-colors">
+                <Link to="/auth/signin" className="h-12 px-[18px] inline-flex items-center rounded-[calc(var(--radius)*1)] font-medium hover:bg-zinc-900 transition-colors">
                   {t('landing.ctaHaveAccount')}
                 </Link>
               </div>
@@ -135,7 +135,7 @@ export default function GuestLanding() {
         <section id="editor" className="border-t border-zinc-800">
           <div className={`${SECTION} py-24`}>
             <h2 className={`${H2} mb-14 max-w-[640px]`} style={H2_SIZE}>{t('landing.features.title')}</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-zinc-800 border border-zinc-800 rounded-[14px] overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-zinc-800 border border-zinc-800 rounded-[calc(var(--radius)*1.4)] overflow-hidden">
 
               <article className="bg-zinc-950 p-8 flex flex-col gap-5">
                 <div>
@@ -156,7 +156,7 @@ export default function GuestLanding() {
                   <p className="text-foreground/65">{t('landing.features.wordsDesc')}</p>
                 </div>
                 {/* Sample lyric with furigana; decorative, so kept out of the a11y tree. */}
-                <div aria-hidden="true" className="flex flex-col gap-2.5 p-5 rounded-[14px] bg-zinc-900 font-lyrics text-2xl">
+                <div aria-hidden="true" className="flex flex-col gap-2.5 p-5 rounded-[calc(var(--radius)*1.4)] bg-zinc-900 font-lyrics text-2xl">
                   <p className="font-extrabold leading-tight">
                     <span className="text-primary glow-line">Midnight echoes</span> through the empty halls
                   </p>
@@ -192,7 +192,7 @@ export default function GuestLanding() {
         <section className="border-t border-zinc-800">
           <div className={`${SECTION} py-28 flex flex-wrap items-end justify-between gap-8`}>
             <div>
-              <span aria-hidden="true" className="inline-flex items-center h-7 mb-[18px] px-3 rounded-full bg-primary/25 border border-primary/50 font-mono text-[13px] font-medium text-primary">
+              <span aria-hidden="true" className="inline-flex items-center h-7 mb-[18px] px-3 rounded-pill bg-primary/25 border border-primary/50 font-mono text-[13px] font-medium text-primary">
                 00:00.00
               </span>
               <h2 className="font-extrabold leading-none tracking-[-0.04em]" style={{ fontSize: 'clamp(36px, 5vw, 64px)' }}>
@@ -202,7 +202,7 @@ export default function GuestLanding() {
             <div className="flex flex-col items-start gap-3.5">
               <div className="flex flex-wrap gap-3">
                 <Link to="/project/new" className={CTA_PRIMARY}>{t('landing.cta.start')}</Link>
-                <Link to="/auth/signup" className="h-12 px-5 inline-flex items-center rounded-[10px] border border-zinc-700 font-semibold hover:bg-zinc-900 transition-colors">
+                <Link to="/auth/signup" className="h-12 px-5 inline-flex items-center rounded-[calc(var(--radius)*1)] border border-zinc-700 font-semibold hover:bg-zinc-900 transition-colors">
                   {t('landing.cta.signUp')}
                 </Link>
               </div>

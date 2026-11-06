@@ -118,12 +118,12 @@ export default function SessionsSettings() {
             variant="outline"
             onClick={handleRevokeAllOthers}
             disabled={revokingAll}
-            className="h-10 rounded-[10px] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
+            className="h-10 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
           >
             {revokingAll ? <LogoLoader size={14} /> : t('profile.sessions.revokeAllOthers')}
           </Button>
         ) : (
-          <Button variant="outline" disabled className="h-10 rounded-[10px] border-zinc-700 bg-transparent text-zinc-500 font-semibold">
+          <Button variant="outline" disabled className="h-10 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent text-zinc-500 font-semibold">
             {t('profile.sessions.revokeAllOthers')}
           </Button>
         )}
@@ -163,7 +163,7 @@ export default function SessionsSettings() {
                     variant="outline"
                     onClick={() => handleRevoke(session.id)}
                     disabled={revokingId === session.id}
-                    className="h-10 rounded-[10px] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
+                    className="h-10 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
                   >
                     {revokingId === session.id ? <LogoLoader size={14} /> : t('profile.sessions.signOut')}
                   </Button>

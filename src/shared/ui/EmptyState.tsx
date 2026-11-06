@@ -25,9 +25,9 @@ function SongArt() {
   return (
     <div className="relative flex h-16 w-[280px] max-w-full items-center justify-center overflow-hidden">
       <div className="flex items-center gap-[5px]">
-        {Array.from({ length: 31 }, (_, i) => <i key={i} className="block size-1 rounded-[2px] bg-hl" />)}
+        {Array.from({ length: 31 }, (_, i) => <i key={i} className="block size-1 rounded-[calc(var(--radius)*0.2)] bg-hl" />)}
       </div>
-      <div className="empty-pulse absolute inset-y-1 left-1/2 -ml-px w-0.5 rounded-[2px] bg-foam" />
+      <div className="empty-pulse absolute inset-y-1 left-1/2 -ml-px w-0.5 rounded-[calc(var(--radius)*0.2)] bg-foam" />
       <Icon name="music_note" size={22} className="absolute left-[calc(50%+10px)] top-0 text-primary-ink" />
     </div>
   );
@@ -40,16 +40,16 @@ function WordsArt({ words }: { words: string[] }) {
     <div className="relative h-[68px] w-fit max-w-full">
       <div className="ml-[22px] flex gap-2 overflow-hidden">
         {[...words.slice(0, 3), '…'].map((word, i) => (
-          <span key={i} className={`flex h-[38px] shrink-0 items-center whitespace-nowrap rounded-[10px] px-[13px] font-heading text-[19px] font-bold text-faint ${DASHED}`}>
+          <span key={i} className={`flex h-[38px] shrink-0 items-center whitespace-nowrap rounded-[calc(var(--radius)*1)] px-[13px] font-heading text-[19px] font-bold text-faint ${DASHED}`}>
             {word}
           </span>
         ))}
       </div>
-      <div className="absolute inset-x-0 bottom-1.5 h-0.5 rounded-[2px] bg-hl" />
+      <div className="absolute inset-x-0 bottom-1.5 h-0.5 rounded-[calc(var(--radius)*0.2)] bg-hl" />
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between px-0.5">
         {ticks.map((h, i) => <span key={i} className="w-[1.5px] bg-hl" style={{ height: h }} />)}
       </div>
-      <div className="empty-pulse absolute inset-y-0 left-2 w-0.5 rounded-[2px] bg-foam" />
+      <div className="empty-pulse absolute inset-y-0 left-2 w-0.5 rounded-[calc(var(--radius)*0.2)] bg-foam" />
     </div>
   );
 }
@@ -59,12 +59,12 @@ function ListsArt() {
   return (
     <div className="relative h-[76px] w-[200px]">
       <div className={`absolute left-[30px] top-0 h-6 w-[140px] rounded-lg ${DASHED}`} />
-      <div className={`absolute left-[15px] top-4 h-7 w-[170px] rounded-[9px] bg-background ${DASHED}`} />
-      <div className="empty-float absolute left-0 top-[34px] flex h-10 w-[200px] items-center gap-2.5 rounded-[10px] bg-raised px-3 inset-ring inset-ring-hl">
+      <div className={`absolute left-[15px] top-4 h-7 w-[170px] rounded-[calc(var(--radius)*0.9)] bg-background ${DASHED}`} />
+      <div className="empty-float absolute left-0 top-[34px] flex h-10 w-[200px] items-center gap-2.5 rounded-[calc(var(--radius)*1)] bg-raised px-3 inset-ring inset-ring-hl">
         <span className="grid size-[22px] place-items-center rounded-md bg-primary-soft text-primary-ink">
           <Icon name="add" size={14} />
         </span>
-        <span className="h-1.5 w-[90px] rounded-[3px] bg-hl" />
+        <span className="h-1.5 w-[90px] rounded-[calc(var(--radius)*0.3)] bg-hl" />
       </div>
     </div>
   );

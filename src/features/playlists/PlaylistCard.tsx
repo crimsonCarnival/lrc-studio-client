@@ -98,7 +98,7 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
         {playlist.tags && playlist.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
             {playlist.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-pill bg-primary/10 text-primary">
                 {tag}
               </span>
             ))}

@@ -381,7 +381,7 @@ export default function PreviewLine({
       }}
       className={`w-full group flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
         } ${isReview
-          ? `gap-2 sm:gap-3.5 px-2 sm:px-3 py-[7px] sm:py-2 coarse:min-h-11 rounded-[10px] text-left transition-[opacity,background-color] duration-300 ease-out ${isActive && !isCounterpart
+          ? `gap-2 sm:gap-3.5 px-2 sm:px-3 py-[7px] sm:py-2 coarse:min-h-11 rounded-[calc(var(--radius)*1)] text-left transition-[opacity,background-color] duration-300 ease-out ${isActive && !isCounterpart
             ? `${activeClass} bg-zinc-800 shadow-[inset_3px_0_0_var(--color-primary)]`
             : hasMedia ? 'hover:bg-zinc-800/50' : ''}`
           : `px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-300 ease-out ${layoutClass} ${alignClass} ${isActive && !isCounterpart
@@ -393,7 +393,7 @@ export default function PreviewLine({
         // Threads the counterpart to the line above, like a reply in a comment thread.
         <span
           aria-hidden
-          className={`pointer-events-none absolute top-0 h-1/2 w-4 border-b-2 transition-colors duration-300 ${isActive ? 'border-counterpart' : 'border-counterpart/45'} ${previewAlign === 'right' ? 'right-3 border-r-2 rounded-br-[12px]' : 'left-3 border-l-2 rounded-bl-[12px]'}`}
+          className={`pointer-events-none absolute top-0 h-1/2 w-4 border-b-2 transition-colors duration-300 ${isActive ? 'border-counterpart' : 'border-counterpart/45'} ${previewAlign === 'right' ? 'right-3 border-r-2 rounded-br-[calc(var(--radius)*1.2)]' : 'left-3 border-l-2 rounded-bl-[calc(var(--radius)*1.2)]'}`}
         />
       )}
       {isReview ? (

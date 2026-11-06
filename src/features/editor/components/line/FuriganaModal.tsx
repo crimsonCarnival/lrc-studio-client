@@ -141,7 +141,7 @@ export function FuriganaModal({
                     </>
                   ) : w.word;
                   return (
-                    <span key={i} className={isCurrent ? 'rounded bg-primary/25 text-primary-ink' : 'text-subtle'}>
+                    <span key={i} className={isCurrent ? 'rounded-xs bg-primary/25 text-primary-ink' : 'text-subtle'}>
                       {body}
                       {/\w$/.test(w.word) ? ' ' : ''}
                     </span>
@@ -246,7 +246,7 @@ export function FuriganaModal({
             {current.lineWords.map((w, i) => (
               <span
                 key={i}
-                className={i === current.index ? 'rounded bg-primary/25 text-primary-ink' : 'text-subtle'}
+                className={i === current.index ? 'rounded-xs bg-primary/25 text-primary-ink' : 'text-subtle'}
               >
                 {w.word}
                 {/\w$/.test(w.word) ? ' ' : ''}

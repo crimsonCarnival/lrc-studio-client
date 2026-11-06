@@ -86,7 +86,7 @@ function NameForm({ time, initial, frequents, onSave, onLater }: {
           // Typing here must never reach the editor's own shortcuts.
           e.stopPropagation();
         }}
-        className="h-10 rounded-[10px] border-0 bg-card px-3 text-base font-medium italic text-foreground outline-none inset-ring-2 inset-ring-counterpart placeholder:text-faint"
+        className="h-10 rounded-[calc(var(--radius)*1)] border-0 bg-card px-3 text-base font-medium italic text-foreground outline-none inset-ring-2 inset-ring-counterpart placeholder:text-faint"
       />
       <div className="flex flex-col gap-1.5">
         <span className={`${CAPTION} text-subtle`}>{t('editor.counterpart.frequents')}</span>
@@ -96,7 +96,7 @@ function NameForm({ time, initial, frequents, onSave, onLater }: {
               key={text}
               type="button"
               onClick={() => onSave(text)}
-              className={`h-[30px] coarse:h-11 rounded-full bg-raised px-2.5 text-sm font-medium italic text-foreground inset-ring inset-ring-hl transition-colors duration-[var(--duration-state)] hover:bg-counterpart-soft hover:text-counterpart-ink hover:inset-ring-counterpart ${FOCUS}`}
+              className={`h-[30px] coarse:h-11 rounded-pill bg-raised px-2.5 text-sm font-medium italic text-foreground inset-ring inset-ring-hl transition-colors duration-[var(--duration-state)] hover:bg-counterpart-soft hover:text-counterpart-ink hover:inset-ring-counterpart ${FOCUS}`}
             >
               {text}
             </button>
@@ -194,7 +194,7 @@ export function CounterpartStrip({
         <button
           type="button"
           onClick={onCapture}
-          className={`inline-flex h-11 items-center gap-2 rounded-[14px] bg-counterpart px-4 text-[15px] font-bold text-primary-foreground transition-transform duration-100 ease-out active:scale-[.96] ${FOCUS}`}
+          className={`inline-flex h-11 items-center gap-2 rounded-[calc(var(--radius)*1.4)] bg-counterpart px-4 text-[15px] font-bold text-primary-foreground transition-transform duration-100 ease-out active:scale-[.96] ${FOCUS}`}
         >
           <Icon name="mic" size={18} />
           {t('editor.counterpart.capture')}
@@ -213,7 +213,7 @@ export function CounterpartStrip({
           <span className={`${CAPTION} flex h-10 items-center text-counterpart-ink`}>{t('editor.counterpart.lane')}</span>
         </div>
         <div className="relative flex min-w-0 flex-col gap-2">
-        <div className="relative h-10 overflow-hidden rounded-[10px] bg-card">
+        <div className="relative h-10 overflow-hidden rounded-[calc(var(--radius)*1)] bg-card">
           {blocks.map((b) => {
             const left = ((Math.max(b.from, start) - start) / span) * 100;
             const width = ((Math.min(b.to, end) - Math.max(b.from, start)) / span) * 100;
@@ -226,7 +226,7 @@ export function CounterpartStrip({
                 tabIndex={-1}
                 onClick={() => onSeek(b.from)}
                 style={{ left: `${left}%`, width: `calc(${width}% - 3px)` }}
-                className={`absolute top-1 flex h-8 min-w-1.5 items-center overflow-hidden whitespace-nowrap rounded-[7px] pl-2 text-left text-[13px] font-semibold inset-ring ${lit ? 'bg-primary-soft text-primary-ink inset-ring-iris' : 'bg-raised text-foreground inset-ring-hl'}`}
+                className={`absolute top-1 flex h-8 min-w-1.5 items-center overflow-hidden whitespace-nowrap rounded-[calc(var(--radius)*0.7)] pl-2 text-left text-[13px] font-semibold inset-ring ${lit ? 'bg-primary-soft text-primary-ink inset-ring-iris' : 'bg-raised text-foreground inset-ring-hl'}`}
               >
                 {b.label}
               </button>
@@ -234,7 +234,7 @@ export function CounterpartStrip({
           })}
         </div>
 
-        <div ref={laneRef} className="relative h-10 rounded-[10px] bg-counterpart-soft">
+        <div ref={laneRef} className="relative h-10 rounded-[calc(var(--radius)*1)] bg-counterpart-soft">
           {visible.map(({ index, line, time }) => {
             const id = line.id ?? `i-${index}`;
             const pending = isPendingCounterpart(line);
@@ -264,7 +264,7 @@ export function CounterpartStrip({
                     onPointerMove={(e) => { if (dragId === id && e.buttons === 1 && Math.abs(e.movementX) > 0) onMove(index, timeAt(e.clientX)); }}
                     onPointerUp={endDrag}
                     onPointerCancel={endDrag}
-                    className={`counterpart-pill absolute top-1 z-[1] flex h-8 cursor-grab touch-none select-none items-center whitespace-nowrap rounded-full px-2.5 active:cursor-grabbing ${FOCUS} ${pending
+                    className={`counterpart-pill absolute top-1 z-[1] flex h-8 cursor-grab touch-none select-none items-center whitespace-nowrap rounded-pill px-2.5 active:cursor-grabbing ${FOCUS} ${pending
                       ? 'bg-gold-soft font-mono text-[13px] font-semibold text-gold-ink inset-ring-[1.5px] inset-ring-gold'
                       : 'bg-counterpart text-sm font-semibold italic text-primary-foreground'} ${selected && !pending ? 'shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--counterpart)]' : ''}`}
                   >
@@ -293,7 +293,7 @@ export function CounterpartStrip({
         {/* Playhead across both lanes. */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -inset-y-1 z-[2] w-0.5 -translate-x-px rounded-[1px] bg-foam"
+          className="pointer-events-none absolute -inset-y-1 z-[2] w-0.5 -translate-x-px rounded-[calc(var(--radius)*0.1)] bg-foam"
           style={{ left: pct(playbackPosition) }}
         />
         </div>

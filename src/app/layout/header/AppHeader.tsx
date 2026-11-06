@@ -215,7 +215,7 @@ export function AppHeader({
                       onClick={(e) => guardedLinkClick(e, () => navTo(path))}
                       aria-current={current ? 'page' : undefined}
                       // Active link: brighter text plus a 16px iris tick under it (sheet 06).
-                      className={`relative flex h-10 items-center rounded-[10px] px-3 text-[15px] font-semibold transition-colors duration-[var(--duration-state)] hover:bg-raised hover:text-foreground focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${current ? "text-foreground after:absolute after:bottom-0.5 after:left-1/2 after:h-[3px] after:w-4 after:-translate-x-1/2 after:rounded-sm after:bg-iris after:content-['']" : 'text-subtle'}`}
+                      className={`relative flex h-10 items-center rounded-[calc(var(--radius)*1)] px-3 text-[15px] font-semibold transition-colors duration-[var(--duration-state)] hover:bg-raised hover:text-foreground focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${current ? "text-foreground after:absolute after:bottom-0.5 after:left-1/2 after:h-[3px] after:w-4 after:-translate-x-1/2 after:rounded-sm after:bg-iris after:content-['']" : 'text-subtle'}`}
                     >
                       {t(labelKey)}
                     </Link>

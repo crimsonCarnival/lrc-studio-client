@@ -563,7 +563,7 @@ export default function ProjectSetupModal({
                         <button
                           type="button"
                           onClick={() => removeTag(i)}
-                          className="p-0.5 hover:bg-zinc-600 rounded-full transition-colors"
+                          className="p-0.5 hover:bg-zinc-600 rounded-pill transition-colors"
                         >
                           <Icon name="close" size={12} />
                         </button>

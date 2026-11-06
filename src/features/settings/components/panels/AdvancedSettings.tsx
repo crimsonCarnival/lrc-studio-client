@@ -134,7 +134,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               <Button
                 variant="outline"
                 onClick={() => setConfirming(true)}
-                className="h-11 rounded-[10px] border-red-900/60 bg-transparent text-red-300 hover:bg-red-950/40 font-semibold"
+                className="h-11 rounded-[calc(var(--radius)*1)] border-red-900/60 bg-transparent text-red-300 hover:bg-red-950/40 font-semibold"
               >
                 {t('settings.advanced.deactivateBtn')}
               </Button>
@@ -150,16 +150,16 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
                 autoComplete="off"
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
-                className="max-w-80 bg-zinc-950 border-zinc-700 rounded-[10px] h-11"
+                className="max-w-80 bg-zinc-950 border-zinc-700 rounded-[calc(var(--radius)*1)] h-11"
               />
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => { setConfirming(false); setTyped(''); }} className="h-10 rounded-[10px] border-zinc-700 bg-transparent">
+                <Button variant="outline" onClick={() => { setConfirming(false); setTyped(''); }} className="h-10 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent">
                   {t('common.cancel')}
                 </Button>
                 <Button
                   disabled={!confirmed || isDeactivating}
                   onClick={handleDeactivate}
-                  className="h-10 rounded-[10px] font-bold bg-red-600 text-white hover:bg-red-500 disabled:bg-red-950 disabled:text-red-300/50"
+                  className="h-10 rounded-[calc(var(--radius)*1)] font-bold bg-red-600 text-white hover:bg-red-500 disabled:bg-red-950 disabled:text-red-300/50"
                 >
                   {isDeactivating ? t('settings.advanced.deactivating') : t('settings.advanced.deactivateConfirmBtn')}
                 </Button>
