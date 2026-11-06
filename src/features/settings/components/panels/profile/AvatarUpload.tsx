@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
@@ -37,11 +38,7 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-
+  const acceptFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error(t('profile.invalidImageType'));
       return;
@@ -53,6 +50,12 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
     }
 
     setCropSrc(URL.createObjectURL(file));
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) acceptFile(file);
   };
 
   const closeCrop = () => {
@@ -88,20 +91,22 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
     <div className={`flex flex-col gap-2.5 shrink-0 ${urlMode ? 'w-72' : 'w-[10.5rem]'}`}>
       {/* Same label row as the cover column, so both previews start on one line. */}
       <span className="text-sm font-semibold text-zinc-200">{t('profile.avatar')}</span>
-      <button
-        type="button"
-        onClick={handleAvatarClick}
-        className="size-20 rounded-[20px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50 shrink-0"
-        aria-label={t('profile.changeAvatar')}
-      >
-        {uploading ? (
-          <LogoLoader size={24} className="text-primary" />
-        ) : hasAvatar ? (
-          <LazyImage src={avatarUrl!}alt={t('profile.avatarAlt')} className="size-full object-cover" />
-        ) : (
-          <InitialsAvatar name={(user?.displayName || user?.accountName || '?')} handle={user?.accountName} className="size-full text-[40px]" />
-        )}
-      </button>
+      <FileDropZone onFile={acceptFile} disabled={uploading} compact className="size-20 rounded-[20px] shrink-0">
+        <button
+          type="button"
+          onClick={handleAvatarClick}
+          className="size-full rounded-[20px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          aria-label={t('profile.changeAvatar')}
+        >
+          {uploading ? (
+            <LogoLoader size={24} className="text-primary" />
+          ) : hasAvatar ? (
+            <LazyImage src={avatarUrl!}alt={t('profile.avatarAlt')} className="size-full object-cover" />
+          ) : (
+            <InitialsAvatar name={(user?.displayName || user?.accountName || '?')} handle={user?.accountName} className="size-full text-[40px]" />
+          )}
+        </button>
+      </FileDropZone>
 
       <div className="min-w-0">
         {urlMode ? (

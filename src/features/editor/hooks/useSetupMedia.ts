@@ -141,7 +141,11 @@ export function useSetupMedia({ playerRef, userId, onPreselectUpload }: UseSetup
 
   const handleAudioFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) loadAudioFile(file);
+  };
+
+  // Shared by the file picker and the drop zone.
+  const loadAudioFile = (file: File) => {
     if (!file.type.startsWith('audio/')) {
       toast.error(t('setup.invalidAudioType'));
       if (audioInputRef.current) audioInputRef.current.value = '';
@@ -261,6 +265,7 @@ export function useSetupMedia({ playerRef, userId, onPreselectUpload }: UseSetup
     clearYtCheck,
     loadYouTubeVerified,
     handleAudioFile,
+    loadAudioFile,
     handleLoadUrl,
     handleSelectUpload,
     handleDeleteUpload,

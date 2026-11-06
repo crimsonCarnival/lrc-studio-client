@@ -8,6 +8,7 @@ export default {
   global: "Global",
   goHome: "Ir a Inicio",
   cancel: "Cancelar",
+  dropFileHere: "Suelta el archivo aquí",
   confirm: "Confirmar",
   back: "Volver",
   close: "Cerrar",

@@ -16,6 +16,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
 import { Icon } from '@/shared/ui/Icon';
+import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { Tip } from '@ui/tip';
 import { getAccessToken } from '@/app/api';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
@@ -322,20 +323,16 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             {!viewerMode && (
               <div className="flex flex-wrap items-center justify-center gap-3 w-full">
                 {/* Local Audio */}
+                <FileDropZone onFile={local.handleFileChange} compact localOnly className="rounded-xl">
                 <label
                   htmlFor="audio-file-input"
                   className="flex items-center gap-2 px-4 py-2 h-10 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/50 hover:border-primary/40 transition-all cursor-pointer shadow-sm group"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) local.handleFileChange(file);
-                  }}
                 >
                   <Icon name="folder_open" size={16} className="text-zinc-400 group-hover:text-primary transition-colors" />
                   <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{t('player.dropAudio')}</span>
                   <input id="audio-file-input" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
                 </label>
+                </FileDropZone>
 
                 <div className="w-px h-6 bg-zinc-800/80 mx-1" />
 
@@ -776,6 +773,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
               <>
                 {!viewerMode && (
                   <div className="flex flex-wrap items-center gap-2">
+                    <FileDropZone onFile={local.handleFileChange} compact localOnly className="rounded-lg shrink-0">
                     <label
                       htmlFor="audio-file-compact"
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
@@ -784,6 +782,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       {t('player.dropAudio')}
                       <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
                     </label>
+                    </FileDropZone>
                     <div className="flex-1 flex gap-2 min-w-0 basis-56">
                       <div className="relative flex-1 min-w-0">
                         {detectedUrlType === 'cdn' ? (

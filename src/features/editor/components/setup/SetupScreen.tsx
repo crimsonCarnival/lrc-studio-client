@@ -13,6 +13,7 @@ import { useLanguageOptions } from '../../hooks/useLanguageOptions';
 import { Textarea } from '@ui/textarea';
 import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
+import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { TagsSelector } from '@ui/tags-selector';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
@@ -170,6 +171,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     clearYtCheck,
     loadYouTubeVerified,
     handleAudioFile,
+    loadAudioFile,
     handleLoadUrl,
     handleSelectUpload,
     handleDeleteUpload,
@@ -795,7 +797,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     {audioTab === 'local' && (
                       <div className="flex-1 flex flex-col gap-3 overflow-y-auto scrollbar-thin pr-0.5">
                         {/* URL + file input */}
-                        <div className="flex items-center gap-2 bg-zinc-900/50 p-2 rounded-2xl border border-zinc-800/60 focus-within:border-primary/40 transition-all shrink-0">
+                        <FileDropZone onFile={loadAudioFile} className="rounded-2xl shrink-0">
+                        <div className="flex items-center gap-2 bg-zinc-900/50 p-2 rounded-2xl border border-zinc-800/60 focus-within:border-primary/40 transition-all">
                           <Tip content={t('setup.uploadAudio')}>
                             <Button
                               variant="outline"
@@ -832,6 +835,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                             {ytLoading ? <LogoLoader size={16} /> : t('player.load')}
                           </Button>
                         </div>
+                        </FileDropZone>
 
                         {!user && (
                           <p className="text-[11px] text-zinc-500 px-1 flex items-center gap-1.5 shrink-0">

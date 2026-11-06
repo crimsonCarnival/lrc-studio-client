@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
-import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
+import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
@@ -37,7 +37,6 @@ export function CoverDropzone({ value, onChange, onUpload, onToggleUrl, urlOpen,
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [dragging, setDragging] = useState(false);
 
   const accept = useCallback(async (file: File | undefined) => {
     if (!file) return;
@@ -61,30 +60,15 @@ export function CoverDropzone({ value, onChange, onUpload, onToggleUrl, urlOpen,
     }
   }, [onChange, onUpload, t]);
 
-  const onDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragging(false);
-    void accept(e.dataTransfer.files?.[0]);
-  };
-
   return (
     <div className={className}>
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        className="relative size-[72px] shrink-0"
-      >
+      <FileDropZone onFile={(f) => void accept(f)} disabled={uploading} compact className="size-[72px] shrink-0 rounded-xl">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
           aria-label={value ? t('setup.coverReplace') : t('setup.coverDropHint')}
-          className={`size-full rounded-xl border border-dashed overflow-hidden flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-            dragging
-              ? 'border-primary bg-primary/10'
-              : 'border-zinc-700/60 bg-zinc-900/40 hover:border-primary/50'
-          }`}
+          className="size-full rounded-xl border border-dashed overflow-hidden flex flex-col items-center justify-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 border-zinc-700/60 bg-zinc-900/40 hover:border-primary/50"
         >
           {uploading ? (
             <LogoLoader size={18} />
@@ -112,7 +96,7 @@ export function CoverDropzone({ value, onChange, onUpload, onToggleUrl, urlOpen,
             </button>
           </Tip>
         )}
-      </div>
+      </FileDropZone>
 
       {onToggleUrl && (
         <Tip content={t('setup.coverUrlLabel')}>

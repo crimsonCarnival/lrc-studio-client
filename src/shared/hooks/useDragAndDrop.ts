@@ -7,6 +7,12 @@ import type { PlayerHandle } from '@/features/player/player.types';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+// Pages with their own <FileDropZone>s (setup, settings, modals) handle drops locally.
+// The page-wide overlay and import would cover them and run a second import.
+const pageOwnsDrops = () => document.querySelector('[data-file-drop="page"]') !== null;
+// A drop on any zone (including editor "local" ones) belongs to that zone alone.
+const inDropZone = (e: DragEvent) => e.target instanceof Element && e.target.closest('[data-file-drop]') !== null;
+
 type DragDropPlayerHandle = Pick<PlayerHandle, 'loadLocalAudio'>;
 
 interface DragAndDropOptions {
@@ -35,6 +41,7 @@ export function useDragAndDrop({
 
   const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault();
+    if (pageOwnsDrops()) return;
     maxDragDepth.current += 1;
     if (e.dataTransfer?.types?.includes('Files')) {
       setIsDraggingFile(true);
@@ -43,7 +50,7 @@ export function useDragAndDrop({
 
   const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault();
-    maxDragDepth.current -= 1;
+    maxDragDepth.current = Math.max(0, maxDragDepth.current - 1);
     if (maxDragDepth.current === 0) {
       setIsDraggingFile(false);
     }
@@ -58,6 +65,9 @@ export function useDragAndDrop({
       e.preventDefault();
       maxDragDepth.current = 0;
       setIsDraggingFile(false);
+
+      // preventDefault above still stops the browser from navigating to a stray file.
+      if (pageOwnsDrops() || inDropZone(e)) return;
 
       const file = e.dataTransfer?.files?.[0];
       if (!file) return;

@@ -9,6 +9,7 @@ import { Textarea } from '@ui/textarea';
 import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
 import { Icon } from '@/shared/ui/Icon';
+import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
@@ -230,11 +231,15 @@ export default function ProjectSetupModal({
     }
   };
 
-  const handleImageUpload = async (field: keyof ProjectSetupForm, e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 5 * 1024 * 1024) return;
+  const uploadImage = async (field: keyof ProjectSetupForm, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('profile.invalidImageType'));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('profile.imageTooLarge'));
+      return;
+    }
     setImageUploading(true);
     try {
       const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_cover');
@@ -243,8 +248,13 @@ export default function ProjectSetupModal({
     } catch { /* ignore */ }
     finally {
       setImageUploading(false);
-      e.target.value = '';
     }
+  };
+
+  const handleImageUpload = (field: keyof ProjectSetupForm, e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) void uploadImage(field, file);
   };
 
   const handleFetchSongInfo = useCallback(async () => {
@@ -585,6 +595,7 @@ export default function ProjectSetupModal({
                 <Label htmlFor="cover-image" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                   {t('setup.coverImage')}
                 </Label>
+                <FileDropZone onFile={(f) => void uploadImage('coverImage', f)} disabled={imageUploading} compact className="rounded-xl">
                 <div className="flex gap-2 items-center">
                   <Input
                     id="cover-image"
@@ -611,6 +622,7 @@ export default function ProjectSetupModal({
                     className="hidden"
                   />
                 </div>
+                </FileDropZone>
               </div>
 
               {/* Privacy Setting */}

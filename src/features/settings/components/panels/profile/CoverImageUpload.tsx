@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
@@ -33,11 +34,7 @@ export default function CoverImageUpload({ coverImageUrl, onChange }: CoverImage
 
   const handlePickClick = () => fileInputRef.current?.click();
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-
+  const acceptFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error(t('profile.invalidImageType'));
       return;
@@ -49,6 +46,12 @@ export default function CoverImageUpload({ coverImageUrl, onChange }: CoverImage
     }
 
     setCropSrc(URL.createObjectURL(file));
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) acceptFile(file);
   };
 
   const closeCrop = () => {
@@ -75,20 +78,22 @@ export default function CoverImageUpload({ coverImageUrl, onChange }: CoverImage
   return (
     <div className="flex flex-col gap-2.5 min-w-0 flex-1 basis-72">
       <span className="text-sm font-semibold text-zinc-200">{t('profile.coverImage')}</span>
-      <button
-        type="button"
-        onClick={handlePickClick}
-        className="h-20 w-full rounded-[14px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-        aria-label={t('profile.changeCover')}
-      >
-        {uploading ? (
-          <LogoLoader size={24} className="text-primary" />
-        ) : hasCover ? (
-          <LazyImage src={coverImageUrl!} alt=""className="size-full object-cover" />
-        ) : (
-          <Icon name="image" size={28} className="text-zinc-500" />
-        )}
-      </button>
+      <FileDropZone onFile={acceptFile} disabled={uploading} className="h-20 w-full rounded-[14px]">
+        <button
+          type="button"
+          onClick={handlePickClick}
+          className="size-full rounded-[14px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          aria-label={t('profile.changeCover')}
+        >
+          {uploading ? (
+            <LogoLoader size={24} className="text-primary" />
+          ) : hasCover ? (
+            <LazyImage src={coverImageUrl!} alt=""className="size-full object-cover" />
+          ) : (
+            <Icon name="image" size={28} className="text-zinc-500" />
+          )}
+        </button>
+      </FileDropZone>
       <div className="flex gap-1.5">
         <Tip content={t('profile.changeCover')}>
           <Button onClick={handlePickClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeCover')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
