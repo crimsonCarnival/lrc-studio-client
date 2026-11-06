@@ -53,7 +53,6 @@ interface SetupConfirmData {
   songYear?: string | number;
   genre?: string;
   coverImage?: string;
-  isPublic?: boolean;
   singerColors?: string[];
   singers?: string[];
 }

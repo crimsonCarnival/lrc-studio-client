@@ -269,7 +269,7 @@ export function useManualSave({
    * boolean is for callers that must not go on with unsaved edits (starting a collab session).
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; isPublic?: boolean; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string } = {}): Promise<boolean> => {
+  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string } = {}): Promise<boolean> => {
     // A create is in flight: the project is not on the server yet, so the edits are unsaved.
     if (isCreatingProjectRef.current) return false;
     // No-op in a collab session: the shared doc is persisted server-side (see useAutosave).
@@ -285,7 +285,6 @@ export function useManualSave({
       const artistStr = artistDisplay(finalMetadata);
       if (songName) finalTitle = artistStr ? `${songName} - ${artistStr}` : songName;
     }
-    if (overrides.isPublic !== undefined) payload.public = overrides.isPublic;
     if (overrides.lines !== undefined) { payload.lines = overrides.lines; payload.sections = flatToSections(overrides.lines); }
     if (overrides.editorMode !== undefined) payload.editorMode = overrides.editorMode;
     if (overrides.syncMode !== undefined) payload.syncMode = overrides.syncMode;
@@ -339,7 +338,6 @@ export function useManualSave({
         const patchData = buildProjectPatch({ prevSnapshot: lastServerSnapshotRef.current, title: finalTitle, metadata: finalMetadata, state: patchState, uploadId: uploadIdToSave ?? undefined, editorMode: payload.editorMode, lines: payload.lines });
         if (overrides.title !== undefined) patchData.title = overrides.title;
         if (overrides.metadata !== undefined) patchData.metadata = overrides.metadata;
-        if (overrides.isPublic !== undefined) patchData.public = overrides.isPublic;
         if (overrides.coverImage !== undefined) patchData.coverImage = overrides.coverImage;
 
         if (Object.keys(patchData).length > 0) {
@@ -415,7 +413,6 @@ export function useManualSave({
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const createData: Record<string, any> = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, sections: payload.sections }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime }, readOnly: false };
-      if (overrides.isPublic !== undefined) createData.public = overrides.isPublic;
       if (overrides.coverImage !== undefined) createData.coverImage = overrides.coverImage;
       if (uploadIdToSave) createData.uploadId = uploadIdToSave;
 
