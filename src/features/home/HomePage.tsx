@@ -24,6 +24,7 @@ import { AlmostDoneBand } from './components/AlmostDoneBand';
 import { ActivityBand } from './components/ActivityBand';
 import { FollowingBand } from './components/FollowingBand';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
+import { SelectField } from '@ui/select-field';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -313,16 +314,18 @@ export default function HomePage() {
               <div className="flex items-center gap-2 relative shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
                 <div className="relative flex items-center">
                   <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
-                  <select 
-                    className="appearance-none bg-transparent hover:bg-zinc-800 text-xs coarse:min-h-11 text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
+                  <SelectField
+                    variant="ghost"
+                    aria-label={t('home.sortBy')}
+                    className="pl-8"
                     value={sortBy}
-                    onChange={e => setSortBy(e.target.value as 'edited' | 'created' | 'title')}
-                  >
-                    <option value="edited" className="bg-zinc-900">{t('home.sortBy')} {t('home.recentlyEdited')}</option>
-                    <option value="created" className="bg-zinc-900">{t('home.sortBy')} {t('home.recentlyCreated')}</option>
-                    <option value="title" className="bg-zinc-900">{t('home.sortBy')} {t('home.titleAZ')}</option>
-                  </select>
-                  <Icon name="expand_more" size={14} className="absolute right-2 text-zinc-400 pointer-events-none" />
+                    onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title')}
+                    options={[
+                      { value: 'edited', label: `${t('home.sortBy')} ${t('home.recentlyEdited')}` },
+                      { value: 'created', label: `${t('home.sortBy')} ${t('home.recentlyCreated')}` },
+                      { value: 'title', label: `${t('home.sortBy')} ${t('home.titleAZ')}` },
+                    ]}
+                  />
                 </div>
                 <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block" />
                 <Link to="/library"

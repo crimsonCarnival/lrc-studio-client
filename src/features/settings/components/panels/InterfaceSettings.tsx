@@ -5,6 +5,7 @@ import { cn } from '@/shared/utils/utils';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import ThemeSelector from '../theme/ThemeSelector';
+import { ColorPicker } from '@ui/color-picker';
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -176,15 +177,13 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           <div className="flex flex-wrap items-end gap-1.5">
             {Array.from({ length: 8 }).map((_, i) => (
               <label key={i} className="flex flex-col items-center gap-1 font-mono text-[11px] text-zinc-400">
-                <input
-                  type="color"
+                <ColorPicker
                   value={singerColors[i] || '#888888'}
-                  onChange={(e) => {
+                  onChange={(hex) => {
                     const next = [...(singerColors.length ? singerColors : Array(8).fill(''))];
-                    next[i] = e.target.value;
+                    next[i] = hex;
                     updateSetting('editor.display.singerColors', next);
                   }}
-                  className="size-8 p-0 rounded-lg border border-zinc-700 bg-transparent cursor-pointer"
                   aria-label={t('editor.singerN', { n: i + 1 })}
                 />
                 {i + 1}

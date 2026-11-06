@@ -7,6 +7,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import { useAdminSub } from './admin-nav';
 import { AdminSubNav } from './AdminSubNav';
+import { SelectField } from '@ui/select-field';
 
 interface AdminXpTabProps {
   onAdjustXP: (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => Promise<void>;
@@ -128,14 +129,15 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.target')}</span>
-            <select
+            <SelectField
+              aria-label={t('admin.xp.target')}
               value={xpBulkTarget}
-              onChange={e => setXpBulkTarget(e.target.value)}
-              className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 focus:outline-none focus:border-amber-500/50"
-            >
-              <option value="all">{t('admin.xp.allUsers')}</option>
-              <option value="ids">{t('admin.xp.specificUsers')}</option>
-            </select>
+              onValueChange={setXpBulkTarget}
+              options={[
+                { value: 'all', label: t('admin.xp.allUsers') },
+                { value: 'ids', label: t('admin.xp.specificUsers') },
+              ]}
+            />
           </label>
         </div>
 

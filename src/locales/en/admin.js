@@ -300,6 +300,7 @@ export default {
     composer: {
       title: 'New request',
       type: 'Request type',
+      action: 'Action',
       reason: 'Reason (optional)',
       deviceId: 'Device ID',
       grant: 'Grant',

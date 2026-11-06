@@ -8,6 +8,7 @@ import {
   type ColorKey, type CustomTheme,
 } from '@/shared/theme/custom-theme';
 import { SegmentedControl, SettingSelect, SettingOption } from '../shared';
+import { ColorPicker } from '@ui/color-picker';
 
 type Props = {
   /** What the editor opens with: the saved custom theme, or a copy of the theme in use. */
@@ -33,13 +34,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
     <div className="flex items-center justify-between gap-3">
       <label className="text-sm text-zinc-300" htmlFor={`theme-color-${label}`}>{label}</label>
       <div className="flex items-center gap-2">
-        <input
-          type="color"
-          aria-label={label}
-          value={value}
-          onChange={(e) => onChange(e.target.value.toLowerCase())}
-          className="size-8 cursor-pointer rounded-md border border-zinc-700 bg-transparent p-0.5"
-        />
+        <ColorPicker aria-label={label} value={value} onChange={(hex) => onChange(hex.toLowerCase())} />
         <input
           id={`theme-color-${label}`}
           value={text}

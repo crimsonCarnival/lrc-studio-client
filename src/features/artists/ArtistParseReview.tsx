@@ -5,6 +5,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
 import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
 import { applyPlan, defaultDecisions, mergedNames, type ParsePlan, type PlanDecisions } from './artist-parse-review';
+import { Checkbox } from '@ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@ui/radio-group';
 
 interface Props {
   plan: ParsePlan;
@@ -57,7 +59,7 @@ export function ArtistParseReview({ plan, onApply, onCancel }: Props) {
             </div>
             {group.parts.slice(1).map((_, bi) => (
               <label key={bi} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-                <input type="checkbox" checked={merge[bi] ?? false} onChange={() => toggleMerge(gi, bi)} />
+                <Checkbox checked={merge[bi] ?? false} onCheckedChange={() => toggleMerge(gi, bi)} />
                 {tr('artists.review.merge', { a: group.parts[bi], b: group.parts[bi + 1] })}
               </label>
             ))}
@@ -69,14 +71,14 @@ export function ArtistParseReview({ plan, onApply, onCancel }: Props) {
       {plan.weak.length > 0 && (
         <fieldset className="flex flex-col gap-1.5">
           <legend className="text-[13px] text-subtle">{tr('artists.review.weak', { text: plan.weak[0].text })}</legend>
-          <div className="flex flex-wrap gap-2">
+          <RadioGroup value={weakChoice} onValueChange={(v) => setWeakChoice(v as 'accept' | 'keep')} className="gap-2">
             {(['accept', 'keep'] as const).map((choice) => (
               <label key={choice} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-                <input type="radio" name="weak-choice" checked={weakChoice === choice} onChange={() => setWeakChoice(choice)} />
+                <RadioGroupItem value={choice} />
                 {tr(`artists.review.weak_${choice}`)}
               </label>
             ))}
-          </div>
+          </RadioGroup>
         </fieldset>
       )}
 
