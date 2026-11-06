@@ -67,12 +67,14 @@ interface UserHoverCardProps {
   accountName: string;
   userId?: string;
   children: ReactNode;
+  /** Classes for the trigger wrapper, e.g. `flex-1 min-w-0` to let it fill a flex row. */
+  className?: string;
 }
 
 const OPEN_DELAY = 280;
 const CLOSE_DELAY = 120;
 
-export function UserHoverCard({ accountName, userId, children }: UserHoverCardProps) {
+export function UserHoverCard({ accountName, userId, children, className }: UserHoverCardProps) {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
   const { user: me } = useAuthContext();
@@ -202,7 +204,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
         ref={triggerRef}
         onMouseEnter={startOpen}
         onMouseLeave={startClose}
-        className="inline-block"
+        className={cn('inline-block', className)}
       >
         {children}
       </span>

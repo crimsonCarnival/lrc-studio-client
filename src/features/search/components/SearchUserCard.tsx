@@ -47,8 +47,8 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
 
   return (
     <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[calc(var(--radius)*1.8)] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
-      <UserHoverCard accountName={accountName} userId={user.id}>
-        <span className="flex min-w-0 flex-1 items-center gap-x-4 gap-y-3">
+      <UserHoverCard accountName={accountName} userId={user.id} className="block min-w-0 flex-1">
+        <span className="flex w-full min-w-0 items-center gap-x-4 gap-y-3">
           <StaffRing role={user.staffRole}>
             <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
               {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}

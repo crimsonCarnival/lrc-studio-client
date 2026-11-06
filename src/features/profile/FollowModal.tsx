@@ -87,11 +87,11 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
 
     return (
       <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
-        <UserHoverCard accountName={u.accountName} userId={u.id}>
+        <UserHoverCard accountName={u.accountName} userId={u.id} className="block min-w-0 flex-1">
           <Link
             to={profilePath(u.accountName)}
             onClick={onClose}
-            className="flex items-center gap-3 flex-1 min-w-0"
+            className="flex w-full items-center gap-3 min-w-0"
           >
             <div className="relative size-9 shrink-0">
               <StaffRing role={u.staffRole} className="rounded-xl">

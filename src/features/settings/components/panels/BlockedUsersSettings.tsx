@@ -56,8 +56,8 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
                 key={u.id}
                 className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/10 p-3"
               >
-                <UserHoverCard accountName={u.accountName} userId={u.id}>
-                  <span className="flex items-center gap-3 min-w-0 flex-1">
+                <UserHoverCard accountName={u.accountName} userId={u.id} className="block min-w-0 flex-1">
+                  <span className="flex w-full items-center gap-3 min-w-0">
                     <Link to={profilePath(u.accountName)} className="shrink-0">
                       {u.avatarUrl ? (
                         <LazyImage src={u.avatarUrl} alt={name} className="size-9 rounded-lg object-cover" />
