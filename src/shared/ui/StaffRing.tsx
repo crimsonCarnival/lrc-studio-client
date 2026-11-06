@@ -28,7 +28,7 @@ export function StaffRing({ role, className, outset, children }: StaffRingProps)
     <span
       data-staff={role}
       aria-label={label}
-      className={cn('staff-ring rounded-pill', className)}
+      className={cn('staff-ring rounded-full', className)}
       style={outset != null ? ({ '--staff-outset': `${outset}px` } as CSSProperties) : undefined}
     >
       {children}
