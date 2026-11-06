@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import type { KeyboardEvent, PointerEvent } from 'react';
+import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
@@ -17,8 +17,8 @@ type PhoneMarkBarProps = {
  * outside the list's scroll container, so a scroll gesture can never stamp a line.
  *
  * Marking fires on pointerdown: waiting for the click adds latency you can hear. The click
- * that follows the same tap is swallowed; a click with no pointerdown before it (keyboard,
- * switch access, a screen reader) still marks.
+ * that follows the same tap is swallowed; a keyboard or assistive-tech click (detail 0)
+ * always marks.
  */
 export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled = false }: PhoneMarkBarProps) {
   const { t } = useTranslation();
@@ -34,13 +34,16 @@ export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled 
     onMark();
   };
 
-  const handleClick = () => {
+  // Only a click that is the tail of the tap just marked is swallowed: it has a pointer
+  // behind it (detail > 0) and follows a marking pointerdown. A click from the keyboard or
+  // assistive tech has detail 0 and always marks, even if a finger left the flag set (a tap
+  // that never produced its click). Clearing the flag on pointerup or pointerleave instead
+  // would not work: on touch both fire before the click, so that click would mark again.
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (disabled) return;
-    if (markedOnPointer.current) {
-      markedOnPointer.current = false;
-      return;
-    }
-    onMark();
+    const tailOfTap = markedOnPointer.current && e.detail > 0;
+    markedOnPointer.current = false;
+    if (!tailOfTap) onMark();
   };
 
   // Enter and Space activate the focused button, which marks through handleClick. Keep the
@@ -67,6 +70,7 @@ export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled 
         type="button"
         disabled={disabled}
         onPointerDown={handlePointerDown}
+        // A cancelled pointer (the browser took it for a scroll or zoom) gets no click.
         onPointerCancel={() => { markedOnPointer.current = false; }}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
@@ -75,6 +79,9 @@ export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled 
       >
         {label}
       </button>
+      {/* Says which line the next tap stamps when it changes after a mark, without
+          announcing anything while the song plays. */}
+      <span role="status" aria-live="polite" className="sr-only">{label}</span>
     </div>
   );
 }

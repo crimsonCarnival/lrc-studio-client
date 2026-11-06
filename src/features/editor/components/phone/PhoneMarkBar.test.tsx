@@ -56,6 +56,42 @@ describe('PhoneMarkBar', () => {
     expect(windowKey).not.toHaveBeenCalled();
   });
 
+  it('does not swallow an assistive-tech click after a tap whose click never came', () => {
+    const { onMark, mark } = renderBar();
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.pointerUp(mark, { isPrimary: true, pointerType: 'touch' });
+    fireEvent.pointerLeave(mark, { isPrimary: true, pointerType: 'touch' });
+    // Screen-reader activation: a click with no pointer behind it (detail 0).
+    fireEvent.click(mark, { detail: 0 });
+    expect(onMark).toHaveBeenCalledTimes(2);
+  });
+
+  it('marks on an assistive-tech click after a cancelled pointer', () => {
+    const { onMark, mark } = renderBar();
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.pointerCancel(mark, { isPrimary: true, pointerType: 'touch' });
+    fireEvent.click(mark, { detail: 0 });
+    expect(onMark).toHaveBeenCalledTimes(2);
+  });
+
+  it('swallows the tap click even when pointerup and pointerleave come first, as on touch', () => {
+    const { onMark, mark } = renderBar();
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.pointerUp(mark, { isPrimary: true, pointerType: 'touch' });
+    fireEvent.pointerLeave(mark, { isPrimary: true, pointerType: 'touch' });
+    fireEvent.click(mark, { detail: 1 });
+    expect(onMark).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces the Mark label politely when it changes', () => {
+    const props = { onMark: vi.fn(), onUndo: vi.fn(), canUndo: true };
+    const { rerender } = render(<PhoneMarkBar {...props} label="Mark line 1" />);
+    rerender(<PhoneMarkBar {...props} label="Mark line 2" />);
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status).toHaveTextContent('Mark line 2');
+  });
+
   it('does not mark while disabled', async () => {
     const { onMark, mark } = renderBar({ disabled: true });
     fireEvent.pointerDown(mark, { isPrimary: true, button: 0 });
