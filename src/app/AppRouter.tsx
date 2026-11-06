@@ -14,6 +14,7 @@ import { useEditorActivity } from '@/features/auth/hooks/useSessionSocket';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { isStaff } from '@/features/auth/permissions';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import { usePhoneEditorMounted } from '@/app/layout/phone-editor-chrome';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
@@ -443,11 +444,14 @@ export function AppRouter({
   }, [routerPathname]);
 
   const isLgRouter = useBreakpoint('lg');
+  const phoneEditorMounted = usePhoneEditorMounted();
+  // Same inputs as AppLayout's slot, so both agree on 'phone' while the phone editor is up.
   const playerSlot = usePlayerSlot({
     hideEditor: view === 'preview',
     hidePreview: false,
     focusMode: 'default',
     isLg: isLgRouter,
+    phoneEditor: phoneEditorMounted,
   });
 
   // The phone editor's back button: same destination and unsaved-changes guard as the
