@@ -12,6 +12,37 @@ import i18next from 'i18next';
 import { deepMerge, pushSettingsChanges } from './settings-merge';
 
 const STORAGE_KEY = 'lrc-syncer-settings';
+// Appearance choices the server has not acknowledged yet. The server copy wins on every sync, so
+// without this a theme picked a moment before a reload (or while a sync was in flight) was
+// overwritten by the older one the account still had.
+const PENDING_KEY = 'lrc-syncer-settings-pending';
+const APPEARANCE_KEYS = ['theme', 'customTheme', 'fontWeight'] as const;
+
+function readPending(): Record<string, string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PENDING_KEY) ?? 'null') as Record<string, unknown> | null;
+    const out: Record<string, string> = {};
+    for (const key of APPEARANCE_KEYS) if (typeof raw?.[key] === 'string') out[key] = raw[key] as string;
+    return out;
+  } catch { return {}; }
+}
+
+function writePending(pending: Record<string, string>): void {
+  try {
+    if (Object.keys(pending).length > 0) localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+    else localStorage.removeItem(PENDING_KEY);
+  } catch { /* storage unavailable */ }
+}
+
+/** Drops the pending entries the server now holds. */
+function clearAcked(serverInterface: Record<string, unknown> | undefined): void {
+  const pending = readPending();
+  let changed = false;
+  for (const key of Object.keys(pending)) {
+    if (serverInterface?.[key] === pending[key]) { delete pending[key]; changed = true; }
+  }
+  if (changed) writePending(pending);
+}
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
@@ -94,6 +125,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [settings]);
 
+  // Remember appearance changes until the server confirms them (see PENDING_KEY).
+  const prevSettingsRef = useRef<any>(settings);
+  useEffect(() => {
+    const prev = prevSettingsRef.current;
+    prevSettingsRef.current = settings;
+    // A guest has no server copy to lose to; their pick is carried up at sign-in (syncFromServer).
+    if (isSyncingRef.current || prev === settings || !getAccessToken()) return;
+    const pending = readPending();
+    let changed = false;
+    for (const key of APPEARANCE_KEYS) {
+      const value = settings.interface?.[key];
+      if (prev?.interface?.[key] !== value && typeof value === 'string') { pending[key] = value; changed = true; }
+    }
+    if (changed) writePending(pending);
+  }, [settings]);
+
   // Debounced server persistence — skips the initial render and skips when changes
   // came from a server fetch (isSyncingRef). Debouncing here is still correct: it's a
   // network call, and rapid successive changes (e.g. dragging a slider) shouldn't each
@@ -115,6 +162,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         // their old value in the snapshot and are re-sent by the next diff.
         void pushSettingsChanges(changes, settings, lastSavedToServerRef.current, settingsApi.patch).then(({ snapshot, failed }) => {
           lastSavedToServerRef.current = snapshot;
+          clearAcked((snapshot as { interface?: Record<string, unknown> } | null)?.interface);
           const failure = failed.join(',');
           if (failure && failure !== lastWarnedFailureRef.current) {
             console.warn('Settings not saved to the server, will retry on the next change:', failed);
@@ -195,16 +243,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         }
       } catch { /* unreadable local settings: nothing to carry */ }
       const serverState = structuredClone(merged);
+      // Appearance picked here but not yet acknowledged by the server beats the server's older copy.
+      const pending = readPending();
+      for (const key of Object.keys(pending)) {
+        if ((remote as { interface?: Record<string, unknown> } | null)?.interface?.[key] !== pending[key]) carried[key] = pending[key];
+      }
+      clearAcked((remote as { interface?: Record<string, unknown> } | null)?.interface);
       if (Object.keys(carried).length > 0) merged.interface = { ...merged.interface, ...carried };
       // Persist immediately (save effect is suppressed via isSyncingRef)
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
       // Update last saved snapshot since we just synced from server
       lastSavedToServerRef.current = serverState;
+      prevSettingsRef.current = merged;
       setSettings(() => merged);
       if (Object.keys(carried).length > 0) {
         // On failure the snapshot still lacks the theme, so the next settings change diffs it and retries.
         void settingsApi.patch({ interface: carried }).then(() => {
           lastSavedToServerRef.current = structuredClone(merged);
+          clearAcked(merged.interface);
         }).catch(() => { /* retried by the next diff */ });
       }
 
