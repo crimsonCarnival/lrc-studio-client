@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { artistFieldsFromForm, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -20,7 +20,7 @@ import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
 import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tour-steps';
-import useInputMethod from '@/shared/hooks/useInputMethod';
+import { PhoneEditorChromeContext } from './layout/phone-editor-chrome';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/app/useAppState';
 import { CollabPresenceProvider } from '@/features/collab/components/CollabPresenceProvider';
@@ -92,17 +92,21 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // Reactive so the dynamic padding formula stays correct on resize.
   const isLg = useBreakpoint('lg');
 
-  const inputMethod = useInputMethod();
-  const isTouch = inputMethod === 'touch';
+  // Set by the phone editor while it is mounted (see phone-editor-chrome): it draws its own
+  // header and player strip, so the app header and the docked player step aside.
+  const [phoneEditorMounted, setPhoneEditorMounted] = useState(false);
   // The workspace shows one view at a time (see EditorWorkspace in AppRouter);
   // whichever is showing owns the desktop player dock.
-  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, isTouch });
+  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, phoneEditor: phoneEditorMounted });
 
-  // Compute dynamic bottom padding only for the mobile dock (fixed above the tab bar).
-  // Desktop slots (editor/header) are in-flow — no space reservation needed.
-  // mobile: bottom-14 (56px) + 24px gap = 80px
+  // The editor workspace is a full-screen tool: no app tab bar there, at any width.
+  const showMobileNav = !isEditorPath(location.pathname);
+
+  // Compute dynamic bottom padding only for the mobile dock. Desktop slots (editor/header)
+  // are in-flow — no space reservation needed. Above the tab bar the dock sits at
+  // bottom-14 (56px) with a 24px gap = 80px; with no tab bar it sits on the bottom edge.
   const dynamicPb = playerSlot === 'mobile' && isReady && isPlayerMounted && playerHeight > 0
-    ? `${playerHeight + 80}px`
+    ? `${playerHeight + (showMobileNav ? 80 : 0)}px`
     : undefined;
 
   const isAdminPage = isAdminPathname(location.pathname);
@@ -236,6 +240,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               navTo={(path) => navigate(path)}
             />
           ) : (
+          // Kept mounted while the phone editor hides it, so the workspace header slots
+          // (useHeaderSlot) still exist when the window grows back to the desktop layout.
+          <div className={phoneEditorMounted ? 'hidden' : 'contents'}>
           <AppHeader
             user={user as AuthUser | null | undefined}
             logout={logout ?? (() => { })}
@@ -263,6 +270,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             collabMe={appState.collabSession.me}
             collabProvider={appState.collabSession.provider}
           />
+          </div>
           )}
 
           <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={closeTour} />
@@ -270,6 +278,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           <div
             className={`relative z-base flex-1 min-h-0 flex flex-col transition-[padding] duration-500 ease-in-out
             ${location.pathname === '/' ? 'pt-14'
+                : phoneEditorMounted ? 'pt-0'
                 : isPublicProjectView ? 'pt-14 lg:pt-0'
                   : 'pt-14 lg:pt-16'
               }
@@ -301,7 +310,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
                 centre their content inside it, so a cap or side padding here would
                 leave gutters that are outside every scroller and ignore the wheel. */}
             <div className="w-full flex-1 flex flex-col min-h-0">
-              {children}
+              <PhoneEditorChromeContext value={setPhoneEditorMounted}>
+                {children}
+              </PhoneEditorChromeContext>
             </div>
           </div>
 
@@ -317,15 +328,18 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               isProjectLoading={isProjectLoading}
               onHeightChange={setPlayerHeight}
               playerSlot={playerSlot}
+              aboveNav={showMobileNav}
             />
           )}
 
-          <AppMobileNav
-            isReady={isReady}
-            mobileTab={mobileTab}
-            setMobileTab={setMobileTab}
-            activepublicId={activepublicId}
-          />
+          {showMobileNav && (
+            <AppMobileNav
+              isReady={isReady}
+              mobileTab={mobileTab}
+              setMobileTab={setMobileTab}
+              activepublicId={activepublicId}
+            />
+          )}
 
           <AppModals
             showKeyboardHelp={showKeyboardHelp}

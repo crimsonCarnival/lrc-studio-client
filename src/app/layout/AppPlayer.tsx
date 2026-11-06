@@ -9,6 +9,8 @@ interface AppPlayerProps {
   isProjectLoading?: boolean;
   onHeightChange?: (height: number) => void;
   playerSlot?: PlayerSlot;
+  /** False where the app tab bar is not shown (the editor): the dock then sits on the bottom edge. */
+  aboveNav?: boolean;
 }
 
 /**
@@ -26,6 +28,7 @@ export function AppPlayer({
   isProjectLoading,
   onHeightChange,
   playerSlot,
+  aboveNav = true,
 }: AppPlayerProps) {
   const innerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -45,7 +48,7 @@ export function AppPlayer({
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-14 top-auto z-player px-0 lg:px-6 pointer-events-none transition-all duration-500 ease-in-out ${isReady ? 'opacity-100' : 'opacity-0 translate-y-12'}`}
+      className={`fixed inset-x-0 ${aboveNav ? 'bottom-14' : 'bottom-0 pb-safe'} top-auto z-player px-0 lg:px-6 pointer-events-none transition-all duration-500 ease-in-out ${isReady ? 'opacity-100' : 'opacity-0 translate-y-12'}`}
     >
       <div ref={innerRef} className={`max-w-[1600px] mx-auto w-full bg-zinc-900/95 backdrop-blur-lg max-lg:border-y lg:border-2 border-zinc-700/50 max-lg:rounded-none lg:rounded-2xl shadow-elevated ${isReady ? 'pointer-events-auto' : 'pointer-events-none'} flex flex-col lg:flex-row items-center justify-center lg:min-h-[80px] overflow-visible lg:px-6 py-2 lg:py-4 relative transition-all duration-500 ${isReady ? '' : 'scale-95'}`}>
         {isProjectLoading && isReady ? (
