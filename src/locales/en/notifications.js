@@ -102,5 +102,13 @@ export default {
   timeMinutes: '{{n}}m ago',
   timeHours: '{{n}}h ago',
   timeDays: '{{n}}d ago',
+  compactNow: 'just now',
+  compactSeconds: '{{n}}s',
+  compactMinutes: '{{n}}m',
+  compactHours: '{{n}}h',
+  compactDays: '{{n}}d',
+  compactWeeks: '{{n}}w',
+  compactMonths: '{{n}}mo',
+  compactYears: '{{n}}y',
   viewAll: 'View all notifications',
 };

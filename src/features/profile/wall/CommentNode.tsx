@@ -10,7 +10,7 @@ import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { cn } from '@/shared/utils/utils';
 import { useSettings } from '@/features/settings/useSettings';
-import { formatTimeAgo } from '@/features/notifications/time-ago';
+import { formatCompactAgo, formatFullDateTime } from '@/features/notifications/time-ago';
 import { profilePath } from '../profile-path';
 import { WALL_MAX_DEPTH } from './wall.service';
 import type { WallAuthor, WallComment } from './wall.service';
@@ -217,9 +217,11 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
           <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
             <Link to={profilePath(author.accountName)} className="font-semibold text-zinc-100 hover:text-primary transition-colors">{name}</Link>
             <span className="text-xs text-zinc-500">
-              {formatTimeAgo(comment.createdAt, t, settings.advanced?.timezone, language)}
+              <Tip content={formatFullDateTime(comment.createdAt, settings.advanced?.timezone, language)}>
+                <span className="cursor-default">{formatCompactAgo(comment.createdAt, t)}</span>
+              </Tip>
               {comment.editedAt && (
-                <Tip content={t('profile.wall.editedAt', { when: formatTimeAgo(comment.editedAt, t, settings.advanced?.timezone, language) })}>
+                <Tip content={t('profile.wall.editedAt', { when: formatFullDateTime(comment.editedAt, settings.advanced?.timezone, language) })}>
                   <span className="ml-1 cursor-help">· {t('profile.wall.edited')}</span>
                 </Tip>
               )}
