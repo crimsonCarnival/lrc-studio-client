@@ -1,0 +1,36 @@
+import { useTranslation } from 'react-i18next';
+import { Icon } from '@/shared/ui/Icon';
+import { cn } from '@/shared/utils/utils';
+
+type VisibilityChipProps = {
+  isPublic: boolean;
+  onOpen: () => void;
+  className?: string;
+};
+
+/**
+ * The project's visibility, always visible in the editor header. Tapping it opens the
+ * publish flow; it never changes visibility by itself. Short enough for a phone header.
+ */
+export function VisibilityChip({ isPublic, onOpen, className }: VisibilityChipProps) {
+  const { t } = useTranslation();
+  const state = t(isPublic ? 'project.visibilityChipPublic' : 'project.visibilityChipPrivate');
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={t('project.visibilityChipLabel', { state })}
+      data-visibility={isPublic ? 'public' : 'private'}
+      className={cn(
+        'inline-flex h-10 coarse:h-11 shrink-0 items-center gap-1.5 rounded-pill px-3 text-[13px] font-semibold whitespace-nowrap transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
+        isPublic
+          ? 'bg-foam-soft text-foam-ink inset-ring inset-ring-foam'
+          : 'bg-raised text-subtle inset-ring inset-ring-hl hover:bg-overlay hover:text-foreground',
+        className,
+      )}
+    >
+      <Icon name={isPublic ? 'public' : 'lock'} size={14} />
+      {state}
+    </button>
+  );
+}
