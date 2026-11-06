@@ -11,7 +11,6 @@ import { TrackNumberField } from '@/shared/ui/track-number-field';
 import { CoverDropzone } from './CoverDropzone';
 import { useLanguageOptions } from '../../hooks/useLanguageOptions';
 import { Textarea } from '@ui/textarea';
-import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
 import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { TagsSelector } from '@ui/tags-selector';
@@ -91,7 +90,6 @@ interface MetadataState {
   name: string;
   description: string;
   tags: string[];
-  isPublic: boolean;
   songName: string;
   artists: ArtistCredit[];
   songAlbum: string;
@@ -203,9 +201,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     name: prefill?.name || '',
     description: prefill?.description || '',
     tags: prefill?.tags || [],
-    // Public by default for authenticated users, unless specified in preferences.
-    // Guests can't toggle it, so their drafts stay private until they sign up.
-    isPublic: user ? (user.preferences?.defaultProjectPrivacy !== 'private') : false,
     songName: prefill?.songName || '',
     artists: prefill?.artists || [],
     songAlbum: prefill?.songAlbum || '',
@@ -227,7 +222,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
   // The server owns `songArtist` (derived from the credits); here only the primary names are needed, for lookups.
   const primaryText = primaryArtistText(artists);
 
@@ -406,7 +401,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
   };
 
   // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
@@ -444,23 +439,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             </h2>
           </div>
           <div className="flex items-center gap-4 shrink-0 max-sm:w-full max-sm:justify-between">
-            {/* Visibility lives up here rather than at the foot of the form: it
-                is a property of the project, not another metadata field, and
-                the form below needs the vertical room. */}
-            <Tip content={!user ? t('setup.visibilityNeedsAccount') : isPublic ? t('setup.publicHelp') : t('setup.privateHelp')}>
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="project-public"
-                  checked={isPublic}
-                  onCheckedChange={(checked: boolean) => setMetadataState({ isPublic: checked })}
-                  disabled={!user}
-                />
-                <label
-                  htmlFor="project-public"
-                  className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 cursor-pointer select-none"
-                >
-                  {isPublic ? t('setup.public') : t('setup.private')}
-                </label>
+            {/* Every new project starts private; publishing is a later, explicit step. */}
+            <Tip content={t('setup.privateHelp')}>
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 select-none">
+                <Icon name="lock" size={14} />
+                <span>{t('setup.private')}</span>
               </div>
             </Tip>
 

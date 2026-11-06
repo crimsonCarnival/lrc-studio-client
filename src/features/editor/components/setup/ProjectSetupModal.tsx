@@ -113,7 +113,8 @@ export interface ProjectSetupConfirm {
   songYear: string;
   genre: string;
   coverImage: string;
-  isPublic: boolean;
+  /** Absent for a new project: it is always created private. */
+  isPublic?: boolean;
   singerColors?: string[];
   /** Present only when the caller passed `initialSingers` (i.e. it persists the roster). */
   singers?: string[];
@@ -137,6 +138,8 @@ interface ProjectSetupModalProps {
   /** Opt-in: pass to show the singer roster editor; omit where the caller can't persist it. */
   initialSingers?: string[];
   isEditing?: boolean;
+  /** A project that does not exist yet: visibility is a fixed, read-only Private. */
+  isNewProject?: boolean;
   sourceInfo?: SourceInfo | null;
   songSingers?: string[];
 }
@@ -158,6 +161,7 @@ export default function ProjectSetupModal({
   initialSingerColors = EMPTY_COLORS,
   initialSingers,
   isEditing = false,
+  isNewProject = false,
   sourceInfo = null,
   songSingers = [],
 }: ProjectSetupModalProps) {
@@ -184,6 +188,7 @@ export default function ProjectSetupModal({
     singers: initialSingers || [],
   }));
   const primaryText = primaryArtistText(form.artists);
+  const visiblePublic = !isNewProject && form.isPublic;
 
   // Sync form when the modal is opened or when the underlying data changes
   // (e.g. switching between projects without unmounting the component)
@@ -311,7 +316,7 @@ export default function ProjectSetupModal({
       songYear: form.songYear.trim(),
       genre: form.genre,
       coverImage: form.coverImage.trim(),
-      isPublic: form.isPublic,
+      ...(isNewProject ? {} : { isPublic: form.isPublic }),
       singerColors: (form.singerColors || []).map((c) => c || ''),
       ...(initialSingers !== undefined ? { singers: form.singers } : {}),
     });
@@ -630,21 +635,23 @@ export default function ProjectSetupModal({
               <div className="flex flex-row items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/50">
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5">
-                    {form.isPublic ? <Icon name="language" size={14} className="text-zinc-400" /> : <Icon name="lock" size={14} className="text-zinc-400" />}
+                    {visiblePublic ? <Icon name="language" size={14} className="text-zinc-400" /> : <Icon name="lock" size={14} className="text-zinc-400" />}
                     <span className="text-xs font-semibold text-zinc-300">
-                      {form.isPublic ? t('project.visibilityPublic') : t('project.visibilityPrivate')}
+                      {visiblePublic ? t('project.visibilityPublic') : t('project.visibilityPrivate')}
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500">
-                    {form.isPublic
+                    {visiblePublic
                       ? t('project.publicDescription')
                       : t('project.privateDescription')}
                   </span>
                 </div>
-                <Switch
-                  checked={form.isPublic}
-                  onCheckedChange={(checked) => setForm(f => ({ ...f, isPublic: checked }))}
-                />
+                {!isNewProject && (
+                  <Switch
+                    checked={form.isPublic}
+                    onCheckedChange={(checked) => setForm(f => ({ ...f, isPublic: checked }))}
+                  />
+                )}
               </div>
 
             </div>

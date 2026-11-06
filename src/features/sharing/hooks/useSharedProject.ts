@@ -250,6 +250,8 @@ export function useSharedProject({
         if (!lastShareData) setShareModalState({ loading: 'creating' });
         const result = await projects.create({ ...projectData, recaptchaToken });
         sharedId = result.publicId;
+        // Creation is always private, and the link below must open for other people.
+        await projects.update(sharedId, { public: true });
         setActivepublicId(sharedId);
         activepublicIdRef.current = sharedId;
         localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, sharedId);

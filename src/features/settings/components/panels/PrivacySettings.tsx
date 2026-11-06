@@ -26,7 +26,6 @@ const NOTIFICATION_TYPES = [
 const MODERATOR_NOTIFICATION_TYPES = ['report'] as const;
 
 type PrefsValues = {
-  defaultProjectPrivacy: 'public' | 'private';
   showFollowers: boolean;
   showActivityHeatmap: boolean;
   showXpProgress: boolean;
@@ -53,7 +52,6 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
   const notificationPrefs = (user?.preferences?.notifications ?? {}) as Partial<Record<string, boolean>>;
   const prefs = user?.preferences;
   const saved: PrefsValues = {
-    defaultProjectPrivacy: prefs?.defaultProjectPrivacy === 'private' ? 'private' : 'public',
     showFollowers: prefs?.showFollowers ?? (user?.showFollowers ?? true),
     // Privacy-by-default: off unless explicitly enabled (server default is false too).
     showActivityHeatmap: prefs?.showActivityHeatmap ?? false,
@@ -120,23 +118,6 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
 
   return (
     <>
-      <Section title={tk('profile.settings.projectsSection')} searchTerm={searchTerm}>
-        <SettingRow
-          label={tk('profile.settings.newProjectsVisibility')}
-          description={tk('profile.settings.newProjectsVisibilityDesc')}
-        >
-          <SegmentedControl
-            label={tk('profile.settings.newProjectsVisibility')}
-            value={values.defaultProjectPrivacy}
-            options={[
-              { value: 'public', label: tk('profile.settings.public') },
-              { value: 'private', label: tk('profile.settings.private') },
-            ]}
-            onChange={(v) => setPref('defaultProjectPrivacy', v)}
-          />
-        </SettingRow>
-      </Section>
-
       <Section title={tk('profile.settings.profileSection')} searchTerm={searchTerm}>
         <SettingRow label={tk('profile.settings.showFollowers')} description={tk('profile.settings.showFollowersSub')}>
           <Toggle label={tk('profile.settings.showFollowers')} checked={values.showFollowers} onChange={(v) => setPref('showFollowers', v)} />

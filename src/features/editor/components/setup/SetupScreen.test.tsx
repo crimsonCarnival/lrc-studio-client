@@ -55,6 +55,13 @@ function renderSetup(state?: unknown, search = '') {
 describe('SetupScreen', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('starts private and shows no public switch', () => {
+    renderSetup();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.getByText('setup.private')).toBeInTheDocument();
+    expect(screen.queryByText('setup.public')).not.toBeInTheDocument();
+  });
+
   it('preselects the upload passed from the uploads library', async () => {
     const playerRef = renderSetup({ uploadId: 'u2' });
     await waitFor(() => expect(screen.getByText('setup.audioReady')).toBeInTheDocument());
