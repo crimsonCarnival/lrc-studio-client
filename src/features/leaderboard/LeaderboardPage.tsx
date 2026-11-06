@@ -15,6 +15,7 @@ import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { SelectField } from '@ui/select-field';
 
 interface LeaderEntry {
   id?: string;
@@ -358,16 +359,14 @@ export default function LeaderboardPage() {
               <label htmlFor="leaderboard-sort" className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                 {t('badges.leaderboard.sortControlLabel')}
               </label>
-              <select
+              <SelectField
                 id="leaderboard-sort"
+                variant="ghost"
+                aria-label={t('badges.leaderboard.sortControlLabel')}
                 value={sortBy}
-                onChange={(e) => setView({ sort: e.target.value as LeaderboardSort, dir: 'DESC' })}
-                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs min-h-11 text-zinc-300 hover:text-zinc-100 transition-colors pl-2 pr-6 rounded-lg outline-none cursor-pointer border-none"
-              >
-                {SORT_COLUMNS.map(({ sort, labelKey }) => (
-                  <option key={sort} value={sort} className="bg-zinc-900">{t(labelKey)}</option>
-                ))}
-              </select>
+                onValueChange={(v) => setView({ sort: v as LeaderboardSort, dir: 'DESC' })}
+                options={SORT_COLUMNS.map(({ sort, labelKey }) => ({ value: sort, label: t(labelKey) }))}
+              />
               <button
                 type="button"
                 onClick={() => setView({ dir: sortDir === 'DESC' ? 'ASC' : 'DESC' })}

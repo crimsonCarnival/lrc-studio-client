@@ -13,6 +13,7 @@ import { requestsApi } from './services/requests.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import useConfirm from '@/shared/hooks/useConfirm';
+import { SelectField } from '@ui/select-field';
 
 // Typed i18next rejects arbitrary string keys / object interpolation values.
 type TkFn = (k: string, o?: Record<string, unknown>) => string;
@@ -377,15 +378,13 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
               {/* Condition */}
               <label className="flex flex-col gap-1">
                 <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.condition_label')}</span>
-                <select
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+                <SelectField
+                  aria-label={t('admin.badges.condition_label')}
+                  className="w-full"
                   value={form.conditionType}
-                  onChange={e => set('conditionType', e.target.value)}
-                >
-                  {CONDITION_TYPES.map(ct => (
-                    <option key={ct} value={ct}>{(t as TkFn)(`admin.badges.conditions.${ct}`)}</option>
-                  ))}
-                </select>
+                  onValueChange={v => set('conditionType', v)}
+                  options={CONDITION_TYPES.map(ct => ({ value: ct, label: (t as TkFn)(`admin.badges.conditions.${ct}`) }))}
+                />
               </label>
 
               {needsValue(form.conditionType) && (

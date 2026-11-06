@@ -27,6 +27,8 @@ import { songMetadata } from '@/app/api';
 import SingersInput from './SingersInput';
 import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
+import { SelectField } from '@ui/select-field';
+import { ColorPicker } from '@ui/color-picker';
 
 const EMPTY_TAGS: string[] = [];
 const EMPTY_ARTISTS: ArtistCredit[] = [];
@@ -438,17 +440,15 @@ export default function ProjectSetupModal({
                       return (
                         <div key={i} className="flex flex-col items-center gap-1">
                           <Tip content={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}>
-                            <input
-                              type="color"
+                            <ColorPicker
                               value={form.singerColors?.[i] || '#888888'}
-                              onChange={(e) => {
+                              onChange={(hex) => {
                                 setForm((f) => {
                                   const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                  newColors[i] = e.target.value;
+                                  newColors[i] = hex;
                                   return { ...f, singerColors: newColors };
                                 });
                               }}
-                              className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
                               aria-label={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
                             />
                           </Tip>
@@ -528,17 +528,14 @@ export default function ProjectSetupModal({
                 <Label htmlFor="song-genre" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                   {t('setup.songGenre')}
                 </Label>
-                <select
+                <SelectField
                   id="song-genre"
+                  aria-label={t('setup.songGenre')}
+                  className="w-full"
                   value={form.genre}
-                  onChange={(e) => setForm(f => ({ ...f, genre: e.target.value }))}
-                  className="h-9 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">—</option>
-                  {PRIMARY_GENRES.map((g) => (
-                    <option key={g} value={g}>{t(`setup.genre.${g}`)}</option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setForm(f => ({ ...f, genre: v }))}
+                  options={[{ value: '', label: '—' }, ...PRIMARY_GENRES.map((g) => ({ value: g, label: t(`setup.genre.${g}`) }))]}
+                />
               </div>
 
               <div className="space-y-2">

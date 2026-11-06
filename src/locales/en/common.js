@@ -46,5 +46,24 @@ export default {
   deleteItem: "Delete {{name}}",
   loadError: "Failed to load. Please try again.",
   shareLinkNotFound: "Share link not found.",
-  moreActions: "More actions"
+  moreActions: "More actions",
+  colorPicker: {
+    area: "saturation and brightness",
+    hue: "hue",
+    hex: "hex code"
+  },
+  datePicker: {
+    placeholder: "Pick a date",
+    dialog: "Choose date and time",
+    prevMonth: "Previous month",
+    nextMonth: "Next month",
+    today: "Today",
+    done: "Done",
+    hour: "Hour",
+    minute: "Minute",
+    meridiem: "AM or PM",
+    am: "AM",
+    pm: "PM",
+    zone: "Times use your timezone: {{zone}}"
+  }
 };

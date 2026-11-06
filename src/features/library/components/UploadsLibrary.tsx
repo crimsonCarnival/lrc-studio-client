@@ -24,6 +24,7 @@ import { Button } from '@ui/button';
 import { LibrarySwitch } from './LibrarySwitch';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectEditPath } from '@/features/projects/project-path';
+import { SelectField } from '@ui/select-field';
 
 interface UploadProject {
   publicId: string;
@@ -462,16 +463,14 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
               />
               <div className="relative flex items-center h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100">
                 <Icon name="sort" size={16} className="absolute left-3 pointer-events-none text-zinc-400" />
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortId)}
+                <SelectField
+                  variant="ghost"
                   aria-label={t('uploads.sort.recent')}
-                  className="appearance-none bg-transparent h-full pl-9 pr-4 text-sm outline-none cursor-pointer"
-                >
-                  {(['recent', 'oldest', 'title'] as SortId[]).map((id) => (
-                    <option key={id} value={id} className="bg-zinc-900">{t(`uploads.sort.${id}`)}</option>
-                  ))}
-                </select>
+                  className="h-full pl-9 text-sm text-foreground"
+                  value={sort}
+                  onValueChange={(v) => setSort(v as SortId)}
+                  options={(['recent', 'oldest', 'title'] as SortId[]).map((id) => ({ value: id, label: t(`uploads.sort.${id}`) }))}
+                />
               </div>
               <SegmentedControl<ViewId>
                 label={t('uploads.gridView')}

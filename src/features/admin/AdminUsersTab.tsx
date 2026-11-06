@@ -15,6 +15,7 @@ import { usePresence } from '@/shared/hooks/usePresence';
 import { OnlineDot } from '@/shared/ui/OnlineDot';
 import { UserHoverCard } from '@/shared/ui/UserHoverCard';
 import type { AdminUser } from '@/features/admin/admin.types';
+import { SelectField } from '@ui/select-field';
 
 function formatBytes(bytes = 0) {
   if (bytes === 0) return '0 B';
@@ -130,14 +131,16 @@ export default function AdminUsersTab({
       // Current role first, then any other roles below the actor's rank.
       const options = Array.from(new Set([user.role ?? 'user', ...assignableRoles]));
       return (
-        <select
-          value={user.role ?? 'user'}
-          onChange={(e) => handleChangeRole(user, e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-zinc-800 text-zinc-200 rounded px-1.5 py-1 coarse:py-3.5 text-[10px] font-semibold uppercase tracking-wider border border-zinc-700 focus:border-primary outline-none cursor-pointer"
-        >
-          {options.map(r => <option key={r} value={r}>{tk(`admin.table.${r}`)}</option>)}
-        </select>
+        <span onClick={(e) => e.stopPropagation()}>
+          <SelectField
+            size="sm"
+            aria-label={t('admin.table.role')}
+            value={user.role ?? 'user'}
+            onValueChange={(v) => handleChangeRole(user, v)}
+            options={options.map(r => ({ value: r, label: tk(`admin.table.${r}`) }))}
+            className="text-[10px] font-semibold uppercase tracking-wider"
+          />
+        </span>
       );
     }
     return (
@@ -160,32 +163,34 @@ export default function AdminUsersTab({
         />
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2 sm:gap-4'}`}>
           {!hideRoleFilter && (
-            <select
-              value={roleFilter}
+            <SelectField
               aria-label={t('admin.dashboard.filters.filterByRole')}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 coarse:min-h-11 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
-            >
-              <option value="">{t('admin.dashboard.filters.allRoles')}</option>
-              <option value="superadmin">{t('admin.table.superadmin')}</option>
-              <option value="admin">{t('admin.table.admin')}</option>
-              <option value="mod">{t('admin.table.mod')}</option>
-              <option value="user">{t('admin.table.user')}</option>
-            </select>
+              value={roleFilter}
+              onValueChange={setRoleFilter}
+              className={isMobile ? 'flex-1' : ''}
+              options={[
+                { value: '', label: t('admin.dashboard.filters.allRoles') },
+                { value: 'superadmin', label: t('admin.table.superadmin') },
+                { value: 'admin', label: t('admin.table.admin') },
+                { value: 'mod', label: t('admin.table.mod') },
+                { value: 'user', label: t('admin.table.user') },
+              ]}
+            />
           )}
-          <select
-            value={statusFilter}
+          <SelectField
             aria-label={t('admin.dashboard.filters.filterByStatus')}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 coarse:min-h-11 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
-          >
-            <option value="">{t('admin.dashboard.filters.allStatuses')}</option>
-            <option value="active">{t('admin.dashboard.filters.active')}</option>
-            <option value="banned">{t('admin.dashboard.filters.banned')}</option>
-            <option value="deleted">{t('admin.dashboard.filters.deleted')}</option>
-            <option value="verified">{t('admin.dashboard.filters.verified')}</option>
-            <option value="premium">{t('admin.dashboard.filters.premium')}</option>
-          </select>
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            className={isMobile ? 'flex-1' : ''}
+            options={[
+              { value: '', label: t('admin.dashboard.filters.allStatuses') },
+              { value: 'active', label: t('admin.dashboard.filters.active') },
+              { value: 'banned', label: t('admin.dashboard.filters.banned') },
+              { value: 'deleted', label: t('admin.dashboard.filters.deleted') },
+              { value: 'verified', label: t('admin.dashboard.filters.verified') },
+              { value: 'premium', label: t('admin.dashboard.filters.premium') },
+            ]}
+          />
         </div>
       </div>
 

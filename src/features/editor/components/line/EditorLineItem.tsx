@@ -27,6 +27,7 @@ import type { PlayerHandle } from '@/features/player/player.types';
 import type { LockHolderView, RemoteActiveView } from '@/features/collab/collab.types';
 import { LineLockBadge } from '@/features/collab/components/LineLockBadge';
 import { collabColor } from '@/features/collab/collab-color';
+import { SuggestInput } from '@ui/suggest-input';
 
 function getSingers(line: EditorLine): string[] {
   return line.singers || [];
@@ -503,10 +504,9 @@ const EditorLineItem = React.memo(({
                         ><Icon name="close" size={10} /></button>
                       </span>
                     ))}
-                    <input
-                      type="text"
+                    <SuggestInput
+                      suggestions={songArtists ?? []}
                       placeholder={t('editor.addSinger')}
-                      list="inline-singers-list"
                       className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-full px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -521,11 +521,6 @@ const EditorLineItem = React.memo(({
                       }}
                       onClick={(e) => e.stopPropagation()}
                     />
-                    {songArtists && songArtists.length > 0 && (
-                      <datalist id="inline-singers-list">
-                        {songArtists.map(a => <option key={a} value={a} />)}
-                      </datalist>
-                    )}
                   </div>
                   <button
                     onClick={(e) => {

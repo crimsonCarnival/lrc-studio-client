@@ -300,6 +300,7 @@ export default {
     composer: {
       title: 'Nueva solicitud',
       type: 'Tipo de solicitud',
+      action: 'Acción',
       reason: 'Motivo (opcional)',
       deviceId: 'ID de dispositivo',
       grant: 'Otorgar',

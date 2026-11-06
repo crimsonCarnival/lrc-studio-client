@@ -4,6 +4,7 @@ import { Button } from '@ui/button';
 import { formatArtistDisplay, parseArtists, primaryNames, joinNames, type ArtistCredit } from '@/shared/utils/artists';
 import { ArtistImportReview } from './ArtistImportReview';
 import { useArtistImport } from './useArtistImport';
+import { RadioGroup, RadioGroupItem } from '@ui/radio-group';
 
 interface Props {
   /** The song a search or lookup found: its title and the provider's artist string. */
@@ -47,14 +48,18 @@ export function ArtistApplyStep({ song, onApply, onSkip, variant = 'apply' }: Pr
           : tr('artists.import.body', { artists: shown })}
       </p>
       {hasFeatured && (
-        <div className="flex flex-wrap gap-4">
+        <RadioGroup
+          name={name}
+          value={String(includeFeatured)}
+          onValueChange={(v) => setIncludeFeatured(v === 'true')}
+        >
           {([false, true] as const).map((withFeatured) => (
             <label key={String(withFeatured)} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-              <input type="radio" name={name} checked={includeFeatured === withFeatured} onChange={() => setIncludeFeatured(withFeatured)} />
+              <RadioGroupItem value={String(withFeatured)} />
               {tr(withFeatured ? 'artists.apply.includeFeatured' : 'artists.apply.primaryOnly')}
             </label>
           ))}
-        </div>
+        </RadioGroup>
       )}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onSkip}>{tr(`artists.${variant}.skip`)}</Button>
