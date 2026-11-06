@@ -41,4 +41,14 @@ describe('getPublishReadiness', () => {
   it('treats a timestamp of 0 as timed', () => {
     expect(getPublishReadiness([timed('a', 0)], meta).complete).toBe(true);
   });
+
+  it('treats undefined artists as missing without throwing', () => {
+    expect(getPublishReadiness([timed('a', 1)], { title: 'Song', artists: undefined, coverImage: 'c' }).missing).toEqual(['artist']);
+  });
+
+  it('reports a missing title and untimed lines together', () => {
+    const r = getPublishReadiness([{ text: 'a', timestamp: null }], { title: '', artists: ['A'], coverImage: 'c' });
+    expect(r.missing).toEqual(['title', 'lines']);
+    expect(r.complete).toBe(false);
+  });
 });
