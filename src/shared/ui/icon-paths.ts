@@ -39,6 +39,8 @@ export const ICON_SHAPES: Record<string, IconShape> = {
   visibility: { d: 'M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z M15 12a3 3 0 1 1-6 0a3 3 0 1 1 6 0' },
   close: { d: 'M6 6l12 12 M18 6L6 18' },
   check: { d: 'M5 12.5l4.5 4.5L19 7' },
+  // A die showing five: the pips are zero-length strokes, drawn by the round caps.
+  casino: { d: ['M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z', 'M8.5 8.5h.01 M15.5 8.5h.01 M12 12h.01 M8.5 15.5h.01 M15.5 15.5h.01'], weight: 1.1 },
   // Zero-length strokes: the round caps draw the dots, and both orientations share one
   // command structure, so ⋯ turns into ⋮ by sliding the dots rather than cross-fading.
   // Unrotated chevrons: expand_less / chevron_right are the same path turned with CSS,

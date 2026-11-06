@@ -286,5 +286,6 @@ export default {
   },
   backToLogin: "Volver al inicio de sesión",
   hidePassword: "Ocultar contraseña",
+  randomName: "Elegir un nombre al azar",
   showPassword: "Mostrar contraseña",
 };

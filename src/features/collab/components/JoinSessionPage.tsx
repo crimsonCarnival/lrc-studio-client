@@ -7,6 +7,8 @@ import { Button } from '@ui/button'
 import { Input } from '@ui/input'
 import { Label } from '@ui/label'
 import { LogoLoader } from '@ui/LogoLoader'
+import { Icon } from '@/shared/ui/Icon'
+import { useNameRoll } from '@/shared/hooks/useNameRoll'
 import { useAuthContext } from '@/features/auth/useAuthContext'
 import { isApiError } from '@/types'
 import { sessionPath } from '@/features/projects/project-path'
@@ -70,6 +72,7 @@ export default function JoinSessionPage() {
   const [error, setError] = useState<JoinErrorKey | null>(null)
   const [joining, setJoining] = useState(false)
   const autoJoinedRef = useRef(false)
+  const { rolling, roll } = useNameRoll(setName)
 
   const join = useCallback(async (guestName?: string) => {
     if (!token) return
@@ -153,17 +156,29 @@ export default function JoinSessionPage() {
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="collab-join-name">{t('collab.join.nameLabel')}</Label>
-        <Input
-          id="collab-join-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('collab.join.namePlaceholder')}
-          autoComplete="nickname"
-          maxLength={40}
-          autoFocus
-          aria-invalid={nameError}
-          aria-describedby={nameError ? 'collab-join-name-error' : undefined}
-        />
+        <div className="flex gap-2">
+          <Input
+            id="collab-join-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('collab.join.namePlaceholder')}
+            autoComplete="nickname"
+            maxLength={40}
+            autoFocus
+            aria-invalid={nameError}
+            aria-describedby={nameError ? 'collab-join-name-error' : undefined}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => { setNameError(false); roll(name) }}
+            disabled={rolling}
+            aria-label={t('collab.join.randomName')}
+          >
+            <Icon name="casino" size={16} className={rolling ? 'animate-spin' : undefined} />
+          </Button>
+        </div>
         {nameError && <p id="collab-join-name-error" role="alert" className="text-xs text-destructive">{t('collab.join.nameInvalid')}</p>}
       </div>
       <Button type="submit" loading={joining} disabled={joining}>{joining ? t('collab.join.joining') : t('collab.join.submit')}</Button>

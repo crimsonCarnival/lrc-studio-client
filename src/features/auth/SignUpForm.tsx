@@ -9,6 +9,7 @@ import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
+import { useNameRoll } from '@/shared/hooks/useNameRoll';
 import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
@@ -133,14 +134,20 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
     onIdentityChange?.({ displayName, accountName });
   }, [displayName, accountName, onIdentityChange]);
 
-  const handleDisplayNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
+  const applyDisplayName = useCallback((val: string) => {
     setDisplayName(val);
     setFieldErrors(p => ({ ...p, displayName: undefined }));
     if (!accountNameTouchedRef.current) {
       setAccountName(val ? generateHandle(val) : '');
     }
   }, []);
+
+  const { rolling, roll } = useNameRoll(applyDisplayName);
+
+  const handleDisplayNameChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => applyDisplayName(e.target.value),
+    [applyDisplayName],
+  );
 
   const handleAccountNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -273,16 +280,30 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
           >
             <form onSubmit={handleNext} noValidate className="flex flex-col gap-[22px]">
               <AuthField error={fieldErrors.displayName}>
-                <FloatingInput
-                  id="reg-displayName"
-                  type="text"
-                  label={t('auth.displayName')}
-                  value={displayName}
-                  onChange={handleDisplayNameChange}
-                  autoComplete="nickname"
-                  maxLength={50}
-                  error={!!fieldErrors.displayName}
-                />
+                <div className="relative">
+                  <FloatingInput
+                    id="reg-displayName"
+                    type="text"
+                    label={t('auth.displayName')}
+                    value={displayName}
+                    onChange={handleDisplayNameChange}
+                    autoComplete="nickname"
+                    maxLength={50}
+                    error={!!fieldErrors.displayName}
+                    className="pr-12"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => roll(displayName)}
+                    disabled={rolling}
+                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
+                    aria-label={t('auth.randomName')}
+                  >
+                    <Icon name="casino" size={16} className={rolling ? 'animate-spin' : undefined} />
+                  </Button>
+                </div>
               </AuthField>
 
               <AuthField error={fieldErrors.accountName} hint={t('auth.accountNameHint')}>

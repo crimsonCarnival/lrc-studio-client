@@ -286,5 +286,6 @@ export default {
   },
   backToLogin: "Back to login",
   hidePassword: "Hide password",
+  randomName: "Pick a random name",
   showPassword: "Show password",
 };

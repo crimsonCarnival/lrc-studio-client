@@ -134,6 +134,7 @@ export default {
     joining: 'Entrando…',
     nameLabel: 'Tu nombre',
     namePlaceholder: '¿Cómo quieres que te vean los demás?',
+    randomName: 'Elegir un nombre al azar',
     nameInvalid: 'Escribe un nombre de entre 1 y 40 caracteres.',
     submit: 'Unirme',
     goHome: 'Ir al inicio',
