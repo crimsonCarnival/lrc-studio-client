@@ -46,5 +46,24 @@ export default {
   deleteItem: "Eliminar {{name}}",
   loadError: "Error al cargar. Por favor, inténtalo de nuevo.",
   shareLinkNotFound: "Enlace no encontrado.",
-  moreActions: "Más acciones"
+  moreActions: "Más acciones",
+  colorPicker: {
+    area: "saturación y brillo",
+    hue: "tono",
+    hex: "código hex"
+  },
+  datePicker: {
+    placeholder: "Elige una fecha",
+    dialog: "Elegir fecha y hora",
+    prevMonth: "Mes anterior",
+    nextMonth: "Mes siguiente",
+    today: "Hoy",
+    done: "Listo",
+    hour: "Hora",
+    minute: "Minuto",
+    meridiem: "a. m. o p. m.",
+    am: "a. m.",
+    pm: "p. m.",
+    zone: "Las horas usan tu zona horaria: {{zone}}"
+  }
 };

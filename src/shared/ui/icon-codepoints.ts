@@ -20,6 +20,7 @@ export const ICON_CODEPOINTS: Record<string, string> = {
   bar_chart: '\u{e26b}',
   bento: '\u{f1f4}',
   bookmark: '\u{e866}',
+  calendar_month: '\u{ebcc}',
   calendar_today: '\u{e935}',
   cancel: '\u{e5c9}',
   chat_bubble: '\u{e0ca}',
