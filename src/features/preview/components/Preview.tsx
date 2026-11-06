@@ -234,7 +234,7 @@ export default function Preview(props: PreviewProps) {
 
   const subtitle = [songInfo.title, songInfo.artist].filter(Boolean).join(' · ');
   const alignment = settings.interface?.previewAlignment || 'left';
-  const canPublish = !!activepublicId && !viewerMode && !sessionMode && !isSharedProject;
+  const canPublish = !!activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && !viewerMode && !sessionMode && !isSharedProject;
   const untimedCount = lineStats.total - lineStats.timed;
 
   const viewToggles = [
@@ -614,6 +614,7 @@ export default function Preview(props: PreviewProps) {
           onOpenChange={setPublishOpen}
           project={{ publicId: activepublicId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines: lines as EditorLine[] }}
           onPublished={onVisibilityChange}
+          onSave={props.handleManualSave as (() => Promise<boolean>) | undefined}
         />
       )}
     </>

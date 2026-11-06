@@ -54,6 +54,8 @@ export default {
   publishSignInAction: "Sign in",
   publishedTitle: "Your project is public",
   publishedLead: "Anyone with this link can open it.",
+  publishLinkLabel: "Public link",
+  publishSaveFailed: "Could not save your latest changes, so nothing was published. The project is still private.",
   publishCopy: "Copy link",
   publishShare: "Share",
   publishDone: "Done",

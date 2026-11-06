@@ -980,6 +980,7 @@ export default function Editor({
           onOpenChange={setPublishOpen}
           project={{ publicId: serverProjectId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines }}
           onPublished={onVisibilityChange}
+          onSave={handleManualSave ?? undefined}
         />
       )}
 

@@ -547,7 +547,8 @@ export function AppRouter({
     playerSlot,
     coverImage: projectCoverImage,
     isPublic: projectIsPublic,
-    onVisibilityChange: activepublicId ? (next: boolean) => setProjectVisibility(activepublicId, next) : undefined,
+    onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean) => setProjectVisibility(activepublicId, next) : undefined,
+    handleManualSave,
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
@@ -558,7 +559,7 @@ export function AppRouter({
     pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
     playerSlot, collabViewer, sessionPublicId,
-    projectCoverImage, projectIsPublic, setProjectVisibility,
+    projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, handleManualSave,
   ]);
 
   const adminPage = (

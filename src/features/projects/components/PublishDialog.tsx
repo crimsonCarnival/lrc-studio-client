@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +33,12 @@ type PublishDialogProps = {
   project: PublishProject;
   /** Called with the new visibility once the server has accepted it. */
   onPublished?: (isPublic: boolean) => void;
+  /**
+   * Flushes unsaved edits through the editor's own manual save, resolving false on failure.
+   * Publishing sends only the visibility, so without this the project could go live with
+   * older lines than the ones the readiness check just judged. Omit where nothing is pending.
+   */
+  onSave?: () => Promise<boolean>;
 };
 
 type FetchedLines = { status: 'loading' } | { status: 'error' } | { status: 'ready'; lines: EditorLine[] };
@@ -48,7 +54,7 @@ const MISSING_KEY = {
  * The only way a project becomes public or private again. Publishing is always an explicit,
  * confirmed action; a failure leaves the project exactly as it was and the dialog open.
  */
-export function PublishDialog({ open, onOpenChange, project, onPublished }: PublishDialogProps) {
+export function PublishDialog({ open, onOpenChange, project, onPublished, onSave }: PublishDialogProps) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const signedIn = !!user && !user.isGuest;
@@ -78,7 +84,13 @@ export function PublishDialog({ open, onOpenChange, project, onPublished }: Publ
     return () => { cancelled = true; };
   }, [needsFetch, publicId]);
 
+  // Each open is a session. A request that outlives its session may still tell the parent what
+  // the server accepted, but must not touch this dialog's state: the next open starts clean.
+  const sessionRef = useRef(0);
+  const busyRef = useRef(false);
   useEffect(() => {
+    sessionRef.current += 1;
+    busyRef.current = false;
     if (open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPublished(false); setError(null); setBusy(false); setShareOpen(false);
@@ -95,18 +107,33 @@ export function PublishDialog({ open, onOpenChange, project, onPublished }: Publ
   const artistLine = artists?.filter((a) => a.trim()).join(', ');
 
   const change = async (next: boolean) => {
-    if (!publicId || busy) return;
+    if (!publicId || busyRef.current) return;
+    busyRef.current = true;
+    const session = sessionRef.current;
+    const live = () => session === sessionRef.current;
     setBusy(true);
     setError(null);
+    const fail = (key: 'project.publishFailed' | 'project.unpublishFailed' | 'project.publishSaveFailed') => {
+      if (!live()) return;
+      busyRef.current = false;
+      setError(t(key));
+      setBusy(false);
+    };
+    if (next && onSave) {
+      const saved = await onSave().catch(() => false);
+      if (!saved) { fail('project.publishSaveFailed'); return; }
+    }
     try {
       await projectsService.update(publicId, { public: next });
     } catch {
-      setError(t(next ? 'project.publishFailed' : 'project.unpublishFailed'));
-      setBusy(false);
+      fail(next ? 'project.publishFailed' : 'project.unpublishFailed');
       return;
     }
-    setBusy(false);
+    // The server accepted it: the parent learns that even if the dialog was closed meanwhile.
     onPublished?.(next);
+    if (!live()) return;
+    busyRef.current = false;
+    setBusy(false);
     if (next) {
       setPublished(true);
     } else {
@@ -150,7 +177,7 @@ export function PublishDialog({ open, onOpenChange, project, onPublished }: Publ
           <input
             readOnly
             value={link}
-            aria-label={t('project.publishedTitle')}
+            aria-label={t('project.publishLinkLabel')}
             onFocus={(e) => e.currentTarget.select()}
             className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none"
           />
