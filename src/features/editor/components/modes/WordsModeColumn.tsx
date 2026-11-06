@@ -222,7 +222,7 @@ export function WordsModeLayerControl({
           title={hint}
           aria-pressed={stampTarget === key}
           onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
-          className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none transition-all ${stampTarget === key
+          className={`inline-flex items-center gap-1 rounded-xs px-1.5 py-0.5 text-[10px] font-semibold leading-none transition-all ${stampTarget === key
             ? 'bg-primary text-primary-foreground shadow-sm'
             : 'text-subtle hover:text-foreground'
             }`}
@@ -398,7 +398,7 @@ export function WordsModeChips({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
-                        className="text-primary-dim bg-primary/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                        className="text-primary-dim bg-primary/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                       >
                         <Icon name="more_horiz" size={12} />
                       </button>
@@ -421,7 +421,7 @@ export function WordsModeChips({
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
-                        className="text-primary-dim bg-primary/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                        className="text-primary-dim bg-primary/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                       >
                         <Icon name="more_horiz" size={12} />
                       </button>
@@ -460,7 +460,7 @@ export function WordsModeChips({
                     wi={wi}
                     isSecondary={true}
                     onClick={(e) => handleWordClick(e, w, wi, true)}
-                    className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-colors cursor-pointer ${isActiveSecondaryWord || isFocusedSecondaryWord
+                    className={`text-[13px] px-3 py-1 rounded-pill border leading-none font-medium transition-colors cursor-pointer ${isActiveSecondaryWord || isFocusedSecondaryWord
                       ? 'bg-accent-blue text-zinc-950 border-accent-blue ring-2 ring-accent-blue/40 shadow-[0_0_12px_rgba(var(--accent-blue-rgb),0.5)] animate-pulse-glow'
                       : 'bg-accent-blue/10 border-accent-blue/30 text-accent-blue/70 hover:bg-accent-blue/20 hover:text-accent-blue hover:border-accent-blue'
                       }`}
@@ -481,7 +481,7 @@ export function WordsModeChips({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
-                    className="text-accent-blue bg-accent-blue/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                    className="text-accent-blue bg-accent-blue/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                   >
                     <Icon name="more_horiz" size={12} />
                   </button>
@@ -492,7 +492,7 @@ export function WordsModeChips({
                 <button
                   type="button"
                   onClick={(e) => handleWordClick(e, w, wi, true)}
-                  className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all cursor-pointer outline-none focus:ring-2 focus:ring-accent-blue/40 ${isActiveSecondaryWord || isFocusedSecondaryWord
+                  className={`text-[13px] px-3 py-1 rounded-pill border leading-none font-medium transition-all cursor-pointer outline-none focus:ring-2 focus:ring-accent-blue/40 ${isActiveSecondaryWord || isFocusedSecondaryWord
                     ? 'bg-accent-blue text-zinc-900 border-accent-blue shadow-[0_0_12px_rgba(var(--accent-blue-rgb),0.5)] animate-pulse-glow'
                     : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400'
                     }`}
@@ -503,7 +503,7 @@ export function WordsModeChips({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
-                    className="text-accent-blue bg-accent-blue/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                    className="text-accent-blue bg-accent-blue/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                   >
                     <Icon name="more_horiz" size={12} />
                   </button>

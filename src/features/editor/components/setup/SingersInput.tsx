@@ -66,7 +66,7 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
         {value.map((name) => (
           <span
             key={name}
-            className="flex items-center gap-1 h-7 pl-2.5 pr-1 rounded-full bg-zinc-800 border border-zinc-700/60 text-xs text-zinc-200"
+            className="flex items-center gap-1 h-7 pl-2.5 pr-1 rounded-pill bg-zinc-800 border border-zinc-700/60 text-xs text-zinc-200"
           >
             <Tip content={name}>
               <span className="max-w-[140px] truncate">{name}</span>
@@ -75,7 +75,7 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
               type="button"
               onClick={() => onChange(value.filter((v) => v !== name))}
               aria-label={t('setup.removeSinger', { name })}
-              className="p-0.5 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-600 transition-colors"
+              className="p-0.5 rounded-pill text-zinc-400 hover:text-zinc-100 hover:bg-zinc-600 transition-colors"
             >
               <Icon name="close" size={12} />
             </button>

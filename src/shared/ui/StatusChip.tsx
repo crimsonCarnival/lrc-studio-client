@@ -29,7 +29,7 @@ export function StatusChip({ tone, role, className, children }: {
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-[5px] whitespace-nowrap rounded-full px-[9px] font-mono text-[11px] font-semibold uppercase leading-none tracking-[0.08em]',
+        'inline-flex h-6 items-center gap-[5px] whitespace-nowrap rounded-pill px-[9px] font-mono text-[11px] font-semibold uppercase leading-none tracking-[0.08em]',
         TONES[resolved],
         className,
       )}

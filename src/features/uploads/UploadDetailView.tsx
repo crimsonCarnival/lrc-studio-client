@@ -109,7 +109,7 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
                   <Icon name="calendar_today" size={14} />
                   <ClientOnlyDate date={media.createdAt} options={{ dateStyle: 'medium' }} />
                 </span>
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700/50">
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-pill bg-zinc-800 border border-zinc-700/50">
                   {isYouTube ? <YoutubeIcon simple className="size-3 text-red-500" /> : <Icon name="audio_file" size={12} className="text-primary" />}
                   <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">{isYouTube ? t('uploads.youtube') : t('uploads.audioFile')}</span>
                 </span>
@@ -152,7 +152,7 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
               <h3 className="text-sm sm:text-base font-semibold text-zinc-200 mb-4 flex items-center gap-2">
                 <Icon name="music_note" size={20} className="text-primary" />
                 {t('uploads.associatedProjects')}
-                <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs ml-1 font-medium">{media.projects?.length || 0}</span>
+                <span className="px-2 py-0.5 rounded-pill bg-zinc-800 text-zinc-400 text-xs ml-1 font-medium">{media.projects?.length || 0}</span>
               </h3>
 
               {media.projects && media.projects.length > 0 ? (

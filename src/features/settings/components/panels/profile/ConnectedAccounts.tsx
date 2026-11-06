@@ -30,7 +30,7 @@ export default function ConnectedAccounts() {
               toast.error(t('auth.errors.googleDisconnectFailed'));
             }
           }}
-          className="h-11 rounded-[10px] border-red-900/60 bg-transparent text-red-300 hover:bg-red-950/40 font-semibold"
+          className="h-11 rounded-[calc(var(--radius)*1)] border-red-900/60 bg-transparent text-red-300 hover:bg-red-950/40 font-semibold"
         >
           {t('settings.google.disconnect')}
         </Button>
@@ -44,7 +44,7 @@ export default function ConnectedAccounts() {
               toast.error(t('settings.google.connectFailed'));
             }
           }}
-          className="h-11 rounded-[10px] px-5 font-bold"
+          className="h-11 rounded-[calc(var(--radius)*1)] px-5 font-bold"
         >
           {t('settings.google.connect')}
         </Button>

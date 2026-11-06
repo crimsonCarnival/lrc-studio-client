@@ -87,7 +87,7 @@ export function SharedProjectsTab({ accountName, isOwner }: SharedProjectsTabPro
               {tags.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5" aria-label={t('projectView.shareTagsLabel')}>
                   {tags.map((tag) => (
-                    <li key={tag} className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">#{tag}</li>
+                    <li key={tag} className="rounded-pill bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">#{tag}</li>
                   ))}
                 </ul>
               )}

@@ -730,7 +730,7 @@ export default function PublicLyrics({
               onClick={() => handleAlignmentChange(align)}
               aria-pressed={alignment === align}
               aria-label={label}
-              className={`grid place-items-center size-7 coarse:size-11 rounded transition-all ${alignment === align ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`grid place-items-center size-7 coarse:size-11 rounded-xs transition-all ${alignment === align ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               <Icon name={`format_align_${align}`} size={15} />
             </button>

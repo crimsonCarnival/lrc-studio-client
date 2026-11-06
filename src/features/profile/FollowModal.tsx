@@ -180,7 +180,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
                 >
                   {tab.label}
                   {count !== null && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-primary/15 text-primary' : 'bg-zinc-800 text-zinc-500'
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-pill ${activeTab === tab.id ? 'bg-primary/15 text-primary' : 'bg-zinc-800 text-zinc-500'
                       }`}>
                       {count}
                     </span>

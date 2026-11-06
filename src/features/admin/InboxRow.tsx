@@ -14,7 +14,7 @@ type InboxRowProps = {
   onClick?: () => void;
 };
 
-const ROW = 'group/inbox flex w-full items-start gap-3 rounded-[10px] p-2.5 text-left transition-colors duration-[var(--duration-state)] hover:bg-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
+const ROW = 'group/inbox flex w-full items-start gap-3 rounded-[calc(var(--radius)*1)] p-2.5 text-left transition-colors duration-[var(--duration-state)] hover:bg-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
 
 /** One pending action, laid out like a row of the notification dropdown. */
 export function InboxRow({ leading, children, meta, to, onClick }: InboxRowProps) {

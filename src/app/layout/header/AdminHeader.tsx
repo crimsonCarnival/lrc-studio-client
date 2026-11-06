@@ -68,7 +68,7 @@ export function AdminHeader({ user, logout, settings, updateSetting, i18n, navTo
               {/* Below 2xl only the open tab keeps its label; the rest shrink to icons so all of them fit. */}
               <span className={activeTab === tab.id ? undefined : 'max-2xl:sr-only'}>{tab.label}</span>
               {!!tab.count && (
-                <span aria-label={t('admin.header.pending', { count: tab.count })} className="grid h-4 min-w-4 place-items-center rounded-full bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums">
+                <span aria-label={t('admin.header.pending', { count: tab.count })} className="grid h-4 min-w-4 place-items-center rounded-pill bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums">
                   {tab.count > 99 ? '99+' : tab.count}
                 </span>
               )}

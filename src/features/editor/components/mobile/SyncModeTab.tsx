@@ -162,7 +162,7 @@ export default function SyncModeTab({
             onPointerDown={(e) => { e.preventDefault(); onMark?.(); }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onMark?.(); } }}
             disabled={total === 0}
-            className="flex-1 h-16 rounded-[18px] bg-primary text-zinc-950 text-lg font-extrabold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+            className="flex-1 h-16 rounded-[calc(var(--radius)*1.8)] bg-primary text-zinc-950 text-lg font-extrabold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
           >
             {t('editor.markLineNumber', { number: activeLyricNumber })}
           </button>

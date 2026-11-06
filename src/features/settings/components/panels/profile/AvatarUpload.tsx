@@ -91,11 +91,11 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
     <div className={`flex flex-col gap-2.5 shrink-0 ${urlMode ? 'w-72' : 'w-[10.5rem]'}`}>
       {/* Same label row as the cover column, so both previews start on one line. */}
       <span className="text-sm font-semibold text-zinc-200">{t('profile.avatar')}</span>
-      <FileDropZone onFile={acceptFile} disabled={uploading} compact className="size-20 rounded-[20px] shrink-0">
+      <FileDropZone onFile={acceptFile} disabled={uploading} compact className="size-20 rounded-[calc(var(--radius)*2)] shrink-0">
         <button
           type="button"
           onClick={handleAvatarClick}
-          className="size-full rounded-[20px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          className="size-full rounded-[calc(var(--radius)*2)] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           aria-label={t('profile.changeAvatar')}
         >
           {uploading ? (
@@ -117,7 +117,7 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
               onChange={e => setUrlValue(e.target.value)}
               placeholder={t('profile.avatarUrlPlaceholder')}
               aria-label={t('profile.setAvatarUrl')}
-              className="bg-zinc-950 border border-zinc-700 rounded-[10px] px-3 h-10 text-sm text-zinc-100 outline-none focus:border-primary/60 w-full"
+              className="bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] px-3 h-10 text-sm text-zinc-100 outline-none focus:border-primary/60 w-full"
               disabled={uploading}
             />
             <div className="flex gap-2">
@@ -132,18 +132,18 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
         ) : (
           <div className="flex gap-1.5">
             <Tip content={t('profile.changeAvatar')}>
-              <Button onClick={handleAvatarClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeAvatar')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+              <Button onClick={handleAvatarClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeAvatar')} className="size-9 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-zinc-900 text-zinc-100">
                 <Icon name="cloud_upload" size={16} />
               </Button>
             </Tip>
             <Tip content={t('profile.setAvatarUrl')}>
-              <Button onClick={() => { setUrlMode(true); setUrlValue(avatarUrl || ''); }} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.setAvatarUrl')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+              <Button onClick={() => { setUrlMode(true); setUrlValue(avatarUrl || ''); }} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.setAvatarUrl')} className="size-9 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-zinc-900 text-zinc-100">
                 <Icon name="link" size={16} />
               </Button>
             </Tip>
             {hasAvatar && (
               <Tip content={t('profile.removeAvatar')}>
-                <Button onClick={() => onChange(null)} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeAvatar')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400">
+                <Button onClick={() => onChange(null)} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeAvatar')} className="size-9 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-zinc-900 text-zinc-400">
                   <Icon name="close" size={16} />
                 </Button>
               </Tip>

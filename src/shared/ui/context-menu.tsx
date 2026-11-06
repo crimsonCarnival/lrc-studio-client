@@ -26,7 +26,7 @@ function ContextMenuContent({
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
         className={cn(
-          "z-popover min-w-[200px] max-w-[280px] overflow-hidden rounded-[14px] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
+          "z-popover min-w-[200px] max-w-[280px] overflow-hidden rounded-[calc(var(--radius)*1.4)] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
@@ -53,7 +53,7 @@ function ContextMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors",
+        "relative flex cursor-pointer select-none items-center gap-3 rounded-[calc(var(--radius)*1)] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors",
         "focus:bg-raised focus:text-foreground",
         // Severity you can read (redesign sheet 15): gold = a loss you can undo, red = removal.
         "data-[variant=warning]:text-gold-ink data-[variant=warning]:focus:bg-gold-soft data-[variant=warning]:focus:text-gold-ink",
@@ -115,7 +115,7 @@ function ContextMenuSubTrigger({
       data-slot="context-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none",
+        "flex cursor-pointer select-none items-center gap-3 rounded-[calc(var(--radius)*1)] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none",
         "focus:bg-raised focus:text-foreground data-[state=open]:bg-primary-soft data-[state=open]:text-foreground",
         "[&>.app-icon]:text-subtle data-[state=open]:[&>.app-icon]:text-primary-ink",
         "data-[inset]:pl-8",
@@ -146,7 +146,7 @@ function ContextMenuSubContent({
         sideOffset={sideOffset}
         alignOffset={alignOffset}
         className={cn(
-          "z-popover min-w-[180px] max-w-[260px] overflow-hidden rounded-[14px] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
+          "z-popover min-w-[180px] max-w-[260px] overflow-hidden rounded-[calc(var(--radius)*1.4)] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           className
@@ -167,7 +167,7 @@ function ContextMenuCheckboxItem({
     <ContextMenuPrimitive.CheckboxItem
       data-slot="context-menu-checkbox-item"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
+        "relative flex cursor-pointer select-none items-center gap-3 rounded-[calc(var(--radius)*1)] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         className
       )}
       checked={checked}
@@ -196,7 +196,7 @@ function ContextMenuRadioItem({
     <ContextMenuPrimitive.RadioItem
       data-slot="context-menu-radio-item"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
+        "relative flex cursor-pointer select-none items-center gap-3 rounded-[calc(var(--radius)*1)] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         className
       )}
       {...props}

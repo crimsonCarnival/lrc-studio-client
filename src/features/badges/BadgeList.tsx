@@ -63,7 +63,7 @@ export function BadgeList({ ids = EMPTY_BADGES, max = 3, className = '' }: Badge
             </div>
           }
         >
-          <span className="inline-flex h-[22px] items-center rounded-full bg-raised px-1.5 font-mono text-[11px] font-medium text-subtle inset-ring inset-ring-hl cursor-default select-none">
+          <span className="inline-flex h-[22px] items-center rounded-pill bg-raised px-1.5 font-mono text-[11px] font-medium text-subtle inset-ring inset-ring-hl cursor-default select-none">
             +{overflow.length}
           </span>
         </Tip>

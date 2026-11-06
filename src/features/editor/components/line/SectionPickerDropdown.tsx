@@ -53,7 +53,7 @@ export default function SectionPickerDropdown({ value, onChange }: SectionPicker
             key={s.id}
             type="button"
             onClick={() => handlePreset(s.id)}
-            className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer
+            className={`px-2 py-0.5 text-xs rounded-xs border transition-colors cursor-pointer
               ${selected === s.id
                 ? 'bg-primary/20 border-primary/60 text-primary'
                 : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100'
@@ -65,7 +65,7 @@ export default function SectionPickerDropdown({ value, onChange }: SectionPicker
         <button
           type="button"
           onClick={handleOtherClick}
-          className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer
+          className={`px-2 py-0.5 text-xs rounded-xs border transition-colors cursor-pointer
             ${selected === '__other__'
               ? 'bg-primary/20 border-primary/60 text-primary'
               : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100'
@@ -82,7 +82,7 @@ export default function SectionPickerDropdown({ value, onChange }: SectionPicker
           onChange={handleCustomChange}
           placeholder={t('editor.sectionLabelPlaceholder')}
           autoFocus
-          className="text-xs px-2 py-0.5 rounded border bg-zinc-800 border-zinc-600 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/60 w-full min-w-[220px]"
+          className="text-xs px-2 py-0.5 rounded-xs border bg-zinc-800 border-zinc-600 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/60 w-full min-w-[220px]"
         />
       )}
     </div>

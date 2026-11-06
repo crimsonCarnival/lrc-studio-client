@@ -93,7 +93,7 @@ export function RemotePointers({ scrollRef }: { scrollRef: RefObject<HTMLElement
           </svg>
           <span
             data-pointer-label
-            className="-mt-1 ml-3 block max-w-40 truncate whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background"
+            className="-mt-1 ml-3 block max-w-40 truncate whitespace-nowrap rounded-pill px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background"
             style={{ backgroundColor: collabColor(p.colorIndex) }}
           >
             {p.name}

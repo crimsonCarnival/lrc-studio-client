@@ -61,7 +61,7 @@ export default function RawLyricsSyntaxBar({ value, onChange, textareaRef, singe
           size="xs"
           onClick={() => setHelpOpen((o) => !o)}
           aria-expanded={helpOpen}
-          className="rounded-full"
+          className="rounded-pill"
         >
           <Icon name="help" size={13} />
           {t('editor.paste.help.toggle')}
@@ -81,7 +81,7 @@ export default function RawLyricsSyntaxBar({ value, onChange, textareaRef, singe
                   // Keep the textarea focused so its caret is the insertion point.
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => insertSinger(name)}
-                  className="h-6 px-2.5 max-w-[160px] truncate rounded-full border border-zinc-700/60 bg-zinc-800 text-[11px] text-zinc-200 hover:border-primary/50 hover:text-primary transition-colors"
+                  className="h-6 px-2.5 max-w-[160px] truncate rounded-pill border border-zinc-700/60 bg-zinc-800 text-[11px] text-zinc-200 hover:border-primary/50 hover:text-primary transition-colors"
                 >
                   {name}
                 </button>
@@ -96,7 +96,7 @@ export default function RawLyricsSyntaxBar({ value, onChange, textareaRef, singe
           <dl className="grid grid-cols-1 sm:grid-cols-[minmax(0,auto)_1fr] gap-x-3 gap-y-1 items-baseline min-w-0">
             {examples.map(({ code, desc }) => (
               <div key={code} className="contents">
-                <dt className="min-w-0"><code className="font-mono text-zinc-200 bg-zinc-800/80 rounded px-1.5 py-px break-all sm:whitespace-nowrap">{code}</code></dt>
+                <dt className="min-w-0"><code className="font-mono text-zinc-200 bg-zinc-800/80 rounded-xs px-1.5 py-px break-all sm:whitespace-nowrap">{code}</code></dt>
                 <dd>{desc}</dd>
               </div>
             ))}

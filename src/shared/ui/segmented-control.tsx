@@ -49,7 +49,7 @@ function SegmentedControl<T extends string | number>({
     <div
       role={tabs ? "tablist" : "group"}
       aria-label={label}
-      className={cn("inline-flex gap-0.5 rounded-[14px] bg-background p-1 inset-ring inset-ring-hl", className)}
+      className={cn("inline-flex gap-0.5 rounded-[calc(var(--radius)*1.4)] bg-background p-1 inset-ring inset-ring-hl", className)}
     >
       {options.map((option) => {
         const active = option.value === value
@@ -68,7 +68,7 @@ function SegmentedControl<T extends string | number>({
               if (!option.disabled) onChange(option.value)
             }}
             className={cn(
-              "h-10 rounded-[10px] px-[18px] text-base text-subtle hover:bg-transparent hover:text-foreground",
+              "h-10 rounded-[calc(var(--radius)*1)] px-[18px] text-base text-subtle hover:bg-transparent hover:text-foreground",
               mono && "px-3.5 font-mono text-[13px] font-medium",
               active && "bg-raised text-foreground inset-ring-[1.5px] inset-ring-primary hover:bg-raised",
               option.disabled && "cursor-not-allowed opacity-40 hover:text-subtle"

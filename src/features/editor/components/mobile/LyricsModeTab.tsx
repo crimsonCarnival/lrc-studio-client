@@ -76,7 +76,7 @@ export default function LyricsModeTab({
           <h3 className="text-sm font-semibold text-zinc-300">{t('editor.currentLine')}</h3>
           <span
             data-testid="line-counter"
-            className="text-xs font-mono text-zinc-400 bg-zinc-900/50 px-2 py-1 rounded"
+            className="text-xs font-mono text-zinc-400 bg-zinc-900/50 px-2 py-1 rounded-xs"
           >
             {lineProgressText}
           </span>

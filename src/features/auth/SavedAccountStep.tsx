@@ -101,7 +101,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
     return (
       <div className="animate-fade-in flex flex-col gap-6" aria-hidden="true">
         <div>
-          <div className="h-8 w-48 rounded bg-zinc-800 mb-6 animate-pulse" />
+          <div className="h-8 w-48 rounded-xs bg-zinc-800 mb-6 animate-pulse" />
           <div className="flex flex-col gap-2">
             {Array.from({ length: skeletonCount }).map((_, i) => (
               <div
@@ -110,10 +110,10 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
               >
                 <div className="size-9 rounded-full bg-zinc-700/60 animate-pulse shrink-0" />
                 <div className="flex-1 flex flex-col gap-1.5">
-                  <div className="h-3 w-28 rounded bg-zinc-700/60 animate-pulse" />
-                  <div className="h-2.5 w-20 rounded bg-zinc-800/80 animate-pulse" />
+                  <div className="h-3 w-28 rounded-xs bg-zinc-700/60 animate-pulse" />
+                  <div className="h-2.5 w-20 rounded-xs bg-zinc-800/80 animate-pulse" />
                 </div>
-                <div className="size-4 rounded bg-zinc-700/40 animate-pulse" />
+                <div className="size-4 rounded-xs bg-zinc-700/40 animate-pulse" />
               </div>
             ))}
           </div>
@@ -203,7 +203,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
       <button
         type="button"
         onClick={onAddAccount}
-        className="h-12 rounded-[10px] border border-dashed border-zinc-700 hover:border-primary/60 hover:bg-zinc-900 text-zinc-100 text-[15px] font-semibold inline-flex items-center justify-center gap-2 transition-colors"
+        className="h-12 rounded-[calc(var(--radius)*1)] border border-dashed border-zinc-700 hover:border-primary/60 hover:bg-zinc-900 text-zinc-100 text-[15px] font-semibold inline-flex items-center justify-center gap-2 transition-colors"
       >
         <Icon name="add" size={16} />
         {t('auth.savedAccount.addAccount')}

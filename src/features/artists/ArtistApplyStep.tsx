@@ -40,7 +40,7 @@ export function ArtistApplyStep({ song, onApply, onSkip, variant = 'apply' }: Pr
     });
 
   return (
-    <div className="flex flex-col gap-2 rounded-[14px] bg-card p-3 inset-ring inset-ring-hl" role="group" aria-label={tr(`artists.${variant}.title`)}>
+    <div className="flex flex-col gap-2 rounded-[calc(var(--radius)*1.4)] bg-card p-3 inset-ring inset-ring-hl" role="group" aria-label={tr(`artists.${variant}.title`)}>
       <p className="font-heading text-[15px] font-bold text-foreground">{tr(`artists.${variant}.title`)}</p>
       <p className="text-[13px] text-subtle">
         {variant === 'apply'

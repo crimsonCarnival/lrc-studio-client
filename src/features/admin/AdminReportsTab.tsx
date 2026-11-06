@@ -127,7 +127,7 @@ function GroupRow({ group, status, busy, onAct }: { group: ReportGroup; status: 
         {group.reports.map(report => (
           <li key={report.id} className="flex flex-col gap-1 text-[11px] text-zinc-500">
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-semibold">
+              <span className="px-2 py-0.5 rounded-pill bg-zinc-800 text-zinc-300 font-semibold">
                 {tk(`reports.reasons.${report.reason}`)}
               </span>
               <span className="inline-flex items-center gap-1">
@@ -169,7 +169,7 @@ function GroupRow({ group, status, busy, onAct }: { group: ReportGroup; status: 
           )}
         </div>
       ) : status !== 'open' && (
-        <span className={`self-end px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[status]}`}>
+        <span className={`self-end px-2 py-0.5 rounded-pill text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[status]}`}>
           {tk(`admin.reports.outcome.${status === 'dismissed' ? 'dismissed' : targetType}`)}
         </span>
       )}

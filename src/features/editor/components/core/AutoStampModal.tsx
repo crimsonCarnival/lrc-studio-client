@@ -171,12 +171,12 @@ export default function AutoStampModal({
                   <span className="uppercase tracking-wider">{title}</span>
                   <span>{pct}%</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden relative">
+                <div className="w-full h-1.5 rounded-pill bg-zinc-800 overflow-hidden relative">
                   <div 
-                    className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-700 ease-in-out" 
+                    className="absolute top-0 left-0 h-full bg-primary rounded-pill transition-all duration-700 ease-in-out" 
                     style={{ width: `${pct}%` }} 
                   />
-                  <div className="absolute top-0 left-0 h-full w-full bg-white/20 rounded-full animate-pulse opacity-0 transition-opacity" style={{ opacity: pct > 0 ? 1 : 0 }} />
+                  <div className="absolute top-0 left-0 h-full w-full bg-white/20 rounded-pill animate-pulse opacity-0 transition-opacity" style={{ opacity: pct > 0 ? 1 : 0 }} />
                 </div>
               </div>
 

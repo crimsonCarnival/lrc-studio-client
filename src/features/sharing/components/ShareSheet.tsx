@@ -42,7 +42,7 @@ const BRAND: Record<Exclude<ShareTargetId, 'email'> | 'discord', { path: string;
   discord: { path: siDiscord.path, label: 'Discord' },
 };
 
-const TILE = 'group flex flex-col items-center gap-2 rounded-[14px] px-1 py-2.5 text-[13px] font-medium text-subtle transition-colors duration-[var(--duration-state)] hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
+const TILE = 'group flex flex-col items-center gap-2 rounded-[calc(var(--radius)*1.4)] px-1 py-2.5 text-[13px] font-medium text-subtle transition-colors duration-[var(--duration-state)] hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
 const DISC = 'grid size-12 place-items-center rounded-full bg-raised text-foreground inset-ring inset-ring-hl transition-colors duration-[var(--duration-state)] group-hover:bg-primary-soft group-hover:text-primary-ink';
 
 function BrandMark({ path }: { path: string }) {
@@ -215,7 +215,7 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage
   return (
       <div className="flex flex-col gap-4">
         {/* What is being shared, the way a link preview will show it. */}
-        <div className="flex items-center gap-3 rounded-[16px] bg-card p-3 inset-ring inset-ring-hl">
+        <div className="flex items-center gap-3 rounded-[calc(var(--radius)*1.6)] bg-card p-3 inset-ring inset-ring-hl">
           <span className="block size-14 shrink-0 overflow-hidden rounded-xl">
             <ProjectListCover coverImage={coverImage} genre={genre} className="size-14" iconSize="size-6" />
           </span>
@@ -243,7 +243,7 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage
         </div>
 
         {canStart && (
-          <div className="flex min-h-9 items-center gap-3 rounded-[14px] bg-card p-3 inset-ring inset-ring-hl">
+          <div className="flex min-h-9 items-center gap-3 rounded-[calc(var(--radius)*1.4)] bg-card p-3 inset-ring inset-ring-hl">
             <Checkbox id="share-start" checked={includeStart} onCheckedChange={(v) => setIncludeStart(v === true)} />
             <label htmlFor="share-start" className="flex-1 cursor-pointer text-[15px] text-foreground">{t('share.sheet.startAt')}</label>
             <input
@@ -255,7 +255,7 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage
               onChange={(e) => setStartText(e.target.value)}
               // Tidy what was typed ("65" becomes "1:05") once the field is left.
               onBlur={() => { if (startAt != null) setStartText(mmss(startAt)); }}
-              className="h-9 w-20 rounded-[10px] border-0 bg-background px-2 text-center font-mono text-sm text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
+              className="h-9 w-20 rounded-[calc(var(--radius)*1)] border-0 bg-background px-2 text-center font-mono text-sm text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
             />
           </div>
         )}

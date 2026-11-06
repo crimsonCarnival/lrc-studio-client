@@ -283,7 +283,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }: { 
                 key={idx}
                 type="button"
                 onClick={() => setSelectedSlot(idx)}
-                className={`flex-1 py-1 rounded text-[10px] font-bold border transition-colors ${
+                className={`flex-1 py-1 rounded-xs text-[10px] font-bold border transition-colors ${
                   selectedSlot === idx
                     ? SINGER_CHIP_COLORS[idx]
                     : 'text-zinc-600 border-transparent hover:text-zinc-400'
@@ -314,12 +314,12 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }: { 
               onChange={(e: ChangeEvent<HTMLInputElement>) => setCustom(e.target.value)}
               onKeyDown={(e: KeyboardEvent) => { if (e.key === 'Enter' && custom.trim()) assignName(custom.trim()); }}
               placeholder={t('editor.singerCustomPlaceholder')}
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xs px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
             />
             <button
               type="button"
               onClick={() => { if (custom.trim()) assignName(custom.trim()); }}
-              className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30"
+              className="px-2 py-1 rounded-xs bg-primary/20 text-primary text-xs hover:bg-primary/30"
             >✓</button>
           </div>
           <button

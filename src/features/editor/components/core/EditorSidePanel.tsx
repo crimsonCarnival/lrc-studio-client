@@ -106,7 +106,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
   );
 }
 
-const SINGER_BUTTON = 'flex h-10 items-center justify-center px-3 rounded-[10px] text-sm font-semibold transition-shadow duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus coarse:h-11';
+const SINGER_BUTTON = 'flex h-10 items-center justify-center px-3 rounded-[calc(var(--radius)*1)] text-sm font-semibold transition-shadow duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus coarse:h-11';
 
 function LineInspector({ lines, activeLineIndex, duration, singers, singerColors, settings, onMoveToSection, onAssignSinger, onNudge }: Pick<EditorSidePanelProps, 'lines' | 'activeLineIndex' | 'duration' | 'singers' | 'singerColors' | 'settings' | 'onMoveToSection' | 'onAssignSinger' | 'onNudge'>) {
   const { t } = useTranslation();

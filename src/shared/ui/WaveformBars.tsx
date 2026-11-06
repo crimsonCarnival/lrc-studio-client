@@ -28,7 +28,7 @@ export function WaveformBars({ seed, count = 30, minHeight = 18, className, barC
   return (
     <div aria-hidden="true" className={cn('flex items-center justify-center gap-[3px] h-full', className)}>
       {heights.map((height, i) => (
-        <span key={i} className={cn('block w-1 shrink-0 rounded-full bg-primary/55', barClassName)} style={{ height: `${height}%` }} />
+        <span key={i} className={cn('block w-1 shrink-0 rounded-pill bg-primary/55', barClassName)} style={{ height: `${height}%` }} />
       ))}
     </div>
   );

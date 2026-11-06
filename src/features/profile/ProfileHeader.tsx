@@ -262,7 +262,7 @@ export function ProfileHeader({
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
               {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={3} />}
               <Tip content={showXp ? xpTip : undefined} side="bottom">
-                <span className="inline-flex h-6 items-center rounded-full bg-primary-soft px-2.5 font-mono text-[11px] font-semibold tracking-[0.08em] text-primary-ink cursor-default">
+                <span className="inline-flex h-6 items-center rounded-pill bg-primary-soft px-2.5 font-mono text-[11px] font-semibold tracking-[0.08em] text-primary-ink cursor-default">
                   {t('common.levelShort', { level })}
                 </span>
               </Tip>
@@ -271,7 +271,7 @@ export function ProfileHeader({
                   content={<span className="flex flex-col gap-0.5"><span>{t('profile.streakLongest', { count: streakLongest })}</span><span className="text-muted-foreground">{streakResetHint}</span></span>}
                   side="bottom"
                 >
-                  <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-semibold cursor-default ${streakCurrent > 0
+                  <span className={`inline-flex h-6 items-center gap-1 rounded-pill px-2.5 text-xs font-semibold cursor-default ${streakCurrent > 0
                     ? 'bg-gold-soft text-gold-ink'
                     : 'bg-raised text-subtle'}`}>
                     <Icon name="local_fire_department" size={14} className={streakCurrent > 0 ? 'icon-flicker' : undefined} />

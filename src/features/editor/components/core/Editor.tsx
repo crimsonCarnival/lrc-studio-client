@@ -63,7 +63,7 @@ const WORDS_LOOP_KEY = 'lrc_words_loop_line';
 // Teal is `success`; in the light theme that token is too pale to read as text,
 // so it is mixed toward the foreground there.
 const TEAL_TEXT = 'text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success';
-const HEADER_ICON_BTN = 'size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground disabled:opacity-30';
+const HEADER_ICON_BTN = 'size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground disabled:opacity-30';
 const EDITOR_SPEEDS = [0.25, 0.5, 1].map((speed) => ({ value: speed, label: `${speed}×` }));
 
 const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: React.ReactNode; icon?: string; label?: string }) => {
@@ -72,7 +72,7 @@ const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: R
     <Popover>
       <Tip content={label || t('editor.lineOptions')}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" aria-label={label || t('editor.lineOptions')} className="size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground">
+          <Button variant="outline" size="icon" aria-label={label || t('editor.lineOptions')} className="size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground">
             <Icon name={icon} size={18} />
           </Button>
         </PopoverTrigger>
@@ -775,7 +775,7 @@ export default function Editor({
           role="status"
           // Each state differs by mark and wording, not colour alone: gold dot, pulsing iris
           // dot, check, cross (redesign sheet 08).
-          className={`inline-flex h-8 items-center gap-2 rounded-full bg-raised px-3.5 text-[15px] font-medium whitespace-nowrap ${saveState === 'saved' ? 'text-foam pl-[11px] gap-1.5' : saveState === 'failed' ? 'text-love-ink pl-[11px] gap-1.5' : 'text-subtle'}`}
+          className={`inline-flex h-8 items-center gap-2 rounded-pill bg-raised px-3.5 text-[15px] font-medium whitespace-nowrap ${saveState === 'saved' ? 'text-foam pl-[11px] gap-1.5' : saveState === 'failed' ? 'text-love-ink pl-[11px] gap-1.5' : 'text-subtle'}`}
         >
           {saveState === 'saved' || saveState === 'failed' ? (
             <svg key={saveState} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={saveState === 'saved' ? 'icon-draw' : undefined}>
@@ -824,7 +824,7 @@ export default function Editor({
               variant="outline"
               onClick={onShowPreview}
               aria-label={t('editor.previewAction')}
-              className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[10px] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
+              className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
             >
               <Icon name="visibility" size={16} />
               <span className="max-xl:hidden">{t('editor.previewAction')}</span>
@@ -833,7 +833,7 @@ export default function Editor({
           <Button
             onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
             disabled={lines.length === 0}
-            className="h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[10px] bg-primary hover:bg-primary-dim text-zinc-950 text-[13px] lg:text-[13px] font-bold"
+            className="h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 text-[13px] lg:text-[13px] font-bold"
           >
             <Icon name="download" size={16} />
             <span className="max-sm:hidden">{t('editor.exportAs', { format: editorMode === 'srt' ? 'SRT' : 'LRC' })}</span>
@@ -981,7 +981,7 @@ export default function Editor({
                 // aria-disabled keeps the tooltip that explains why reachable.
                 aria-disabled={focusLength == null || !focusLine?.words?.length}
                 onClick={() => { if (focusLength != null && focusLine?.words?.length) handleDistributeWords(); }}
-                className={`h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 rounded-[10px] border-zinc-700 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground ${focusLength == null ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground ${focusLength == null ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {t('editor.words.distribute')}
               </Button>
@@ -1292,7 +1292,7 @@ export default function Editor({
                   aria-pressed={loopFocusLine}
                   aria-label={t('editor.words.loop')}
                   onClick={toggleLoopFocusLine}
-                  className={`size-10 lg:size-10 coarse:size-11 rounded-[10px] ${loopFocusLine ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
+                  className={`size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] ${loopFocusLine ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
                 >
                   <Icon name="repeat" size={18} />
                 </Button>

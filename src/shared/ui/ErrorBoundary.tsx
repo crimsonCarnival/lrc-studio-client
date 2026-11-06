@@ -124,7 +124,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
                 backgroundColor: 'var(--color-primary)',
                 color: 'var(--color-zinc-950)',
                 border: 'none',
-                borderRadius: '0.5rem',
+                borderRadius: 'var(--radius-control)',
                 fontSize: '0.875rem',
                 fontWeight: 600,
                 cursor: 'pointer',

@@ -30,7 +30,7 @@ function MyReportRow({ report, focused }: { report: MyReport; focused: boolean }
         <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           {tk(`reports.preview.type.${report.targetType}`)}
         </span>
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[report.status]}`}>
+        <span className={`px-2 py-0.5 rounded-pill text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[report.status]}`}>
           {tk(`reports.page.status.${report.status}`)}
         </span>
       </div>
@@ -43,7 +43,7 @@ function MyReportRow({ report, focused }: { report: MyReport; focused: boolean }
       />
       <div className="flex flex-col gap-1 text-[11px] text-zinc-500">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-semibold">{tk(`reports.reasons.${report.reason}`)}</span>
+          <span className="px-2 py-0.5 rounded-pill bg-zinc-800 text-zinc-300 font-semibold">{tk(`reports.reasons.${report.reason}`)}</span>
           <span>{t('reports.page.filed', { time: ago(report.createdAt) })}</span>
           {report.resolvedAt && <span>{t('reports.page.reviewed', { time: ago(report.resolvedAt) })}</span>}
         </p>

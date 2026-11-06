@@ -78,11 +78,11 @@ export default function CoverImageUpload({ coverImageUrl, onChange }: CoverImage
   return (
     <div className="flex flex-col gap-2.5 min-w-0 flex-1 basis-72">
       <span className="text-sm font-semibold text-zinc-200">{t('profile.coverImage')}</span>
-      <FileDropZone onFile={acceptFile} disabled={uploading} className="h-20 w-full rounded-[14px]">
+      <FileDropZone onFile={acceptFile} disabled={uploading} className="h-20 w-full rounded-[calc(var(--radius)*1.4)]">
         <button
           type="button"
           onClick={handlePickClick}
-          className="size-full rounded-[14px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          className="size-full rounded-[calc(var(--radius)*1.4)] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           aria-label={t('profile.changeCover')}
         >
           {uploading ? (
@@ -96,13 +96,13 @@ export default function CoverImageUpload({ coverImageUrl, onChange }: CoverImage
       </FileDropZone>
       <div className="flex gap-1.5">
         <Tip content={t('profile.changeCover')}>
-          <Button onClick={handlePickClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeCover')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+          <Button onClick={handlePickClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeCover')} className="size-9 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-zinc-900 text-zinc-100">
             <Icon name="cloud_upload" size={16} />
           </Button>
         </Tip>
         {hasCover && (
           <Tip content={t('profile.removeCover')}>
-            <Button onClick={() => onChange(null)} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeCover')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400">
+            <Button onClick={() => onChange(null)} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeCover')} className="size-9 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-zinc-900 text-zinc-400">
               <Icon name="close" size={16} />
             </Button>
           </Tip>

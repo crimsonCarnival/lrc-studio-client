@@ -152,7 +152,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
         to={row.to}
         onClick={() => setOpen(false)}
         onMouseEnter={() => setActiveKey(row.key)}
-        className={cn('mx-1.5 flex min-h-[52px] items-center gap-3 rounded-[10px] px-2.5 py-1.5 text-foreground', isActive && 'bg-primary-soft')}
+        className={cn('mx-1.5 flex min-h-[52px] items-center gap-3 rounded-[calc(var(--radius)*1)] px-2.5 py-1.5 text-foreground', isActive && 'bg-primary-soft')}
       >
         {row.kind === 'user' ? (
           <UserHoverCard accountName={row.accountName ?? ''} userId={row.userId}>

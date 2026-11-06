@@ -8,7 +8,7 @@ export function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {before}
-      <mark className="rounded-[3px] bg-mark px-px text-inherit">{match}</mark>
+      <mark className="rounded-[calc(var(--radius)*0.3)] bg-mark px-px text-inherit">{match}</mark>
       {after}
     </>
   );

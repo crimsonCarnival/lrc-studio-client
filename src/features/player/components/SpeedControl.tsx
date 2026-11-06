@@ -18,7 +18,7 @@ interface SpeedControlProps {
   SPEED_PRESETS: number[];
 }
 
-const STEP_BUTTON = 'h-[38px] w-9 rounded-[9px] font-mono text-lg font-semibold text-subtle hover:bg-raised hover:text-foreground coarse:h-11 coarse:w-11';
+const STEP_BUTTON = 'h-[38px] w-9 rounded-[calc(var(--radius)*0.9)] font-mono text-lg font-semibold text-subtle hover:bg-raised hover:text-foreground coarse:h-11 coarse:w-11';
 
 /**
  * Slower / current speed / faster as one field (redesign sheet 14). The value in the
@@ -79,7 +79,7 @@ const SpeedControl = memo(function SpeedControl({
               size={null}
               aria-label={`${t('player.speed')}: ${playbackSpeed}x`}
               // Iris when the speed is anything but normal, so a slowed-down song is hard to forget.
-              className={cn('h-[38px] min-w-[58px] rounded-[9px] px-1.5 font-mono text-sm font-semibold tabular-nums coarse:h-11', playbackSpeed !== 1 ? 'text-primary-ink' : 'text-foreground')}
+              className={cn('h-[38px] min-w-[58px] rounded-[calc(var(--radius)*0.9)] px-1.5 font-mono text-sm font-semibold tabular-nums coarse:h-11', playbackSpeed !== 1 ? 'text-primary-ink' : 'text-foreground')}
             >
               {playbackSpeed}×
             </Button>

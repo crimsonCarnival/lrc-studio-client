@@ -107,7 +107,7 @@ export default function AdminUsersTab({
     const [textTone, barTone] = tone.split(' ');
     const label = (
       <span className={`flex items-center gap-3 ${textTone}`}>
-        <span aria-hidden className={`h-4 w-1 rounded-full ${barTone}`} />
+        <span aria-hidden className={`h-4 w-1 rounded-pill ${barTone}`} />
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em]">{tk(`admin.table.${role}`)}</span>
         <span className="font-mono text-[11px] tabular-nums opacity-60">{count}</span>
         <span aria-hidden className="h-px flex-1 bg-zinc-800" />
@@ -238,7 +238,7 @@ export default function AdminUsersTab({
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-zinc-200 truncate">{user.displayName || user.accountName}</span>
-                                {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
+                                {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-xs font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
                               </div>
                               <div className="text-xs text-zinc-500 truncate">{user.email}</div>
                             </div>
@@ -269,13 +269,13 @@ export default function AdminUsersTab({
 
                       {/* Projects and Uploads */}
                       <div className="flex gap-2 text-xs">
-                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                        <div className="flex-1 bg-zinc-900/50 rounded-xs px-2 py-1.5 text-center">
                           <div className="flex items-center justify-center gap-1 text-zinc-300">
                             <Icon name="bar_chart" size={14} />
                             <span>{user.projectCount} {t('admin.table.projects')}</span>
                           </div>
                         </div>
-                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                        <div className="flex-1 bg-zinc-900/50 rounded-xs px-2 py-1.5 text-center">
                           <div className="flex items-center justify-center gap-1 text-zinc-300">
                             <Icon name="music_note" size={14} />
                             <span>{user.uploadCount} {t('admin.table.uploads')}</span>
@@ -285,13 +285,13 @@ export default function AdminUsersTab({
 
                       {/* Storage and Sync */}
                       <div className="flex gap-2 text-xs">
-                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                        <div className="flex-1 bg-zinc-900/50 rounded-xs px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
                             <span className="font-semibold">{formatBytes(user.storageUsed)}</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.storage')}</span>
                           </div>
                         </div>
-                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                        <div className="flex-1 bg-zinc-900/50 rounded-xs px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
                             <span className="font-semibold">{user.stats?.minutesSynced || 0}m</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.sync')}</span>
@@ -301,13 +301,13 @@ export default function AdminUsersTab({
 
                       {/* Dates */}
                       <div className="flex gap-2 text-xs">
-                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                        <div className="flex-1 bg-zinc-900/50 rounded-xs px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
                             <span className="font-semibold">{user.createdAt ? formatDay(user.createdAt) : '—'}</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.joined')}</span>
                           </div>
                         </div>
-                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                        <div className="flex-1 bg-zinc-900/50 rounded-xs px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
                             <span className="font-semibold">{user.lastOnlineAt || user.lastUsedAt ? formatDay((user.lastOnlineAt || user.lastUsedAt) as string) : '—'}</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.lastActive')}</span>
@@ -458,7 +458,7 @@ export default function AdminUsersTab({
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-zinc-200">{user.displayName || user.accountName}</span>
-                              {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
+                              {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-xs font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
                             </div>
                             <div className="text-xs text-zinc-500">{user.email}</div>
                           </div>
@@ -570,7 +570,7 @@ export default function AdminUsersTab({
                             min={1}
                             value={xpAmount}
                             onChange={e => setXpAmount(e.target.value)}
-                            className="w-16 h-7 px-2 text-xs rounded bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
+                            className="w-16 h-7 px-2 text-xs rounded-xs bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
                           />
                           <Button
                             variant="outline"

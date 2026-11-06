@@ -67,7 +67,7 @@ export function CollapsibleSection({
         </span>
 
         {filledCount > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold tabular-nums leading-none">
+          <span className="px-1.5 py-0.5 rounded-pill bg-primary/20 text-primary text-[10px] font-bold tabular-nums leading-none">
             {filledCount}
           </span>
         )}

@@ -133,7 +133,7 @@ export const shapeOf = (id: string): ThemeShape => (SHARP.includes(id) ? 'sharp'
 const SHAPE_VARS: Record<ThemeShape, Record<string, string>> = {
   soft: {},
   sharp: {
-    '--radius': '0px', '--radius-chip': '0px', '--radius-control': '0px', '--radius-card': '0px',
+    '--radius': '0px', '--radius-chip': '0px', '--radius-control': '0px', '--radius-card': '0px', '--radius-pill': '0px',
     '--shadow-glow': 'none', '--shadow-glow-strong': 'none', '--shadow-card': 'none', '--shadow-elevated': '0 0 0 1px var(--border)',
   },
   round: { '--radius': '1rem', '--radius-chip': '12px', '--radius-control': '16px', '--radius-card': '28px' },
@@ -152,7 +152,7 @@ export const RADIUS_MAX = 32;
 function radiusVars(r: number): Record<string, string> {
   const px = (n: number) => `${Math.round(n)}px`;
   const v = Math.min(RADIUS_MAX, Math.max(0, r));
-  return { '--radius': px(v), '--radius-chip': px(v * 0.6), '--radius-control': px(v * 0.9), '--radius-card': px(v * 1.5) };
+  return { '--radius': px(v), '--radius-chip': px(v * 0.6), '--radius-control': px(v * 0.9), '--radius-card': px(v * 1.5), ...(v === 0 ? { '--radius-pill': '0px' } : {}) };
 }
 
 /**

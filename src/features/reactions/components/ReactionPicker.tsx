@@ -32,7 +32,7 @@ export function ReactionPicker({ myReaction, onReact }: ReactionPickerProps) {
       sideOffset={10}
       aria-label={t('reactions.addReaction')}
       // overflow-visible: the pointer sits outside the box, and the default scroll clip would cut it off.
-      className="flex w-[348px] max-w-[calc(100vw-1.5rem)] flex-col gap-3 overflow-visible rounded-[18px] border-0 bg-background p-3 shadow-elevated inset-ring inset-ring-hl lg:min-w-0"
+      className="flex w-[348px] max-w-[calc(100vw-1.5rem)] flex-col gap-3 overflow-visible rounded-[calc(var(--radius)*1.8)] border-0 bg-background p-3 shadow-elevated inset-ring inset-ring-hl lg:min-w-0"
     >
       <div role="group" aria-label={t('reactions.reactTitle')} className="flex justify-between gap-1">
         {Object.entries(EMOJI_MAP).map(([code, emoji]) => (
@@ -43,7 +43,7 @@ export function ReactionPicker({ myReaction, onReact }: ReactionPickerProps) {
               aria-label={tk(`reactions.names.${code}`)}
               onClick={() => onReact(code)}
               className={cn(
-                'grid size-[52px] place-items-center rounded-[14px] text-[28px] leading-none transition-[transform,background-color] duration-[180ms] ease-bounce select-none hover:-translate-y-1 hover:scale-[1.18] hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none max-sm:size-11 max-sm:text-2xl',
+                'grid size-[52px] place-items-center rounded-[calc(var(--radius)*1.4)] text-[28px] leading-none transition-[transform,background-color] duration-[180ms] ease-bounce select-none hover:-translate-y-1 hover:scale-[1.18] hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none max-sm:size-11 max-sm:text-2xl',
                 myReaction === code && 'bg-primary-soft inset-ring-2 inset-ring-iris',
               )}
             >

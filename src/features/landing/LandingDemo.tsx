@@ -37,7 +37,7 @@ function formatStamp(seconds: number): string {
   return `${pad(Math.floor(total / 6000))}:${pad(Math.floor(total / 100) % 60)}.${pad(total % 100)}`;
 }
 
-const PANEL = 'min-w-0 rounded-[22px] bg-zinc-900 flex flex-col font-lyrics';
+const PANEL = 'min-w-0 rounded-[calc(var(--radius)*2.2)] bg-zinc-900 flex flex-col font-lyrics';
 const PANEL_LABEL = 'inline-flex items-center gap-2 text-[15px] font-bold tracking-[0.08em] uppercase text-zinc-100';
 
 export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean }) {
@@ -72,7 +72,7 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
             <Icon name="undo" size={16} />
             <Icon name="redo" size={16} className="text-foreground/35" />
           </span>
-          <span className="ml-auto inline-flex items-center gap-2 h-[30px] px-3 rounded-full border border-zinc-700 font-mono text-xs font-medium">
+          <span className="ml-auto inline-flex items-center gap-2 h-[30px] px-3 rounded-pill border border-zinc-700 font-mono text-xs font-medium">
             <span className="size-1.5 rounded-full bg-primary" />
             {t('landing.demo.progress', { done: DEMO_LINES.length, total: DEMO_LINES.length, words: WORD_COUNT })}
           </span>
@@ -97,7 +97,7 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
             return (
               <li
                 key={line.t}
-                className={`relative flex items-center gap-3.5 min-h-14 py-2 pl-5 pr-4 rounded-[14px] border transition-colors ${
+                className={`relative flex items-center gap-3.5 min-h-14 py-2 pl-5 pr-4 rounded-[calc(var(--radius)*1.4)] border transition-colors ${
                   isActive ? 'bg-zinc-800 border-dashed border-zinc-700' : 'bg-zinc-800/50 border-transparent'
                 }`}
               >
@@ -105,7 +105,7 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
                 <Icon name="drag_indicator" size={16} className="shrink-0 text-foreground/45" />
                 <span className="shrink-0 w-[22px] font-mono text-xs font-semibold text-foreground/80">{i + 1}</span>
                 <span
-                  className={`shrink-0 inline-flex items-center h-6 px-2.5 rounded-full border font-mono text-xs font-medium tabular-nums transition-colors ${
+                  className={`shrink-0 inline-flex items-center h-6 px-2.5 rounded-pill border font-mono text-xs font-medium tabular-nums transition-colors ${
                     isActive ? 'bg-primary/25 border-primary/50 text-primary' : 'bg-primary/10 border-primary/20 text-foreground/80'
                   }`}
                 >
@@ -117,10 +117,10 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
                 {isActive && (
                   <>
                     <span className="ml-auto shrink-0 hidden lg:inline-flex items-center gap-2">
-                      <span className="size-9 rounded-[10px] bg-primary/30 text-primary inline-flex items-center justify-center">
+                      <span className="size-9 rounded-[calc(var(--radius)*1)] bg-primary/30 text-primary inline-flex items-center justify-center">
                         <Icon name="location_on" size={16} />
                       </span>
-                      <span className="inline-flex items-center gap-3 h-10 px-3.5 rounded-full bg-zinc-950 border border-zinc-800 text-zinc-100">
+                      <span className="inline-flex items-center gap-3 h-10 px-3.5 rounded-pill bg-zinc-950 border border-zinc-800 text-zinc-100">
                         <Icon name="play_arrow" size={14} />
                         <Icon name="chevron_left" size={14} />
                         <Icon name="chevron_right" size={14} />
@@ -147,7 +147,7 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
         </div>
 
         <div aria-hidden="true" className="px-2.5 flex flex-col gap-2">
-          <div className="relative h-[38px] rounded-full bg-zinc-950 overflow-hidden">
+          <div className="relative h-[38px] rounded-pill bg-zinc-950 overflow-hidden">
             <span className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent to-primary/35" style={{ width: progress }} />
             <span className="absolute inset-y-0 w-0.5 bg-primary/80" style={{ left: progress }} />
           </div>
@@ -158,7 +158,7 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
 
         <div className="flex items-center justify-center gap-3.5 flex-wrap text-zinc-100">
           <span aria-hidden="true" className="font-mono text-sm font-medium min-w-[76px] tabular-nums">{formatStamp(time)}</span>
-          <span aria-hidden="true" className="hidden sm:inline-flex items-center gap-1.5 h-10 px-3.5 rounded-full bg-primary text-primary-foreground font-mono text-sm font-semibold">
+          <span aria-hidden="true" className="hidden sm:inline-flex items-center gap-1.5 h-10 px-3.5 rounded-pill bg-primary text-primary-foreground font-mono text-sm font-semibold">
             1x<Icon name="expand_more" size={14} />
           </span>
           <span aria-hidden="true" className="inline-flex"><Icon name="skip_previous" size={18} /></span>
@@ -228,8 +228,8 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
 /** The Auto-stamp + mode pill from the editor toolbar; also reused by the step-4 mock. */
 export function ModePill({ t }: { t: TFunction }) {
   return (
-    <div className="inline-flex items-center gap-1.5 p-1.5 rounded-full bg-zinc-800/70 border border-zinc-700 flex-wrap justify-center">
-      <span className="inline-flex items-center gap-2 h-9 px-3.5 rounded-full bg-success text-success-foreground text-sm font-semibold">
+    <div className="inline-flex items-center gap-1.5 p-1.5 rounded-pill bg-zinc-800/70 border border-zinc-700 flex-wrap justify-center">
+      <span className="inline-flex items-center gap-2 h-9 px-3.5 rounded-pill bg-success text-success-foreground text-sm font-semibold">
         <Icon name="auto_fix_high" size={15} />{t('landing.demo.autoStamp')}
       </span>
       <span className="inline-flex gap-0.5 px-1.5 text-sm font-bold text-zinc-100">

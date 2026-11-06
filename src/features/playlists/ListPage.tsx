@@ -200,7 +200,7 @@ export default function ListPage() {
                 </>
               )}
               {playlist.tags?.map(tag => (
-                <span key={tag} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary">{tag}</span>
+                <span key={tag} className="px-2 py-0.5 rounded-pill bg-primary/10 text-primary">{tag}</span>
               ))}
             </div>
 
@@ -208,7 +208,7 @@ export default function ListPage() {
               {playAllPath && (
                 <Button asChild
                   size="sm"
-                  className="gap-1.5 rounded-full"
+                  className="gap-1.5 rounded-pill"
                 ><Link to={playAllPath}>
                   <Icon name="play_arrow" size={16} filled />
                   {t('playlists.detail.playAll')}

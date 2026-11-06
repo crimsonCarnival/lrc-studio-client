@@ -129,7 +129,7 @@ export default function SearchPage() {
       {hasQuery && active.loading && active.results.length === 0 && (
         <div aria-busy="true" aria-label={t('search.loading')} className="flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-center gap-4 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl">
+            <div key={i} className="flex items-center gap-4 rounded-[calc(var(--radius)*1.8)] bg-background px-[18px] py-4 inset-ring inset-ring-hl">
               <Skeleton className={`size-14 shrink-0 ${urlTab === 'users' ? 'rounded-full' : 'rounded-lg'}`} />
               <div className="flex flex-col gap-2"><Skeleton className="h-4 w-48 rounded-md" /><Skeleton className="h-3 w-32 rounded-md" /></div>
             </div>

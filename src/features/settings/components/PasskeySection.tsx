@@ -138,7 +138,7 @@ export default function PasskeySection() {
         <Button
           onClick={handleRegister}
           disabled={registering || loading}
-          className="h-11 rounded-[10px] px-5 font-bold gap-2"
+          className="h-11 rounded-[calc(var(--radius)*1)] px-5 font-bold gap-2"
         >
           {registering && <LogoLoader size={14} />}
           {t('auth.passkeyManagement.add')}

@@ -10,7 +10,7 @@ function CountDot({ count, className }: { count: number; className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute top-1.5 right-[5px] grid h-4 min-w-4 place-items-center rounded-full bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums ring-2 ring-background",
+        "pointer-events-none absolute top-1.5 right-[5px] grid h-4 min-w-4 place-items-center rounded-pill bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums ring-2 ring-background",
         className
       )}
     >

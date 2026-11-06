@@ -18,7 +18,7 @@ const PREVIEW_LINES = [
   { time: '00:18.80', text: 'She sang a melody that broke the night' },
 ];
 
-const CARD = 'min-w-0 rounded-[22px] bg-zinc-900 border border-zinc-800 font-lyrics text-zinc-100';
+const CARD = 'min-w-0 rounded-[calc(var(--radius)*2.2)] bg-zinc-900 border border-zinc-800 font-lyrics text-zinc-100';
 const WELL = 'rounded-xl bg-zinc-950 border border-zinc-800';
 const FIELD_LABEL = 'block text-[10px] font-bold tracking-[0.08em] uppercase text-primary';
 const THUMB = 'shrink-0 rounded-lg bg-zinc-700';
@@ -26,7 +26,7 @@ const THUMB = 'shrink-0 rounded-lg bg-zinc-700';
 function TimePill({ children, strong }: { children: ReactNode; strong?: boolean }) {
   return (
     <span
-      className={`shrink-0 inline-flex items-center rounded-full border font-mono font-medium tabular-nums ${
+      className={`shrink-0 inline-flex items-center rounded-pill border font-mono font-medium tabular-nums ${
         strong ? 'bg-primary/25 border-primary/50 text-primary' : 'bg-primary/10 border-primary/20 text-primary'
       }`}
     >
@@ -40,7 +40,7 @@ function Step({ stamp, title, desc, last, children }: { stamp: string; title: st
     <div className="flex flex-wrap items-center gap-x-16 gap-y-8">
       <div className="flex-[1_1_300px] max-w-[420px] flex flex-col gap-3.5">
         <span
-          className={`self-start inline-flex items-center h-[26px] px-[11px] rounded-full border font-mono text-xs font-medium ${
+          className={`self-start inline-flex items-center h-[26px] px-[11px] rounded-pill border font-mono text-xs font-medium ${
             last ? 'bg-primary/25 border-primary/50 text-primary' : 'bg-primary/10 border-primary/20 text-primary'
           }`}
         >
@@ -65,7 +65,7 @@ function Tabs({ t, active }: { t: TFunction; active: 'media' | 'lyrics' }) {
 }
 
 function Segmented({ left, right, active }: { left: string; right: string; active: 'left' | 'right' }) {
-  const seg = (on: boolean) => `p-[9px] rounded-[9px] ${on ? 'bg-zinc-800' : ''}`;
+  const seg = (on: boolean) => `p-[9px] rounded-[calc(var(--radius)*0.9)] ${on ? 'bg-zinc-800' : ''}`;
   return (
     <div className="grid grid-cols-2 p-1 rounded-xl bg-zinc-950 text-[13px] font-bold text-center">
       <span className={seg(active === 'left')}>{left}</span>
@@ -79,7 +79,7 @@ function ProjectInfoMock({ t }: { t: TFunction }) {
     <div className={`${CARD} p-5 flex flex-col gap-4`}>
       <div className="flex gap-4">
         <div className="shrink-0 flex flex-col items-center gap-2.5">
-          <div className={`${WELL} size-[84px] rounded-[14px] flex flex-col items-center justify-center gap-1.5`}>
+          <div className={`${WELL} size-[84px] rounded-[calc(var(--radius)*1.4)] flex flex-col items-center justify-center gap-1.5`}>
             <Icon name="image" size={18} />
             <span className="text-[10px] font-bold tracking-wider uppercase">{t('landing.mock.cover')}</span>
           </div>
@@ -105,7 +105,7 @@ function ProjectInfoMock({ t }: { t: TFunction }) {
           </div>
         </div>
       </div>
-      <span className="h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center gap-2 text-sm font-bold text-primary">
+      <span className="h-10 rounded-pill bg-primary/20 border border-primary/30 flex items-center justify-center gap-2 text-sm font-bold text-primary">
         <Icon name="search" size={14} />{t('landing.mock.search')}
       </span>
       <div className="flex flex-col gap-2">
@@ -137,7 +137,7 @@ function MediaMock({ t }: { t: TFunction }) {
       <Segmented left="YouTube" right={t('landing.mock.fileUrl')} active="left" />
       <div className="flex gap-2.5">
         <div className="flex-1 min-w-0 h-[46px] px-3.5 rounded-xl bg-zinc-950 flex items-center gap-2.5">
-          <span className="shrink-0 w-[18px] h-[13px] rounded-[3.5px] bg-destructive" />
+          <span className="shrink-0 w-[18px] h-[13px] rounded-[calc(var(--radius)*0.35)] bg-destructive" />
           <span className="flex-1 min-w-0 truncate">{query}</span>
           <Icon name="close" size={12} />
         </div>
@@ -168,10 +168,10 @@ function LyricsMock({ t }: { t: TFunction }) {
       <div className={`${CARD} flex-[1_1_260px] px-[18px] pt-4 pb-5 flex flex-col gap-3.5`}>
         <Tabs t={t} active="lyrics" />
         <Segmented left={t('landing.mock.pasteLyrics')} right={t('lyricsSearch.tabLabel')} active="right" />
-        <div className="h-10 px-3 rounded-[10px] border border-zinc-800 flex items-center gap-2 text-sm">
+        <div className="h-10 px-3 rounded-[calc(var(--radius)*1)] border border-zinc-800 flex items-center gap-2 text-sm">
           <Icon name="search" size={13} /><span className="truncate">{SONG} {artist}</span>
         </div>
-        <div className="flex items-center gap-3 p-1.5 rounded-[10px] bg-zinc-800">
+        <div className="flex items-center gap-3 p-1.5 rounded-[calc(var(--radius)*1)] bg-zinc-800">
           <span className={`${THUMB} size-11 rounded-md`} />
           <span className="min-w-0"><span className="block text-[15px] font-semibold">{SONG}</span><span className="text-[13px] text-foreground/80">{artist}</span></span>
         </div>
@@ -181,12 +181,12 @@ function LyricsMock({ t }: { t: TFunction }) {
         </div>
       </div>
 
-      <div className="flex-[1_1_300px] min-w-0 rounded-[18px] bg-zinc-800 border border-zinc-700 shadow-elevated p-5 flex flex-col gap-3.5">
+      <div className="flex-[1_1_300px] min-w-0 rounded-[calc(var(--radius)*1.8)] bg-zinc-800 border border-zinc-700 shadow-elevated p-5 flex flex-col gap-3.5">
         <div>
           <p className="font-heading text-[17px] font-extrabold">{t('lyricsSearch.preview')}</p>
           <p className="mt-0.5 text-[13px] text-foreground/80">{SONG} — {artist}</p>
         </div>
-        <div className="px-3 py-2.5 rounded-[10px] bg-primary/10 border border-primary/25 text-[13px]">
+        <div className="px-3 py-2.5 rounded-[calc(var(--radius)*1)] bg-primary/10 border border-primary/25 text-[13px]">
           <span className="block font-semibold text-primary">{t('lyricsSearch.syncedTitle')}</span>
           <span className="text-foreground/80">{t('landing.mock.syncedShort')}</span>
         </div>
@@ -200,7 +200,7 @@ function LyricsMock({ t }: { t: TFunction }) {
         </ol>
         <div className="flex items-center gap-2.5 flex-wrap pt-3 border-t border-zinc-700 text-[13px]">
           <span className="inline-flex items-center gap-2 mr-auto">
-            <span className="size-4 rounded bg-primary text-primary-foreground inline-flex items-center justify-center"><Icon name="check" size={12} /></span>
+            <span className="size-4 rounded-xs bg-primary text-primary-foreground inline-flex items-center justify-center"><Icon name="check" size={12} /></span>
             {t('lyricsSearch.keepTimestamps')}
           </span>
           <span className="px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold">{t('lyricsSearch.useLyrics')}</span>
@@ -213,24 +213,24 @@ function LyricsMock({ t }: { t: TFunction }) {
 function StartSyncingMock({ t }: { t: TFunction }) {
   return (
     <div className="flex flex-col font-lyrics text-zinc-100">
-      <div className="rounded-[22px] border border-zinc-800 bg-zinc-950 px-5 pt-[18px] pb-5 flex flex-col gap-3.5">
+      <div className="rounded-[calc(var(--radius)*2.2)] border border-zinc-800 bg-zinc-950 px-5 pt-[18px] pb-5 flex flex-col gap-3.5">
         <span className="font-mono text-[11px] font-medium text-foreground/45">{t('landing.mock.setupPage')}</span>
         <div className="flex items-center gap-3.5 flex-wrap">
           <span className="inline-flex items-center gap-2.5 mr-auto font-heading text-[22px] font-extrabold tracking-tight">
             <span className="size-2 rounded-full bg-primary/80" />{t('landing.mock.newProject')}
           </span>
           <span className="inline-flex items-center gap-2.5 text-xs font-bold tracking-wider uppercase">
-            <span className="relative w-10 h-[22px] rounded-full bg-primary"><span className="absolute right-[3px] top-[3px] size-4 rounded-full bg-primary-foreground" /></span>
+            <span className="relative w-10 h-[22px] rounded-pill bg-primary"><span className="absolute right-[3px] top-[3px] size-4 rounded-full bg-primary-foreground" /></span>
             {t('landing.mock.public')}
           </span>
-          <span className="h-10 px-4 rounded-[10px] bg-primary text-primary-foreground inline-flex items-center gap-2 text-sm font-bold ring-4 ring-primary/20">
+          <span className="h-10 px-4 rounded-[calc(var(--radius)*1)] bg-primary text-primary-foreground inline-flex items-center gap-2 text-sm font-bold ring-4 ring-primary/20">
             {t('landing.mock.startSyncing')}<Icon name="arrow_forward" size={14} />
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[['w-3/5', 'w-[85%]', 'w-2/5'], ['w-[30%]', 'w-[90%]', 'w-[70%]']].map((bars, i) => (
-            <div key={i} className="h-[72px] rounded-[14px] bg-zinc-900 border border-zinc-800 p-3 flex flex-col gap-2">
-              {bars.map((w, k) => <span key={w} className={`${w} h-2 rounded ${k === 0 ? 'bg-zinc-700' : 'bg-zinc-800'}`} />)}
+            <div key={i} className="h-[72px] rounded-[calc(var(--radius)*1.4)] bg-zinc-900 border border-zinc-800 p-3 flex flex-col gap-2">
+              {bars.map((w, k) => <span key={w} className={`${w} h-2 rounded-xs ${k === 0 ? 'bg-zinc-700' : 'bg-zinc-800'}`} />)}
             </div>
           ))}
         </div>
@@ -244,7 +244,7 @@ function StartSyncingMock({ t }: { t: TFunction }) {
       <div className={`${CARD} px-5 pt-[18px] pb-5 flex flex-col gap-4`}>
         <div className="flex items-center gap-4 text-foreground/80">
           <span className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.08em] uppercase text-zinc-100"><Icon name="description" size={15} />{t('landing.demo.editor')}</span>
-          <span className="ml-auto inline-flex items-center gap-2 h-7 px-3 rounded-full border border-zinc-700 font-mono text-xs font-medium">
+          <span className="ml-auto inline-flex items-center gap-2 h-7 px-3 rounded-pill border border-zinc-700 font-mono text-xs font-medium">
             <span className="size-1.5 rounded-full bg-primary" />{t('landing.demo.progress', { done: 1, total: 12, words: 84 })}
           </span>
         </div>
@@ -268,7 +268,7 @@ function StartSyncingMock({ t }: { t: TFunction }) {
 export function Kbd({ children, square }: { children: ReactNode; square?: boolean }) {
   return (
     <kbd
-      className={`shrink-0 h-8 inline-flex items-center justify-center rounded-[7px] border border-b-[3px] border-zinc-700 bg-zinc-800 font-mono text-[13px] font-medium text-zinc-100 ${
+      className={`shrink-0 h-8 inline-flex items-center justify-center rounded-[calc(var(--radius)*0.7)] border border-b-[3px] border-zinc-700 bg-zinc-800 font-mono text-[13px] font-medium text-zinc-100 ${
         square ? 'w-8' : 'min-w-16 px-2.5'
       }`}
     >

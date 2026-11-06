@@ -159,7 +159,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
         {!isUserFollow && targetLink && (
           <Link to={targetLink} className="mt-1.5 flex items-center gap-2 group">
             {coverImage && (
-              <img src={coverImage} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+              <img src={coverImage} alt="" className="w-8 h-8 rounded-xs object-cover shrink-0" />
             )}
             <span className="text-sm font-medium text-zinc-200 group-hover:text-primary transition-colors truncate">
               {projectTitle || t('feed.untitled')}
@@ -174,7 +174,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
         {tags && tags.length > 0 && (
           <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={t('projectView.shareTagsLabel')}>
             {tags.map((tag) => (
-              <li key={tag} className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">#{tag}</li>
+              <li key={tag} className="rounded-pill bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">#{tag}</li>
             ))}
           </ul>
         )}

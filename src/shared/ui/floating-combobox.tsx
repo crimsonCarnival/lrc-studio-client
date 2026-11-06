@@ -252,7 +252,7 @@ export function FloatingCombobox({
           // Same field as FloatingInput (redesign sheet 05), so the two sit side by side evenly.
           size === 'default' && 'h-[52px] lg:h-[52px] rounded-[var(--radius-control)] border-0 bg-card px-4 lg:px-4 text-[17px] md:text-[17px] lg:text-[17px] font-medium text-foreground inset-ring inset-ring-hl hover:inset-ring-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary',
           size === 'default' && hasOptions && 'pr-9 lg:pr-9',
-          size === 'sm' && 'h-6 bg-zinc-800 border-zinc-600/50 text-zinc-500 text-[10px] focus:border-primary/60 rounded px-1.5 pr-6',
+          size === 'sm' && 'h-6 bg-zinc-800 border-zinc-600/50 text-zinc-500 text-[10px] focus:border-primary/60 rounded-xs px-1.5 pr-6',
           error && (size === 'default' ? 'inset-ring-2 inset-ring-love' : 'border-destructive/50 focus:border-destructive/80')
         )}
       />

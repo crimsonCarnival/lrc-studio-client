@@ -90,7 +90,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
               style: {
                 background: 'var(--card)',
                 border: '1px solid var(--border)',
-                borderRadius: '1rem',
+                borderRadius: 'var(--radius-card)',
                 padding: '12px 16px',
                 color: 'var(--card-foreground)',
               },
@@ -170,7 +170,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             style: {
               background: 'var(--card)',
               border: '1px solid var(--border)',
-              borderRadius: '1rem',
+              borderRadius: 'var(--radius-card)',
               padding: '12px 16px',
               color: 'var(--card-foreground)',
             },
@@ -207,7 +207,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           style: {
             background: 'var(--card)',
             border: '1px solid var(--border)',
-            borderRadius: '1rem',
+            borderRadius: 'var(--radius-card)',
             padding: '12px 16px',
             color: 'var(--card-foreground)',
           },

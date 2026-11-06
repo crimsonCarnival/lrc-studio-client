@@ -59,7 +59,7 @@ function SignUpShowcase({ t, displayName, accountName }: Omit<SignUpProps, 'vari
       </div>
 
       {/* A blank project card: the only real data in it is the name being typed. */}
-      <div className="rounded-[18px] bg-zinc-950 border border-zinc-800 overflow-hidden font-lyrics">
+      <div className="rounded-[calc(var(--radius)*1.8)] bg-zinc-950 border border-zinc-800 overflow-hidden font-lyrics">
         <div className="aspect-video bg-zinc-800 flex items-center justify-center text-foreground/45">
           <Icon name="music_note" size={32} />
         </div>

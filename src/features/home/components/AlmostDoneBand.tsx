@@ -67,7 +67,7 @@ export function AlmostDoneBand({
             variant="ghost"
             size={null}
             onClick={() => onOpen(p.publicId)}
-            className="h-auto justify-start gap-3.5 rounded-[14px] px-2.5 py-2 text-left font-normal hover:bg-raised hover:text-foreground"
+            className="h-auto justify-start gap-3.5 rounded-[calc(var(--radius)*1.4)] px-2.5 py-2 text-left font-normal hover:bg-raised hover:text-foreground"
           >
             {/* 44px ring, 4px stroke, 2px gap: leaves 32px for the cover. */}
             <ProgressRing value={p.pct} size={44} label={p.title || t('library.untitled')}>

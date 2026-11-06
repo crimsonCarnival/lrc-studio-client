@@ -72,10 +72,10 @@ export default function EmailSection() {
           value={value}
           onChange={(e) => { setValue(e.target.value); setError(''); }}
           placeholder={t('profile.email')}
-          className="flex-1 basis-64 bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px]"
+          className="flex-1 basis-64 bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] h-11 text-[15px]"
         />
         {user?.email && (
-          <span className={`flex items-center gap-1.5 px-3 h-11 rounded-[10px] text-[13px] font-semibold ${verified ? 'bg-teal-950 text-teal-300' : 'bg-amber-950 text-amber-300'}`}>
+          <span className={`flex items-center gap-1.5 px-3 h-11 rounded-[calc(var(--radius)*1)] text-[13px] font-semibold ${verified ? 'bg-teal-950 text-teal-300' : 'bg-amber-950 text-amber-300'}`}>
             <Icon name={verified ? 'check' : 'schedule'} size={16} />
             {verified ? t('profile.verified') : t('profile.unverified')}
           </span>

@@ -145,7 +145,7 @@ const LineTextContent = memo(({
 
       <div className="flex items-center gap-2">
         {isCounterpart && (
-          <span className={`inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${isPendingCounterpart ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold' : 'bg-counterpart-soft text-counterpart-ink'}`}>
+          <span className={`inline-flex h-[22px] shrink-0 items-center gap-1 rounded-pill px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${isPendingCounterpart ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold' : 'bg-counterpart-soft text-counterpart-ink'}`}>
             <Icon name="mic" size={11} />
             {t('editor.counterpart.chip')}
           </span>
@@ -198,14 +198,14 @@ const LineTextContent = memo(({
               const singerColorStyle = customHex ? getCustomColorStyle(customHex, isActive && wi === activeWordIndex) : undefined;
 
               const spanClass = editorMode === 'words'
-                ? `transition-all px-0.5 rounded ${singerColorClass} ${isActive && wi === activeWordIndex
+                ? `transition-all px-0.5 rounded-xs ${singerColorClass} ${isActive && wi === activeWordIndex
                   ? 'bg-primary/20 text-primary [text-shadow:0_0_0.8px_currentColor] underline decoration-dotted underline-offset-2'
                   : w.time != null
                     ? wordSingerIdx !== null ? '' : 'text-primary/70 hover:bg-zinc-800'
                     : isActive || isSynced ? wordSingerIdx !== null ? '' : 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
                 }`
                 // No side padding: at 17px it read as double spaces between words.
-                : `transition-colors rounded ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
+                : `transition-colors rounded-xs ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
 
               // The reading belongs to the kanji, not the kana around it. Since the
               // rt is positioned across its ruby's whole box, the ruby has to wrap
@@ -348,7 +348,7 @@ const LineTextContent = memo(({
                   return (
                     <Tip key={wi} content={t('editor.rightClickToAssignSinger')}>
                       <span
-                        className={`transition-colors rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
+                        className={`transition-colors rounded-xs cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
                         style={singerColorStyle}
                         onContextMenu={(e) => {
                           e.preventDefault();
@@ -519,7 +519,7 @@ const LineTextContent = memo(({
           <Tip content={t('editor.wordBadgeHint', { count: line.words.filter(w => w.time != null).length })}>
             <button
               type="button"
-              className="flex-shrink-0 text-[9px] font-mono text-accent-blue/60 px-1 py-0.5 bg-accent-blue/10 rounded border border-accent-blue/20 leading-none cursor-pointer hover:bg-accent-blue/20 hover:text-accent-blue transition-colors focus:ring-1 focus:ring-accent-blue/40 outline-none"
+              className="flex-shrink-0 text-[9px] font-mono text-accent-blue/60 px-1 py-0.5 bg-accent-blue/10 rounded-xs border border-accent-blue/20 leading-none cursor-pointer hover:bg-accent-blue/20 hover:text-accent-blue transition-colors focus:ring-1 focus:ring-accent-blue/40 outline-none"
               onClick={(e) => { e.stopPropagation(); }}
             >
               W

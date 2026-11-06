@@ -15,8 +15,8 @@ interface Props {
   onCancel: () => void;
 }
 
-const CARD = 'flex flex-col gap-3 rounded-[14px] bg-card p-3 inset-ring inset-ring-hl';
-const CHIP = 'rounded-full bg-raised px-2.5 py-1 text-sm text-foreground inset-ring inset-ring-hl';
+const CARD = 'flex flex-col gap-3 rounded-[calc(var(--radius)*1.4)] bg-card p-3 inset-ring inset-ring-hl';
+const CHIP = 'rounded-pill bg-raised px-2.5 py-1 text-sm text-foreground inset-ring inset-ring-hl';
 
 /**
  * Shows what the parser is unsure about and lets the person decide. Nothing is applied

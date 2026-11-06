@@ -258,7 +258,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                     {profile.country && (
                       <span className="flex items-center gap-1.5"><CountryFlag countryCode={profile.country} />{countryName}</span>
                     )}
-                    <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-violet-200 text-[11px] font-bold font-mono">
+                    <span className="px-2 py-0.5 rounded-pill bg-zinc-800 text-violet-200 text-[11px] font-bold font-mono">
                       {t('profile.levelLabel')} {profile.progression?.level ?? 0}
                     </span>
                   </div>
@@ -322,7 +322,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                 <Link
                   to={profilePath(accountName)}
                   onClick={() => setOpen(false)}
-                  className="flex-1 h-10 grid place-items-center rounded-[10px] border border-zinc-700 text-sm font-semibold text-zinc-100 hover:bg-zinc-800/60 transition-colors"
+                  className="flex-1 h-10 grid place-items-center rounded-[calc(var(--radius)*1)] border border-zinc-700 text-sm font-semibold text-zinc-100 hover:bg-zinc-800/60 transition-colors"
                 >
                   {t('profile.mini.viewProfile')}
                 </Link>
@@ -371,9 +371,9 @@ function MiniProfileSkeleton() {
         ))}
       </div>
       <div className="flex gap-2 px-[18px] pt-3 pb-4 border-t border-zinc-800">
-        <div className={cn(sk, 'flex-1 h-10 rounded-[10px]')} />
-        <div className={cn(sk, 'flex-1 h-10 rounded-[10px]')} />
-        <div className={cn(sk, 'size-10 rounded-[10px]')} />
+        <div className={cn(sk, 'flex-1 h-10 rounded-[calc(var(--radius)*1)]')} />
+        <div className={cn(sk, 'flex-1 h-10 rounded-[calc(var(--radius)*1)]')} />
+        <div className={cn(sk, 'size-10 rounded-[calc(var(--radius)*1)]')} />
       </div>
     </>
   );

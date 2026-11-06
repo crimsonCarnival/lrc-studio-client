@@ -74,7 +74,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
                 key={v}
                 // The player drops presets outside the allowed range; show them as inactive, not gone.
                 title={inRange(v) ? undefined : t('settings.playback.presetOutOfRange')}
-                className={`flex items-center h-[34px] pl-3 rounded-full bg-zinc-800 text-zinc-100 font-mono text-[13px] ${inRange(v) ? '' : 'opacity-50 line-through'}`}
+                className={`flex items-center h-[34px] pl-3 rounded-pill bg-zinc-800 text-zinc-100 font-mono text-[13px] ${inRange(v) ? '' : 'opacity-50 line-through'}`}
               >
                 {formatSpeed(v)}
                 <button
@@ -91,7 +91,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
               <button
                 type="button"
                 onClick={addPreset}
-                className="h-[34px] px-3 rounded-full border border-dashed border-zinc-700 text-primary text-[13px] font-semibold hover:bg-zinc-800"
+                className="h-[34px] px-3 rounded-pill border border-dashed border-zinc-700 text-primary text-[13px] font-semibold hover:bg-zinc-800"
               >
                 + {t('settings.playback.addPreset')}
               </button>

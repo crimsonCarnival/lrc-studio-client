@@ -69,7 +69,7 @@ function SourceBadge({ source, label, className }: { source?: string; label: Rea
   const isYt = source === 'youtube';
   return (
     <span className={cn(
-      'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide',
+      'flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide',
       isYt ? 'text-red-300' : 'text-blue-300',
       className,
     )}>
@@ -404,7 +404,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
       aria-selected={filter === id}
       onClick={() => setFilter(id)}
       className={cn(
-        'h-9 px-3.5 rounded-full border text-sm font-semibold transition-colors coarse:h-11',
+        'h-9 px-3.5 rounded-pill border text-sm font-semibold transition-colors coarse:h-11',
         filter === id
           ? 'bg-primary border-primary text-primary-foreground'
           : 'border-zinc-800 text-zinc-200 hover:border-zinc-600',

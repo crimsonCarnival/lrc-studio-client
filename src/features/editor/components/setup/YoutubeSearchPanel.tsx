@@ -225,8 +225,8 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
               <div key={i} className="flex gap-3">
                 <Skeleton className="w-32 h-[72px] rounded-lg shrink-0" />
                 <div className="flex-1 flex flex-col gap-2 pt-1">
-                  <Skeleton className="h-4 w-3/4 rounded" />
-                  <Skeleton className="h-3 w-1/2 rounded" />
+                  <Skeleton className="h-4 w-3/4 rounded-xs" />
+                  <Skeleton className="h-3 w-1/2 rounded-xs" />
                 </div>
               </div>
             ))}
@@ -263,7 +263,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs text-zinc-500 truncate">{item.channelTitle}</p>
                     {item.embeddable === false && (
-                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded-xs flex items-center gap-1">
                         <Icon name="warning" size={10} />
                         {t('player.noEmbed')}
                       </span>

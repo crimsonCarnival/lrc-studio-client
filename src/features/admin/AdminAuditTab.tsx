@@ -41,7 +41,7 @@ export default function AdminAuditTab({ auditLogs }: { auditLogs: AuditLog[] }) 
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.action')}</p>
-                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                  <span className={`inline-block px-2 py-0.5 rounded-xs text-[10px] font-semibold uppercase tracking-wider ${
                     log.action.includes('ban') ? 'bg-red-500/10 text-red-400' :
                     log.action.includes('unban') || log.action.includes('reactivate') ? 'bg-emerald-500/10 text-emerald-400' :
                     'bg-zinc-800 text-zinc-400'
@@ -82,7 +82,7 @@ export default function AdminAuditTab({ auditLogs }: { auditLogs: AuditLog[] }) 
                     <span className="text-xs font-semibold text-primary whitespace-nowrap">{log.adminName}</span>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap inline-block ${log.action.includes('ban') ? 'bg-red-500/10 text-red-400' :
+                    <span className={`px-2 py-0.5 rounded-xs text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap inline-block ${log.action.includes('ban') ? 'bg-red-500/10 text-red-400' :
                         log.action.includes('unban') || log.action.includes('reactivate') ? 'bg-emerald-500/10 text-emerald-400' :
                           'bg-zinc-800 text-zinc-400'
                       }`}>

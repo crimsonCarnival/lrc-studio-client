@@ -66,7 +66,7 @@ function SearchField({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center rounded-full bg-card text-subtle inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state hover:inset-ring-faint focus-within:inset-ring-2 focus-within:inset-ring-primary",
+        "flex min-w-0 items-center rounded-pill bg-card text-subtle inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state hover:inset-ring-faint focus-within:inset-ring-2 focus-within:inset-ring-primary",
         compact ? "h-10 gap-2 px-3.5" : "h-11 gap-2.5 px-4",
         className
       )}

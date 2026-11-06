@@ -124,7 +124,7 @@ export function ColorPicker({ value, onChange, 'aria-label': ariaLabel, classNam
           aria-valuemax={360}
           aria-valuenow={Math.round(hsv.h)}
           onKeyDown={(e) => nudge(e, (n) => ({ ...hsv, h: (hsv.h + n + 360) % 360 }), ['ArrowLeft', 'ArrowRight'])}
-          className="relative mt-3 h-3 w-full cursor-pointer touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="relative mt-3 h-3 w-full cursor-pointer touch-none rounded-pill outline-none focus-visible:ring-2 focus-visible:ring-primary"
           style={{ backgroundImage: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)' }}
         >
           <span
