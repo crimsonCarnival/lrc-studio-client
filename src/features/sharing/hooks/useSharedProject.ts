@@ -34,6 +34,7 @@ export function useSharedProject({
   setIsProjectLoading,
   setActivepublicId,
   setShareModal,
+  setProjectVisibility,
   activepublicIdRef,
   lines,
   editorMode,
@@ -241,8 +242,10 @@ export function useSharedProject({
 
       if (sharedId) {
         if (!lastShareData) setShareModalState({ loading: 'saving' });
-        try { await projects.update(sharedId, projectData); }
-        catch (err) { console.error(err); sharedId = null; }
+        try {
+          await projects.update(sharedId, projectData);
+          setProjectVisibility?.(sharedId, true);
+        } catch (err) { console.error(err); sharedId = null; }
       }
       if (!sharedId) {
         if (!lastShareData) setShareModalState({ loading: 'recaptcha' });
@@ -250,11 +253,21 @@ export function useSharedProject({
         if (!lastShareData) setShareModalState({ loading: 'creating' });
         const result = await projects.create({ ...projectData, recaptchaToken });
         sharedId = result.publicId;
-        // Creation is always private, and the link below must open for other people.
-        await projects.update(sharedId, { public: true });
+        // The project now exists, and it is private.
         setActivepublicId(sharedId);
         activepublicIdRef.current = sharedId;
         localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, sharedId);
+        // Creation is always private, and the link below must open for other people. If this
+        // step fails there is no working link, so say so instead of handing out a dead one.
+        try {
+          await projects.update(sharedId, { public: true });
+        } catch (err) {
+          console.error(err);
+          setShareModalState(null);
+          toast.error(t('project.shareMadePublicFailed'));
+          return;
+        }
+        setProjectVisibility?.(sharedId, true);
       }
 
       const finalData = {
@@ -272,7 +285,7 @@ export function useSharedProject({
       setShareModalState(null);
       toast.error(t('project.shareFailed'));
     }
-  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activepublicIdRef, setActivepublicId, setShareModalState, executeRecaptcha, lastShareData, restoredMedia]);
+  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activepublicIdRef, setActivepublicId, setProjectVisibility, setShareModalState, executeRecaptcha, lastShareData, restoredMedia]);
 
   return {
     isSharedProject, setIsSharedProject,

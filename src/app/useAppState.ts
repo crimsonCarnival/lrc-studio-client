@@ -602,6 +602,7 @@ export function useAppState(user?: AuthUserType | null) {
     setIsProjectLoading,
     setActivepublicId,
     setShareModal: undefined, // hook owns its own state
+    setProjectVisibility,
     activepublicIdRef,
     lines,
     editorMode,
