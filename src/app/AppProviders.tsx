@@ -10,9 +10,16 @@ import { NotificationsProvider } from '@/features/notifications/NotificationsCon
 import { connectSocket, disconnectSocket } from '@/app/socket.client';
 import { installOverflowMarquee } from '@/shared/utils/overflow-marquee';
 import { useSessionSocket } from '@/features/auth/hooks/useSessionSocket';
+import { useTimezoneSync } from '@/shared/hooks/useTimezoneSync';
 import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal';
 
 import { BadgeDefsProvider } from '@/features/badges/BadgeDefsContext';
+
+// useTimezoneSync reads settings, which only exist below SettingsProvider.
+function TimezoneSync() {
+  useTimezoneSync();
+  return null;
+}
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const { user: socketUser } = useAuthContext();
@@ -92,6 +99,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <TooltipProvider>
             <NotificationsProvider>
               <BadgeDefsProvider>
+                <TimezoneSync />
                 <SetAccountNameModal />
                 {children}
               </BadgeDefsProvider>

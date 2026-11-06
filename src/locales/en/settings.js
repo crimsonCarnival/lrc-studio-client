@@ -329,7 +329,7 @@ export default {
     confirmDestructive: "Confirm Destructive Actions",
     confirmDestructiveDesc: "Ask for confirmation before deleting or clearing data",
     timezone: "Timezone",
-    timezoneDesc: "Override detected timezone for saved timestamps",
+    timezoneDesc: "For dates, streaks and activity. Detected from your browser by default",
     timezoneAuto: "Auto-detect",
     autoSaveIndicatorDuration: "Auto-save indicator duration",
     autoSaveIndicatorDurationDesc: "How long the save completion indicator remains visible",

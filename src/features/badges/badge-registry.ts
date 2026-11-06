@@ -17,7 +17,6 @@ export const BADGE_REGISTRY = {
   streak7:     { label: 'On a Roll',     icon: '🔥', color: 'orange',  condition: '7-day activity streak'         },
   streak30:    { label: 'Unstoppable',   icon: '⚡', color: 'amber',   condition: '30-day activity streak'        },
   verified:    { label: 'Verified',      icon: '✓',  color: 'primary', condition: 'Email verified'                },
-  admin:       { label: 'Staff',         icon: '🛡️', color: 'rose',   condition: 'Platform administrator'        },
 };
 
 export const RARITY_CONFIG = {

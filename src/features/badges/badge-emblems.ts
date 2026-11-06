@@ -68,7 +68,6 @@ const BUILTIN: Record<string, Emblem> = {
   pioneer:      { shape: 'shield',  glyph: GLYPHS.flag,      color: foam },
   verified:     { shape: 'shield',  glyph: GLYPHS.check,     color: iris },
   veteran:      { shape: 'shield',  glyph: GLYPHS.hourglass, color: love },
-  admin:        { shape: 'shield',  glyph: GLYPHS.wave,      color: rose },
   syncer10h:    { shape: 'record',  glyph: GLYPHS.clock,     color: foam },
   syncer100h:   { shape: 'record',  glyph: GLYPHS.clock,     color: foam, pips: true },
   wordsmith1k:  { shape: 'record',  glyph: GLYPHS.pen,       color: iris },

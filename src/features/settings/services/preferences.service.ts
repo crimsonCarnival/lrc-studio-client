@@ -13,6 +13,7 @@ export const PREFERENCES_FIELDS =/* GraphQL */ `
   defaultProjectPrivacy
   showActivityHeatmap
   showXpProgress
+  showAddictionTitle
   wallEnabled
   allowTags
   notifications {
@@ -59,6 +60,15 @@ export async function updatePreferences(input: UpdatePreferencesInput): Promise<
     }
   `, { input });
   return data.updatePreferences;
+}
+
+/** Sets the IANA timezone whose calendar days the user's streak and activity heatmap count. */
+export async function setTimezone(timezone: string): Promise<void> {
+  await gqlRequest(/* GraphQL */ `
+    mutation SetTimezone($timezone: String!) {
+      setTimezone(timezone: $timezone)
+    }
+  `, { timezone });
 }
 
 export async function adminShadowBan(

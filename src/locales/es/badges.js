@@ -115,5 +115,4 @@ export default {
   streak7:      { label: 'En Racha', tip: 'Mantuvo una racha de 7 días' },
   streak30:     { label: 'Imparable', tip: 'Mantuvo una racha de 30 días' },
   verified:     { label: 'Verificado', tip: 'Cuenta verificada' },
-  admin:        { label: 'Staff', tip: 'Equipo oficial de LRC Studio' },
 };

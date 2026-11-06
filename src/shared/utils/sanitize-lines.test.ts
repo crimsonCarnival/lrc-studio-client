@@ -203,6 +203,19 @@ describe('sanitizeLines — untrusted payloads', () => {
     expect(out[0]).not.toHaveProperty('__proto__hack');
   });
 
+  it('keeps who timed a line, so a full save does not turn AI, imported and forked lines into manual ones', () => {
+    const out = sanitizeLines([
+      { text: 'a', source: 'asr' }, { text: 'b', source: 'import' }, { text: 'c', source: 'fork' }, { text: 'd', source: 'manual' },
+    ]);
+    expect(out.map((l) => l.source)).toEqual(['asr', 'import', 'fork', 'manual']);
+  });
+
+  it('drops a source value it does not know', () => {
+    const out = sanitizeLines([{ text: 'a', source: 'hacked' }, { text: 'b', source: 7 }]);
+    expect(out[0]).not.toHaveProperty('source');
+    expect(out[1]).not.toHaveProperty('source');
+  });
+
   it('does not pollute Object.prototype via a crafted key', () => {
     sanitizeLines([JSON.parse('{"text":"one","__proto__":{"polluted":true}}')]);
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();

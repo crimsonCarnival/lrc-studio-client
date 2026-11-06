@@ -30,6 +30,7 @@ type PrefsValues = {
   showFollowers: boolean;
   showActivityHeatmap: boolean;
   showXpProgress: boolean;
+  showAddictionTitle: boolean;
   wallEnabled: boolean;
   allowTags: boolean;
   onlineVisibility: Audience;
@@ -57,6 +58,8 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
     // Privacy-by-default: off unless explicitly enabled (server default is false too).
     showActivityHeatmap: prefs?.showActivityHeatmap ?? false,
     showXpProgress: prefs?.showXpProgress ?? false,
+    // On unless opted out (server default is true too).
+    showAddictionTitle: prefs?.showAddictionTitle ?? true,
     wallEnabled: prefs?.wallEnabled ?? true,
     allowTags: prefs?.allowTags ?? true,
     onlineVisibility: (prefs?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as Audience,
@@ -143,6 +146,9 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
         </SettingRow>
         <SettingRow label={tk('profile.settings.showXpProgress')} description={tk('profile.settings.showXpProgressSub')}>
           <Toggle label={tk('profile.settings.showXpProgress')} checked={values.showXpProgress} onChange={(v) => setPref('showXpProgress', v)} />
+        </SettingRow>
+        <SettingRow label={tk('profile.settings.showAddictionTitle')} description={tk('profile.settings.showAddictionTitleSub')}>
+          <Toggle label={tk('profile.settings.showAddictionTitle')} checked={values.showAddictionTitle} onChange={(v) => setPref('showAddictionTitle', v)} />
         </SettingRow>
         <SettingRow label={tk('profile.settings.wallEnabled')} description={tk('profile.settings.wallEnabledSub')}>
           <Toggle label={tk('profile.settings.wallEnabled')} checked={values.wallEnabled} onChange={(v) => setPref('wallEnabled', v)} />

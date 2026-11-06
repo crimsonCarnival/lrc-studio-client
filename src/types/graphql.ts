@@ -1347,6 +1347,7 @@ export type UserPreferences = {
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showActivityHeatmap: Scalars['Boolean']['output'];
   showXpProgress: Scalars['Boolean']['output'];
+  showAddictionTitle: Scalars['Boolean']['output'];
   wallEnabled: Scalars['Boolean']['output'];
   allowTags: Scalars['Boolean']['output'];
   notifications: NotificationPreferences;
@@ -1366,6 +1367,7 @@ export type UpdatePreferencesInput = {
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
   showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
   showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
+  showAddictionTitle?: InputMaybe<Scalars['Boolean']['input']>;
   wallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   allowTags?: InputMaybe<Scalars['Boolean']['input']>;
   notifications?: InputMaybe<NotificationPreferencesInput>;

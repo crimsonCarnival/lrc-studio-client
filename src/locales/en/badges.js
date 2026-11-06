@@ -118,5 +118,4 @@ export default {
   streak7:      { label: 'On a Roll', tip: 'Maintained a 7-day streak' },
   streak30:     { label: 'Unstoppable', tip: 'Maintained a 30-day streak' },
   verified:     { label: 'Verified', tip: 'A verified account' },
-  admin:        { label: 'Staff', tip: 'Official LRC Studio team' },
 };

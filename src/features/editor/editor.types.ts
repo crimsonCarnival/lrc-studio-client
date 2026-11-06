@@ -27,9 +27,10 @@ export interface EditorLine {
   mode?: 'solo' | 'duet' | 'split';
   label?: string;
   id?: string;
-  /** Tracks whether this line's timestamp was set by ASR ('asr') or manually ('manual').
-   *  null = legacy/unknown lines (treated as manual). Cleared when timestamp is removed. */
-  source?: 'manual' | 'asr' | null;
+  /** Who set this line's timing: by hand ('manual'), ASR ('asr'), a file or lyrics search ('import')
+   *  or a fork ('fork'). null = legacy/unknown lines (treated as manual). Cleared when the timestamp
+   *  is removed, and becomes 'manual' when the user re-times the line. */
+  source?: 'manual' | 'asr' | 'import' | 'fork' | null;
   /** When non-null, this line is a counterpart overlapping the parent line at timestamp=adLibOf.
    *  Keeps its pre-rename name ("ad-lib") because it is persisted in every stored project. */
   adLibOf?: number | null;

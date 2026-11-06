@@ -24,6 +24,8 @@ function finiteOrNull(value: unknown): number | null {
   return typeof value === 'number' && isFinite(value) ? value : null;
 }
 
+const LINE_SOURCES = ['manual', 'asr', 'import', 'fork'] as const;
+
 function sanitizeWords(raw: unknown, keepSingerIndex: boolean): EditorWord[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   return raw.flatMap((w) => {
@@ -71,6 +73,8 @@ export function sanitizeLines(raw: unknown): EditorLine[] {
       singers: Array.isArray(l.singers) ? (l.singers as string[]) : undefined,
       translations: Array.isArray(l.translations) ? (l.translations as EditorLine['translations']) : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
+      // Who timed the line. Dropping it would turn AI, imported and forked lines into manual ones on the next full save.
+      ...(typeof l.source === 'string' && (LINE_SOURCES as readonly string[]).includes(l.source) ? { source: l.source as EditorLine['source'] } : {}),
       words: sanitizeWords(l.words, true),
       // The secondary track has no singer attribution of its own.
       secondaryWords: sanitizeWords(l.secondaryWords, false),

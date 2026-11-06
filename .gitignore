@@ -37,3 +37,5 @@ src/assets/fonts/material-symbols-subset.woff2
 # Redesign mock bundles (local reference only, never committed)
 redesign/
 .codegraph/
+
+tsconfig.tsbuildinfo
