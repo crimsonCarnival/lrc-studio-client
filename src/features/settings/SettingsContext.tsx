@@ -127,6 +127,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   // Remember appearance changes until the server confirms them (see PENDING_KEY).
   const prevSettingsRef = useRef<any>(settings);
+  // Appearance picked while a server fetch was in flight. That response predates the pick, and
+  // the push may already have been acknowledged (clearing PENDING_KEY) by the time it lands.
+  const changedSinceSyncStartRef = useRef<Record<string, string>>({});
   useEffect(() => {
     const prev = prevSettingsRef.current;
     prevSettingsRef.current = settings;
@@ -136,7 +139,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     let changed = false;
     for (const key of APPEARANCE_KEYS) {
       const value = settings.interface?.[key];
-      if (prev?.interface?.[key] !== value && typeof value === 'string') { pending[key] = value; changed = true; }
+      if (prev?.interface?.[key] !== value && typeof value === 'string') {
+        pending[key] = value;
+        changedSinceSyncStartRef.current[key] = value;
+        changed = true;
+      }
     }
     if (changed) writePending(pending);
   }, [settings]);
@@ -153,6 +160,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (isSyncingRef.current) return;
     if (!getAccessToken()) return;
 
+    // An appearance pick is sent at once: the user often navigates or closes the tab right after
+    // choosing a theme, and the debounce window is long enough to lose it. Other settings
+    // (sliders, typing) keep the debounce so they do not fire a request per tick.
+    const delay = Object.keys(readPending()).length > 0 ? 0 : 300;
     const timer = setTimeout(() => {
       const changes = computeChangesRef.current?.(lastSavedToServerRef.current, settings) ?? {};
 
@@ -170,7 +181,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           lastWarnedFailureRef.current = failure;
         });
       }
-    }, 300);
+    }, delay);
     return () => clearTimeout(timer);
   }, [settings]);
 
@@ -219,6 +230,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const syncFromServer = useCallback(() => {
     if (!getAccessToken() || syncInFlightRef.current) return;
     syncInFlightRef.current = true;
+    changedSinceSyncStartRef.current = {};
 
     settingsApi.get().then((remote: any) => {
       isSyncingRef.current = true;
@@ -247,6 +259,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const pending = readPending();
       for (const key of Object.keys(pending)) {
         if ((remote as { interface?: Record<string, unknown> } | null)?.interface?.[key] !== pending[key]) carried[key] = pending[key];
+      }
+      // Picked after this fetch started: the response cannot know about it, even if the push
+      // already landed and cleared the pending entry.
+      for (const [key, value] of Object.entries(changedSinceSyncStartRef.current)) {
+        if ((remote as { interface?: Record<string, unknown> } | null)?.interface?.[key] !== value) carried[key] = value;
       }
       clearAcked((remote as { interface?: Record<string, unknown> } | null)?.interface);
       if (Object.keys(carried).length > 0) merged.interface = { ...merged.interface, ...carried };
