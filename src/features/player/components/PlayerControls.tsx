@@ -6,6 +6,7 @@ import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
 
 import { formatTime } from '@/shared/utils/format-time';
+import { lineLoopAt } from '@/features/player/line-loop';
 import { usePlayer } from '../PlayerContext';
 import type { UploadItem } from '../PlayerContext';
 const WaveformDisplay = lazy(() => import('./WaveformDisplay'));
@@ -963,24 +964,8 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       if (loopA != null && loopB != null) {
                         clearLoop();
                       } else {
-                        const now = currentTime;
-                        if (lines?.length) {
-                          let activeIdx = -1;
-                          for (let i = 0; i < lines.length; i++) {
-                            if (lines[i].timestamp != null && lines[i].timestamp! <= now) activeIdx = i;
-                          }
-                          if (activeIdx >= 0) {
-                            const a = lines[activeIdx].timestamp ?? null;
-                            let b: number | null = lines[activeIdx].endTime ?? null;
-                            if (b == null) {
-                              b = duration;
-                              for (let i = activeIdx + 1; i < lines.length; i++) {
-                                if (lines[i].timestamp != null) { b = lines[i].timestamp ?? null; break; }
-                              }
-                            }
-                            setLoop({ a, b });
-                          }
-                        }
+                        const bounds = lineLoopAt(lines ?? [], currentTime, duration);
+                        if (bounds) setLoop(bounds);
                       }
                     }}
                     className={`flex flex-col items-center justify-center size-14 rounded-2xl transition-all duration-100 shrink-0 active:scale-95 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:bg-zinc-800'}`}
