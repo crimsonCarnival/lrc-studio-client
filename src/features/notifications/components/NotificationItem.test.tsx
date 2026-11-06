@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import i18n from 'i18next';
 
@@ -99,5 +99,38 @@ describe('notification actors', () => {
   it('names each actor once, newest first', () => {
     expect(text(grouped(['bob', 'sam']), 'ann')).toBe('sam and bob replied to your comment on 32blunts’s wall');
     expect(text(grouped(['bob', 'sam', 'mia']), 'ann')).toBe('mia, sam and bob replied to your comment on 32blunts’s wall');
+  });
+});
+
+describe('projects privatized notification text', () => {
+  const privatized = (meta: Record<string, unknown> | null): NotificationData => ({
+    _id: 'n5', type: 'system', body: 'English body from the server', actors: [], actorCount: 0, meta,
+  } as NotificationData);
+
+  afterEach(async () => { await i18n.changeLanguage('en'); });
+
+  it('localizes from meta in English, singular and plural', () => {
+    expect(text(privatized({ kind: 'projects_privatized', count: 1 }))).toBe(
+      '1 of your public projects still had untimed lines, so it was made private. Publish it again when it’s ready.',
+    );
+    expect(text(privatized({ kind: 'projects_privatized', count: 3 }))).toBe(
+      '3 of your public projects still had untimed lines, so they were made private. Publish them again when they’re ready.',
+    );
+  });
+
+  it('localizes from meta in Spanish, singular and plural', async () => {
+    await i18n.changeLanguage('es');
+    expect(text(privatized({ kind: 'projects_privatized', count: 1 }))).toBe(
+      'Uno de tus proyectos públicos aún tenía líneas sin tiempo, así que se hizo privado. Vuelve a publicarlo cuando esté listo.',
+    );
+    expect(text(privatized({ kind: 'projects_privatized', count: 4 }))).toBe(
+      '4 de tus proyectos públicos aún tenían líneas sin tiempo, así que se hicieron privados. Vuelve a publicarlos cuando estén listos.',
+    );
+  });
+
+  it('falls back to the body for an unknown kind or a missing count', () => {
+    expect(text(privatized({ kind: 'something_else', count: 2 }))).toBe('English body from the server');
+    expect(text(privatized({ kind: 'projects_privatized' }))).toBe('English body from the server');
+    expect(text(privatized(null))).toBe('English body from the server');
   });
 });

@@ -33,7 +33,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated' | 'projects_privatized'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean } | null;
 }
 
 /** The target types a `report` / `report_reviewed` notification can name. */
@@ -334,6 +334,11 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
   }
   if (type === 'star_milestone') {
     return <span><Trans i18nKey="notifications.starMilestone" values={{ count: notification.meta?.count ?? 0, title: projectTitle ?? '' }} components={[<strong key="0" />, <strong key="1" />]} /></span>;
+  }
+  // Migration notice: the server's `body` is English, so localize from `meta`. An unknown kind or a
+  // missing count falls through to the raw body below.
+  if (type === 'system' && notification.meta?.kind === 'projects_privatized' && typeof notification.meta.count === 'number') {
+    return <span>{t('notifications.projectsPrivatized', { count: notification.meta.count })}</span>;
   }
   if (type === 'new_device') return <span>{t('notifications.newDevice')}</span>;
   if (type === 'appeal_result') return <span>{t('notifications.appealRejected')}</span>;
