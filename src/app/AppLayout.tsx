@@ -82,6 +82,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     isProjectLoading, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed,
     projectCoverImage, setProjectCoverImage,
+    projectIsPublic, setProjectVisibility, isSharedProject,
     collabViewer,
   } = appState;
 
@@ -177,6 +178,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     handleManualSave({ title: newTitle, metadata: newMetadata, ...(coverImage ? { coverImage } : {}) });
     navigate('/project/local');
   }, [mediaTitle, projectMetadata, setMediaTitle, setProjectMetadata, setProjectCoverImage, navigate, handleManualSave, setShowNamingModal]);
+
+  // Only a saved project of your own has a visibility to change from the settings modal.
+  const settingsProjectId = activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && !isSharedProject && !collabViewer ? activepublicId : null;
 
   const songSingers = useMemo(() => buildSingerRoster(lines, artistRoster(projectMetadata)), [lines, projectMetadata]);
 
@@ -348,6 +352,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               title: mediaTitle || appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '') || '',
             }}
             songSingers={songSingers}
+            isPublic={projectIsPublic}
+            publicId={settingsProjectId}
+            onVisibilityChange={settingsProjectId ? (next: boolean) => setProjectVisibility(settingsProjectId, next) : undefined}
           />
         </div>
         </CollabPresenceProvider>
