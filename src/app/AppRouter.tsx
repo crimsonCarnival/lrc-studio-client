@@ -19,7 +19,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
-import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
+import { isEditorPath, projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
 import { getSession } from '@features/collab/collab.service';
 import { SessionAudioNotice } from '@features/collab/components/SharedAudioNotice';
 import type { SessionOwnerControl } from '@features/collab/components/SessionControl';
@@ -425,6 +425,16 @@ export function AppRouter({
   const view: WorkspaceView = collabViewer || mobileTab === 'preview' ? 'preview' : 'editor';
   const showEditorView = useCallback(() => setMobileTab('editor'), [setMobileTab]);
   const showPreviewView = useCallback(() => setMobileTab('preview'), [setMobileTab]);
+
+  // The view is a persisted setting, so a project opened after leaving the last one on "Revisar"
+  // used to open in preview. Opening any editor route starts in the editor; switching views
+  // afterwards doesn't change the path, so it isn't undone.
+  const routerPathname = routerLocation.pathname;
+  useEffect(() => {
+    if (isEditorPath(routerPathname) && mobileTab === 'preview') setMobileTab('editor');
+    // Only on entering a route: `mobileTab` changing within one must not fight the user's own switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routerPathname]);
 
   const isLgRouter = useBreakpoint('lg');
   const routerInputMethod = useInputMethod();
