@@ -41,7 +41,7 @@ export function useDragAndDrop({
 
   const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault();
-    if (pageOwnsDrops()) return;
+    if (pageOwnsDrops() || inDropZone(e)) return;
     maxDragDepth.current += 1;
     if (e.dataTransfer?.types?.includes('Files')) {
       setIsDraggingFile(true);
