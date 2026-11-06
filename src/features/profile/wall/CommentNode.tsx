@@ -155,9 +155,8 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
           // -mx-3 px-3 keeps the avatar where the thread lines expect it while the row's
           // own background and ring get room around the content; pr-20 clears the corner actions.
           'group/row relative -mx-3 flex cursor-pointer gap-3 rounded-xl py-2 pl-3 pr-20 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/50',
-          highlighted
-            ? 'bg-primary/[0.08] ring-1 ring-inset ring-primary/35 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_6%,transparent)]'
-            : 'hover:bg-zinc-800/40',
+          // No hover background: the thread lines already react to the pointer, and a tinted row fought them.
+          highlighted && 'bg-primary/[0.08] ring-1 ring-inset ring-primary/35 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_6%,transparent)]',
           // Opened from a link: tinted, then a slow fade back (the long duration only while fading).
           flash && !flash.fading && !highlighted && 'bg-primary/15',
           flash?.fading && 'duration-1000',
@@ -226,11 +225,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
               )}
             </span>
           </p>
-          {levelTitle && (
-            <Tip content={(t as (key: string) => string)('profile.stats.addictionLevel')}>
-              <p className="w-fit cursor-default text-xs font-medium leading-tight text-primary-ink">{levelTitle}</p>
-            </Tip>
-          )}
+          {levelTitle && <p className="text-xs font-medium leading-tight text-primary-ink">{levelTitle}</p>}
           {comment.replyToMissing && (
             <p className="mt-0.5 flex items-center gap-1 text-xs italic text-zinc-500">
               <Icon name="reply" size={12} /> {t('profile.wall.replyToMissing')}
