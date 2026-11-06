@@ -5,6 +5,8 @@ export default {
   remove: "Remove media",
   changeSong: "Change media",
   addMedia: "Add audio",
+  play: "Play",
+  pause: "Pause",
   clearUrl: "Back to file upload",
   dropAudio: "Drop audio here, or click to browse",
   emptyTitle: "Load a song to start",

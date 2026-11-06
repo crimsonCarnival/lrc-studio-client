@@ -16,8 +16,8 @@ type PhonePlayerStripProps = {
 const STRIP_BTN = 'size-11 lg:size-11 shrink-0 rounded-[calc(var(--radius)*1)] text-foreground/75 hover:text-foreground';
 
 /**
- * The phone editor's one-row player: play/pause, current time, back N seconds, line loop
- * and speed, plus a thin seek bar along its top edge. It is only controls: the media
+ * The phone editor's player: a seek row (range and current time) over one row of
+ * play/pause, back N seconds, line loop and speed. It is only controls: the media
  * elements live in PlayerEngine, which stays mounted above the routes.
  */
 export default function PhonePlayerStrip({ onAddMedia }: PhonePlayerStripProps) {
@@ -29,7 +29,6 @@ export default function PhonePlayerStrip({ onAddMedia }: PhonePlayerStripProps) 
   } = usePlayer();
   const seekStep = settings.playback?.seekTime ?? 5;
   const looping = loopA != null && loopB != null;
-  const progress = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   if (!hasMedia) {
     return (
@@ -54,33 +53,35 @@ export default function PhonePlayerStrip({ onAddMedia }: PhonePlayerStripProps) 
   };
 
   return (
-    <div className="relative px-2 pt-3 pb-1">
-      {/* Thin progress line; the transparent range over it is the touch target for seeking. */}
-      <div aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-zinc-800">
-        <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
+    <div className="px-2 pt-1 pb-1">
+      {/* Seek row: a full-height (44px) native range, so it is a real touch target with its own
+          thumb and focus ring, then the current time. */}
+      <div className="flex h-11 items-center gap-2 px-1">
+        <input
+          type="range"
+          min={0}
+          max={duration || 0}
+          step={0.1}
+          value={currentTime}
+          aria-label={t('player.seekPlayback')}
+          aria-valuetext={formatTime(currentTime)}
+          onChange={(e) => seek(parseFloat(e.target.value))}
+          className="h-11 min-w-0 flex-1 cursor-pointer accent-primary touch-manipulation rounded-pill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+        />
+        <span className="shrink-0 font-mono text-[13px] tabular-nums text-foreground/80">
+          {formatTime(currentTime)}
+        </span>
       </div>
-      <input
-        type="range"
-        min={0}
-        max={duration || 0}
-        step={0.1}
-        value={currentTime}
-        aria-label={t('player.seekPlayback')}
-        onChange={(e) => seek(parseFloat(e.target.value))}
-        className="absolute inset-x-0 top-0 h-3 w-full cursor-pointer opacity-0 touch-manipulation"
-      />
       <div className="flex items-center gap-1.5">
         <Button
           size="icon"
           onClick={togglePlay}
-          aria-label={t('shortcuts.playPause')}
+          aria-label={isPlaying ? t('player.pause') : t('player.play')}
           className="size-11 lg:size-11 shrink-0 rounded-pill bg-primary hover:bg-primary-dim text-zinc-950"
         >
           <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={20} />
         </Button>
-        <span className="min-w-0 flex-1 truncate px-1 font-mono text-[13px] tabular-nums text-foreground/80">
-          {formatTime(currentTime)}
-        </span>
+        <span className="flex-1" />
         <Button
           variant="ghost"
           size="icon"

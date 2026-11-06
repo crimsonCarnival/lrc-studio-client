@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
@@ -55,15 +56,38 @@ export default function PhoneEditor({
       : saveState === 'failed' ? t('project.saveFailed')
         : saveState === 'unsaved' ? t('editor.statusUnsaved') : null;
 
-  const tabButton = (id: PhoneTab | 'preview', label: string, onSelect: (() => void) | undefined) => {
+  // Sync and Edit are tabs over this screen, with roving focus. Preview leaves for another
+  // view, so it is a plain button that sits in the same strip, never a tab.
+  const baseId = useId();
+  const tabIds = { sync: `${baseId}-sync`, edit: `${baseId}-edit` };
+  const panelIds = { sync: `${baseId}-sync-panel`, edit: `${baseId}-edit-panel` };
+  const tabRefs = useRef<Partial<Record<PhoneTab, HTMLButtonElement | null>>>({});
+  const TABS: PhoneTab[] = ['sync', 'edit'];
+  const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const i = TABS.indexOf(tab);
+    const next = e.key === 'ArrowRight' ? TABS[(i + 1) % TABS.length]
+      : e.key === 'ArrowLeft' ? TABS[(i - 1 + TABS.length) % TABS.length]
+        : e.key === 'Home' ? TABS[0]
+          : e.key === 'End' ? TABS[TABS.length - 1] : null;
+    if (!next) return;
+    e.preventDefault();
+    setTab(next);
+    tabRefs.current[next]?.focus();
+  };
+  const tabButton = (id: PhoneTab, label: string) => {
     const selected = tab === id;
     return (
       <button
         key={id}
+        ref={(el) => { tabRefs.current[id] = el; }}
+        id={tabIds[id]}
         type="button"
         role="tab"
         aria-selected={selected}
-        onClick={onSelect}
+        aria-controls={panelIds[id]}
+        tabIndex={selected ? 0 : -1}
+        onClick={() => setTab(id)}
+        onKeyDown={onTabKeyDown}
         className={`${TAB_BTN} ${selected ? 'text-foreground' : 'text-subtle hover:text-foreground'}`}
       >
         {label}
@@ -103,27 +127,36 @@ export default function PhoneEditor({
           variant="ghost"
           size="icon"
           aria-label={t('common.moreActions')}
-          className="size-11 lg:size-11 shrink-0 text-foreground/80"
+          aria-disabled="true"
+          className="size-11 lg:size-11 shrink-0 text-foreground/40"
         >
           <Icon name="more_vert" size={22} />
         </Button>
       </header>
 
-      <div role="tablist" aria-label={t('editor.phone.tabs')} className="flex shrink-0 border-b border-zinc-800">
-        {tabButton('sync', t('editor.sync'), () => setTab('sync'))}
-        {tabButton('edit', t('editor.edit'), () => setTab('edit'))}
-        {onShowPreview && tabButton('preview', t('editor.preview'), onShowPreview)}
+      <div className="flex shrink-0 border-b border-zinc-800">
+        <div role="tablist" aria-label={t('editor.phone.tabs')} className="flex flex-[2_1_0%]">
+          {tabButton('sync', t('editor.sync'))}
+          {tabButton('edit', t('editor.edit'))}
+        </div>
+        {onShowPreview && (
+          <button type="button" onClick={onShowPreview} className={`${TAB_BTN} text-subtle hover:text-foreground`}>
+            {t('editor.preview')}
+          </button>
+        )}
       </div>
 
       {tab === 'sync' ? (
         <PhoneSyncTab
+          id={panelIds.sync}
+          labelledBy={tabIds.sync}
           list={list}
           banner={banner}
           player={<PhonePlayerStrip onAddMedia={onAddMedia} />}
           markBar={mark ? <PhoneMarkBar {...mark} /> : undefined}
         />
       ) : (
-        <div role="tabpanel" className="flex flex-1 min-h-0 flex-col items-center justify-center gap-4 overflow-y-auto px-6 pb-safe text-center">
+        <div role="tabpanel" id={panelIds.edit} aria-labelledby={tabIds.edit} className="flex flex-1 min-h-0 flex-col items-center justify-center gap-4 overflow-y-auto px-6 pb-safe text-center">
           <p className="max-w-sm text-[15px] text-subtle">{t('editor.phone.editPlaceholder')}</p>
           {onEditText && (
             <Button onClick={onEditText} className="h-11 gap-2 px-5 font-semibold text-zinc-950 bg-primary hover:bg-primary-dim">

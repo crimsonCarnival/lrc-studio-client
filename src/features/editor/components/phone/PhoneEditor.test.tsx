@@ -6,6 +6,7 @@ import { TooltipProvider } from '@ui/tooltip';
 import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
 import Editor from '../core/Editor';
 import EditorPage from '../EditorPage';
+import PhoneEditor from './PhoneEditor';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 
@@ -135,6 +136,32 @@ describe('Phone editor marking (shared handleMark)', () => {
     expect(latest.lines[0].endTime).toBe(13);
   });
 
+  it('two rapid taps stamp two lines and advance twice', () => {
+    render(<Harness initialLines={makeLines(4)} />);
+    const mark = screen.getByRole('button', { name: /mark line 1/i });
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    expect(latest.lines[0].timestamp).toBe(12.5);
+    expect(latest.lines[1].timestamp).toBe(12.5);
+    expect(latest.lines[2].timestamp).toBeNull();
+    expect(latest.activeLineIndex).toBe(2);
+  });
+
+  it('stamps the shown position while paused', () => {
+    const getCurrentTime = vi.fn(() => 20.25);
+    render(<Harness initialLines={makeLines(2)} playbackPosition={12.5} isPlaying={false} playerRef={{ current: { getCurrentTime } }} />);
+    tapMark(/mark line 1/i);
+    expect(latest.lines[0].timestamp).toBe(12.5);
+  });
+
+  it('stamps the live player time while playing', () => {
+    const getCurrentTime = vi.fn(() => 20.25);
+    render(<Harness initialLines={makeLines(2)} playbackPosition={12.5} isPlaying playerRef={{ current: { getCurrentTime } }} />);
+    tapMark(/mark line 1/i);
+    expect(getCurrentTime).toHaveBeenCalled();
+    expect(latest.lines[0].timestamp).toBe(20.25);
+  });
+
   it('shows no Mark control to a session viewer', () => {
     const collab = {
       provider: null,
@@ -262,3 +289,60 @@ describe('Crossing the lg breakpoint on a mounted editor', () => {
     expect(Math.max(0, ...tops)).toBeGreaterThan(1000);
   });
 });
+
+describe('Phone editor header and tabs', () => {
+  it('has Sync and Edit as tabs with roving focus, and Preview as a plain button', () => {
+    const onShowPreview = vi.fn();
+    render(
+      <MemoryRouter>
+        <TooltipProvider>
+          <PhoneEditorView onShowPreview={onShowPreview} />
+        </TooltipProvider>
+      </MemoryRouter>,
+    );
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.map((t) => t.textContent)).toEqual(['Sync', 'Edit']);
+    expect(screen.queryByRole('tab', { name: 'Preview' })).toBeNull();
+    const [sync, edit] = tabs;
+    expect(sync).toHaveAttribute('aria-selected', 'true');
+    expect(sync).toHaveAttribute('tabindex', '0');
+    expect(edit).toHaveAttribute('tabindex', '-1');
+    const panel = screen.getByRole('tabpanel');
+    expect(sync.getAttribute('aria-controls')).toBe(panel.id);
+    expect(panel.getAttribute('aria-labelledby')).toBe(sync.id);
+
+    sync.focus();
+    fireEvent.keyDown(sync, { key: 'ArrowRight' });
+    expect(edit).toHaveAttribute('aria-selected', 'true');
+    expect(edit).toHaveFocus();
+    expect(screen.getByRole('tabpanel').getAttribute('aria-labelledby')).toBe(edit.id);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    expect(onShowPreview).toHaveBeenCalledTimes(1);
+  });
+
+  it('labels play/pause by what it will do and keeps the Tools placeholder labelled but disabled', () => {
+    render(
+      <MemoryRouter>
+        <TooltipProvider>
+          <PhoneEditorView />
+        </TooltipProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'More actions' })).toHaveAttribute('aria-disabled', 'true');
+  });
+});
+
+function PhoneEditorView({ onShowPreview }: { onShowPreview?: () => void }) {
+  return (
+    <PhoneEditor
+      title="Song"
+      saveState="saved"
+      visibility={null}
+      list={<div />}
+      onShowPreview={onShowPreview}
+      mark={{ onMark: vi.fn(), onUndo: vi.fn(), canUndo: false, label: 'Mark line 1', disabled: false }}
+    />
+  );
+}

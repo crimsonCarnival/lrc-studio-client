@@ -5,6 +5,8 @@ export default {
   remove: "Eliminar multimedia",
   changeSong: "Cambiar canción",
   addMedia: "Añadir audio",
+  play: "Reproducir",
+  pause: "Pausar",
   clearUrl: "Volver a cargar archivo",
   dropAudio: "Suelta o haz clic para cargar un archivo de audio",
   emptyTitle: "Carga una canción para empezar",
