@@ -15,7 +15,7 @@ import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
+import { holdsUnsavedEdits, isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
 import { useCollabEditorMode } from '@/features/collab/useCollabEditorMode';
@@ -917,8 +917,8 @@ export function useAppState(user?: AuthUserType | null) {
 
 
   const hasUnsavedChanges = useCallback(() => {
-    // Only editor routes (local, new, or edit) can have unsaved changes
-    if (!window.location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/)) return false;
+    // Only editor routes (local, new, or a project's /edit page) can have unsaved changes.
+    if (!holdsUnsavedEdits(window.location.pathname)) return false;
 
     // Unsaved local project with actual content
     if (!activepublicId && lines.length > 0) return true;

@@ -125,6 +125,15 @@ export function isEditorPath(pathname: string): boolean {
   return PROJECT_EDIT_PATH.test(pathname) || pathname === '/project/local' || SESSION_PATH.test(pathname);
 }
 
+/**
+ * Pages whose edits a solo save persists, and so can be left with unsaved changes: a saved
+ * project's `/edit` page, the local draft and setup. A live session is not one of them: its
+ * edits live in the shared doc, which the server stores.
+ */
+export function holdsUnsavedEdits(pathname: string): boolean {
+  return PROJECT_EDIT_PATH.test(pathname) || pathname === '/project/local' || pathname === '/project/new';
+}
+
 /** Any canonical project path — view, `/edit` or `/fork`. */
 export function isProjectPath(pathname: string): boolean {
   return PROJECT_ANY_PATH.test(pathname);
