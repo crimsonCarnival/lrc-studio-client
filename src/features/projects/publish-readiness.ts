@@ -19,7 +19,9 @@ export function getPublishReadiness(
   meta: { title?: string; artists?: string[]; coverImage?: string },
 ): PublishReadiness {
   const lyric = lines.filter((l) => l.type !== 'section');
-  const timed = lyric.filter((l) => l.timestamp != null).length;
+  // Same rule as the privacy migration: a line is timed by its start time or by any word time.
+  // An end time alone does not count.
+  const timed = lyric.filter((l) => l.timestamp != null || l.words?.some((w) => w.time != null)).length;
   const total = lyric.length;
   const linesDone = total > 0 && timed === total;
   const hasTitle = !!meta.title?.trim();

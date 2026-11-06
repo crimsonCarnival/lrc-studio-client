@@ -51,4 +51,15 @@ describe('getPublishReadiness', () => {
     expect(r.missing).toEqual(['title', 'lines']);
     expect(r.complete).toBe(false);
   });
+
+  it('counts a line timed by a word time only (words mode), matching the migration', () => {
+    const wordsOnly: EditorLine = { text: 'a', timestamp: null, words: [{ word: 'a', time: 0 }] };
+    expect(getPublishReadiness([wordsOnly], meta)).toMatchObject({ timed: 1, total: 1, complete: true });
+  });
+
+  it('does not count a line with only an end time, or words without times', () => {
+    const endOnly: EditorLine = { text: 'a', timestamp: null, endTime: 5 };
+    const wordsUntimed: EditorLine = { text: 'b', timestamp: null, words: [{ word: 'b', time: null }] };
+    expect(getPublishReadiness([endOnly, wordsUntimed], meta)).toMatchObject({ timed: 0, total: 2, complete: false });
+  });
 });

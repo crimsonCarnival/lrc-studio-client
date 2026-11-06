@@ -90,8 +90,6 @@ export type ProjectPatch = {
   uploadId?: string | null;
   lyrics?: LyricsPatch;
   state?: ProjectSaveState;
-  /** Set from explicit save overrides, not from the diff. */
-  public?: boolean;
   coverImage?: string | null;
 };
 

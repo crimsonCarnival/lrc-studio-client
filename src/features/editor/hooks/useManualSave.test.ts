@@ -130,3 +130,15 @@ describe('buildProjectPatch — lyrics diffing', () => {
     expect(patch?.lines).toHaveLength(2);
   });
 });
+
+describe('saves never change visibility', () => {
+  // Visibility goes public only through PublishDialog. A save patch is built from the diff and
+  // has no way to carry `public`, so neither autosave nor manual save can publish.
+  it('a full save patch has no public field', () => {
+    const patch = buildProjectPatch({
+      prevSnapshot: null, title: 'T', metadata: {}, state: { syncMode: true, activeLineIndex: 0, playbackPosition: 0, playbackSpeed: 1 },
+      editorMode: 'lrc', lines: [{ text: 'a', timestamp: 1 }],
+    } as Parameters<typeof buildProjectPatch>[0]);
+    expect(Object.keys(patch)).not.toContain('public');
+  });
+});
