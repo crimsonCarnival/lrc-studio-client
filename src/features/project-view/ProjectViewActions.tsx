@@ -12,6 +12,7 @@ import { projectsService } from '@features/projects/services/projects.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { ReportDialog } from '@features/reports/ReportDialog';
 import { downloadProjectExport } from './project-export';
+import { Tip } from '@ui/tip';
 
 interface Playlist {
   id: string;
@@ -210,16 +211,18 @@ export function ProjectViewActions({
   return (
     <>
     <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          size="icon"
-          variant="ghost"
-          className={triggerClassName}
-          aria-label={t('projectView.actions.menu')}
-        >
-          <Icon name="more_horiz" size={16} />
-        </Button>
-      </PopoverTrigger>
+      <Tip content={t('projectView.actions.menu')}>
+        <PopoverTrigger asChild>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={triggerClassName}
+            aria-label={t('projectView.actions.menu')}
+          >
+            <Icon name="more_horiz" size={16} />
+          </Button>
+        </PopoverTrigger>
+      </Tip>
 
       <PopoverContent align="end" className="w-52">
 

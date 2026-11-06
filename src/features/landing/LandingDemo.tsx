@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
 
 /**
  * The hero's looping editor + preview mock. It owns the playback clock so the
@@ -162,14 +163,16 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
             1x<Icon name="expand_more" size={14} />
           </span>
           <span aria-hidden="true" className="inline-flex"><Icon name="skip_previous" size={18} /></span>
-          <button
-            type="button"
-            onClick={() => setPlaying((p) => !p)}
-            aria-label={playing ? t('landing.demo.pause') : t('landing.demo.play')}
-            className="size-10 rounded-full bg-primary hover:bg-primary-dim text-primary-foreground inline-flex items-center justify-center transition-colors"
-          >
-            <Icon name={playing ? 'pause' : 'play_arrow'} size={18} />
-          </button>
+          <Tip content={playing ? t('landing.demo.pause') : t('landing.demo.play')}>
+            <button
+              type="button"
+              onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? t('landing.demo.pause') : t('landing.demo.play')}
+              className="size-10 rounded-full bg-primary hover:bg-primary-dim text-primary-foreground inline-flex items-center justify-center transition-colors"
+            >
+              <Icon name={playing ? 'pause' : 'play_arrow'} size={18} />
+            </button>
+          </Tip>
           <span aria-hidden="true" className="inline-flex"><Icon name="skip_next" size={18} /></span>
           <span aria-hidden="true" className="hidden sm:inline-flex items-center gap-2.5">
             <span className="size-9 rounded-full bg-zinc-800 inline-flex items-center justify-center"><Icon name="volume_up" size={16} /></span>

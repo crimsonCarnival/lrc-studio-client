@@ -15,6 +15,7 @@ import { PersonLink, ReportTargetPreview } from '@/features/reports/ReportTarget
 import { ReportThreadToggle } from '@/features/reports/ReportThread';
 import { isSudoCancelled, withSudo } from './services/sudo';
 import BanUserModal from './BanUserModal';
+import { Tip } from '@ui/tip';
 
 const STATUSES = ['open', 'dismissed', 'actioned'] as const satisfies readonly ReportStatus[];
 const TYPE_FILTERS = ['all', ...REPORT_TARGET_TYPES] as const;
@@ -269,9 +270,11 @@ export default function AdminReportsTab() {
             onChange={setType}
           />
         </div>
-        <Button type="button" variant="outline" size="icon" onClick={() => fetchGroups()} aria-label={t('admin.reports.refresh')}>
-          <Icon name="refresh" size={14} />
-        </Button>
+        <Tip content={t('admin.reports.refresh')}>
+          <Button type="button" variant="outline" size="icon" onClick={() => fetchGroups()} aria-label={t('admin.reports.refresh')}>
+            <Icon name="refresh" size={14} />
+          </Button>
+        </Tip>
       </div>
 
       {loading ? (

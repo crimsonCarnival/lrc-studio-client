@@ -115,7 +115,7 @@ function AvatarBadgeInner({ accountName, avatarUrl, size = 'md' }: AvatarBadgePr
       <LazyImage
         src={avatarUrl}
         alt={accountName}
-        className={`${sizeClass} ${ring} shrink-0 rounded-pill object-cover`}
+        className={`${sizeClass} ${ring} shrink-0 rounded-full object-cover`}
         onError={() => setImgError(true)}
       />
     );
@@ -184,15 +184,17 @@ export function RedirectMessage({ from, t }: { from?: string; t: TFunction }) {
     }`}>
       {variant === 'warning' ? <Icon name="lightbulb" size={16} className="shrink-0" /> : <Icon name="music_note" size={16} className="shrink-0" />}
       <div className="flex-1">{message}</div>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        onClick={() => setVisible(false)}
-        aria-label={t('common.dismiss')}
-        className="size-6 lg:size-6"
-      >
-        <Icon name="close" size={14} />
-      </Button>
+      <Tip content={t('common.dismiss')}>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => setVisible(false)}
+          aria-label={t('common.dismiss')}
+          className="size-6 lg:size-6"
+        >
+          <Icon name="close" size={14} />
+        </Button>
+      </Tip>
     </div>
   );
 }

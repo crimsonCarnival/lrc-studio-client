@@ -7,6 +7,7 @@ import { EditorLineContextMenu } from '@features/editor/components/line/EditorLi
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
+import { Tip } from '@ui/tip';
 
 /** Long-press acts on the pressed line alone; this tab has no multi-select. */
 const NO_SELECTION: Set<number> = new Set();
@@ -167,15 +168,17 @@ export default function SyncModeTab({
             {t('editor.markLineNumber', { number: activeLyricNumber })}
           </button>
           {onUndo && (
-            <button
-              type="button"
-              onClick={onUndo}
-              disabled={!canUndo}
-              aria-label={t('editor.undo')}
-              className="size-14 shrink-0 grid place-items-center rounded-full border border-zinc-700 text-foreground active:bg-zinc-800 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-            >
-              <Icon name="undo" size={20} />
-            </button>
+            <Tip content={t('editor.undo')}>
+              <button
+                type="button"
+                onClick={onUndo}
+                disabled={!canUndo}
+                aria-label={t('editor.undo')}
+                className="size-14 shrink-0 grid place-items-center rounded-full border border-zinc-700 text-foreground active:bg-zinc-800 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <Icon name="undo" size={20} />
+              </button>
+            </Tip>
           )}
         </div>
       </div>

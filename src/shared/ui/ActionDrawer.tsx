@@ -5,6 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
 
 interface ActionDrawerProps {
   isOpen?: boolean;
@@ -65,15 +66,17 @@ export default function ActionDrawer({
               <div className="flex items-center justify-between mb-6">
                 {title && <h3 className="text-lg font-semibold text-zinc-100">{title}</h3>}
                 {showClose && (
-                  <Button
-                    variant="ghost"
-                    size="icon-lg"
-                    onClick={onClose}
-                    aria-label={t('common.close')}
-                    className="-mr-2 rounded-pill"
-                  >
-                    <Icon name="close" size={20} />
-                  </Button>
+                  <Tip content={t('common.close')}>
+                    <Button
+                      variant="ghost"
+                      size="icon-lg"
+                      onClick={onClose}
+                      aria-label={t('common.close')}
+                      className="-mr-2 rounded-pill"
+                    >
+                      <Icon name="close" size={20} />
+                    </Button>
+                  </Tip>
                 )}
               </div>
 

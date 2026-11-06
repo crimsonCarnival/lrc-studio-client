@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
+import { EnsureTooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 interface TipProps {
   children: ReactNode;
@@ -16,11 +16,13 @@ interface TipProps {
 export function Tip({ children, content, side = 'top', align, className, ...props }: TipProps) {
   if (!content) return children;
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side} align={align} className={className} {...props}>
-        {content}
-      </TooltipContent>
-    </Tooltip>
+    <EnsureTooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side={side} align={align} className={className} {...props}>
+          {content}
+        </TooltipContent>
+      </Tooltip>
+    </EnsureTooltipProvider>
   );
 }

@@ -205,9 +205,11 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                 : t('admin.levels.modal.newTitle')}
             </h3>
           </div>
-          <Button type="button" variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')} className="-m-1">
-            <Icon name="close" size={16} />
-          </Button>
+          <Tip content={t('common.close')}>
+            <Button type="button" variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')} className="-m-1">
+              <Icon name="close" size={16} />
+            </Button>
+          </Tip>
         </div>
 
         <form onSubmit={submit} className="p-5 flex flex-col gap-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
@@ -379,29 +381,33 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
     >
       <div className="flex flex-col items-center gap-0.5 mt-0.5 shrink-0">
         {!proposeMode && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            disabled={rank === 0}
-            onClick={() => onMove(level, 'up')}
-            className="lg:size-5"
-          >
-            <Icon name="expand_less" size={14} />
-          </Button>
+          <Tip content={t('common.actions.moveUp')}>
+            <Button aria-label={t('common.actions.moveUp')}
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              disabled={rank === 0}
+              onClick={() => onMove(level, 'up')}
+              className="lg:size-5"
+            >
+              <Icon name="expand_less" size={14} />
+            </Button>
+          </Tip>
         )}
         <span className="text-[10px] font-bold text-zinc-400 tabular-nums w-5 text-center">#{rank + 1}</span>
         {!proposeMode && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            disabled={rank === total - 1}
-            onClick={() => onMove(level, 'down')}
-            className="lg:size-5"
-          >
-            <Icon name="expand_more" size={14} />
-          </Button>
+          <Tip content={t('common.actions.moveDown')}>
+            <Button aria-label={t('common.actions.moveDown')}
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              disabled={rank === total - 1}
+              onClick={() => onMove(level, 'down')}
+              className="lg:size-5"
+            >
+              <Icon name="expand_more" size={14} />
+            </Button>
+          </Tip>
         )}
       </div>
 
@@ -418,25 +424,29 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
             )}
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => onEdit(level)}
-              aria-label={t('editor.edit')}
-            >
-              <Icon name="edit" size={12} />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => onDelete(level)}
-              aria-label={t('common.delete')}
-              className="text-love-ink hover:bg-love-soft hover:text-love-ink"
-            >
-              <Icon name="delete" size={12} />
-            </Button>
+            <Tip content={t('editor.edit')}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => onEdit(level)}
+                aria-label={t('editor.edit')}
+              >
+                <Icon name="edit" size={12} />
+              </Button>
+            </Tip>
+            <Tip content={t('common.delete')}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => onDelete(level)}
+                aria-label={t('common.delete')}
+                className="text-love-ink hover:bg-love-soft hover:text-love-ink"
+              >
+                <Icon name="delete" size={12} />
+              </Button>
+            </Tip>
           </div>
         </div>
 

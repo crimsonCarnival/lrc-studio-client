@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import type { TourStep } from '../tour/tour-steps';
+import { Tip } from '@ui/tip';
 
 const PADDING = 8;
 const CARD_WIDTH = 320;
@@ -119,15 +120,17 @@ export function GuidedTour({ steps, isOpen, onClose }: { steps: TourStep[]; isOp
       >
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-zinc-100">{t(step.titleKey)}</h3>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            onClick={onClose}
-            aria-label={t('editor.tour.skip')}
-          >
-            <Icon name="close" size={16} />
-          </Button>
+          <Tip content={t('editor.tour.skip')}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={onClose}
+              aria-label={t('editor.tour.skip')}
+            >
+              <Icon name="close" size={16} />
+            </Button>
+          </Tip>
         </div>
         <p className="text-xs text-zinc-400 leading-relaxed">{t(step.bodyKey)}</p>
 

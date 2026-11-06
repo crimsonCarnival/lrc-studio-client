@@ -616,9 +616,11 @@ export default function AdminUsersTab({
                                   {t('admin.table.unban')}
                                 </Button>
                               )}
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(user)} className="size-8 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
-                                <Icon name="delete" size={16} />
-                              </Button>
+                              <Tip content={t('common.actions.deleteUser')}>
+                                <Button aria-label={t('common.actions.deleteUser')} variant="ghost" size="icon" onClick={() => handleDelete(user)} className="size-8 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
+                                  <Icon name="delete" size={16} />
+                                </Button>
+                              </Tip>
                             </>
                           )}
                         </>

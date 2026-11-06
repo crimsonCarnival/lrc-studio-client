@@ -249,15 +249,19 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
         disabled={savingTitle}
         aria-label={t('uploads.rename')}
       />
-      <Button type="button" variant="ghost" size="icon" aria-label={t('common.save')} onClick={(e) => handleSaveTitle(e, upload.id)} loading={savingTitle}
-        className="size-8 text-primary hover:bg-primary/10 hover:text-primary">
-        {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it. */}
-        {!savingTitle && <Icon name="check" size={16} />}
-      </Button>
-      <Button type="button" variant="ghost" size="icon" aria-label={t('common.cancel')} onClick={handleCancelEdit} disabled={savingTitle}
-        className="size-8">
-        <Icon name="close" size={16} />
-      </Button>
+      <Tip content={t('common.save')}>
+        <Button type="button" variant="ghost" size="icon" aria-label={t('common.save')} onClick={(e) => handleSaveTitle(e, upload.id)} loading={savingTitle}
+          className="size-8 text-primary hover:bg-primary/10 hover:text-primary">
+          {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it. */}
+          {!savingTitle && <Icon name="check" size={16} />}
+        </Button>
+      </Tip>
+      <Tip content={t('common.cancel')}>
+        <Button type="button" variant="ghost" size="icon" aria-label={t('common.cancel')} onClick={handleCancelEdit} disabled={savingTitle}
+          className="size-8">
+          <Icon name="close" size={16} />
+        </Button>
+      </Tip>
     </div>
   ) : (
     <span className={className}>{displayTitle(upload, untitled)}</span>
@@ -265,18 +269,20 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
 
   const menuButton = (upload: Upload) => (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t('uploads.moreOptions')}
-          onClick={(e) => e.stopPropagation()}
-          className="size-8 coarse:size-11"
-        >
-          <Icon name="more_vert" size={18} />
-        </Button>
-      </DropdownMenuTrigger>
+      <Tip content={t('uploads.moreOptions')}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t('uploads.moreOptions')}
+            onClick={(e) => e.stopPropagation()}
+            className="size-8 coarse:size-11"
+          >
+            <Icon name="more_vert" size={18} />
+          </Button>
+        </DropdownMenuTrigger>
+      </Tip>
       <DropdownMenuContent align="end">{renderMenu(upload)(dropdownMenuComponents)}</DropdownMenuContent>
     </DropdownMenu>
   );
@@ -316,14 +322,16 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   };
 
   const playButton = (upload: Upload, className: string, iconSize = 14) => (
-    <button
-      type="button"
-      aria-label={playingId === upload.id ? t('uploads.pausePreview') : t('uploads.preview')}
-      onClick={(e) => handlePreview(e, upload)}
-      className={className}
-    >
-      <Icon name={playingId === upload.id ? 'pause' : 'play_arrow'} size={iconSize} />
-    </button>
+    <Tip content={playingId === upload.id ? t('uploads.pausePreview') : t('uploads.preview')}>
+      <button
+        type="button"
+        aria-label={playingId === upload.id ? t('uploads.pausePreview') : t('uploads.preview')}
+        onClick={(e) => handlePreview(e, upload)}
+        className={className}
+      >
+        <Icon name={playingId === upload.id ? 'pause' : 'play_arrow'} size={iconSize} />
+      </button>
+    </Tip>
   );
 
   const renderCard = (upload: Upload) => (

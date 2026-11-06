@@ -44,6 +44,7 @@ import { ProfileHeader } from './ProfileHeader';
 import type { PublicUser, Project } from '@/types';
 import { connectSocket } from '@/app/socket.client';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
+import { Tip } from '@ui/tip';
 
 const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es };
 
@@ -123,12 +124,16 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
 
         {isOwner && (
           <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
-            <Button variant="ghost" size="icon-sm" onClick={handleEdit} className="size-7" aria-label={t('profile.editProject')}>
-              <Icon name="edit" size={14} />
-            </Button>
-            <Button variant="ghost" size="icon-sm" onClick={handleDelete} className="size-7 text-love-ink hover:bg-love-soft hover:text-love-ink" aria-label={t('profile.deleteProject')}>
-              <Icon name="delete" size={14} />
-            </Button>
+            <Tip content={t('profile.editProject')}>
+              <Button variant="ghost" size="icon-sm" onClick={handleEdit} className="size-7" aria-label={t('profile.editProject')}>
+                <Icon name="edit" size={14} />
+              </Button>
+            </Tip>
+            <Tip content={t('profile.deleteProject')}>
+              <Button variant="ghost" size="icon-sm" onClick={handleDelete} className="size-7 text-love-ink hover:bg-love-soft hover:text-love-ink" aria-label={t('profile.deleteProject')}>
+                <Icon name="delete" size={14} />
+              </Button>
+            </Tip>
           </div>
         )}
 

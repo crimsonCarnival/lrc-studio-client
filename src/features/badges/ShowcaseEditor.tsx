@@ -11,6 +11,7 @@ import { useBadgeDefs } from './BadgeDefsContext';
 import { Button } from '@ui/button';
 import { Toggle } from '@/features/settings/components/shared';
 import { SelectField } from '@ui/select-field';
+import { Tip } from '@ui/tip';
 
 const UPDATE_SHOWCASE = /* GraphQL */ `
   mutation UpdateShowcase($badgeIds: [String!]!, $showcasePublic: Boolean) {
@@ -57,17 +58,19 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isIn
         <span className="block text-[13px] text-subtle">{tk(`badges.${badge.id}.tip`, def.condition ?? '')}</span>
         <span className="mt-0.5 block font-mono text-[11px] text-faint">{tk(rarityConf.labelKey)}</span>
       </span>
-      <Button
-        type="button"
-        variant={isInShowcase ? 'default' : 'outline'}
-        size="icon"
-        aria-pressed={isInShowcase}
-        aria-label={t(isInShowcase ? 'badges.showcase.removeFrom' : 'badges.showcase.addTo', { name: label })}
-        onClick={() => onToggle(badge.id)}
-        className="size-11 lg:size-9"
-      >
-        <MorphIcon name={isInShowcase ? 'check' : 'add'} size={18} decorative />
-      </Button>
+      <Tip content={t(isInShowcase ? 'badges.showcase.removeFrom' : 'badges.showcase.addTo', { name: label })}>
+        <Button
+          type="button"
+          variant={isInShowcase ? 'default' : 'outline'}
+          size="icon"
+          aria-pressed={isInShowcase}
+          aria-label={t(isInShowcase ? 'badges.showcase.removeFrom' : 'badges.showcase.addTo', { name: label })}
+          onClick={() => onToggle(badge.id)}
+          className="size-11 lg:size-9"
+        >
+          <MorphIcon name={isInShowcase ? 'check' : 'add'} size={18} decorative />
+        </Button>
+      </Tip>
     </li>
   );
 }
@@ -121,16 +124,18 @@ function ShowcaseSlot({ badge, index, onRemove, onChoose, onDragStart, onDragOve
       {number}
       <BadgeEmblem id={badge.id} color={color} rarity={dbDefs[badge.id]?.rarity ?? badge.rarity} size={64} />
       <span>{label}</span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        aria-label={t('badges.showcase.removeFrom', { name: label })}
-        onClick={() => onRemove(badge.id)}
-        className="absolute right-1 top-1 rounded-pill opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
-      >
-        <Icon name="close" size={14} />
-      </Button>
+      <Tip content={t('badges.showcase.removeFrom', { name: label })}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={t('badges.showcase.removeFrom', { name: label })}
+          onClick={() => onRemove(badge.id)}
+          className="absolute right-1 top-1 rounded-pill opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
+        >
+          <Icon name="close" size={14} />
+        </Button>
+      </Tip>
     </div>
   );
 }

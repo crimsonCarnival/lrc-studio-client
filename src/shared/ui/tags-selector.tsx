@@ -11,6 +11,7 @@ import {
   type TagEntry,
   type PrimaryGenre,
 } from '@features/editor/constants/genre-tags'
+import { Tip } from '@ui/tip';
 
 /** Tallest the tag list is allowed to get; it shrinks to fit the viewport. */
 const MAX_HEIGHT = 320
@@ -188,21 +189,23 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
               className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-pill text-[10px] font-medium bg-primary/15 text-primary border border-primary/25"
             >
               {tag}
-              <button
-                type="button"
-                onPointerDown={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onChange(value.filter((v) => v !== tag))
-                }}
-                className="hover:text-primary/60 transition-colors leading-none"
-                aria-label={t('common.removeItem', { name: tag })}
-              >
-                <Icon name="close" size={10} />
-              </button>
+              <Tip content={t('common.removeItem', { name: tag })}>
+                <button
+                  type="button"
+                  onPointerDown={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onChange(value.filter((v) => v !== tag))
+                  }}
+                  className="hover:text-primary/60 transition-colors leading-none"
+                  aria-label={t('common.removeItem', { name: tag })}
+                >
+                  <Icon name="close" size={10} />
+                </button>
+              </Tip>
             </span>
           ))}
 

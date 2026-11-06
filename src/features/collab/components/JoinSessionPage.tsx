@@ -13,6 +13,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext'
 import { isApiError } from '@/types'
 import { sessionPath } from '@/features/projects/project-path'
 import { joinSession } from '../collab.service'
+import { Tip } from '@ui/tip';
 
 // Matches the server (collab.service MAX_NAME): 1-40 characters after trimming.
 const nameSchema = z.string().trim().min(1).max(40)
@@ -168,16 +169,18 @@ export default function JoinSessionPage() {
             aria-invalid={nameError}
             aria-describedby={nameError ? 'collab-join-name-error' : undefined}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => { setNameError(false); roll(name) }}
-            disabled={rolling}
-            aria-label={t('collab.join.randomName')}
-          >
-            <Icon name="casino" size={16} className={rolling ? 'animate-spin' : undefined} />
-          </Button>
+          <Tip content={t('collab.join.randomName')}>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => { setNameError(false); roll(name) }}
+              disabled={rolling}
+              aria-label={t('collab.join.randomName')}
+            >
+              <Icon name="casino" size={16} className={rolling ? 'animate-spin' : undefined} />
+            </Button>
+          </Tip>
         </div>
         {nameError && <p id="collab-join-name-error" role="alert" className="text-xs text-destructive">{t('collab.join.nameInvalid')}</p>}
       </div>

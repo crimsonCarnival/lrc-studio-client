@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
 
 interface ImageLightboxProps {
   /** Lightbox is open iff this is non-null. */
@@ -35,14 +36,16 @@ export function ImageLightbox({ src, alt = '', onClose }: ImageLightboxProps) {
       onClick={onClose}
       className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in p-6"
     >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={t('common.close')}
-        className="absolute top-4 right-4 grid size-11 place-items-center rounded-full bg-zinc-900/70 text-zinc-200 hover:bg-zinc-800 transition-colors"
-      >
-        <Icon name="close" size={22} />
-      </button>
+      <Tip content={t('common.close')}>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('common.close')}
+          className="absolute top-4 right-4 grid size-11 place-items-center rounded-full bg-zinc-900/70 text-zinc-200 hover:bg-zinc-800 transition-colors"
+        >
+          <Icon name="close" size={22} />
+        </button>
+      </Tip>
       <img
         src={src}
         alt={alt}

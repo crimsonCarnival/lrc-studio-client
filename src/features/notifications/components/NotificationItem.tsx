@@ -13,6 +13,7 @@ import { formatTimeAgo } from '../time-ago';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 import { EMOJI_MAP } from '@/features/reactions/components/reaction-constants';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { Tip } from '@ui/tip';
 
 const REACTION_GLYPHS: Record<string, string> = EMOJI_MAP;
 
@@ -413,14 +414,16 @@ export function NotificationItem({ notification }: { notification: NotificationD
       </div>
       <div className="flex items-center gap-1.5 shrink-0 self-center">
         {!read && <span className="size-2 rounded-full bg-iris" aria-hidden="true" />}
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={(e) => { e.stopPropagation(); dismiss(_id); }}
-          aria-label={t('notifications.dismiss')}
-        >
-          <Icon name="close" size={14} />
-        </Button>
+        <Tip content={t('notifications.dismiss')}>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={(e) => { e.stopPropagation(); dismiss(_id); }}
+            aria-label={t('notifications.dismiss')}
+          >
+            <Icon name="close" size={14} />
+          </Button>
+        </Tip>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectEditPath } from '@/features/projects/project-path';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
+import { Tip } from '@ui/tip';
 
 interface UploadProject {
   publicId: string;
@@ -94,14 +95,16 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
 
           {/* Header */}
           <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-zinc-700/50 flex-shrink-0">
-            <Button
-              onClick={onBack}
-              variant="outline"
-              className="size-8 sm:size-10 p-0 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700 shadow-sm"
-              aria-label={t('common.back')}
-            >
-              <Icon name="chevron_left" size={20} />
-            </Button>
+            <Tip content={t('common.back')}>
+              <Button
+                onClick={onBack}
+                variant="outline"
+                className="size-8 sm:size-10 p-0 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700 shadow-sm"
+                aria-label={t('common.back')}
+              >
+                <Icon name="chevron_left" size={20} />
+              </Button>
+            </Tip>
             <div className="flex-1 min-w-0">
               <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100 truncate tracking-tight">{media.title || media.fileName || t('uploads.unnamed')}</h2>
               <div className="flex items-center gap-3 text-xs sm:text-sm text-zinc-500 mt-1.5">

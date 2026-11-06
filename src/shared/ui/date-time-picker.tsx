@@ -19,6 +19,7 @@ import {
   zonedPartsToDate,
 } from '@/shared/utils/zoned-date';
 import type { DateTimeParts, DayParts } from '@/shared/utils/zoned-date';
+import { Tip } from '@ui/tip';
 
 type DateTimePickerProps = {
   /** ISO instant, or null for "not set". */
@@ -177,21 +178,25 @@ export function DateTimePicker({
         className="w-[19rem] max-w-[calc(100vw-2rem)] border-0 bg-popover p-3 text-popover-foreground ring-1 ring-foreground/10 lg:min-w-0"
       >
         <div className="mb-2 flex items-center justify-between">
-          <Button
-            type="button" variant="ghost" size="icon-sm"
-            aria-label={t('common.datePicker.prevMonth')}
-            onClick={() => { setView((v) => ({ ...addMonths(v, -1), day: 1 })); }}
-          >
-            <Icon name="chevron_left" size={18} />
-          </Button>
+          <Tip content={t('common.datePicker.prevMonth')}>
+            <Button
+              type="button" variant="ghost" size="icon-sm"
+              aria-label={t('common.datePicker.prevMonth')}
+              onClick={() => { setView((v) => ({ ...addMonths(v, -1), day: 1 })); }}
+            >
+              <Icon name="chevron_left" size={18} />
+            </Button>
+          </Tip>
           <div id={titleId} aria-live="polite" className="text-sm font-semibold capitalize">{monthTitle}</div>
-          <Button
-            type="button" variant="ghost" size="icon-sm"
-            aria-label={t('common.datePicker.nextMonth')}
-            onClick={() => { setView((v) => ({ ...addMonths(v, 1), day: 1 })); }}
-          >
-            <Icon name="chevron_right" size={18} />
-          </Button>
+          <Tip content={t('common.datePicker.nextMonth')}>
+            <Button
+              type="button" variant="ghost" size="icon-sm"
+              aria-label={t('common.datePicker.nextMonth')}
+              onClick={() => { setView((v) => ({ ...addMonths(v, 1), day: 1 })); }}
+            >
+              <Icon name="chevron_right" size={18} />
+            </Button>
+          </Tip>
         </div>
 
         <div ref={gridRef} role="grid" aria-labelledby={titleId} onKeyDown={onGridKeyDown}>

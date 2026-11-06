@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogTitle } from '@ui/dialog';
 import { Icon } from '@/shared/ui/Icon';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
 import { matchKey } from '@/shared/utils/keyboard';
+import { Tip } from '@ui/tip';
 
 const SYMBOLS = KEY_SYMBOLS as Record<string, string>;
 
@@ -129,16 +130,18 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
             <h3 className="font-heading text-[22px] font-bold tracking-[-0.02em] text-foreground">
               {t('shortcuts.title')}
             </h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              onPointerDown={(e) => e.stopPropagation()}
-              aria-label={t('common.close')}
-              className="size-10 lg:size-10 -mr-2"
-            >
-              <Icon name="close" size={20} />
-            </Button>
+            <Tip content={t('common.close')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                onPointerDown={(e) => e.stopPropagation()}
+                aria-label={t('common.close')}
+                className="size-10 lg:size-10 -mr-2"
+              >
+                <Icon name="close" size={20} />
+              </Button>
+            </Tip>
           </div>
 
           {/* Tabs: text only, the open one ringed in iris (redesign sheet 15). */}

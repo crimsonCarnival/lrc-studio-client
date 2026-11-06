@@ -195,13 +195,17 @@ export default function AdminTasksView() {
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] uppercase tracking-widest text-zinc-600">{tk('admin.tasks.total', { count: data.total })}</p>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)} aria-label={t('admin.xp.levelsPrev')}>
-              <Icon name="chevron_left" size={16} />
-            </Button>
+            <Tip content={t('admin.xp.levelsPrev')}>
+              <Button type="button" variant="outline" size="icon" disabled={page <= 1} onClick={() => setPage(page - 1)} aria-label={t('admin.xp.levelsPrev')}>
+                <Icon name="chevron_left" size={16} />
+              </Button>
+            </Tip>
             <span className="min-w-12 text-center text-xs tabular-nums text-zinc-400">{page} / {pageCount}</span>
-            <Button type="button" variant="outline" size="icon" disabled={page >= pageCount} onClick={() => setPage(page + 1)} aria-label={t('admin.xp.levelsNext')}>
-              <Icon name="chevron_right" size={16} />
-            </Button>
+            <Tip content={t('admin.xp.levelsNext')}>
+              <Button type="button" variant="outline" size="icon" disabled={page >= pageCount} onClick={() => setPage(page + 1)} aria-label={t('admin.xp.levelsNext')}>
+                <Icon name="chevron_right" size={16} />
+              </Button>
+            </Tip>
           </div>
         </div>
       )}

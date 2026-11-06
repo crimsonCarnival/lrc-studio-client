@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import type { ChangeEvent, KeyboardEventHandler } from 'react';
+import { Tip } from '@ui/tip';
 
 interface NumberInputChangeEvent {
   target: { value: string };
@@ -18,6 +20,7 @@ interface NumberInputProps {
 }
 
 export default function NumberInput({ value, onChange, onKeyDown, min, max, step = 1, placeholder, className, disabled, id }: NumberInputProps) {
+  const { t } = useTranslation();
   const decimals = String(step).split('.')[1]?.length || 0;
   const numeric = parseFloat(String(value)) || 0;
 
@@ -54,29 +57,33 @@ export default function NumberInput({ value, onChange, onKeyDown, min, max, step
 
       {/* Custom Spin Buttons */}
       <div className="absolute right-0 inset-y-0 flex flex-col border-l border-zinc-700/50 w-5 bg-zinc-800/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-        <button
-          type="button"
-          onClick={handleIncrement}
-          disabled={disabled || (max !== undefined && numeric >= max)}
-          className="flex-1 flex items-center justify-center hover:bg-zinc-700 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          tabIndex={-1}
-        >
-          <svg className="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
+        <Tip content={t('common.actions.increase')}>
+          <button aria-label={t('common.actions.increase')}
+            type="button"
+            onClick={handleIncrement}
+            disabled={disabled || (max !== undefined && numeric >= max)}
+            className="flex-1 flex items-center justify-center hover:bg-zinc-700 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            tabIndex={-1}
+          >
+            <svg className="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+        </Tip>
         <div className="h-px w-full bg-zinc-700/30" />
-        <button
-          type="button"
-          onClick={handleDecrement}
-          disabled={disabled || (min !== undefined && numeric <= min)}
-          className="flex-1 flex items-center justify-center hover:bg-zinc-700 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          tabIndex={-1}
-        >
-          <svg className="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+        <Tip content={t('common.actions.decrease')}>
+          <button aria-label={t('common.actions.decrease')}
+            type="button"
+            onClick={handleDecrement}
+            disabled={disabled || (min !== undefined && numeric <= min)}
+            className="flex-1 flex items-center justify-center hover:bg-zinc-700 hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            tabIndex={-1}
+          >
+            <svg className="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </Tip>
       </div>
 
       <style>{`

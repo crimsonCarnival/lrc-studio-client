@@ -10,6 +10,7 @@ import type { AudioFeed } from '../visualizer-context';
 import { startVisualizer, VISUALIZER_PRESETS, isVisualizer3dPreset } from '../visualizer-presets';
 import type { VisualizerKind, VisualizerPresetId } from '../visualizer-presets';
 import { fillSimulated } from '../visualizer-signal';
+import { Tip } from '@ui/tip';
 
 const OPTIONS: readonly VisualizerKind[] = ['off', ...VISUALIZER_PRESETS];
 
@@ -260,14 +261,16 @@ export function VisualizerButton() {
               >
                 <Icon name="info" size={16} className="mt-0.5 shrink-0 text-primary" />
                 <span className="flex-1 text-muted-foreground">{t('projectView.visualizer.bloom.tip')}</span>
-                <button
-                  type="button"
-                  onClick={dismissTip}
-                  aria-label={t('projectView.visualizer.bloom.dismissTip')}
-                  className="shrink-0 rounded-xs p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Icon name="close" size={14} />
-                </button>
+                <Tip content={t('projectView.visualizer.bloom.dismissTip')}>
+                  <button
+                    type="button"
+                    onClick={dismissTip}
+                    aria-label={t('projectView.visualizer.bloom.dismissTip')}
+                    className="shrink-0 rounded-xs p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                </Tip>
               </div>
             )}
 

@@ -12,6 +12,7 @@ import {
 } from './auth-shared';
 import { Button } from '@ui/button';
 import type { IdentifierData } from '@/features/auth/auth.types';
+import { Tip } from '@ui/tip';
 
 interface LoginPasswordStepProps {
   t: TFunction;
@@ -120,16 +121,18 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                 className="pr-12"
               />
               {password && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
-                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                >
-                  <MorphIcon name={showPassword ? 'visibility_off' : 'visibility'} size={16} decorative />
-                </Button>
+                <Tip content={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  >
+                    <MorphIcon name={showPassword ? 'visibility_off' : 'visibility'} size={16} decorative />
+                  </Button>
+                </Tip>
               )}
             </div>
             <AnimatePresence>

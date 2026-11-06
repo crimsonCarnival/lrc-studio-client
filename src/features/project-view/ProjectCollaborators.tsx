@@ -9,6 +9,7 @@ import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { Icon } from '@/shared/ui/Icon';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import type { ProjectCollaborator } from '@/types/graphql';
+import { Tip } from '@ui/tip';
 
 interface ProjectCollaboratorsProps {
   publicId: string;
@@ -79,18 +80,20 @@ export function ProjectCollaborators({ publicId, collaborators, isOwner }: Proje
                   </span>
                 )}
                 {isOwner && (
-                  <button
-                    type="button"
-                    aria-label={t('projectView.collaborators.remove', { name })}
-                    onClick={() => requestConfirm(
-                      t('projectView.collaborators.confirmMessage', { name }),
-                      () => { void remove(c); },
-                      { title: t('projectView.collaborators.confirmTitle'), variant: 'danger' },
-                    )}
-                    className="ml-auto grid size-6 coarse:size-9 shrink-0 place-items-center rounded-full text-subtle transition-colors hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
-                  >
-                    <Icon name="close" size={14} />
-                  </button>
+                  <Tip content={t('projectView.collaborators.remove', { name })}>
+                    <button
+                      type="button"
+                      aria-label={t('projectView.collaborators.remove', { name })}
+                      onClick={() => requestConfirm(
+                        t('projectView.collaborators.confirmMessage', { name }),
+                        () => { void remove(c); },
+                        { title: t('projectView.collaborators.confirmTitle'), variant: 'danger' },
+                      )}
+                      className="ml-auto grid size-6 coarse:size-9 shrink-0 place-items-center rounded-full text-subtle transition-colors hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
+                  </Tip>
                 )}
               </li>
             );

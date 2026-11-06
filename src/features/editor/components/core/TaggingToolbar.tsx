@@ -7,6 +7,7 @@ import { applyTagToSelection } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { SuggestInput } from '@ui/suggest-input';
+import { Tip } from '@ui/tip';
 
 const STANDARD_TYPES = SECTION_TYPES.filter(s => s.depth !== 0);
 const STANDARD_IDS = new Set(STANDARD_TYPES.map(s => s.id));
@@ -130,9 +131,11 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
     <div className="flex flex-col gap-2 px-3 py-2 mb-2 rounded-xl bg-zinc-900 border border-zinc-700 shadow-sm animate-fade-in">
       <div className="flex items-center justify-between text-xs font-semibold text-zinc-400 px-1">
         <span>{tk('editor.tagging.taggingNLines', { count: selectedLines.size })}</span>
-        <button onClick={clearSelection} className="hover:text-zinc-200 transition-colors">
-          <Icon name="close" size={14} />
-        </button>
+        <Tip content={t('common.actions.clearSelection')}>
+          <button aria-label={t('common.actions.clearSelection')} onClick={clearSelection} className="hover:text-zinc-200 transition-colors">
+            <Icon name="close" size={14} />
+          </button>
+        </Tip>
       </div>
       
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -174,12 +177,14 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
                   style={{ borderColor: `color-mix(in srgb, ${colorVar} 30%, transparent)`, color: colorVar }}
                 >
                   <span>{singer}</span>
-                  <button 
-                    onClick={() => handleRemoveSinger(singer)}
-                    className="p-1 hover:bg-white/10 rounded-pill transition-colors"
-                  >
-                    <Icon name="close" size={12} />
-                  </button>
+                  <Tip content={t('common.actions.removeSinger')}>
+                    <button aria-label={t('common.actions.removeSinger')} 
+                      onClick={() => handleRemoveSinger(singer)}
+                      className="p-1 hover:bg-white/10 rounded-pill transition-colors"
+                    >
+                      <Icon name="close" size={12} />
+                    </button>
+                  </Tip>
                 </div>
               );
             })

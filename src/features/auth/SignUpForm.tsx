@@ -17,6 +17,7 @@ import {
   AuthField, AuthHeading, OrDivider, ContextBanner, GoogleButton,
 } from './auth-shared';
 import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
 
 // The account name is required, not one identifier of two: `/:accountName` is the
 // profile URL and every project URL is scoped under it, so an account without one
@@ -292,17 +293,19 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                     error={!!fieldErrors.displayName}
                     className="pr-12"
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => roll(displayName)}
-                    disabled={rolling}
-                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
-                    aria-label={t('auth.randomName')}
-                  >
-                    <Icon name="casino" size={16} className={rolling ? 'animate-spin' : undefined} />
-                  </Button>
+                  <Tip content={t('auth.randomName')}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => roll(displayName)}
+                      disabled={rolling}
+                      className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
+                      aria-label={t('auth.randomName')}
+                    >
+                      <Icon name="casino" size={16} className={rolling ? 'animate-spin' : undefined} />
+                    </Button>
+                  </Tip>
                 </div>
               </AuthField>
 
@@ -383,16 +386,18 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   className="pr-12"
                 />
                 {password && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
-                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  >
-                    <MorphIcon name={showPassword ? 'visibility_off' : 'visibility'} size={16} decorative />
-                  </Button>
+                  <Tip content={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
+                      aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    >
+                      <MorphIcon name={showPassword ? 'visibility_off' : 'visibility'} size={16} decorative />
+                    </Button>
+                  </Tip>
                 )}
               </div>
               <PasswordStrength password={password} />
@@ -411,31 +416,35 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   className="pr-12"
                 />
                 {confirmPassword && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
-                    aria-label={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}
-                  >
-                    <MorphIcon name={showConfirm ? 'visibility_off' : 'visibility'} size={16} decorative />
-                  </Button>
+                  <Tip content={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
+                      aria-label={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}
+                    >
+                      <MorphIcon name={showConfirm ? 'visibility_off' : 'visibility'} size={16} decorative />
+                    </Button>
+                  </Tip>
                 )}
               </div>
             </AuthField>
 
             <div className="flex gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleBack}
-                aria-label={t('common.back')}
-                className="size-11 bg-transparent lg:size-11"
-              >
-                <Icon name="arrow_back" size={16} />
-              </Button>
+              <Tip content={t('common.back')}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleBack}
+                  aria-label={t('common.back')}
+                  className="size-11 bg-transparent lg:size-11"
+                >
+                  <Icon name="arrow_back" size={16} />
+                </Button>
+              </Tip>
               <Button type="submit" loading={loading} className="h-[52px] flex-1 text-[17px] lg:h-[52px] lg:text-[17px]">
                 {loading ? t('auth.registerActionLoading') : t('auth.registerAction')}
               </Button>

@@ -16,6 +16,7 @@ import { StaffRing } from '@/shared/ui/StaffRing';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { SelectField } from '@ui/select-field';
+import { Tip } from '@ui/tip';
 
 interface LeaderEntry {
   id?: string;
@@ -367,15 +368,17 @@ export default function LeaderboardPage() {
                 onValueChange={(v) => setView({ sort: v as LeaderboardSort, dir: 'DESC' })}
                 options={SORT_COLUMNS.map(({ sort, labelKey }) => ({ value: sort, label: t(labelKey) }))}
               />
-              <button
-                type="button"
-                onClick={() => setView({ dir: sortDir === 'DESC' ? 'ASC' : 'DESC' })}
-                aria-label={dirLabel}
-                title={dirLabel}
-                className="ml-auto inline-flex items-center justify-center size-11 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-              >
-                <Icon name={sortDir === 'ASC' ? 'expand_less' : 'expand_more'} size={18} />
-              </button>
+              <Tip content={dirLabel}>
+                <button
+                  type="button"
+                  onClick={() => setView({ dir: sortDir === 'DESC' ? 'ASC' : 'DESC' })}
+                  aria-label={dirLabel}
+                  title={dirLabel}
+                  className="ml-auto inline-flex items-center justify-center size-11 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                >
+                  <Icon name={sortDir === 'ASC' ? 'expand_less' : 'expand_more'} size={18} />
+                </button>
+              </Tip>
             </div>
 
             {/* Stacked cards below lg. The table needs 780px of columns, so on a

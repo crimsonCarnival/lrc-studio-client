@@ -8,6 +8,7 @@ import { Button } from '@ui/button';
 import { useAdminSub } from './admin-nav';
 import { AdminSubNav } from './AdminSubNav';
 import { SelectField } from '@ui/select-field';
+import { Tip } from '@ui/tip';
 
 interface AdminXpTabProps {
   onAdjustXP: (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => Promise<void>;
@@ -254,27 +255,31 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
                 {t('admin.xp.curve.shownCount', { total: curve.length })}
               </p>
               <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={page === 0}
-                  onClick={() => setCurvePage(page - 1)}
-                  aria-label={t('admin.xp.levelsPrev')}
-                >
-                  <Icon name="chevron_left" size={16} />
-                </Button>
+                <Tip content={t('admin.xp.levelsPrev')}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={page === 0}
+                    onClick={() => setCurvePage(page - 1)}
+                    aria-label={t('admin.xp.levelsPrev')}
+                  >
+                    <Icon name="chevron_left" size={16} />
+                  </Button>
+                </Tip>
                 <span className="min-w-12 text-center text-xs tabular-nums text-zinc-400">{page + 1} / {pageCount}</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={page >= pageCount - 1}
-                  onClick={() => setCurvePage(page + 1)}
-                  aria-label={t('admin.xp.levelsNext')}
-                >
-                  <Icon name="chevron_right" size={16} />
-                </Button>
+                <Tip content={t('admin.xp.levelsNext')}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={page >= pageCount - 1}
+                    onClick={() => setCurvePage(page + 1)}
+                    aria-label={t('admin.xp.levelsNext')}
+                  >
+                    <Icon name="chevron_right" size={16} />
+                  </Button>
+                </Tip>
               </div>
             </div>
           </>

@@ -47,6 +47,23 @@ export default {
   loadError: "Failed to load. Please try again.",
   shareLinkNotFound: "Share link not found.",
   moreActions: "More actions",
+  actions: {
+    moveUp: "Move up",
+    moveDown: "Move down",
+    refresh: "Refresh",
+    deleteUser: "Delete user",
+    clearSelection: "Clear selection",
+    removeSinger: "Remove singer",
+    saveChanges: "Save changes",
+    moreActions: "More actions",
+    removeTranslation: "Remove translation",
+    clearTimestamp: "Clear timestamp",
+    wordActions: "Word actions",
+    removeTag: "Remove tag",
+    uploadImage: "Upload image",
+    increase: "Increase",
+    decrease: "Decrease"
+  },
   colorPicker: {
     area: "saturation and brightness",
     hue: "hue",

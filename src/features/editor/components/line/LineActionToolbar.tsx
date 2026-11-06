@@ -304,14 +304,16 @@ const LineActionToolbar = memo(({
                 sectionLines={sectionLines}
               />
             ) : (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={(e) => { e.stopPropagation(); onLineMenu?.(lineIndex, line); }}
-                className="text-zinc-500 active:text-zinc-300"
-              >
-                <Icon name="more_horiz" size={16} />
-              </Button>
+              <Tip content={t('common.actions.moreActions')}>
+                <Button aria-label={t('common.actions.moreActions')}
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={(e) => { e.stopPropagation(); onLineMenu?.(lineIndex, line); }}
+                  className="text-zinc-500 active:text-zinc-300"
+                >
+                  <Icon name="more_horiz" size={16} />
+                </Button>
+              </Tip>
             )}
           </>
         )}

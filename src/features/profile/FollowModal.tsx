@@ -14,6 +14,7 @@ import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { useFollowList, useFollowToggle } from './profile.queries';
+import { Tip } from '@ui/tip';
 
 type Tab = 'FOLLOWERS' | 'FOLLOWING' | 'FRIENDS';
 
@@ -160,9 +161,11 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
             <p className="text-sm font-semibold text-foreground">
               {accountName}
             </p>
-            <Button variant="ghost" size="icon-xs" onClick={onClose} className="-mr-1" aria-label={t('common.close')}>
-              <Icon name="close" size={16} />
-            </Button>
+            <Tip content={t('common.close')}>
+              <Button variant="ghost" size="icon-xs" onClick={onClose} className="-mr-1" aria-label={t('common.close')}>
+                <Icon name="close" size={16} />
+              </Button>
+            </Tip>
           </div>
 
           {/* Tabs */}

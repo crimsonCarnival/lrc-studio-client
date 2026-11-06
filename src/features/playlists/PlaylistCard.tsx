@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
 
 interface PlaylistCardData {
   id: string;
@@ -47,12 +48,16 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
     >
       {isOwner && (
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-black/40 backdrop-blur-sm rounded-lg p-1">
-          <Button variant="ghost" size="icon-sm" onClick={handleEdit} className="size-7" aria-label={t('playlists.editPlaylist')}>
-            <Icon name="edit" size={14} />
-          </Button>
-          <Button variant="ghost" size="icon-sm" onClick={handleDelete} className="size-7 text-love-ink hover:bg-love-soft hover:text-love-ink" aria-label={t('playlists.deletePlaylist')}>
-            <Icon name="delete" size={14} />
-          </Button>
+          <Tip content={t('playlists.editPlaylist')}>
+            <Button variant="ghost" size="icon-sm" onClick={handleEdit} className="size-7" aria-label={t('playlists.editPlaylist')}>
+              <Icon name="edit" size={14} />
+            </Button>
+          </Tip>
+          <Tip content={t('playlists.deletePlaylist')}>
+            <Button variant="ghost" size="icon-sm" onClick={handleDelete} className="size-7 text-love-ink hover:bg-love-soft hover:text-love-ink" aria-label={t('playlists.deletePlaylist')}>
+              <Icon name="delete" size={14} />
+            </Button>
+          </Tip>
         </div>
       )}
       {/* Cover */}

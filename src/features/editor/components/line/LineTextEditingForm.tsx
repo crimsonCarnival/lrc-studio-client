@@ -205,9 +205,11 @@ function LineTextEditingForm({
             placeholder={t('editor.translationText')}
             className="flex-1 bg-zinc-800 border-zinc-600/50 text-xs text-zinc-500 h-6 italic"
           />
-          <button type="button" onClick={() => removeTranslation(idx)} className="text-zinc-600 hover:text-zinc-400 shrink-0 px-0.5">
-            <Icon name="close" size={12} />
-          </button>
+          <Tip content={t('common.actions.removeTranslation')}>
+            <button aria-label={t('common.actions.removeTranslation')} type="button" onClick={() => removeTranslation(idx)} className="text-zinc-600 hover:text-zinc-400 shrink-0 px-0.5">
+              <Icon name="close" size={12} />
+            </button>
+          </Tip>
         </div>
       ))}
       <button

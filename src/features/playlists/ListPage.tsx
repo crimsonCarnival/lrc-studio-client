@@ -19,6 +19,7 @@ import { PlaylistModal } from './PlaylistModal';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { ReportDialog } from '@/features/reports/ReportDialog';
+import { Tip } from '@ui/tip';
 
 interface PlaylistProject {
   id: string;
@@ -237,11 +238,13 @@ export default function ListPage() {
               )}
               {canReport && (
                 <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-                  <PopoverTrigger asChild>
-                    <Button size="icon-sm" variant="outline" aria-label={t('reports.menu.more')}>
-                      <Icon name="more_horiz" size={16} />
-                    </Button>
-                  </PopoverTrigger>
+                  <Tip content={t('reports.menu.more')}>
+                    <PopoverTrigger asChild>
+                      <Button size="icon-sm" variant="outline" aria-label={t('reports.menu.more')}>
+                        <Icon name="more_horiz" size={16} />
+                      </Button>
+                    </PopoverTrigger>
+                  </Tip>
                   <PopoverContent align="start" className="w-52 lg:min-w-52">
                     <PopoverItem onClick={() => { setMenuOpen(false); setReportOpen(true); }} className="text-sm">
                       <Icon name="flag" size={16} /> {t('reports.menu.reportPlaylist')}

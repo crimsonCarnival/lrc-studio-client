@@ -71,14 +71,16 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
             <Tip content={name}>
               <span className="max-w-[140px] truncate">{name}</span>
             </Tip>
-            <button
-              type="button"
-              onClick={() => onChange(value.filter((v) => v !== name))}
-              aria-label={t('setup.removeSinger', { name })}
-              className="p-0.5 rounded-pill text-zinc-400 hover:text-zinc-100 hover:bg-zinc-600 transition-colors"
-            >
-              <Icon name="close" size={12} />
-            </button>
+            <Tip content={t('setup.removeSinger', { name })}>
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((v) => v !== name))}
+                aria-label={t('setup.removeSinger', { name })}
+                className="p-0.5 rounded-pill text-zinc-400 hover:text-zinc-100 hover:bg-zinc-600 transition-colors"
+              >
+                <Icon name="close" size={12} />
+              </button>
+            </Tip>
           </span>
         ))}
         <SuggestInput

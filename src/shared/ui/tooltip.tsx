@@ -5,17 +5,28 @@ import { Tooltip as TooltipPrimitive } from "radix-ui"
 
 import { cn } from "@/shared/utils/utils"
 
+// Radix throws when a Tooltip has no provider above it. <Tip> sits on many small controls that can
+// render outside AppProviders (portals, isolated tests), so it checks this and supplies its own then.
+const HasTooltipProvider = React.createContext(false)
+
 function TooltipProvider({
   delayDuration = 0,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
-      {...props}
-    />
+    <HasTooltipProvider.Provider value>
+      <TooltipPrimitive.Provider
+        data-slot="tooltip-provider"
+        delayDuration={delayDuration}
+        {...props}
+      />
+    </HasTooltipProvider.Provider>
   )
+}
+
+/** Wraps `children` in a provider unless one already exists above. */
+function EnsureTooltipProvider({ children }: { children: React.ReactNode }) {
+  return React.useContext(HasTooltipProvider) ? <>{children}</> : <TooltipProvider>{children}</TooltipProvider>
 }
 
 function Tooltip({
@@ -54,4 +65,4 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }
+export { EnsureTooltipProvider, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }

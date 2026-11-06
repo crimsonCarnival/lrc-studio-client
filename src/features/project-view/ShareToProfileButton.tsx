@@ -197,14 +197,16 @@ export function ShareToProfileButton({ publicId, initialShare = null, initialCou
             {tags.map((tag) => (
               <span key={tag} className="flex items-center gap-1 rounded-pill bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">
                 #{tag}
-                <button
-                  type="button"
-                  onClick={() => setTags((prev) => prev.filter((x) => x !== tag))}
-                  aria-label={t('projectView.shareTagRemove', { tag })}
-                  className="grid place-items-center rounded-full coarse:size-6"
-                >
-                  <Icon name="close" size={12} />
-                </button>
+                <Tip content={t('projectView.shareTagRemove', { tag })}>
+                  <button
+                    type="button"
+                    onClick={() => setTags((prev) => prev.filter((x) => x !== tag))}
+                    aria-label={t('projectView.shareTagRemove', { tag })}
+                    className="grid place-items-center rounded-full coarse:size-6"
+                  >
+                    <Icon name="close" size={12} />
+                  </button>
+                </Tip>
               </span>
             ))}
             {tags.length < TAGS_MAX && (

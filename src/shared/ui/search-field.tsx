@@ -5,6 +5,7 @@ import { Button } from "@ui/button"
 import { LogoLoader } from "@ui/LogoLoader"
 import { Icon } from "@/shared/ui/Icon"
 import { SEARCH_SHORTCUT_ATTR, isSearchShortcut, pickShortcutTarget } from "@/shared/utils/search-shortcut"
+import { Tip } from '@ui/tip';
 
 type SearchFieldProps = Omit<React.ComponentProps<"input">, "type" | "value" | "onChange" | "aria-label"> & {
   value: string
@@ -90,16 +91,18 @@ function SearchField({
       {busy ? (
         <LogoLoader size={compact ? 14 : 16} className="shrink-0" />
       ) : clearLabel && value ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size={null}
-          aria-label={clearLabel}
-          onClick={() => (onClear ? onClear() : onValueChange(""))}
-          className="size-7 shrink-0 rounded-full"
-        >
-          <Icon name="close" size={16} />
-        </Button>
+        <Tip content={clearLabel}>
+          <Button
+            type="button"
+            variant="ghost"
+            size={null}
+            aria-label={clearLabel}
+            onClick={() => (onClear ? onClear() : onValueChange(""))}
+            className="size-7 shrink-0 rounded-full"
+          >
+            <Icon name="close" size={16} />
+          </Button>
+        </Tip>
       ) : (
         // No physical keyboard on touch devices, so the hint would only be noise there.
         shortcutRole && <kbd className="shrink-0 rounded-md bg-raised px-1.5 py-0.5 font-mono text-[11px] leading-none coarse:hidden">/</kbd>

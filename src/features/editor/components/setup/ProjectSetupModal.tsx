@@ -560,13 +560,15 @@ export default function ProjectSetupModal({
                     {form.tags.map((tag, i) => (
                       <Badge key={tag} variant="secondary" className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 gap-1 pl-2 pr-1 h-6 transition-colors border-zinc-700/50">
                         <span className="text-[11px] font-medium">{tag}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTag(i)}
-                          className="p-0.5 hover:bg-zinc-600 rounded-pill transition-colors"
-                        >
-                          <Icon name="close" size={12} />
-                        </button>
+                        <Tip content={t('common.actions.removeTag')}>
+                          <button aria-label={t('common.actions.removeTag')}
+                            type="button"
+                            onClick={() => removeTag(i)}
+                            className="p-0.5 hover:bg-zinc-600 rounded-pill transition-colors"
+                          >
+                            <Icon name="close" size={12} />
+                          </button>
+                        </Tip>
                       </Badge>
                     ))}
                     <input
@@ -601,16 +603,18 @@ export default function ProjectSetupModal({
                     placeholder={t('setup.coverImagePlaceholder')}
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9 placeholder:text-zinc-600"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => coverImageInputRef.current?.click()}
-                    loading={imageUploading}
-                  >
-                    {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it itself. */}
-                    {!imageUploading && <Icon name="upload" size={16} />}
-                  </Button>
+                  <Tip content={t('common.actions.uploadImage')}>
+                    <Button aria-label={t('common.actions.uploadImage')}
+                      type="button"
+                      variant="outline"
+                      size="icon-lg"
+                      onClick={() => coverImageInputRef.current?.click()}
+                      loading={imageUploading}
+                    >
+                      {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it itself. */}
+                      {!imageUploading && <Icon name="upload" size={16} />}
+                    </Button>
+                  </Tip>
                   <input
                     type="file"
                     ref={coverImageInputRef}

@@ -304,15 +304,17 @@ function EditorSidePanel(props: EditorSidePanelProps) {
         collapsed ? 'w-11' : 'w-[400px] xl:w-[460px]',
       )}
     >
-      <button
-        type="button"
-        onClick={() => setCollapsed((c) => !c)}
-        aria-expanded={!collapsed}
-        aria-label={collapsed ? t('editor.sidePanelExpand') : t('editor.sidePanelCollapse')}
-        className="shrink-0 flex h-full w-11 items-start justify-center pt-5 text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
-      >
-        <Icon name={collapsed ? 'chevron_left' : 'chevron_right'} size={18} />
-      </button>
+      <Tip content={collapsed ? t('editor.sidePanelExpand') : t('editor.sidePanelCollapse')}>
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? t('editor.sidePanelExpand') : t('editor.sidePanelCollapse')}
+          className="shrink-0 flex h-full w-11 items-start justify-center pt-5 text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+        >
+          <Icon name={collapsed ? 'chevron_left' : 'chevron_right'} size={18} />
+        </button>
+      </Tip>
       {!collapsed && (
         <div className="lrc-scroll min-w-0 flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 pl-0">
           <LiveCard lines={props.lines} playbackPosition={props.playbackPosition} duration={props.duration} editorMode={props.editorMode} />

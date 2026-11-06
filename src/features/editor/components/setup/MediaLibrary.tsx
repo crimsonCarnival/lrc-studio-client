@@ -2,6 +2,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
+import { Tip } from '@ui/tip';
 
 interface MediaUpload {
   id: string;
@@ -80,18 +81,20 @@ export default function MediaLibrary({
                 }`}>
                 {upload.title || upload.fileName || 'Untitled'}
               </p>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(upload.id);
-                }}
-                aria-label={t('common.delete')}
-                className="size-6 coarse:size-6 opacity-0 group-hover:opacity-100 text-love-ink hover:bg-love-soft hover:text-love-ink"
-              >
-                <Icon name="delete" size={14} />
-              </Button>
+              <Tip content={t('common.delete')}>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(upload.id);
+                  }}
+                  aria-label={t('common.delete')}
+                  className="size-6 coarse:size-6 opacity-0 group-hover:opacity-100 text-love-ink hover:bg-love-soft hover:text-love-ink"
+                >
+                  <Icon name="delete" size={14} />
+                </Button>
+              </Tip>
             </div>
           ))
         )}

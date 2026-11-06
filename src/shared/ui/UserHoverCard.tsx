@@ -20,6 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
 import { formatDistanceToNow } from 'date-fns';
 import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
+import { Tip } from '@ui/tip';
 
 interface MiniProfile {
   id: string;
@@ -327,11 +328,13 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                   {t('profile.mini.viewProfile')}
                 </Link>
                 <DropdownMenu onOpenChange={(o) => { menuOpenRef.current = o; if (!o) startClose(); }}>
-                  <DropdownMenuTrigger asChild>
-                    <Button type="button" variant="outline" size="icon" aria-label={t('profile.mini.moreOptions')} className="size-10 lg:size-10">
-                      <Icon name="more_horiz" size={18} />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <Tip content={t('profile.mini.moreOptions')}>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" variant="outline" size="icon" aria-label={t('profile.mini.moreOptions')} className="size-10 lg:size-10">
+                        <Icon name="more_horiz" size={18} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </Tip>
                   <DropdownMenuContent align="end" onMouseEnter={cancelClose}>
                     <DropdownMenuItem onClick={copyProfileLink}>
                       <Icon name="link" />

@@ -386,22 +386,26 @@ export function WordsModeChips({
                       </StampedWordChip>
                     </Tip>
                     {!isMobile && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi, markingSecondary ? 'secondaryWords' : undefined); }}
-                        className="opacity-0 group-hover/word:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
-                      >
-                        <Icon name="ink_eraser" size={10} />
-                      </button>
+                      <Tip content={t('common.actions.clearTimestamp')}>
+                        <button aria-label={t('common.actions.clearTimestamp')}
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi, markingSecondary ? 'secondaryWords' : undefined); }}
+                          className="opacity-0 group-hover/word:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
+                        >
+                          <Icon name="ink_eraser" size={10} />
+                        </button>
+                      </Tip>
                     )}
                     {isFocusedWord && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
-                        className="text-primary-dim bg-primary/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
-                      >
-                        <Icon name="more_horiz" size={12} />
-                      </button>
+                      <Tip content={t('common.actions.wordActions')}>
+                        <button aria-label={t('common.actions.wordActions')}
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
+                          className="text-primary-dim bg-primary/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                        >
+                          <Icon name="more_horiz" size={12} />
+                        </button>
+                      </Tip>
                     )}
                   </div>
                 ) : (
@@ -418,13 +422,15 @@ export function WordsModeChips({
                       {chipBody(displayWord, layerWord.time, { romaji })}
                     </button>
                     {isFocusedWord && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
-                        className="text-primary-dim bg-primary/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
-                      >
-                        <Icon name="more_horiz" size={12} />
-                      </button>
+                      <Tip content={t('common.actions.wordActions')}>
+                        <button aria-label={t('common.actions.wordActions')}
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
+                          className="text-primary-dim bg-primary/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                        >
+                          <Icon name="more_horiz" size={12} />
+                        </button>
+                      </Tip>
                     )}
                   </div>
                 )}
@@ -469,22 +475,26 @@ export function WordsModeChips({
                   </StampedWordChip>
                 </Tip>
                 {!isMobile && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi, 'secondaryWords'); }}
-                    className="opacity-0 group-hover/sword:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
-                  >
-                    <Icon name="ink_eraser" size={10} />
-                  </button>
+                  <Tip content={t('common.actions.clearTimestamp')}>
+                    <button aria-label={t('common.actions.clearTimestamp')}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi, 'secondaryWords'); }}
+                      className="opacity-0 group-hover/sword:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
+                    >
+                      <Icon name="ink_eraser" size={10} />
+                    </button>
+                  </Tip>
                 )}
                 {isMobile && isFocusedSecondaryWord && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
-                    className="text-accent-blue bg-accent-blue/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
-                  >
-                    <Icon name="more_horiz" size={12} />
-                  </button>
+                  <Tip content={t('common.actions.wordActions')}>
+                    <button aria-label={t('common.actions.wordActions')}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
+                      className="text-accent-blue bg-accent-blue/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                    >
+                      <Icon name="more_horiz" size={12} />
+                    </button>
+                  </Tip>
                 )}
               </div>
             ) : (
@@ -500,13 +510,15 @@ export function WordsModeChips({
                   {w.word}
                 </button>
                 {isMobile && isFocusedSecondaryWord && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
-                    className="text-accent-blue bg-accent-blue/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
-                  >
-                    <Icon name="more_horiz" size={12} />
-                  </button>
+                  <Tip content={t('common.actions.wordActions')}>
+                    <button aria-label={t('common.actions.wordActions')}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
+                      className="text-accent-blue bg-accent-blue/10 rounded-pill p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
+                    >
+                      <Icon name="more_horiz" size={12} />
+                    </button>
+                  </Tip>
                 )}
               </div>
             );

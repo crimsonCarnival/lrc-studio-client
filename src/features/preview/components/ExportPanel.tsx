@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialo
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
 import type { ExportFormat, LineStats } from '../hooks/usePreview';
+import { Tip } from '@ui/tip';
 
 interface ExportPanelProps {
   showExportPanel: boolean;
@@ -134,15 +135,17 @@ export default function ExportPanel({
             <DialogTitle className="text-2xl font-bold leading-tight">{t('export.dialogTitle')}</DialogTitle>
             <DialogDescription className="text-[13px] text-foreground/65 truncate">{subtitle}</DialogDescription>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowExportPanel(false)}
-            aria-label={t('common.close')}
-            className="size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent shrink-0"
-          >
-            <Icon name="close" size={18} />
-          </Button>
+          <Tip content={t('common.close')}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowExportPanel(false)}
+              aria-label={t('common.close')}
+              className="size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent shrink-0"
+            >
+              <Icon name="close" size={18} />
+            </Button>
+          </Tip>
         </div>
 
         <div className="lrc-scroll flex flex-wrap flex-1 min-h-0 overflow-y-auto">

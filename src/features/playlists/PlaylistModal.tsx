@@ -11,6 +11,7 @@ import { gqlRequest } from '@/app/graphql.client';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
+import { Tip } from '@ui/tip';
 
 const GET_MY_PROJECTS = /* GraphQL */ `
   query GetMyProjects {
@@ -198,9 +199,11 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
           <h2 className="text-base font-semibold">
             {isEdit ? t('playlists.modal.titleEdit') : t('playlists.modal.titleCreate')}
           </h2>
-          <Button variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')}>
-            <Icon name="close" size={20} />
-          </Button>
+          <Tip content={t('common.close')}>
+            <Button variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')}>
+              <Icon name="close" size={20} />
+            </Button>
+          </Tip>
         </div>
 
         {/* Step indicator (create only) */}
@@ -247,16 +250,18 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                     value={form.coverImage}
                     onChange={e => handleField('coverImage', e.target.value)}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => imageInputRef.current?.click()}
-                    loading={imageUploading}
-                  >
-                    {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it. */}
-                    {!imageUploading && <Icon name="upload" size={16} />}
-                  </Button>
+                  <Tip content={t('common.actions.uploadImage')}>
+                    <Button aria-label={t('common.actions.uploadImage')}
+                      type="button"
+                      variant="outline"
+                      size="icon-lg"
+                      onClick={() => imageInputRef.current?.click()}
+                      loading={imageUploading}
+                    >
+                      {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it. */}
+                      {!imageUploading && <Icon name="upload" size={16} />}
+                    </Button>
+                  </Tip>
                   <input
                     type="file"
                     ref={imageInputRef}
@@ -274,7 +279,9 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                   {form.tags.map(tag => (
                     <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-pill bg-primary/15 text-primary">
                       {tag}
-                      <button onClick={() => removeTag(tag)}><Icon name="close" size={12} /></button>
+                      <Tip content={t('common.actions.removeTag')}>
+                        <button aria-label={t('common.actions.removeTag')} onClick={() => removeTag(tag)}><Icon name="close" size={12} /></button>
+                      </Tip>
                     </span>
                   ))}
                   {form.tags.length < 10 && (

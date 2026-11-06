@@ -47,6 +47,23 @@ export default {
   loadError: "Error al cargar. Por favor, inténtalo de nuevo.",
   shareLinkNotFound: "Enlace no encontrado.",
   moreActions: "Más acciones",
+  actions: {
+    moveUp: "Subir",
+    moveDown: "Bajar",
+    refresh: "Actualizar",
+    deleteUser: "Eliminar usuario",
+    clearSelection: "Borrar selección",
+    removeSinger: "Quitar cantante",
+    saveChanges: "Guardar cambios",
+    moreActions: "Más acciones",
+    removeTranslation: "Quitar traducción",
+    clearTimestamp: "Borrar marca de tiempo",
+    wordActions: "Acciones de la palabra",
+    removeTag: "Quitar etiqueta",
+    uploadImage: "Subir imagen",
+    increase: "Aumentar",
+    decrease: "Disminuir"
+  },
   colorPicker: {
     area: "saturación y brillo",
     hue: "tono",

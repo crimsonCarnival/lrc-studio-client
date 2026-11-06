@@ -7,6 +7,7 @@ import { Skeleton } from '@ui/skeleton';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { SearchField } from '@ui/search-field';
+import { Tip } from '@ui/tip';
 
 function YtIcon({ className }: { className?: string }) {
   return (
@@ -185,20 +186,24 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           leading={<YtIcon className="size-4 text-red-500 shrink-0" />}
           className="flex-1"
         />
-        <Button
-          aria-label={t('home.searchYoutube')}
-          onClick={() => runSearch(query)}
-          disabled={!query.trim()}
-          loading={loading}
-          className="h-9 lg:h-9 coarse:h-11 bg-red-600 hover:bg-red-500 text-white"
-        >
-          {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it itself. */}
-          {!loading && <Icon name="search" size={16} />}
-        </Button>
-        {onClose && (
-          <Button variant="ghost" size="icon-lg" aria-label={t('common.close')} onClick={onClose}>
-            <Icon name="close" size={16} />
+        <Tip content={t('home.searchYoutube')}>
+          <Button
+            aria-label={t('home.searchYoutube')}
+            onClick={() => runSearch(query)}
+            disabled={!query.trim()}
+            loading={loading}
+            className="h-9 lg:h-9 coarse:h-11 bg-red-600 hover:bg-red-500 text-white"
+          >
+            {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it itself. */}
+            {!loading && <Icon name="search" size={16} />}
           </Button>
+        </Tip>
+        {onClose && (
+          <Tip content={t('common.close')}>
+            <Button variant="ghost" size="icon-lg" aria-label={t('common.close')} onClick={onClose}>
+              <Icon name="close" size={16} />
+            </Button>
+          </Tip>
         )}
       </div>
 

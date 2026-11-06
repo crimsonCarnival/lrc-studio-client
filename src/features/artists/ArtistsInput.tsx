@@ -10,6 +10,7 @@ import { artistErrorMessage } from './artist-errors';
 import { ArtistImportReview } from './ArtistImportReview';
 import { useArtistImport } from './useArtistImport';
 import { useArtistSuggestions } from './useArtistSuggestions';
+import { Tip } from '@ui/tip';
 
 interface ArtistsInputProps {
   value: ArtistCredit[];
@@ -237,14 +238,16 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
             >
               {credit.name}
             </button>
-            <button
-              type="button"
-              onClick={() => onRemove(credit)}
-              aria-label={tr('artists.remove', { name: credit.name })}
-              className="grid size-6 place-items-center rounded-full hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <Icon name="close" size={13} />
-            </button>
+            <Tip content={tr('artists.remove', { name: credit.name })}>
+              <button
+                type="button"
+                onClick={() => onRemove(credit)}
+                aria-label={tr('artists.remove', { name: credit.name })}
+                className="grid size-6 place-items-center rounded-full hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Icon name="close" size={13} />
+              </button>
+            </Tip>
           </li>
         ))}
       </ul>

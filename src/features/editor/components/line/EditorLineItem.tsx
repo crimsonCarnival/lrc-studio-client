@@ -498,10 +498,12 @@ const EditorLineItem = React.memo(({
                     {editingSingers.map((s, si) => (
                       <span key={si} className="text-[11px] bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-pill pl-2 pr-1 py-0.5 flex items-center gap-1">
                         {s}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditingSingers(prev => prev.filter((_, idx) => idx !== si)); }}
-                          className="hover:text-destructive opacity-70 hover:opacity-100"
-                        ><Icon name="close" size={10} /></button>
+                        <Tip content={t('common.actions.removeSinger')}>
+                          <button aria-label={t('common.actions.removeSinger')}
+                            onClick={(e) => { e.stopPropagation(); setEditingSingers(prev => prev.filter((_, idx) => idx !== si)); }}
+                            className="hover:text-destructive opacity-70 hover:opacity-100"
+                          ><Icon name="close" size={10} /></button>
+                        </Tip>
                       </span>
                     ))}
                     <SuggestInput
@@ -522,16 +524,18 @@ const EditorLineItem = React.memo(({
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSaveLineText(i, editingText, undefined, undefined, editingSingers);
-                      setEditingLineIndex(null);
-                    }}
-                    className="ml-2 text-primary hover:text-primary/80 transition-colors flex items-center justify-center p-1 rounded-pill hover:bg-white/10"
-                  >
-                    <Icon name="check" size={16} />
-                  </button>
+                  <Tip content={t('common.actions.saveChanges')}>
+                    <button aria-label={t('common.actions.saveChanges')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSaveLineText(i, editingText, undefined, undefined, editingSingers);
+                        setEditingLineIndex(null);
+                      }}
+                      className="ml-2 text-primary hover:text-primary/80 transition-colors flex items-center justify-center p-1 rounded-pill hover:bg-white/10"
+                    >
+                      <Icon name="check" size={16} />
+                    </button>
+                  </Tip>
                 </div>
               </div>
             ) : (

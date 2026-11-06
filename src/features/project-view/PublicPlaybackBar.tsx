@@ -324,15 +324,17 @@ export default function PublicPlaybackBar({
         <div className="lg:hidden">{startSlot}</div>
 
         <div className="flex items-center justify-center gap-1.5 lg:gap-2">
-          <button
-            type="button"
-            onClick={goToPreviousLine}
-            disabled={!canStepLines}
-            aria-label={t('projectView.previousLine')}
-            className={TRANSPORT_BTN}
-          >
-            <Icon name="skip_previous" size={22} />
-          </button>
+          <Tip content={t('projectView.previousLine')}>
+            <button
+              type="button"
+              onClick={goToPreviousLine}
+              disabled={!canStepLines}
+              aria-label={t('projectView.previousLine')}
+              className={TRANSPORT_BTN}
+            >
+              <Icon name="skip_previous" size={22} />
+            </button>
+          </Tip>
           <button
             type="button"
             onClick={togglePlay}
@@ -352,15 +354,17 @@ export default function PublicPlaybackBar({
               <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
             )}
           </button>
-          <button
-            type="button"
-            onClick={goToNextLine}
-            disabled={!canStepLines}
-            aria-label={t('projectView.nextLine')}
-            className={TRANSPORT_BTN}
-          >
-            <Icon name="skip_next" size={22} />
-          </button>
+          <Tip content={t('projectView.nextLine')}>
+            <button
+              type="button"
+              onClick={goToNextLine}
+              disabled={!canStepLines}
+              aria-label={t('projectView.nextLine')}
+              className={TRANSPORT_BTN}
+            >
+              <Icon name="skip_next" size={22} />
+            </button>
+          </Tip>
         </div>
 
         <div className="lg:hidden justify-self-end">{endSlot}</div>

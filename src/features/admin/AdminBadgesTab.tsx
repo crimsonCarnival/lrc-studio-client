@@ -14,6 +14,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { SelectField } from '@ui/select-field';
+import { Tip } from '@ui/tip';
 
 // Typed i18next rejects arbitrary string keys / object interpolation values.
 type TkFn = (k: string, o?: Record<string, unknown>) => string;
@@ -243,9 +244,11 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
               {editing ? t('admin.badges.editTitle', { name: editing.label?.en || editing.id }) : t('admin.badges.newTitle')}
             </h3>
           </div>
-          <Button type="button" variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')} className="-m-1">
-            <Icon name="close" size={16} />
-          </Button>
+          <Tip content={t('common.close')}>
+            <Button type="button" variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')} className="-m-1">
+              <Icon name="close" size={16} />
+            </Button>
+          </Tip>
         </div>
 
         <form onSubmit={submit} className="p-5 flex flex-col gap-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
@@ -493,13 +496,17 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button type="button" variant="ghost" size="icon-xs" onClick={() => onEdit(def)} aria-label={t('editor.edit')}>
-            <Icon name="edit" size={12} />
-          </Button>
-          {!def.isBuiltin && (
-            <Button type="button" variant="ghost" size="icon-xs" onClick={() => onDelete(def)} aria-label={t('common.delete')} className="text-love-ink hover:bg-love-soft hover:text-love-ink">
-              <Icon name="delete" size={12} />
+          <Tip content={t('editor.edit')}>
+            <Button type="button" variant="ghost" size="icon-xs" onClick={() => onEdit(def)} aria-label={t('editor.edit')}>
+              <Icon name="edit" size={12} />
             </Button>
+          </Tip>
+          {!def.isBuiltin && (
+            <Tip content={t('common.delete')}>
+              <Button type="button" variant="ghost" size="icon-xs" onClick={() => onDelete(def)} aria-label={t('common.delete')} className="text-love-ink hover:bg-love-soft hover:text-love-ink">
+                <Icon name="delete" size={12} />
+              </Button>
+            </Tip>
           )}
         </div>
       </div>

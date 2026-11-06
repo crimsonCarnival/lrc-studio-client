@@ -11,6 +11,7 @@ import { getSocket } from '@/app/socket.client';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import { SelectField } from '@ui/select-field';
+import { Tip } from '@ui/tip';
 
 // Request types the inline composer can build (simple payloads). Other types
 // (badges/levels) are submitted from their own tabs.
@@ -241,14 +242,16 @@ export default function AdminRequestsTab() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={fetchAll}
-        >
-          <Icon name="refresh" size={14} />
-        </Button>
+        <Tip content={t('common.actions.refresh')}>
+          <Button aria-label={t('common.actions.refresh')}
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={fetchAll}
+          >
+            <Icon name="refresh" size={14} />
+          </Button>
+        </Tip>
         {composerTypes.length > 0 && (
           <Button
             type="button"

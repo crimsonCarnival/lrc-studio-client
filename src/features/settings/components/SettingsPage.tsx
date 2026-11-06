@@ -28,6 +28,7 @@ import { cn } from '@/shared/utils/utils';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { SettingsDraftContext } from './SettingsDraftContext';
 import type { PanelDraft } from './SettingsDraftContext';
+import { Tip } from '@ui/tip';
 
 type Settings = AppSettings;
 
@@ -329,15 +330,17 @@ export default function SettingsPage() {
       {/* Mobile/tablet bar — guarded back button (keeps the unsaved-changes prompt) + search.
           On desktop the sidebar carries the search and the app header carries navigation. */}
       <div className="lg:hidden flex items-center gap-3 px-4 h-13 py-2.5 border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 bg-background/95 backdrop-blur-sm z-20">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => guardedNavigate(-1)}
-          aria-label={t('common.back')}
-          className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full size-8 coarse:size-11 shrink-0"
-        >
-          <Icon name="arrow_back" size={16} />
-        </Button>
+        <Tip content={t('common.back')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => guardedNavigate(-1)}
+            aria-label={t('common.back')}
+            className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full size-8 coarse:size-11 shrink-0"
+          >
+            <Icon name="arrow_back" size={16} />
+          </Button>
+        </Tip>
         {isSearchable && <div className="w-48 sm:w-64 md:w-72 ml-auto">{searchField}</div>}
       </div>
 
