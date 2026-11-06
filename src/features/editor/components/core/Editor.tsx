@@ -866,6 +866,7 @@ export default function Editor({
       collapsedSections={collapsedSections}
       collapsedView={listView}
       onToggleSectionCollapse={toggleSectionCollapse}
+      compactRows={phone}
     />
   );
 

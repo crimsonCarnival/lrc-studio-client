@@ -119,6 +119,9 @@ interface EditorLineItemProps {
   isModified?: boolean;
   onToggleLineMode?: (i: number, next: EditorLine) => void;
   confidenceInfo?: ConfidenceInfo;
+  /** Phone layout: no drag handle and no per-row action toolbar, so the lyric keeps the width.
+   *  Mark lives in the phone Mark bar; line actions move to a sheet. */
+  compact?: boolean;
   handleToggleCounterpart?: (lineIndex: number) => void;
   /** Section markers only: number of lyric lines until the next marker (0 = no chevron). */
   sectionLineCount?: number;
@@ -203,6 +206,7 @@ const EditorLineItem = React.memo(({
   isModified,
   onToggleLineMode,
   confidenceInfo,
+  compact = false,
   activeSingers,
   handleToggleCounterpart,
   sectionLineCount = 0,
@@ -689,7 +693,7 @@ const EditorLineItem = React.memo(({
         {!isActive && confidenceTint && (
           <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-pill opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
         )}
-        {editorMode !== 'words' && lineHandle}
+        {editorMode !== 'words' && !compact && lineHandle}
 
         {editorMode !== 'words' && (
           <span
@@ -949,6 +953,7 @@ const EditorLineItem = React.memo(({
             </button>
           </Tip>
         )}
+        {!compact && (
         <LineActionToolbar
           line={line as ComponentProps<typeof LineActionToolbar>['line']}
           lineIndex={i}
@@ -982,6 +987,7 @@ const EditorLineItem = React.memo(({
           activeWordIndex={activeWordIndex}
           focusedTimestamp={focusedTimestamp}
         />
+        )}
         {/* Word meter, at the very end of the row so it lines up down the list whatever the
             hover toolbar beside it is showing. Foam when every word carries its own time. */}
         {editorMode !== 'words' && !!line.words?.length && (
