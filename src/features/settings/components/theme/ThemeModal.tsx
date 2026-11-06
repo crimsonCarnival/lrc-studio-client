@@ -18,10 +18,15 @@ export default function ThemeModal({ open, onOpenChange, settings, updateSetting
       onOpenChange={onOpenChange}
       title={t('settings.interface.theme')}
       description={t('settings.themeEditor.description')}
-      dialogProps={{ className: 'max-w-3xl w-[94vw] max-h-[85vh] overflow-y-auto' }}
+      // Flex column capped to the viewport: the title stays put and only the body scrolls.
+      dialogProps={{ className: 'max-w-3xl w-[94vw] max-h-[85dvh] flex flex-col gap-0 overflow-hidden' }}
     >
       {/* Mounted per open so the editor never carries a stale draft into the next visit. */}
-      {open && <ThemeSelector settings={settings} updateSetting={updateSetting} />}
+      {open && (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ThemeSelector settings={settings} updateSetting={updateSetting} />
+        </div>
+      )}
     </ResponsiveModal>
   );
 }

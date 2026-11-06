@@ -116,9 +116,10 @@ export const settingsService = {
     return data.updateSettings;
   },
 
-  // patch maps to save for GQL (partial updates work the same way)
+  // patch maps to save for GQL (partial updates work the same way). Not `this.save`: callers pass
+  // `patch` around as a bare function (SettingsContext), where `this` is undefined.
   async patch(input: UpdateSettingsInput): Promise<Settings> {
-    return this.save(input);
+    return settingsService.save(input);
   },
 
   async reset(): Promise<boolean> {
