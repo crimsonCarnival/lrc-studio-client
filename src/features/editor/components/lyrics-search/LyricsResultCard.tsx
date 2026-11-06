@@ -34,10 +34,10 @@ export default function LyricsResultCard({ song, onClick }: LyricsResultCardProp
         <LazyImage
           src={song.thumbnail}
           alt=""
-          className="size-10 rounded object-cover flex-shrink-0 bg-zinc-800"
+          className="size-10 rounded-xs object-cover flex-shrink-0 bg-zinc-800"
         />
       ) : (
-        <div className="size-10 rounded flex-shrink-0 bg-zinc-800 flex items-center justify-center">
+        <div className="size-10 rounded-xs flex-shrink-0 bg-zinc-800 flex items-center justify-center">
           <Icon name="music_note" size={18} className="text-zinc-600" />
         </div>
       )}
@@ -49,7 +49,7 @@ export default function LyricsResultCard({ song, onClick }: LyricsResultCardProp
         {/* Surfaced before the click so the user can pick the timed version when
             one exists — the whole reason to prefer a synced source. */}
         {song.synced && (
-          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
+          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-pill bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
             <Icon name="schedule" size={11} />
             {t('lyricsSearch.syncedBadge')}
           </span>

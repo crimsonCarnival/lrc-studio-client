@@ -437,7 +437,7 @@ export default function SettingsPage() {
                       </Button>
                     )}
                     {activeTab === 'badges' && (
-                      <span className="px-3 py-1.5 rounded-full bg-zinc-800 text-violet-200 text-[13px] font-bold font-mono">
+                      <span className="px-3 py-1.5 rounded-pill bg-zinc-800 text-violet-200 text-[13px] font-bold font-mono">
                         {t('settings.levelShort', { level })}
                       </span>
                     )}

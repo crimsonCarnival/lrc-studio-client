@@ -72,7 +72,7 @@ export function ProjectCollaborators({ publicId, collaborators, isOwner }: Proje
                     <Avatar name={c.name} />
                     <span className="truncate font-bold text-foreground">{c.name}</span>
                     {c.isGuest && (
-                      <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-raised px-[7px] text-[11px] font-semibold text-subtle">
+                      <span className="inline-flex h-5 shrink-0 items-center rounded-pill bg-raised px-[7px] text-[11px] font-semibold text-subtle">
                         {t('projectView.collaborators.guest')}
                       </span>
                     )}

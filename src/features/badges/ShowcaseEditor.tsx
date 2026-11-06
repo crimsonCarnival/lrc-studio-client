@@ -10,6 +10,7 @@ import { emblemFor } from './badge-emblems';
 import { useBadgeDefs } from './BadgeDefsContext';
 import { Button } from '@ui/button';
 import { Toggle } from '@/features/settings/components/shared';
+import { SelectField } from '@ui/select-field';
 
 const UPDATE_SHOWCASE = /* GraphQL */ `
   mutation UpdateShowcase($badgeIds: [String!]!, $showcasePublic: Boolean) {
@@ -126,7 +127,7 @@ function ShowcaseSlot({ badge, index, onRemove, onChoose, onDragStart, onDragOve
         size="icon-xs"
         aria-label={t('badges.showcase.removeFrom', { name: label })}
         onClick={() => onRemove(badge.id)}
-        className="absolute right-1 top-1 rounded-full opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
+        className="absolute right-1 top-1 rounded-pill opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
       >
         <Icon name="close" size={14} />
       </Button>
@@ -282,17 +283,15 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           </h2>
           <label className="flex items-center gap-2 text-[13px] text-zinc-400">
             {t('badges.showcase.rarity')}
-            <select
+            <SelectField
+              aria-label={t('badges.showcase.rarity')}
               value={rarityFilter}
-              onChange={(e) => setRarityFilter(e.target.value)}
-              className="h-9 rounded-[10px] bg-zinc-950 border border-zinc-700 px-3 text-sm text-zinc-100 outline-none focus:border-primary/60 cursor-pointer"
-            >
-              {['all', 'legendary', 'epic', 'rare', 'uncommon', 'common'].map(r => (
-                <option key={r} value={r}>
-                  {r === 'all' ? t('badges.showcase.filterAll') : tk(RARITY_CONFIG[r as keyof typeof RARITY_CONFIG]?.labelKey ?? `badges.rarity.${r}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={setRarityFilter}
+              options={['all', 'legendary', 'epic', 'rare', 'uncommon', 'common'].map(r => ({
+                value: r,
+                label: r === 'all' ? t('badges.showcase.filterAll') : tk(RARITY_CONFIG[r as keyof typeof RARITY_CONFIG]?.labelKey ?? `badges.rarity.${r}`),
+              }))}
+            />
           </label>
         </div>
 

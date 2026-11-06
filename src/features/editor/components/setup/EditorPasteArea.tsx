@@ -137,7 +137,7 @@ export default function EditorPasteArea({
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 h-10 lg:h-10 coarse:h-11 lg:text-sm gap-2 bg-transparent border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 text-zinc-200 font-semibold rounded-[10px] text-sm"
+            className="flex-1 h-10 lg:h-10 coarse:h-11 lg:text-sm gap-2 bg-transparent border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 text-zinc-200 font-semibold rounded-[calc(var(--radius)*1)] text-sm"
           >
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -155,7 +155,7 @@ export default function EditorPasteArea({
               onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
               placeholder={t('import.urlPlaceholder')}
               aria-label={t('import.fromUrl')}
-              className="flex-1 h-10 coarse:h-11 bg-zinc-950/60 border border-zinc-700 text-zinc-200 text-xs rounded-[10px] px-3 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
+              className="flex-1 h-10 coarse:h-11 bg-zinc-950/60 border border-zinc-700 text-zinc-200 text-xs rounded-[calc(var(--radius)*1)] px-3 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
               disabled={urlFetching}
             />
             <Tip content={t('import.fromUrl')}>
@@ -164,7 +164,7 @@ export default function EditorPasteArea({
                 onClick={handleUrlSubmit}
                 disabled={!urlInput.trim() || urlFetching}
                 aria-label={t('import.fromUrl')}
-                className="size-10 lg:size-10 coarse:size-11 p-0 bg-transparent border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 text-zinc-200 rounded-[10px] flex-shrink-0"
+                className="size-10 lg:size-10 coarse:size-11 p-0 bg-transparent border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 text-zinc-200 rounded-[calc(var(--radius)*1)] flex-shrink-0"
               >
               {urlFetching ? (
                 <LogoLoader size={16} />

@@ -58,7 +58,7 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
             type="button"
             aria-current={active ? 'true' : undefined}
             onClick={() => onSelect(item.index)}
-            className={`flex flex-col gap-1.5 px-2.5 py-2.5 rounded-[10px] text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${active
+            className={`flex flex-col gap-1.5 px-2.5 py-2.5 rounded-[calc(var(--radius)*1)] text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${active
               ? 'bg-zinc-800 text-foreground font-semibold ring-1 ring-inset ring-primary/40'
               : 'text-foreground/80 hover:bg-zinc-800/50'}`}
           >
@@ -77,7 +77,7 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
               </span>
               <span className="flex-none font-mono text-[11px] font-normal tabular-nums text-foreground/65">{item.timed}/{item.total}</span>
             </span>
-            <span className="h-1 rounded-full bg-zinc-700/60 overflow-hidden">
+            <span className="h-1 rounded-pill bg-zinc-700/60 overflow-hidden">
               <span
                 className={`block h-full ${item.timed === item.total ? 'bg-success' : 'bg-primary'}`}
                 style={{ width: `${item.total ? (item.timed / item.total) * 100 : 0}%` }}
@@ -254,7 +254,7 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
             className="group absolute inset-y-0 w-3 coarse:w-11 -translate-x-1/2 grid place-items-center cursor-ew-resize touch-none focus-visible:outline-none"
             style={{ left: `${((seg.from - start) / span) * 100}%` }}
           >
-            <span className={`w-0.5 h-full rounded-full transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragIndex === i ? 'bg-foreground' : 'bg-transparent'}`} />
+            <span className={`w-0.5 h-full rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragIndex === i ? 'bg-foreground' : 'bg-transparent'}`} />
             {dragIndex === i && (
               <span className="absolute bottom-full mb-1.5 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background whitespace-nowrap pointer-events-none">
                 {formatTime(seg.from)}
@@ -263,7 +263,7 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
           </span>
         ) : null))}
         {playhead >= 0 && playhead <= 1 && (
-          <span aria-hidden className="absolute inset-y-[-4px] w-0.5 rounded-full bg-foam pointer-events-none" style={{ left: `${playhead * 100}%` }} />
+          <span aria-hidden className="absolute inset-y-[-4px] w-0.5 rounded-pill bg-foam pointer-events-none" style={{ left: `${playhead * 100}%` }} />
         )}
       </div>
       <span className="text-[13px] text-subtle">{t('editor.words.dragHint')}</span>

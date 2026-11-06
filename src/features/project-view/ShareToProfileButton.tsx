@@ -195,7 +195,7 @@ export function ShareToProfileButton({ publicId, initialShare = null, initialCou
           </label>
           <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-lg border border-border bg-raised/50 px-2.5 py-1.5">
             {tags.map((tag) => (
-              <span key={tag} className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">
+              <span key={tag} className="flex items-center gap-1 rounded-pill bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">
                 #{tag}
                 <button
                   type="button"

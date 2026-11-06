@@ -51,7 +51,7 @@ const PopoverItem = React.forwardRef<
     ref={ref}
     data-slot="popover-item"
     className={cn(
-      "relative flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-hidden select-none text-foreground hover:bg-raised hover:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 whitespace-nowrap",
+      "relative flex w-full cursor-pointer items-center gap-3 rounded-[calc(var(--radius)*1)] px-3 py-2 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-hidden select-none text-foreground hover:bg-raised hover:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 whitespace-nowrap",
       className
     )}
     {...props}

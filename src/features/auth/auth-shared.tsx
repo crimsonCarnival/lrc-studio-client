@@ -115,13 +115,13 @@ function AvatarBadgeInner({ accountName, avatarUrl, size = 'md' }: AvatarBadgePr
       <LazyImage
         src={avatarUrl}
         alt={accountName}
-        className={`${sizeClass} ${ring} shrink-0 rounded-full object-cover`}
+        className={`${sizeClass} ${ring} shrink-0 rounded-pill object-cover`}
         onError={() => setImgError(true)}
       />
     );
   }
   return (
-    <div className={`${sizeClass} ${ring} shrink-0 rounded-full bg-primary-soft text-primary-ink font-heading font-bold flex items-center justify-center`}>
+    <div className={`${sizeClass} ${ring} shrink-0 rounded-pill bg-primary-soft text-primary-ink font-heading font-bold flex items-center justify-center`}>
       {initial}
     </div>
   );

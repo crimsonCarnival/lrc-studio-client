@@ -153,7 +153,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`h-10 shrink-0 rounded-[10px] px-3.5 text-[15px] coarse:h-11 ${
+                  className={`h-10 shrink-0 rounded-[calc(var(--radius)*1)] px-3.5 text-[15px] coarse:h-11 ${
                     isActive
                       ? 'bg-raised text-foreground inset-ring-[1.5px] inset-ring-iris hover:bg-raised hover:text-foreground'
                       : 'text-subtle hover:bg-transparent hover:text-foreground'

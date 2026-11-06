@@ -50,7 +50,7 @@ export function NotificationPanel() {
   const systemSlice  = system.slice(0, remaining);
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-[380px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[18px] bg-background shadow-elevated inset-ring inset-ring-hl">
+    <div className="absolute right-0 top-full z-50 mt-2 w-[380px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[calc(var(--radius)*1.8)] bg-background shadow-elevated inset-ring inset-ring-hl">
       <div className="flex items-center justify-between px-[18px] pt-4 pb-2">
         <span className="font-heading text-xl font-bold tracking-[-0.02em] text-foreground">{t('notifications.bell')}</span>
         <Button variant="link" size={null} onClick={markAllRead} className="text-sm">

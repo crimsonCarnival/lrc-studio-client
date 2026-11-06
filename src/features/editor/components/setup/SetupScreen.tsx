@@ -574,7 +574,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     size="sm"
                     onClick={togglePreviewPlayback}
                     aria-label={previewPlaying ? t('setup.previewPause') : t('setup.previewPlay')}
-                    className="h-8 px-3 gap-1.5 rounded-full text-xs"
+                    className="h-8 px-3 gap-1.5 rounded-pill text-xs"
                   >
                     <Icon name={previewPlaying ? 'pause' : 'play_arrow'} size={14} filled />
                     {t('setup.previewClip')}
@@ -585,7 +585,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     type="button"
                     onClick={() => setMetadataState({ explicit: !explicit })}
                     aria-pressed={explicit}
-                    className={`h-8 px-3 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    className={`h-8 px-3 rounded-pill text-xs font-semibold uppercase tracking-wider transition-colors ${
                       explicit ? 'bg-love/20 text-love' : 'bg-zinc-800 text-zinc-500'
                     }`}
                   >

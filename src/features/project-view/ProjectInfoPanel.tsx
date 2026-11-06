@@ -62,8 +62,8 @@ const SEG =
 const SEG_BUTTON = 'hover:bg-raised disabled:pointer-events-none';
 const SEG_COUNT = 'border-l border-hl pl-2 font-mono text-xs font-medium tabular-nums text-subtle';
 const SECTION_LABEL = 'text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground';
-const CARD = 'rounded-[14px] border border-border bg-card/60 p-3.5';
-const CHIP = 'inline-flex h-[26px] items-center gap-1.5 rounded-full bg-raised px-2.5 text-[13px] font-semibold text-subtle';
+const CARD = 'rounded-[calc(var(--radius)*1.4)] border border-border bg-card/60 p-3.5';
+const CHIP = 'inline-flex h-[26px] items-center gap-1.5 rounded-pill bg-raised px-2.5 text-[13px] font-semibold text-subtle';
 
 function clock(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
@@ -178,7 +178,7 @@ export default function ProjectInfoPanel({
               )}
             </Link>
             {authorLevel > 0 && (
-              <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
+              <span className="inline-flex h-5 shrink-0 items-center rounded-pill bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
                 {t('settings.levelShort', { level: authorLevel })}
               </span>
             )}
@@ -203,7 +203,7 @@ export default function ProjectInfoPanel({
           <img
             src={cover}
             alt={t('projectView.coverAlt', { title })}
-            className="size-24 sm:size-[116px] flex-none rounded-[14px] bg-raised object-contain shadow-elevated"
+            className="size-24 sm:size-[116px] flex-none rounded-[calc(var(--radius)*1.4)] bg-raised object-contain shadow-elevated"
             loading="eager"
             decoding="async"
           />
@@ -441,7 +441,7 @@ export default function ProjectInfoPanel({
                 return (
                   <span
                     key={`${singer}-${idx}`}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-foreground"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-xs font-medium text-foreground"
                     style={{
                       background: `color-mix(in srgb, ${color} 10%, transparent)`,
                       border: `1px solid color-mix(in srgb, ${color} 27%, transparent)`,

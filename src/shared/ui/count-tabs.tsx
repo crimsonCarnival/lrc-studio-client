@@ -46,7 +46,7 @@ function CountTabs<T extends string>({ tabs, value, onChange, label, className }
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  "grid h-5 min-w-[22px] place-items-center rounded-full px-1.5 font-mono text-xs font-medium tabular-nums",
+                  "grid h-5 min-w-[22px] place-items-center rounded-pill px-1.5 font-mono text-xs font-medium tabular-nums",
                   active ? "bg-primary-soft text-primary-ink" : "bg-raised text-subtle",
                   // An empty bucket recedes so the eye lands on tabs that have something.
                   tab.count === 0 && "opacity-55"

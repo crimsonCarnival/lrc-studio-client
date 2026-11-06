@@ -20,7 +20,7 @@ export function ProjectStatusTag({ status, withCheck, className }: { status: Pro
   return (
     <span
       className={cn(
-        'inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-[9px] font-mono text-[11px] font-semibold uppercase leading-none tracking-[0.08em]',
+        'inline-flex h-6 shrink-0 items-center gap-1.5 rounded-pill px-[9px] font-mono text-[11px] font-semibold uppercase leading-none tracking-[0.08em]',
         TONE[status],
         className,
       )}

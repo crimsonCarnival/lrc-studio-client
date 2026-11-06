@@ -10,6 +10,7 @@ import { isSudoCancelled, withSudo } from './services/sudo';
 import { getSocket } from '@/app/socket.client';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
+import { SelectField } from '@ui/select-field';
 
 // Request types the inline composer can build (simple payloads). Other types
 // (badges/levels) are submitted from their own tabs.
@@ -65,9 +66,13 @@ function RequestComposer({ types, onClose, onSubmitted }: { types: ComposerType[
         <form onSubmit={submit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
             <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.requests.composer.type')}</span>
-            <select className={inputCls} value={type} onChange={e => setType(e.target.value as ComposerType)}>
-              {types.map(ty => <option key={ty} value={ty}>{tk(`admin.requests.types.${ty}`)}</option>)}
-            </select>
+            <SelectField
+              aria-label={t('admin.requests.composer.type')}
+              className="w-full"
+              value={type}
+              onValueChange={v => setType(v as ComposerType)}
+              options={types.map(ty => ({ value: ty, label: tk(`admin.requests.types.${ty}`) }))}
+            />
           </label>
 
           {type === 'block_ip' && (
@@ -81,10 +86,16 @@ function RequestComposer({ types, onClose, onSubmitted }: { types: ComposerType[
           )}
           {type === 'xp_adjust' && (
             <>
-              <select className={inputCls} value={fields.action} onChange={e => set('action', e.target.value)}>
-                <option value="grant">{t('admin.requests.composer.grant')}</option>
-                <option value="revoke">{t('admin.requests.composer.revoke')}</option>
-              </select>
+              <SelectField
+                aria-label={t('admin.requests.composer.action')}
+                className="w-full"
+                value={fields.action ?? 'grant'}
+                onValueChange={v => set('action', v)}
+                options={[
+                  { value: 'grant', label: t('admin.requests.composer.grant') },
+                  { value: 'revoke', label: t('admin.requests.composer.revoke') },
+                ]}
+              />
               <input className={inputCls} type="number" min={1} placeholder={t('admin.requests.composer.amount')} value={fields.amount ?? ''} onChange={e => set('amount', e.target.value)} required />
               <input className={inputCls} placeholder={t('admin.requests.composer.identifier')} value={fields.identifier ?? ''} onChange={e => set('identifier', e.target.value)} required />
             </>
@@ -132,7 +143,7 @@ function RequestRow({ req, children }: { req: StaffRequest; children?: ReactNode
         {req.decisionNote && <p className="text-[11px] text-zinc-400 mt-1">{t('admin.requests.decisionNote', { note: req.decisionNote })}</p>}
         {req.error && <p className="text-[11px] text-red-400 mt-1">{req.error}</p>}
       </div>
-      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[req.status] ?? ''}`}>
+      <span className={`shrink-0 px-2 py-0.5 rounded-pill text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[req.status] ?? ''}`}>
         {tk(`admin.requests.status.${req.status}`)}
       </span>
       {children}

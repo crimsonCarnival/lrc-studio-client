@@ -93,7 +93,7 @@ export const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent
               onClick={() => onSelectUpload(upload)}
               className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-zinc-800 transition-colors group"
             >
-              <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
+              <div className="size-6 rounded-xs bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
                 {upload.source === 'youtube'
                   ? <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-3 text-red-400" /></svg>
                   : <Icon name="cloud" size={12} className="text-blue-400" />}
@@ -143,7 +143,7 @@ function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: Audi
         {canReplace && (
           <label
             htmlFor={fileInputId}
-            className="inline-flex items-center h-11 px-[18px] rounded-[10px] bg-primary hover:bg-primary-dim text-zinc-950 text-sm font-bold cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-primary/50"
+            className="inline-flex items-center h-11 px-[18px] rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 text-sm font-bold cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-primary/50"
           >
             {t('player.reupload')}
             <input id={fileInputId} type="file" accept="audio/*" onChange={onFileChange} className="sr-only" />
@@ -152,7 +152,7 @@ function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: Audi
         <Button
           variant="outline"
           onClick={onRetry}
-          className="h-11 lg:h-11 px-[18px] lg:px-[18px] rounded-[10px] bg-transparent border-zinc-700 text-sm lg:text-sm font-semibold text-foreground"
+          className="h-11 lg:h-11 px-[18px] lg:px-[18px] rounded-[calc(var(--radius)*1)] bg-transparent border-zinc-700 text-sm lg:text-sm font-semibold text-foreground"
         >
           {t('player.retry')}
         </Button>
@@ -234,7 +234,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             aria-valuemin={0}
             aria-valuemax={Math.round(duration)}
             onChange={(e) => seek(parseFloat(e.target.value))}
-            className="w-full h-1 appearance-none rounded-full outline-none"
+            className="w-full h-1 appearance-none rounded-pill outline-none"
             style={{
               background: `linear-gradient(to right, var(--color-primary) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%, rgba(255,255,255,0.1) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%)`,
             }}
@@ -295,7 +295,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden pb-0.5 min-w-0">
               <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5"><Icon name="headphones" size={14} />{t('player.title')}</span>
               {mediaTitle && (
-                <div className="flex items-center gap-2 px-1.5 py-0.5 rounded text-xs min-w-0">
+                <div className="flex items-center gap-2 px-1.5 py-0.5 rounded-xs text-xs min-w-0">
                   <Icon name="music_note" size={10} className="text-primary shrink-0" />
                   <span className="text-primary normal-case tracking-normal truncate max-w-[300px]">{mediaTitle}</span>
                 </div>
@@ -385,7 +385,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                                 onClick={() => handleSelectUpload(upload)}
                                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-zinc-800/80 transition-all group"
                               >
-                                <div className="size-8 rounded bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
+                                <div className="size-8 rounded-xs bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
                                   {upload.source === 'youtube'
                                     ? <YoutubeIcon className="size-5" />
                                     : <Icon name="cloud" size={14} className="text-blue-400" />}
@@ -506,7 +506,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       size={null}
                       onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
                       aria-label={t(delta < 0 ? 'player.seekBack' : 'player.seekForward', { seconds: Math.abs(delta) })}
-                      className="h-[38px] rounded-[9px] px-2.5 font-mono text-[13px] font-medium text-subtle hover:bg-raised hover:text-foreground"
+                      className="h-[38px] rounded-[calc(var(--radius)*0.9)] px-2.5 font-mono text-[13px] font-medium text-subtle hover:bg-raised hover:text-foreground"
                     >
                       {delta < 0 ? '−' : '+'}{Math.abs(delta)}{Math.abs(delta) >= 1 ? 's' : ''}
                     </Button>
@@ -655,7 +655,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       size="icon"
                       onClick={togglePlay}
                       aria-label={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}
-                      className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary shrink-0 transition-all duration-100"
+                      className="rounded-pill bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary shrink-0 transition-all duration-100"
                     >
                       {isPlaying ? (
                         <Icon name="pause" size={16} />
@@ -678,7 +678,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       aria-valuemin={0}
                       aria-valuemax={Math.round(duration)}
                       onChange={(e) => seek(parseFloat(e.target.value))}
-                      className="w-full h-1 appearance-none rounded-full outline-none"
+                      className="w-full h-1 appearance-none rounded-pill outline-none"
                       style={{
                         background: `linear-gradient(to right, var(--color-primary) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%, rgba(255,255,255,0.1) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%)`,
                       }}
@@ -838,7 +838,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                             onClick={() => handleSelectUpload(upload)}
                             className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-left hover:bg-zinc-700/60 transition-colors"
                           >
-                            <div className="size-8 rounded flex-shrink-0 overflow-hidden bg-zinc-700/50 flex items-center justify-center">
+                            <div className="size-8 rounded-xs flex-shrink-0 overflow-hidden bg-zinc-700/50 flex items-center justify-center">
                               {upload.source === 'youtube'
                                 ? <YoutubeIcon className="size-5" />
                                 : <Icon name="cloud" size={14} className="text-blue-400 shrink-0" />}
@@ -928,7 +928,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       type="range" min={0} max={duration || 0} step={0.1} value={currentTime}
                       aria-label={t('player.seekPlayback')} aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={Math.round(duration)}
                       onChange={(e) => seek(parseFloat(e.target.value))}
-                      className="w-full relative z-raised h-1 appearance-none bg-zinc-800 rounded-full outline-none"
+                      className="w-full relative z-raised h-1 appearance-none bg-zinc-800 rounded-pill outline-none"
                       style={{ background: `linear-gradient(to right, var(--color-primary) ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255, 255, 255, 0.1) ${duration ? (currentTime / duration) * 100 : 0}%)` }}
                     />
                   </div>

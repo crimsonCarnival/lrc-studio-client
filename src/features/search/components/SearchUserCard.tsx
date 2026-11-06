@@ -46,7 +46,7 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
   };
 
   return (
-    <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
+    <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[calc(var(--radius)*1.8)] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
       <UserHoverCard accountName={accountName} userId={user.id}>
         <span className="flex min-w-0 flex-1 items-center gap-x-4 gap-y-3">
           <StaffRing role={user.staffRole}>
@@ -60,7 +60,7 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
                 <Highlight text={name} query={query} />
               </Link>
               {level > 0 && (
-                <span className="inline-flex h-[22px] shrink-0 items-center rounded-full bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
+                <span className="inline-flex h-[22px] shrink-0 items-center rounded-pill bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
                   {t('settings.levelShort', { level })}
                 </span>
               )}

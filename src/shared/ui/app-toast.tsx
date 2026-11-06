@@ -43,14 +43,14 @@ export function AppToast({ item }: { item: Toast }) {
     <div
       {...item.ariaProps}
       className={cn(
-        'group/toast pointer-events-auto relative flex w-max max-w-[min(380px,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-[14px] bg-raised py-3.5 pr-3 pl-4 text-foreground shadow-toast inset-ring inset-ring-hl',
+        'group/toast pointer-events-auto relative flex w-max max-w-[min(380px,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-[calc(var(--radius)*1.4)] bg-raised py-3.5 pr-3 pl-4 text-foreground shadow-toast inset-ring inset-ring-hl',
         item.visible
           ? 'animate-in fade-in-0 slide-in-from-bottom-3 duration-[220ms]'
           : 'animate-out fade-out-0 duration-[160ms] fill-mode-forwards',
       )}
     >
       {icon && (
-        <span className={cn('grid size-8 shrink-0 place-items-center rounded-[10px]', icon.className)}>{icon.icon}</span>
+        <span className={cn('grid size-8 shrink-0 place-items-center rounded-[calc(var(--radius)*1)]', icon.className)}>{icon.icon}</span>
       )}
       <div className={cn('min-w-0 flex-1 text-[15px] font-semibold leading-snug', icon && 'pt-1.5')}>
         {resolveValue(item.message, item)}

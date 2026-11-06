@@ -60,7 +60,7 @@ export default function PasswordStrength({ password }: { password?: string }) {
         {LEVELS.map((lvl, i) => (
           <div
             key={i}
-            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+            className={`h-1 flex-1 rounded-pill transition-colors duration-300 ${
               i < filled ? level.color : 'bg-zinc-700'
             }`}
           />

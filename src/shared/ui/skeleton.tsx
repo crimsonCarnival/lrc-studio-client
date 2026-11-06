@@ -21,11 +21,11 @@ export function SkeletonResumeCard({ className }: { className?: string }) {
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-6 w-40" />
-          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-pill" />
         </div>
         <Skeleton className="h-4 w-52 max-w-full" />
         <div className="flex items-center gap-3">
-          <Skeleton className="h-1 flex-1 rounded-full" />
+          <Skeleton className="h-1 flex-1 rounded-pill" />
           <Skeleton className="h-3 w-36" />
         </div>
       </div>
@@ -46,10 +46,10 @@ export function SkeletonProjectCard({ className }: { className?: string }) {
           <Skeleton className="h-4 w-2/5" />
         </div>
         <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-pill" />
           <Skeleton className="h-3 w-20" />
         </div>
-        <Skeleton className="h-1 w-full rounded-full" />
+        <Skeleton className="h-1 w-full rounded-pill" />
         <div className="flex items-center gap-3">
           <Skeleton className="h-3 w-8" />
           <Skeleton className="h-3 w-8" />
@@ -89,7 +89,7 @@ function SkeletonCard({ className }: { className?: string }) {
       <div className="flex-1 space-y-2">
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-2/5" />
-          <Skeleton className="h-4 w-10 rounded" />
+          <Skeleton className="h-4 w-10 rounded-xs" />
         </div>
         <div className="flex items-center gap-3">
           <Skeleton className="h-3 w-16" />
@@ -108,8 +108,8 @@ export function SkeletonList({ count = 3, className }: { count?: number; classNa
     <div className={cn("flex flex-col h-full animate-fade-in", className)}>
       <div className="flex items-center gap-3 mb-5">
         <Skeleton className="size-8 rounded-lg" />
-        <Skeleton className="h-3.5 w-20 rounded" />
-        <Skeleton className="h-3 w-14 ml-auto rounded" />
+        <Skeleton className="h-3.5 w-20 rounded-xs" />
+        <Skeleton className="h-3 w-14 ml-auto rounded-xs" />
       </div>
       <div className="flex-1 space-y-2">
         {Array.from({ length: count }, (_, i) => (
@@ -129,7 +129,7 @@ export function SkeletonSetup({ className }: { className?: string }) {
         {/* Title area */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-zinc-800/60 mb-4">
-            <Skeleton className="size-7 rounded" />
+            <Skeleton className="size-7 rounded-xs" />
           </div>
           <Skeleton className="h-7 w-48 mx-auto" />
         </div>
@@ -138,7 +138,7 @@ export function SkeletonSetup({ className }: { className?: string }) {
           {/* Audio Panel skeleton */}
           <div className="glass rounded-2xl p-5 flex flex-col gap-4">
             <div className="flex items-center gap-2">
-              <Skeleton className="size-4 rounded" />
+              <Skeleton className="size-4 rounded-xs" />
               <Skeleton className="h-4 w-24" />
             </div>
             {/* File upload area */}
@@ -165,14 +165,14 @@ export function SkeletonSetup({ className }: { className?: string }) {
           {/* Lyrics Panel skeleton */}
           <div className="glass rounded-2xl p-5 flex flex-col gap-4">
             <div className="flex items-center gap-2">
-              <Skeleton className="size-4 rounded" />
+              <Skeleton className="size-4 rounded-xs" />
               <Skeleton className="h-4 w-24" />
             </div>
             {/* Textarea placeholder */}
             <Skeleton className="flex-1 min-h-[140px] rounded-xl" />
             {/* Import file button */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700/40">
-              <Skeleton className="size-3.5 rounded flex-shrink-0" />
+              <Skeleton className="size-3.5 rounded-xs flex-shrink-0" />
               <Skeleton className="h-3 w-24" />
               <Skeleton className="h-3 w-16 ml-auto" />
             </div>
@@ -211,7 +211,7 @@ export function SkeletonEditor({ className }: { className?: string }) {
             <Skeleton className="h-7 w-10 rounded-lg" />
             <Skeleton className="h-7 w-10 rounded-lg" />
           </div>
-          <Skeleton className="h-5 w-8 rounded" />
+          <Skeleton className="h-5 w-8 rounded-xs" />
         </div>
         <div className="flex items-center gap-1.5">
           <Skeleton className="size-7 rounded-lg" />
@@ -224,7 +224,7 @@ export function SkeletonEditor({ className }: { className?: string }) {
         {[72, 54, 66, 40, 60, 48, 70, 58].map((w, i) => (
           <div key={i} className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl bg-zinc-800/30">
             <Skeleton className="h-[26px] w-16 rounded-lg flex-shrink-0" />
-            <Skeleton className="h-3.5 rounded-full" style={{ width: `${w}%` }} />
+            <Skeleton className="h-3.5 rounded-pill" style={{ width: `${w}%` }} />
           </div>
         ))}
       </div>
@@ -240,7 +240,7 @@ export function SkeletonPreview({ className }: { className?: string }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
-          <Skeleton className="size-4 rounded" />
+          <Skeleton className="size-4 rounded-xs" />
           <Skeleton className="h-4 w-16" />
         </div>
         <div className="flex items-center gap-1">
@@ -251,10 +251,10 @@ export function SkeletonPreview({ className }: { className?: string }) {
       </div>
       {/* Lines — centered like the real preview */}
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
-        <Skeleton className="h-5 w-3/5 rounded opacity-40" />
-        <Skeleton className="h-7 w-4/5 rounded" />
-        <Skeleton className="h-5 w-2/3 rounded opacity-40" />
-        <Skeleton className="h-5 w-1/2 rounded opacity-30" />
+        <Skeleton className="h-5 w-3/5 rounded-xs opacity-40" />
+        <Skeleton className="h-7 w-4/5 rounded-xs" />
+        <Skeleton className="h-5 w-2/3 rounded-xs opacity-40" />
+        <Skeleton className="h-5 w-1/2 rounded-xs opacity-30" />
       </div>
     </div>
   );
@@ -285,7 +285,7 @@ export function SkeletonPlayer({ className = '' }: { className?: string }) {
         </div>
         <div className="w-full flex items-center gap-2 hidden lg:flex">
           <Skeleton className="h-2.5 w-8 flex-shrink-0" />
-          <Skeleton className="h-1.5 flex-1 rounded-full" />
+          <Skeleton className="h-1.5 flex-1 rounded-pill" />
           <Skeleton className="h-2.5 w-8 flex-shrink-0" />
         </div>
       </div>
@@ -293,7 +293,7 @@ export function SkeletonPlayer({ className = '' }: { className?: string }) {
       {/* Right: Volume and options */}
       <div className="flex items-center justify-end gap-3 w-[120px] sm:w-[180px] lg:w-[240px] flex-shrink-0">
         <Skeleton className="size-5 rounded-md hidden lg:block" />
-        <Skeleton className="w-20 h-1.5 rounded-full hidden lg:block" />
+        <Skeleton className="w-20 h-1.5 rounded-pill hidden lg:block" />
         <Skeleton className="size-5 rounded-md hidden lg:block" />
       </div>
     </div>

@@ -47,7 +47,7 @@ export default function GuidePage() {
             <a
               key={id}
               href={`#${id}`}
-              className="px-3 py-1.5 text-xs font-medium rounded-full bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-pill bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
             >
               {t(`guide.nav.${id}`)}
             </a>

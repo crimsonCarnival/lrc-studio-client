@@ -222,12 +222,12 @@ function ProjectCard({
               <span className="text-sm font-semibold text-zinc-100 truncate">
                 {project.title || project.upload?.fileName || t('library.untitled')}
               </span>
-              <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded flex-shrink-0">
+              <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded-xs flex-shrink-0">
                 {project.editorMode}
               </span>
               {project.forkedFrom?.publicId && (
                 <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { accountName: project.forkedFrom.accountName }) : t('share.forkedProject')}>
-                  <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
+                  <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded-xs flex-shrink-0 flex items-center gap-1">
                     <Icon name="open_in_new" size={10} />
                     {t('share.forkedBadge')}
                   </span>
@@ -357,7 +357,7 @@ function ProjectCard({
               </svg>
             )}
           </div>
-          <div className="absolute top-3 left-3 z-10 flex h-[26px] items-center gap-1.5 rounded-full bg-glass px-2.5 font-mono text-[11px] font-semibold leading-none tracking-[0.08em] text-foreground uppercase backdrop-blur-md">
+          <div className="absolute top-3 left-3 z-10 flex h-[26px] items-center gap-1.5 rounded-pill bg-glass px-2.5 font-mono text-[11px] font-semibold leading-none tracking-[0.08em] text-foreground uppercase backdrop-blur-md">
             {project.upload?.source === 'youtube' ? (
               <><Icon name="play_circle" size={12} className="text-love" />{t('home.sourceYoutube')}</>
             ) : project.upload?.source === 'cloudinary' ? (
@@ -374,7 +374,7 @@ function ProjectCard({
                 rel="noopener noreferrer"
                 aria-label={t('home.viewPublic')}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute top-2 right-2 z-10 grid size-9 place-items-center rounded-[10px] bg-glass text-foreground opacity-0 backdrop-blur-md transition-opacity duration-[var(--duration-state)] group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
+                className="absolute top-2 right-2 z-10 grid size-9 place-items-center rounded-[calc(var(--radius)*1)] bg-glass text-foreground opacity-0 backdrop-blur-md transition-opacity duration-[var(--duration-state)] group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
               >
                 <Icon name="open_in_new" size={16} />
               </a>
@@ -405,7 +405,7 @@ function ProjectCard({
               ownerAccountName={ownerAccountName}
               onEdit={onEdit ? () => onEdit(project) : undefined}
               onDelete={onDelete ? handleSwipeDelete : undefined}
-              className="grid size-9 shrink-0 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground"
+              className="grid size-9 shrink-0 place-items-center rounded-[calc(var(--radius)*1)] text-subtle transition-colors hover:bg-raised hover:text-foreground"
             />
           </div>
 

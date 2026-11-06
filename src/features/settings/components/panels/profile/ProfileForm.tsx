@@ -26,7 +26,7 @@ export default function ProfileForm({ values, onChange, identifier, show = { dis
             value={values.displayName}
             onChange={(e) => onChange('displayName', e.target.value)}
             placeholder={t('profile.displayNamePlaceholder')}
-            className="bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px]"
+            className="bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] h-11 text-[15px]"
             maxLength={50}
           />
         </div>}

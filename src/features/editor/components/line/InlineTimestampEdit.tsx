@@ -66,7 +66,7 @@ export function InlineTimestampEdit({ value, onChange, onCancel, precision }: In
       }}
       onWheel={handleWheel}
       onClick={(e) => e.stopPropagation()}
-      className="w-[82px] text-[10px] font-mono tabular-nums bg-zinc-800 border border-primary/50 rounded px-1.5 py-0.5 text-primary outline-none focus:ring-1 focus:ring-primary/50"
+      className="w-[82px] text-[10px] font-mono tabular-nums bg-zinc-800 border border-primary/50 rounded-xs px-1.5 py-0.5 text-primary outline-none focus:ring-1 focus:ring-primary/50"
     />
   );
 }

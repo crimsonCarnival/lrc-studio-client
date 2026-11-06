@@ -179,7 +179,7 @@ export default function StatsTab() {
           </p>
         </div>
         <Tip content={t('profile.stats.tips.syncTrend')}>
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-[10px] font-bold cursor-default ${trendUp ? 'bg-teal-950 text-teal-300' : 'bg-red-950 text-red-300'}`}>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-[calc(var(--radius)*1)] font-bold cursor-default ${trendUp ? 'bg-teal-950 text-teal-300' : 'bg-red-950 text-red-300'}`}>
             <Icon name={trendUp ? 'trending_up' : 'trending_down'} size={18} />
             {(t as (k: string, o?: object) => string)('profile.stats.trendChip', { value: `${stats.syncTrendPercentage > 0 ? '+' : ''}${stats.syncTrendPercentage}` })}
           </div>

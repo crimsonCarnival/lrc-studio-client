@@ -390,7 +390,7 @@ const WaveformDisplay = ({
             className="absolute inset-y-0 w-px bg-foreground/40 pointer-events-none z-20"
             style={{ left: `${hoverPct * 100}%` }}
           >
-            <span className="absolute top-0 left-1 rounded bg-background/80 px-1 font-mono text-[10px] tabular-nums text-foreground">
+            <span className="absolute top-0 left-1 rounded-xs bg-background/80 px-1 font-mono text-[10px] tabular-nums text-foreground">
               {formatTime(hoverPct * duration)}
             </span>
           </div>
@@ -401,7 +401,7 @@ const WaveformDisplay = ({
           <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/60 backdrop-blur-[2px]">
             <div className="flex gap-1">
               {[0, 1, 2].map(n => (
-                <div key={n} className="w-1 h-3 bg-primary/40 rounded-full animate-pulse" style={{ animationDelay: `${n * 0.1}s` }} />
+                <div key={n} className="w-1 h-3 bg-primary/40 rounded-pill animate-pulse" style={{ animationDelay: `${n * 0.1}s` }} />
               ))}
             </div>
           </div>
@@ -423,7 +423,7 @@ const WaveformDisplay = ({
             style={{ left: `${loopAPct}%` }}
             onPointerDown={(e) => handleLoopHandleDrag('A', e)}
           >
-            <div className="w-1 h-6 bg-violet-400 rounded-full group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
+            <div className="w-1 h-6 bg-violet-400 rounded-pill group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
           </div>
         )}
 
@@ -435,7 +435,7 @@ const WaveformDisplay = ({
             style={{ left: `${loopBPct}%` }}
             onPointerDown={(e) => handleLoopHandleDrag('B', e)}
           >
-            <div className="w-1 h-6 bg-violet-400 rounded-full group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
+            <div className="w-1 h-6 bg-violet-400 rounded-pill group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
           </div>
         )}
 

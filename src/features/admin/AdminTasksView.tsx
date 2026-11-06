@@ -43,7 +43,7 @@ interface TaskPage {
 
 const PAGE_SIZE = 25;
 
-const FILTER_BTN = 'h-8 coarse:h-11 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
+const FILTER_BTN = 'h-8 coarse:h-11 rounded-pill px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
 
 /** The lyrics tasks behind the dashboard's "lyrics jobs" count: who ran each, for which project, and how it ended. */
 export default function AdminTasksView() {
@@ -135,7 +135,7 @@ export default function AdminTasksView() {
                     </td>
                     <td className="p-3">
                       <div className="font-medium text-zinc-200">{t(`admin.tasks.type.${log.jobType}`)}</div>
-                      <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      <span className={`mt-1 inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                         <Icon name={ok ? 'check_circle' : 'error'} size={12} />
                         {t(ok ? 'admin.tasks.succeeded' : 'admin.tasks.failed')}
                       </span>

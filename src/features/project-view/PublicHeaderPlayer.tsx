@@ -53,7 +53,7 @@ export function PublicHeaderPlayer({
 
   return (
     <div
-      className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-zinc-900/80 border border-zinc-800/80 backdrop-blur-md shadow-sm"
+      className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-pill bg-zinc-900/80 border border-zinc-800/80 backdrop-blur-md shadow-sm"
       role="region"
       aria-label={t('player.title')}
     >
@@ -91,7 +91,7 @@ export function PublicHeaderPlayer({
             aria-valuemin={0}
             aria-valuemax={Math.round(duration)}
             onChange={(e) => seek(parseFloat(e.target.value))}
-            className="w-full h-1 appearance-none rounded-full outline-none cursor-pointer"
+            className="w-full h-1 appearance-none rounded-pill outline-none cursor-pointer"
             style={{
               background: `linear-gradient(to right, var(--color-primary) ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255,255,255,0.1) ${duration ? (currentTime / duration) * 100 : 0}%)`,
             }}

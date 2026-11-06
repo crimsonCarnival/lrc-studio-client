@@ -222,7 +222,7 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
             onDrop={(e) => onDrop(e, index)}
             onDragEnd={() => setDragFrom(null)}
             className={cn(
-              'inline-flex items-center gap-0.5 rounded-full py-0.5 pl-1 pr-0.5 text-sm inset-ring',
+              'inline-flex items-center gap-0.5 rounded-pill py-0.5 pl-1 pr-0.5 text-sm inset-ring',
               primary ? 'bg-primary-soft text-primary-ink inset-ring-iris' : 'bg-raised text-subtle inset-ring-hl',
               dragFrom === index && 'opacity-50',
             )}
@@ -233,7 +233,7 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
               ref={(el) => { chipRefs.current[index] = el; }}
               onKeyDown={(e) => onChipKeyDown(e, index)}
               aria-label={tr('artists.chipLabel', { name: credit.name, position: index + 1, total: credits.length })}
-              className="max-w-[16rem] truncate rounded-full px-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="max-w-[16rem] truncate rounded-pill px-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               {credit.name}
             </button>
@@ -287,7 +287,7 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
                 aria-selected={i === active}
                 // mousedown, not click: the input's blur would otherwise add the half-typed text first.
                 onMouseDown={(e) => { e.preventDefault(); onPickName(s.name); setDraft(''); setActive(-1); }}
-                className={cn('cursor-pointer rounded px-2 py-1.5 text-sm text-foreground', i === active && 'bg-primary-soft text-primary-ink')}
+                className={cn('cursor-pointer rounded-xs px-2 py-1.5 text-sm text-foreground', i === active && 'bg-primary-soft text-primary-ink')}
               >
                 {s.name}
               </li>

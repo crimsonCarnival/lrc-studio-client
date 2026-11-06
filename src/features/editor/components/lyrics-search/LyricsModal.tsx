@@ -111,7 +111,7 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
               {timedLines.map((line, i) => (
                 <li key={i} className="flex items-center gap-3.5 px-3 py-1.5 rounded-lg">
                   <span
-                    className={`shrink-0 inline-flex items-center h-6 px-2.5 rounded-full bg-primary/10 border border-primary/25 font-mono text-xs font-medium tabular-nums text-primary transition-opacity ${
+                    className={`shrink-0 inline-flex items-center h-6 px-2.5 rounded-pill bg-primary/10 border border-primary/25 font-mono text-xs font-medium tabular-nums text-primary transition-opacity ${
                       dimTimes ? 'opacity-35 line-through' : ''
                     }`}
                   >

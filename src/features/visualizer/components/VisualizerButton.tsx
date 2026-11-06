@@ -173,7 +173,7 @@ export function VisualizerButton() {
                 type="button"
                 onClick={() => setCategory(cat.id)}
                 className={cn(
-                  'px-3 py-1 rounded-full text-xs font-medium transition-colors shrink-0',
+                  'px-3 py-1 rounded-pill text-xs font-medium transition-colors shrink-0',
                   category === cat.id
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -214,7 +214,7 @@ export function VisualizerButton() {
                         <PresetPreview preset={option} />
                       )}
                       {is3d && (
-                        <span className="absolute top-1.5 right-1.5 rounded bg-primary/20 px-1 py-0.5 text-[8.5px] font-bold tracking-wider text-primary uppercase">
+                        <span className="absolute top-1.5 right-1.5 rounded-xs bg-primary/20 px-1 py-0.5 text-[8.5px] font-bold tracking-wider text-primary uppercase">
                           3D
                         </span>
                       )}
@@ -264,7 +264,7 @@ export function VisualizerButton() {
                   type="button"
                   onClick={dismissTip}
                   aria-label={t('projectView.visualizer.bloom.dismissTip')}
-                  className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                  className="shrink-0 rounded-xs p-0.5 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <Icon name="close" size={14} />
                 </button>

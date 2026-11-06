@@ -40,7 +40,7 @@ export default function PasswordSection() {
       <Button
         variant="outline"
         onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
-        className="h-11 rounded-[10px] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
+        className="h-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
       >
         {user?.hasPassword ? t('auth.passwordManagement.button') : t('auth.passwordManagement.setPassword')}
         {!user?.hasPassword && <span className="size-2 rounded-full bg-amber-400" aria-hidden="true" />}

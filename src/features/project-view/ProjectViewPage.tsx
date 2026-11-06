@@ -487,7 +487,7 @@ function ProjectViewPageInner() {
             <p className="text-xs flex-1 min-w-0 truncate text-muted-foreground">
               {t('projectView.ctaGuest')}
             </p>
-            <Button variant="outline" size="sm" onClick={handleSignUp} className="h-8 shrink-0 rounded-full px-3 text-xs coarse:h-11">
+            <Button variant="outline" size="sm" onClick={handleSignUp} className="h-8 shrink-0 rounded-pill px-3 text-xs coarse:h-11">
               {t('projectView.signUpButton')}
             </Button>
           </div>
@@ -540,7 +540,7 @@ function ProjectViewPageInner() {
                     variant="outline"
                     onClick={togglePlayerHidden}
                     aria-label={t('projectView.showPlayer')}
-                    className="rounded-full bg-card/80 backdrop-blur-md border border-border shadow-md gap-1.5 px-3 py-1 text-xs"
+                    className="rounded-pill bg-card/80 backdrop-blur-md border border-border shadow-md gap-1.5 px-3 py-1 text-xs"
                   >
                     <Icon name="expand_less" size={16} />
                     <span>{t('projectView.showPlayer')}</span>

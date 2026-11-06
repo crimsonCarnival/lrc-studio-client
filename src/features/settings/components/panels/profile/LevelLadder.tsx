@@ -85,7 +85,7 @@ export function LevelLadder({ currentId }: { currentId?: string }) {
                 )}
                 <span
                   className={cn(
-                    'relative rounded-full',
+                    'relative rounded-pill',
                     isCurrent ? 'size-4 bg-iris ring-[3px] ring-primary-strong' : 'size-2.5',
                     !isCurrent && (reached ? 'bg-iris' : summit ? 'bg-gold' : 'bg-hl'),
                   )}
@@ -97,7 +97,7 @@ export function LevelLadder({ currentId }: { currentId?: string }) {
                     {level.title[lang] || level.title.en}
                   </span>
                   {isCurrent && (
-                    <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 font-mono text-[11px] leading-none font-bold text-primary-foreground">
+                    <span className="shrink-0 rounded-pill bg-primary px-2 py-0.5 font-mono text-[11px] leading-none font-bold text-primary-foreground">
                       {t('profile.stats.ladder.you')}
                     </span>
                   )}

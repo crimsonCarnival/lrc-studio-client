@@ -14,6 +14,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Checkbox } from '@ui/checkbox';
+import { DateTimePicker } from '@ui/date-time-picker';
 
 interface BanUser {
   displayName?: string;
@@ -58,10 +59,8 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }: BanU
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    let isoDate: string | null = null;
-    if (form.bannedUntil) {
-      isoDate = new Date(form.bannedUntil).toISOString();
-    }
+    // The picker already yields an ISO instant in the user's configured timezone.
+    const isoDate = form.bannedUntil || null;
     onConfirm({
       reason: form.reason,
       bannedUntil: isoDate,
@@ -102,12 +101,11 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }: BanU
               <Label htmlFor="bannedUntil" className="text-zinc-300">
                 {t('admin.table.banDuration')}
               </Label>
-              <Input
+              <DateTimePicker
                 id="bannedUntil"
-                type="datetime-local"
-                value={form.bannedUntil}
-                onChange={(e) => setForm(f => ({ ...f, bannedUntil: e.target.value }))}
-                className="bg-zinc-800/50 border-zinc-700 focus-visible:ring-red-500/50 [color-scheme:dark]"
+                value={form.bannedUntil || null}
+                onChange={(iso) => setForm(f => ({ ...f, bannedUntil: iso ?? '' }))}
+                min={new Date()}
               />
             </div>
 

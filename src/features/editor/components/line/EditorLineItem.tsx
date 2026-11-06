@@ -27,6 +27,7 @@ import type { PlayerHandle } from '@/features/player/player.types';
 import type { LockHolderView, RemoteActiveView } from '@/features/collab/collab.types';
 import { LineLockBadge } from '@/features/collab/components/LineLockBadge';
 import { collabColor } from '@/features/collab/collab-color';
+import { SuggestInput } from '@ui/suggest-input';
 
 function getSingers(line: EditorLine): string[] {
   return line.singers || [];
@@ -471,7 +472,7 @@ const EditorLineItem = React.memo(({
                 onClick={(e) => { e.stopPropagation(); onToggleCollapse(sectionCollapseKey(line, i)); }}
                 aria-expanded={!isCollapsed}
                 aria-label={isCollapsed ? t('editor.expandSection') : t('editor.collapseSection')}
-                className="relative z-10 -ml-3 mr-0.5 mb-1 p-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center"
+                className="relative z-10 -ml-3 mr-0.5 mb-1 p-0.5 rounded-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center"
               >
                 <MorphIcon name={isCollapsed ? 'chevron_forward' : 'chevron_down'} size={16} decorative />
               </button>
@@ -495,7 +496,7 @@ const EditorLineItem = React.memo(({
                   <div className="w-px h-4 bg-zinc-700 mx-1" />
                   <div className="flex items-center gap-1">
                     {editingSingers.map((s, si) => (
-                      <span key={si} className="text-[11px] bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-full pl-2 pr-1 py-0.5 flex items-center gap-1">
+                      <span key={si} className="text-[11px] bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-pill pl-2 pr-1 py-0.5 flex items-center gap-1">
                         {s}
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingSingers(prev => prev.filter((_, idx) => idx !== si)); }}
@@ -503,11 +504,10 @@ const EditorLineItem = React.memo(({
                         ><Icon name="close" size={10} /></button>
                       </span>
                     ))}
-                    <input
-                      type="text"
+                    <SuggestInput
+                      suggestions={songArtists ?? []}
                       placeholder={t('editor.addSinger')}
-                      list="inline-singers-list"
-                      className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-full px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
+                      className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-pill px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -521,11 +521,6 @@ const EditorLineItem = React.memo(({
                       }}
                       onClick={(e) => e.stopPropagation()}
                     />
-                    {songArtists && songArtists.length > 0 && (
-                      <datalist id="inline-singers-list">
-                        {songArtists.map(a => <option key={a} value={a} />)}
-                      </datalist>
-                    )}
                   </div>
                   <button
                     onClick={(e) => {
@@ -533,7 +528,7 @@ const EditorLineItem = React.memo(({
                       handleSaveLineText(i, editingText, undefined, undefined, editingSingers);
                       setEditingLineIndex(null);
                     }}
-                    className="ml-2 text-primary hover:text-primary/80 transition-colors flex items-center justify-center p-1 rounded-full hover:bg-white/10"
+                    className="ml-2 text-primary hover:text-primary/80 transition-colors flex items-center justify-center p-1 rounded-pill hover:bg-white/10"
                   >
                     <Icon name="check" size={16} />
                   </button>
@@ -556,7 +551,7 @@ const EditorLineItem = React.memo(({
                     {t('editor.tagging.sectionSingerFormat', { section: label, singer: singersStr })}
                   </span>
                   {isCollapsed && (
-                    <span className="text-[10px] font-medium normal-case tracking-normal px-1.5 py-px rounded-full bg-zinc-800 text-zinc-400 select-none">
+                    <span className="text-[10px] font-medium normal-case tracking-normal px-1.5 py-px rounded-pill bg-zinc-800 text-zinc-400 select-none">
                       {t('editor.hiddenLines', { count: sectionLineCount })}
                     </span>
                   )}
@@ -648,7 +643,7 @@ const EditorLineItem = React.memo(({
         // One height and padding for every state (redesign sheet 13): the row never jumps when
         // the cursor lands on it, and the surface alone says what it is. Outline = the line
         // marking acts on (gold while it has an unsaved edit), soft fill = multi-selected.
-        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2 py-2.5' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[14px] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
+        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2 py-2.5' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[calc(var(--radius)*1.4)] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
           ? `bg-primary-soft inset-ring ${isModified ? 'inset-ring-gold' : 'inset-ring-iris/50'}`
           : isCursor
             // Locked (playback will not move it) reads stronger than merely selected.
@@ -669,7 +664,7 @@ const EditorLineItem = React.memo(({
           <span
             aria-hidden
             title={t('collab.presence.onLine', { name: remoteActive.name })}
-            className="pointer-events-none absolute inset-0 z-10 rounded-[14px] border border-dashed"
+            className="pointer-events-none absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] border border-dashed"
             style={{ borderColor: collabColor(remoteActive.colorIndex) }}
           />
         )}
@@ -678,8 +673,8 @@ const EditorLineItem = React.memo(({
         {isActive && (
           // Clipped by the row's own radius so the bar can run into the corner
           // and join the progress bar along the bottom edge.
-          <div className="absolute inset-0 z-0 rounded-[14px] overflow-hidden pointer-events-none">
-            <div className={`absolute left-0 top-2 w-1 animate-bar-grow ${segmentProgress != null ? 'bottom-0 rounded-t-full' : 'bottom-2 rounded-full'} ${isLocked
+          <div className="absolute inset-0 z-0 rounded-[calc(var(--radius)*1.4)] overflow-hidden pointer-events-none">
+            <div className={`absolute left-0 top-2 w-1 animate-bar-grow ${segmentProgress != null ? 'bottom-0 rounded-t-full' : 'bottom-2 rounded-pill'} ${isLocked
               ? `${isModified ? 'bg-warning' : 'bg-primary'} opacity-90`
               : `${isModified ? 'bg-warning/60' : 'bg-primary/40'} opacity-60`
               }`} />
@@ -687,7 +682,7 @@ const EditorLineItem = React.memo(({
         )}
         {/* Auto Stamp confidence indicator (only when the line isn't already showing the active/lock bar) */}
         {!isActive && confidenceTint && (
-          <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
+          <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-pill opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
         )}
         {editorMode !== 'words' && lineHandle}
 
@@ -759,7 +754,7 @@ const EditorLineItem = React.memo(({
             {singerBadges.map((badge) => (
               <Tip key={badge.name} content={badge.name}>
                 <span
-                  className="mt-[5px] grid size-[18px] shrink-0 place-items-center rounded-[5px] font-mono text-[11px] font-bold text-primary-foreground select-none"
+                  className="mt-[5px] grid size-[18px] shrink-0 place-items-center rounded-[calc(var(--radius)*0.5)] font-mono text-[11px] font-bold text-primary-foreground select-none"
                   style={{ background: badge.color }}
                 >
                   {badge.number}
@@ -856,10 +851,10 @@ const EditorLineItem = React.memo(({
                     aria-valuemin={0}
                     aria-valuemax={line.words.length}
                     aria-valuenow={timedWords}
-                    className="flex-1 h-1 rounded-full bg-hl overflow-hidden"
+                    className="flex-1 h-1 rounded-pill bg-hl overflow-hidden"
                   >
                     <span
-                      className={`block h-full rounded-full transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-success' : 'bg-primary'}`}
+                      className={`block h-full rounded-pill transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-success' : 'bg-primary'}`}
                       style={{ width: `${(timedWords / line.words.length) * 100}%` }}
                     />
                   </span>
@@ -1007,7 +1002,7 @@ const EditorLineItem = React.memo(({
         )}
 
         {segmentProgress != null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[14px] overflow-hidden bg-hl/60 z-10 pointer-events-none animate-in fade-in duration-300">
+          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[calc(var(--radius)*1.4)] overflow-hidden bg-hl/60 z-10 pointer-events-none animate-in fade-in duration-300">
             <div
               className="h-full bg-primary rounded-r-full"
               style={{ width: `${segmentProgress * 100}%` }}

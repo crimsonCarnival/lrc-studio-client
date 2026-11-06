@@ -24,6 +24,7 @@ import { Button } from '@ui/button';
 import { LibrarySwitch } from './LibrarySwitch';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectEditPath } from '@/features/projects/project-path';
+import { SelectField } from '@ui/select-field';
 
 interface UploadProject {
   publicId: string;
@@ -68,7 +69,7 @@ function SourceBadge({ source, label, className }: { source?: string; label: Rea
   const isYt = source === 'youtube';
   return (
     <span className={cn(
-      'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide',
+      'flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide',
       isYt ? 'text-red-300' : 'text-blue-300',
       className,
     )}>
@@ -403,7 +404,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
       aria-selected={filter === id}
       onClick={() => setFilter(id)}
       className={cn(
-        'h-9 px-3.5 rounded-full border text-sm font-semibold transition-colors coarse:h-11',
+        'h-9 px-3.5 rounded-pill border text-sm font-semibold transition-colors coarse:h-11',
         filter === id
           ? 'bg-primary border-primary text-primary-foreground'
           : 'border-zinc-800 text-zinc-200 hover:border-zinc-600',
@@ -462,16 +463,14 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
               />
               <div className="relative flex items-center h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100">
                 <Icon name="sort" size={16} className="absolute left-3 pointer-events-none text-zinc-400" />
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortId)}
+                <SelectField
+                  variant="ghost"
                   aria-label={t('uploads.sort.recent')}
-                  className="appearance-none bg-transparent h-full pl-9 pr-4 text-sm outline-none cursor-pointer"
-                >
-                  {(['recent', 'oldest', 'title'] as SortId[]).map((id) => (
-                    <option key={id} value={id} className="bg-zinc-900">{t(`uploads.sort.${id}`)}</option>
-                  ))}
-                </select>
+                  className="h-full pl-9 text-sm text-foreground"
+                  value={sort}
+                  onValueChange={(v) => setSort(v as SortId)}
+                  options={(['recent', 'oldest', 'title'] as SortId[]).map((id) => ({ value: id, label: t(`uploads.sort.${id}`) }))}
+                />
               </div>
               <SegmentedControl<ViewId>
                 label={t('uploads.gridView')}

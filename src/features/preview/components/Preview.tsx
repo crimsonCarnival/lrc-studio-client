@@ -280,7 +280,7 @@ export default function Preview(props: PreviewProps) {
                 setShowTranslationsInPreview(true);
               }
             }}
-            className={`min-h-7 coarse:min-h-11 px-2.5 rounded-full border text-[11px] font-semibold tracking-wide transition-colors ${on ? 'bg-primary/20 text-primary border-primary/40' : 'bg-zinc-800 text-foreground/65 border-zinc-700 hover:text-foreground'}`}
+            className={`min-h-7 coarse:min-h-11 px-2.5 rounded-pill border text-[11px] font-semibold tracking-wide transition-colors ${on ? 'bg-primary/20 text-primary border-primary/40' : 'bg-zinc-800 text-foreground/65 border-zinc-700 hover:text-foreground'}`}
           >
             {lang || `T${idx + 1}`}
           </button>
@@ -314,7 +314,7 @@ export default function Preview(props: PreviewProps) {
           variant="outline"
           onClick={onShowEditor}
           aria-label={t('preview.backToEditor')}
-          className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[10px] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
+          className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
         >
           <Icon name="chevron_left" size={18} />
           <span className="max-sm:hidden">{t('preview.backToEditor')}</span>
@@ -324,7 +324,7 @@ export default function Preview(props: PreviewProps) {
       {/* A session viewer has no editor to go back to; the badge says why. */}
       {statusSlot && viewerMode && sessionMode && createPortal(
         <Tip content={t('collab.session.viewOnlyHint')}>
-          <span role="status" tabIndex={0} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-raised px-3 text-[13px] font-semibold text-subtle">
+          <span role="status" tabIndex={0} className="inline-flex h-8 items-center gap-1.5 rounded-pill bg-raised px-3 text-[13px] font-semibold text-subtle">
             <Icon name="visibility" size={16} />
             {t('collab.session.viewOnly')}
           </span>
@@ -344,7 +344,7 @@ export default function Preview(props: PreviewProps) {
             <Button
               variant="outline"
               onClick={onViewPublic}
-              className="max-md:hidden h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 rounded-[10px] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
+              className="max-md:hidden h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
             >
               {t('preview.viewAsPublic')}
             </Button>
@@ -388,7 +388,7 @@ export default function Preview(props: PreviewProps) {
                   variant="outline"
                   size="icon"
                   aria-label={t('preview.moreActions')}
-                  className="size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground"
+                  className="size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground"
                 >
                   <Icon name="more_horiz" size={18} />
                 </Button>
@@ -453,7 +453,7 @@ export default function Preview(props: PreviewProps) {
               <button
                 type="button"
                 onClick={goToFirstUntimed}
-                className="lg:hidden mb-3 flex items-center gap-2 min-h-11 px-3 py-2.5 rounded-[10px] border border-warning/35 bg-warning/10 text-left text-[13px] font-medium text-foreground active:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                className="lg:hidden mb-3 flex items-center gap-2 min-h-11 px-3 py-2.5 rounded-[calc(var(--radius)*1)] border border-warning/35 bg-warning/10 text-left text-[13px] font-medium text-foreground active:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               >
                 <span className="flex-1">{t('preview.untimedJump', { count: untimedCount })}</span>
                 <Icon name="arrow_forward" size={16} />
@@ -518,10 +518,10 @@ export default function Preview(props: PreviewProps) {
                 aria-valuemin={0}
                 aria-valuemax={lineStats.total}
                 aria-valuenow={lineStats.timed}
-                className="h-1.5 rounded-full bg-zinc-800 overflow-hidden"
+                className="h-1.5 rounded-pill bg-zinc-800 overflow-hidden"
               >
                 <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+                  className="h-full rounded-pill bg-primary transition-[width] duration-300 ease-out"
                   style={{ width: `${lineStats.total ? (lineStats.timed / lineStats.total) * 100 : 0}%` }}
                 />
               </div>

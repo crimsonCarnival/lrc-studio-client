@@ -185,7 +185,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
           value.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/15 text-primary border border-primary/25"
+              className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-pill text-[10px] font-medium bg-primary/15 text-primary border border-primary/25"
             >
               {tag}
               <button
@@ -268,7 +268,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                             onClick={() => toggle(tag.value)}
                             disabled={!isSel && atMax}
                             className={cn(
-                              'px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-all',
+                              'px-2.5 py-0.5 rounded-pill text-[11px] font-medium border transition-all',
                               isSel
                                 ? 'bg-primary/15 text-primary border-primary/30 hover:bg-primary/25'
                                 : 'bg-zinc-800/60 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/60 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed',
@@ -293,7 +293,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                         onClick={() => toggle(tag.value)}
                         disabled={!isSel && atMax}
                         className={cn(
-                          'px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-all',
+                          'px-2.5 py-0.5 rounded-pill text-[11px] font-medium border transition-all',
                           isSel
                             ? 'bg-primary/15 text-primary border-primary/30 hover:bg-primary/25'
                             : 'bg-zinc-800/60 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/60 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed',

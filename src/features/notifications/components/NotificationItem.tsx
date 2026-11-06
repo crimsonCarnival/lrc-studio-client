@@ -370,7 +370,7 @@ export function NotificationAvatar({ notification }: { notification: Notificatio
   const isBadge = type === 'badge_awarded';
   // No person behind it: a square tile, so system and badge notices are told apart from people.
   return (
-    <div className={`grid size-[34px] shrink-0 place-items-center rounded-[10px] ${isBadge ? 'bg-gold-soft text-gold-ink' : 'bg-primary-soft text-primary-ink'}`}>
+    <div className={`grid size-[34px] shrink-0 place-items-center rounded-[calc(var(--radius)*1)] ${isBadge ? 'bg-gold-soft text-gold-ink' : 'bg-primary-soft text-primary-ink'}`}>
       <Icon name={iconName} size={18} aria-hidden="true" />
     </div>
   );
@@ -400,7 +400,7 @@ export function NotificationItem({ notification }: { notification: NotificationD
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
       // Read and unread differ by the dot and by how bright the text is, not by a tinted row
       // (redesign sheet 15).
-      className="group/notification flex items-start gap-3 rounded-[10px] p-2.5 cursor-pointer transition-colors duration-[var(--duration-state)] hover:bg-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+      className="group/notification flex items-start gap-3 rounded-[calc(var(--radius)*1)] p-2.5 cursor-pointer transition-colors duration-[var(--duration-state)] hover:bg-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
     >
       <NotificationAvatar notification={notification} />
       <div className="flex-1 min-w-0">

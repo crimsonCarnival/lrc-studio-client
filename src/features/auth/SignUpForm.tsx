@@ -262,7 +262,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             role="alert"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            className="p-3 rounded-[10px] bg-destructive/10 border border-destructive/30 text-sm text-destructive"
+            className="p-3 rounded-[calc(var(--radius)*1)] bg-destructive/10 border border-destructive/30 text-sm text-destructive"
           >
             {error}
           </M.div>

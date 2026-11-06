@@ -8,7 +8,7 @@ import { projectPath } from '@/features/projects/project-path';
 import type { Project } from '@/types';
 import { Highlight } from './Highlight';
 
-const ROW_CLASS = 'flex items-center gap-4 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
+const ROW_CLASS = 'flex items-center gap-4 rounded-[calc(var(--radius)*1.8)] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
 
 export function SearchProjectCard({ project, query }: { project: Project; query: string }) {
   const { t } = useTranslation();
@@ -39,7 +39,7 @@ export function SearchProjectCard({ project, query }: { project: Project; query:
 
         <div className="flex shrink-0 items-center gap-3 font-mono text-xs font-medium text-subtle tabular-nums">
           <span className="flex items-center gap-1"><Icon name="star" size={14} />{starCount ?? 0}</span>
-          <ProjectCardMenuButton project={project} isOwner={false} className="grid size-8 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground coarse:size-11" />
+          <ProjectCardMenuButton project={project} isOwner={false} className="grid size-8 place-items-center rounded-[calc(var(--radius)*1)] text-subtle transition-colors hover:bg-raised hover:text-foreground coarse:size-11" />
         </div>
     </>
   );

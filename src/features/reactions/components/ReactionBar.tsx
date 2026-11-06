@@ -70,7 +70,7 @@ export function ReactionBar({
               aria-pressed={mine}
               aria-label={t(mine ? 'reactions.chipLabelMine' : 'reactions.chipLabel', { name, count })}
               className={cn(
-                'relative inline-flex h-[34px] items-center gap-1.5 rounded-full px-[11px] font-mono text-[13px] font-medium tabular-nums transition-[background-color,box-shadow] duration-[var(--duration-state)] select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
+                'relative inline-flex h-[34px] items-center gap-1.5 rounded-pill px-[11px] font-mono text-[13px] font-medium tabular-nums transition-[background-color,box-shadow] duration-[var(--duration-state)] select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
                 mine
                   ? 'bg-primary-soft text-primary-ink inset-ring-[1.5px] inset-ring-iris'
                   : 'bg-raised text-foreground inset-ring inset-ring-hl',
@@ -99,7 +99,7 @@ export function ReactionBar({
       {hidden > 0 && (
         <span
           aria-label={t('reactions.moreReactions', { count: hidden })}
-          className="inline-flex h-[34px] items-center rounded-full px-[11px] font-mono text-[13px] font-medium text-subtle tabular-nums inset-ring inset-ring-hl"
+          className="inline-flex h-[34px] items-center rounded-pill px-[11px] font-mono text-[13px] font-medium text-subtle tabular-nums inset-ring inset-ring-hl"
         >
           +{hidden}
         </span>

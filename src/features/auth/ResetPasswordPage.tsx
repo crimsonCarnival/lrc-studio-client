@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
               : t('auth.resetPassword.errorAlreadyUsed')}
           </p>
           <Link to="/auth?tab=forgot"
-            className="block w-full py-2 text-center bg-primary hover:bg-primary-dim text-zinc-950 font-medium rounded"
+            className="block w-full py-2 text-center bg-primary hover:bg-primary-dim text-zinc-950 font-medium rounded-xs"
           >
             {t('auth.resetPassword.requestNewLink')}
           </Link>

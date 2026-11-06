@@ -5,6 +5,7 @@ import { cn } from '@/shared/utils/utils';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import ThemeSelector from '../theme/ThemeSelector';
+import { ColorPicker } from '@ui/color-picker';
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -104,7 +105,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           <div
             role="radiogroup"
             aria-label={t('settings.interface.toastPosition')}
-            className="grid grid-cols-3 gap-1 w-[150px] h-[72px] p-1 rounded-[10px] border border-zinc-700 bg-zinc-950"
+            className="grid grid-cols-3 gap-1 w-[150px] h-[72px] p-1 rounded-[calc(var(--radius)*1)] border border-zinc-700 bg-zinc-950"
           >
             {TOAST_POSITIONS.map((p) => {
               const on = toastPosition === p.value;
@@ -119,7 +120,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
                     onClick={() => handleToastPositionChange({ target: { value: p.value } })}
                     className={cn('flex p-1 rounded-md', p.v, p.h, on ? 'bg-zinc-800' : 'hover:bg-zinc-900')}
                   >
-                    <span className={cn('block w-[18px] h-2 rounded-[3px]', on ? 'bg-primary' : 'bg-zinc-700')} />
+                    <span className={cn('block w-[18px] h-2 rounded-[calc(var(--radius)*0.3)]', on ? 'bg-primary' : 'bg-zinc-700')} />
                   </button>
                 </Tip>
               );
@@ -176,15 +177,13 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           <div className="flex flex-wrap items-end gap-1.5">
             {Array.from({ length: 8 }).map((_, i) => (
               <label key={i} className="flex flex-col items-center gap-1 font-mono text-[11px] text-zinc-400">
-                <input
-                  type="color"
+                <ColorPicker
                   value={singerColors[i] || '#888888'}
-                  onChange={(e) => {
+                  onChange={(hex) => {
                     const next = [...(singerColors.length ? singerColors : Array(8).fill(''))];
-                    next[i] = e.target.value;
+                    next[i] = hex;
                     updateSetting('editor.display.singerColors', next);
                   }}
-                  className="size-8 p-0 rounded-lg border border-zinc-700 bg-transparent cursor-pointer"
                   aria-label={t('editor.singerN', { n: i + 1 })}
                 />
                 {i + 1}

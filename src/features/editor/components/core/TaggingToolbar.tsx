@@ -6,6 +6,7 @@ import { SECTION_TYPES } from '@features/editor/constants/section-types';
 import { applyTagToSelection } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { SuggestInput } from '@ui/suggest-input';
 
 const STANDARD_TYPES = SECTION_TYPES.filter(s => s.depth !== 0);
 const STANDARD_IDS = new Set(STANDARD_TYPES.map(s => s.id));
@@ -143,7 +144,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
               <button
                 key={s.id}
                 onClick={() => applySection(s.id)}
-                className={`h-7 px-3 text-[13px] rounded-[14px] border transition-colors flex items-center gap-1.5 cursor-pointer
+                className={`h-7 px-3 text-[13px] rounded-[calc(var(--radius)*1.4)] border transition-colors flex items-center gap-1.5 cursor-pointer
                   ${isActive 
                     ? 'bg-primary/20 border-primary/60 text-primary' 
                     : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100'
@@ -169,13 +170,13 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
               return (
                 <div 
                   key={singer}
-                  className="h-7 pl-3 pr-1 text-[13px] rounded-[14px] border flex items-center gap-1 bg-zinc-800"
+                  className="h-7 pl-3 pr-1 text-[13px] rounded-[calc(var(--radius)*1.4)] border flex items-center gap-1 bg-zinc-800"
                   style={{ borderColor: `color-mix(in srgb, ${colorVar} 30%, transparent)`, color: colorVar }}
                 >
                   <span>{singer}</span>
                   <button 
                     onClick={() => handleRemoveSinger(singer)}
-                    className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                    className="p-1 hover:bg-white/10 rounded-pill transition-colors"
                   >
                     <Icon name="close" size={12} />
                   </button>
@@ -185,8 +186,8 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
           )}
           
           <div className="relative">
-            <input
-              type="text"
+            <SuggestInput
+              suggestions={songArtists}
               value={singerInput}
               onChange={(e) => setSingerInput(e.target.value)}
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
@@ -196,14 +197,8 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
                 }
               }}
               placeholder={t('editor.addSinger')}
-              list="tagging-singers-list"
-              className="h-7 w-32 px-3 text-[13px] rounded-[14px] border bg-zinc-800 border-zinc-600 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-primary/60 transition-colors ml-1"
+              className="h-7 w-32 px-3 text-[13px] rounded-[calc(var(--radius)*1.4)] border bg-zinc-800 border-zinc-600 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-primary/60 transition-colors ml-1"
             />
-            {songArtists.length > 0 && (
-              <datalist id="tagging-singers-list">
-                {songArtists.map(a => <option key={a} value={a} />)}
-              </datalist>
-            )}
           </div>
         </div>
       </div>
