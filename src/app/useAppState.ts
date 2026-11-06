@@ -375,7 +375,8 @@ export function useAppState(user?: AuthUserType | null) {
           if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
           if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
           if (project.title) setMediaTitle(project.title);
-          if (project.coverImage) setProjectCoverImage(project.coverImage);
+          // Always assign: a project without a cover must clear the previous project's.
+          setProjectCoverImage(project.coverImage || '');
           setForkedFrom((project.forkedFrom as ForkedFrom) || null);
           if (project.metadata) {
             const m = project.metadata as ProjectMetadata;

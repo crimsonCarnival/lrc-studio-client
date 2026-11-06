@@ -212,6 +212,8 @@ function AppInner() {
 
     const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [], ...(previewUrl ? { previewUrl } : {}), ...(explicit != null ? { explicit } : {}) };
     appState.setProjectMetadata(newMetadata);
+    // Setup always starts a fresh project: replace, never inherit, the previous cover.
+    appState.setProjectCoverImage(_coverImage || '');
 
     if (!user) {
       // Guest: handleManualSave writes to localStorage only (no token).
