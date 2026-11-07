@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { TooltipProvider } from '@ui/tooltip';
 import ActionDrawer, { DrawerItem } from './ActionDrawer';
@@ -18,7 +18,7 @@ function Host({ onItem = vi.fn() }: { onItem?: () => void }) {
 }
 
 describe('ActionDrawer', () => {
-  it('is a labelled modal dialog that takes focus and gives it back on close', () => {
+  it('is a labelled modal dialog that takes focus and gives it back on close', async () => {
     render(<Host />);
     const opener = screen.getByText('opener');
     opener.focus();
@@ -27,6 +27,8 @@ describe('ActionDrawer', () => {
     expect(dialog).toHaveAttribute('aria-modal', 'true');
     expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
     fireEvent.keyDown(dialog, { key: 'Escape' });
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(opener).toHaveFocus();
   });
 
   it('closes on Escape and returns focus to the opener', async () => {
@@ -61,5 +63,52 @@ describe('ActionDrawer', () => {
     fireEvent.click(second);
     fireEvent.click(screen.getByRole('button', { name: 'First' }));
     expect(onItem).toHaveBeenCalledTimes(1);
+  });
+
+  it('focuses the panel, not a text field, so the keyboard stays down', () => {
+    render(
+      <TooltipProvider>
+        <ActionDrawer isOpen onClose={() => {}} title="Form">
+          <input aria-label="Name" />
+          <DrawerItem label="Go" />
+        </ActionDrawer>
+      </TooltipProvider>
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveFocus();
+    expect(screen.getByLabelText('Name')).not.toHaveFocus();
+    // The trap still works from the panel.
+    const close = screen.getByRole('button', { name: /close/i });
+    fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+    expect(screen.getByRole('button', { name: 'Go' })).toHaveFocus();
+    expect(close).not.toHaveFocus();
+  });
+
+  describe('backdrop guard', () => {
+    function Guarded({ onClose }: { onClose: () => void }) {
+      return (
+        <TooltipProvider>
+          <ActionDrawer isOpen onClose={onClose} title="Sheet" backdropGuardMs={300}>
+            <DrawerItem label="First" />
+          </ActionDrawer>
+        </TooltipProvider>
+      );
+    }
+    const backdrop = () => document.body.querySelector<HTMLElement>('.fixed.inset-0')!;
+
+    it('ignores a backdrop click right after opening, accepts it later', () => {
+      vi.useFakeTimers();
+      try {
+        const onClose = vi.fn();
+        render(<Guarded onClose={onClose} />);
+        fireEvent.click(backdrop());
+        expect(onClose).not.toHaveBeenCalled();
+        act(() => { vi.advanceTimersByTime(350); });
+        fireEvent.click(backdrop());
+        expect(onClose).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

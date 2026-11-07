@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
+import { m, LazyMotion, domAnimation, AnimatePresence, useIsPresent } from 'framer-motion';
 import { Icon } from '@/shared/ui/Icon';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,8 @@ interface ActionDrawerProps {
   title?: string;
   children?: ReactNode;
   showClose?: boolean;
+  /** Ignore backdrop taps for this long after opening (a long-press release can land on it). */
+  backdropGuardMs?: number;
 }
 
 /**
@@ -23,11 +25,14 @@ export default function ActionDrawer({
   onClose,
   title,
   children,
-  showClose = true
+  showClose = true,
+  backdropGuardMs = 0
 }: ActionDrawerProps) {
+  const openedAtRef = useRef(0);
   // Prevent scrolling when drawer is open
   useEffect(() => {
     if (isOpen) {
+      openedAtRef.current = Date.now();
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -42,13 +47,12 @@ export default function ActionDrawer({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <m.div
+          <DrawerBackdrop
             key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[200]"
+            onClick={() => {
+              if (backdropGuardMs > 0 && Date.now() - openedAtRef.current < backdropGuardMs) return;
+              onClose();
+            }}
           />
           <DrawerPanel key="panel" onClose={onClose} title={title} showClose={showClose}>
             {children}
@@ -59,6 +63,23 @@ export default function ActionDrawer({
     document.body
   );
 }
+
+function DrawerBackdrop({ onClick }: { onClick: () => void }) {
+  // While it fades out it must not take taps: a quick second tap would repeat an action.
+  const isPresent = useIsPresent();
+  return (
+    <m.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClick}
+      style={isPresent ? undefined : { pointerEvents: 'none' }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[200]"
+    />
+  );
+}
+
+const TEXT_ENTRY = 'input:not([type]),input[type="text"],input[type="search"],input[type="url"],input[type="email"],input[type="number"],input[type="tel"],input[type="password"],textarea,[contenteditable]:not([contenteditable="false"])';
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
@@ -71,12 +92,15 @@ function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => v
   const { t } = useTranslation();
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const isPresent = useIsPresent();
 
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const panel = panelRef.current;
     // The first control, not the close button, so a screen reader starts on the content.
-    const first = panel?.querySelector<HTMLElement>('[data-drawer-body]')?.querySelector<HTMLElement>(FOCUSABLE) ?? panel;
+    const candidate = panel?.querySelector<HTMLElement>('[data-drawer-body]')?.querySelector<HTMLElement>(FOCUSABLE) ?? null;
+    // A text field would pop the on-screen keyboard the moment the sheet opens: focus the panel instead.
+    const first = candidate && !candidate.matches(TEXT_ENTRY) ? candidate : panel;
     first?.focus({ preventScroll: true });
     return () => {
       // Skipped when the choice opened another dialog, which has taken focus by now.
@@ -118,6 +142,7 @@ function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => v
       aria-labelledby={title ? titleId : undefined}
       aria-label={title ? undefined : t('common.close')}
       tabIndex={-1}
+      style={isPresent ? undefined : { pointerEvents: 'none' }}
       onKeyDown={handleKeyDown}
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
