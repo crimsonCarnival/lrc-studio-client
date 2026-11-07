@@ -18,13 +18,15 @@ export function guestLyricsCleared(): boolean {
   return clearedByUser;
 }
 
-/** Number of lyric lines in the stored guest draft; 0 when there is none or it is unreadable. */
+/** Number of restorable lines in the stored guest draft; 0 when there is none or it is unreadable. */
 export function storedGuestDraftLineCount(): number {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PROJECT);
     if (!raw) return 0;
     const lines = (JSON.parse(raw) as { lines?: unknown }).lines;
-    return Array.isArray(lines) ? lines.length : 0;
+    if (!Array.isArray(lines)) return 0;
+    // The same lines the restore accepts: a section marker or an object with text.
+    return lines.filter((l) => l && typeof l === 'object' && ((l as { type?: unknown }).type === 'section' || typeof (l as { text?: unknown }).text === 'string')).length;
   } catch {
     return 0;
   }

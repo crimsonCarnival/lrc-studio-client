@@ -20,6 +20,8 @@ import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
 import { isEditorPath, projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
+import { getAccessToken } from '@/app/api';
+import { guestLyricsCleared, storedGuestDraftLineCount } from '@features/projects/services/guest-draft';
 import { getSession } from '@features/collab/collab.service';
 import { SessionAudioNotice } from '@features/collab/components/SharedAudioNotice';
 import type { SessionOwnerControl } from '@features/collab/components/SessionControl';
@@ -443,6 +445,9 @@ export function AppRouter({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routerPathname]);
 
+  const guestDraftPending = routerLocation.pathname === '/project/local' && lines.length === 0 && !getAccessToken() && !activepublicId && !guestLyricsCleared()
+    && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
+    && !window.location.hash.startsWith('#s=') && storedGuestDraftLineCount() > 0;
   const isLgRouter = useBreakpoint('lg');
   const phoneEditorMounted = usePhoneEditorMounted();
   // Same inputs as AppLayout's slot, so both agree on 'phone' while the phone editor is up.
@@ -662,6 +667,10 @@ export function AppRouter({
         </Suspense>
       } />
       <Route path="project/local" element={
+        // A guest's saved draft is about to be restored into memory by useAppState. Mounting the
+        // editor empty first would open it on its (empty) Edit tab, and redirecting to setup would
+        // reset the app state and throw the draft away; render nothing for this one pass instead.
+        guestDraftPending ? null :
         editorReady && lines.length === 0 && !hasMedia && !pendingProject && !restoredMedia
           && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
           ? <Navigate to="/project/new" replace />
