@@ -35,7 +35,7 @@ export function AppMobileNav({ isReady, lines, mediaTitle, buildProjectPayload }
   return (
     <nav
       aria-label={t('nav.tabs')}
-      className="lg:hidden fixed bottom-0 inset-x-0 z-nav pb-safe bg-zinc-900/95 backdrop-blur-md border-t border-zinc-700/50"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-nav pb-safe pl-safe pr-safe bg-zinc-900/95 backdrop-blur-md border-t border-zinc-700/50"
     >
       <div className="flex items-stretch gap-2 px-1">
         {items.map((item) => {

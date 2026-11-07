@@ -1,8 +1,7 @@
 import type { ParseKeys } from 'i18next';
 import { accessFor } from '@/app/route-access';
-import { isAdminPathname } from '@/features/admin/admin-nav';
 import { isStaff } from '@/features/auth/permissions';
-import { isEditorPath } from '@/features/projects/project-path';
+import { isEditorPath, isProjectViewPath } from '@/features/projects/project-path';
 import { profilePath } from '@/features/profile/profile-path';
 
 export type NavGroup = 'main' | 'discover' | 'you' | 'staff';
@@ -130,11 +129,19 @@ export function activeNavId(items: NavItem[], pathname: string): string | null {
 
 /**
  * Whether the phone bottom bar shows on this page. Not in the editor workspace (at any
- * width the editor is a full-screen tool), setup, the local draft, the admin dashboard
- * (it gets its own navigation) or while the phone editor draws its own chrome.
+ * width the editor is a full-screen tool), setup, the local draft, a live session, the
+ * public project view (its own playback bar sits at the bottom edge), or while the phone
+ * editor draws its own chrome. Admin keeps the bar until the dashboard gets its own
+ * burger (Task 11), so phones keep some navigation there.
  */
 export function showsBottomBar(pathname: string, phoneEditorMounted = false): boolean {
   if (phoneEditorMounted) return false;
-  if (isEditorPath(pathname) || pathname === '/project/new') return false;
-  return !isAdminPathname(pathname);
+  if (isEditorPath(pathname) || isProjectViewPath(pathname) || pathname === '/project/new') return false;
+  return true;
 }
+
+/**
+ * Page bottom padding where the bar shows: its 56px plus the home-indicator inset, with
+ * room to spare. Desktop has no bar.
+ */
+export const BOTTOM_BAR_CLEARANCE = 'pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0';

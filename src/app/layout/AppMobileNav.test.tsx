@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { AuthUser } from '@/features/auth/auth.types';
-import { showsBottomBar } from './nav-items';
+import { BOTTOM_BAR_CLEARANCE, showsBottomBar } from './nav-items';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
@@ -82,24 +82,36 @@ describe('AppMobileNav', () => {
 });
 
 describe('showsBottomBar', () => {
-  it('shows on app pages and the public project view', () => {
-    for (const p of ['/home', '/library', '/explore', '/explore/projects', '/ana', '/settings', '/notifications', '/ana/projects/song-abcdefghij']) {
-      expect(showsBottomBar(p)).toBe(true);
-    }
-  });
-
-  it('hides in the editor, setup, the local draft and live sessions', () => {
-    for (const p of ['/ana/projects/song-abcdefghij/edit', '/project/new', '/project/local', '/session/abcdefghij']) {
-      expect(showsBottomBar(p)).toBe(false);
-    }
-  });
-
-  it('hides on admin routes', () => {
-    expect(showsBottomBar('/admin')).toBe(false);
-    expect(showsBottomBar('/admin/moderation/users')).toBe(false);
+  const table: Array<[string, boolean]> = [
+    ['/home', true],
+    ['/library', true],
+    ['/uploads', true],
+    ['/uploads/abc123', true],
+    ['/explore', true],
+    ['/explore/projects', true],
+    ['/ana', true],
+    ['/settings', true],
+    ['/notifications', true],
+    // Admin keeps the bar until the dashboard gets its own burger.
+    ['/admin', true],
+    ['/admin/moderation/users', true],
+    // The public view has its own playback bar at the bottom edge.
+    ['/ana/projects/song-abcdefghij', false],
+    ['/ana/projects/song-abcdefghij/edit', false],
+    ['/project/new', false],
+    ['/project/local', false],
+    ['/session/abcdefghij', false],
+  ];
+  it.each(table)('%s -> %s', (path, shown) => {
+    expect(showsBottomBar(path)).toBe(shown);
   });
 
   it('hides while the phone editor draws its own chrome', () => {
     expect(showsBottomBar('/home', true)).toBe(false);
+  });
+
+  it('clears the bar plus the home-indicator inset, on phones only', () => {
+    expect(BOTTOM_BAR_CLEARANCE).toContain('env(safe-area-inset-bottom)');
+    expect(BOTTOM_BAR_CLEARANCE).toContain('lg:pb-0');
   });
 });
