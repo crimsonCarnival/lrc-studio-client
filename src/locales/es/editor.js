@@ -172,6 +172,15 @@ export default {
   markEndNumber: "Marcar fin de la línea {{number}}",
   phone: {
     tabs: "Vistas del editor",
+    focus: {
+      open: "Vista de enfoque",
+      close: "Volver a la lista",
+      previous: "Línea anterior",
+      current: "Línea actual",
+      next: "Línea siguiente",
+      none: "Sin línea",
+      tapHint: "Toca el botón grande para marcar",
+    },
     tools: {
       title: "Herramientas",
       timing: "Tiempos",

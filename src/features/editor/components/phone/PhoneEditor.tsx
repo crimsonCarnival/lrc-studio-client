@@ -33,6 +33,13 @@ export type PhoneEditorProps = {
   /** Select mode: replaces the Mark row, so a selection never shares the thumb zone with Mark. */
   selectBar?: ReactNode;
   onAddMedia?: () => void;
+  /**
+   * Focus view, the alternate Sync presentation. Absent for a viewer (nothing to stamp), which
+   * also hides the header toggle.
+   */
+  focus?: { on: boolean; onToggle: () => void; view: ReactNode };
+  /** Session state the desktop header shows (participants), rendered beside the title. */
+  sessionBar?: ReactNode;
   mark: {
     onMark: () => void;
     onUndo: () => void;
@@ -53,7 +60,7 @@ const TAB_BTN = 'relative flex-1 h-11 text-[15px] font-semibold transition-color
  */
 export default function PhoneEditor({
   title, saveState, visibility, onBack, list, banner, onShowPreview, edit, tab: tabProp, onTabChange, onOpenTools,
-  selectBar, onAddMedia, mark,
+  selectBar, onAddMedia, mark, focus, sessionBar,
 }: PhoneEditorProps) {
   const { t } = useTranslation();
   usePhoneEditorChrome();
@@ -134,7 +141,20 @@ export default function PhoneEditor({
             </p>
           )}
         </div>
+        {sessionBar}
         {visibility}
+        {focus && tab === 'sync' && !selectBar && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={focus.onToggle}
+            aria-pressed={focus.on}
+            aria-label={t('editor.phone.focus.open')}
+            className={`size-11 lg:size-11 shrink-0 ${focus.on ? 'bg-primary/15 text-primary hover:text-primary' : 'text-foreground/80'}`}
+          >
+            <Icon name="center_focus_strong" size={22} />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -160,7 +180,11 @@ export default function PhoneEditor({
         )}
       </div>
 
-      {tab === 'sync' ? (
+      {tab === 'sync' && focus?.on && !selectBar ? (
+        <div role="tabpanel" id={panelIds.sync} aria-labelledby={tabIds.sync} className="flex flex-1 min-h-0 flex-col">
+          {focus.view}
+        </div>
+      ) : tab === 'sync' ? (
         <PhoneSyncTab
           id={panelIds.sync}
           labelledBy={tabIds.sync}

@@ -13,6 +13,8 @@ export type PhoneToolsSheetProps = {
   hasLines: boolean;
   /** A session viewer: nothing that edits or saves. */
   readOnly?: boolean;
+  /** Sync presentation: the Focus view toggle. */
+  focusView?: { on: boolean; onToggle: () => void };
   /** Timing */
   autoStamp: { blocked: PhoneToolsAutoStampBlock; onStart: () => void };
   shiftAmount: number;
@@ -111,6 +113,15 @@ export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
           disabled={!p.hasLines}
           onClick={run(() => p.onShiftAll(1))}
         />
+        {p.focusView && (
+          <DrawerItem
+            iconName="center_focus_strong"
+            label={t('editor.phone.focus.open')}
+            pressed={p.focusView.on}
+            disabled={!p.hasLines}
+            onClick={run(p.focusView.onToggle)}
+          />
+        )}
         <DrawerItem iconName="redo" label={t('editor.redo')} disabled={!p.canRedo} onClick={run(p.onRedo)} />
         <DrawerItem
           iconName="ink_eraser"

@@ -169,6 +169,15 @@ export default {
   markEndNumber: "Mark end of line {{number}}",
   phone: {
     tabs: "Editor views",
+    focus: {
+      open: "Focus view",
+      close: "Back to list",
+      previous: "Previous line",
+      current: "Current line",
+      next: "Next line",
+      none: "No line",
+      tapHint: "Tap anywhere on the big button to stamp",
+    },
     tools: {
       title: "Tools",
       timing: "Timing",

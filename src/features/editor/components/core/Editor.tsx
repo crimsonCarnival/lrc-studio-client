@@ -26,6 +26,9 @@ import PhoneToolsSheet from '../phone/PhoneToolsSheet';
 import PhoneLineSheet from '../phone/PhoneLineSheet';
 import PhoneSelectBar from '../phone/PhoneSelectBar';
 import PhoneEditTab from '../phone/PhoneEditTab';
+import PhoneFocusView from '../phone/PhoneFocusView';
+import { focusLines } from '../phone/focus-lines';
+import { usePhoneFocus } from '../phone/usePhoneFocus';
 import type { EditView } from '../phone/PhoneEditTab';
 import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
@@ -812,6 +815,7 @@ export default function Editor({
   const [phoneTab, setPhoneTab] = useState<PhoneTab>(() => (phone && !syncMode ? 'edit' : 'sync'));
   const [editView, setEditView] = useState<EditView>('text');
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [phoneFocus, setPhoneFocus] = usePhoneFocus();
   const [selecting, setSelecting] = useState(false);
   // Line ids, not indices: a collaborator's insert or delete while the sheet is open must not
   // retarget it, and if a line vanishes the sheet closes.
@@ -1196,6 +1200,24 @@ export default function Editor({
             />
           ) : undefined}
           onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
+          focus={readOnly ? undefined : {
+            on: phoneFocus,
+            onToggle: () => setPhoneFocus(!phoneFocus),
+            // Marks through the very handler the Mark bar uses (no forceAdvance), so
+            // autoAdvance, SRT end marks and session locks behave the same.
+            view: (
+              <PhoneFocusView
+                {...focusLines(lines, activeLineIndex)}
+                onMark={() => handleMarkWithConfidence()}
+                onUndo={undo}
+                canUndo={canUndo}
+                label={markLabel}
+                disabled={!syncMode || lines.length === 0}
+                onClose={() => setPhoneFocus(false)}
+                onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
+              />
+            ),
+          }}
           // A session viewer never reaches the editor (AppRouter shows them the preview);
           // this keeps Mark away from them even if that ever changes.
           mark={readOnly ? null : {
@@ -1212,6 +1234,13 @@ export default function Editor({
           open={toolsOpen}
           onClose={() => setToolsOpen(false)}
           readOnly={readOnly}
+          focusView={{
+            on: phoneFocus,
+            onToggle: () => {
+              if (phoneTab !== 'sync') changePhoneTab('sync');
+              setPhoneFocus(!phoneFocus);
+            },
+          }}
           editorMode={editorMode}
           hasLines={hasLyricLines}
           autoStamp={{ blocked: autoStampBlocked, onStart: handleAutoStampStart }}

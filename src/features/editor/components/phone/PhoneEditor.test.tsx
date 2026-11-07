@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { TooltipProvider } from '@ui/tooltip';
@@ -346,3 +346,109 @@ function PhoneEditorView({ onShowPreview }: { onShowPreview?: () => void }) {
     />
   );
 }
+
+describe('Phone Focus view', () => {
+  beforeEach(() => { try { localStorage.clear(); } catch { /* none */ } });
+  afterEach(() => { try { localStorage.clear(); } catch { /* none */ } });
+
+  const openFocus = () => fireEvent.click(screen.getByRole('button', { name: 'Focus view' }));
+
+  it('starts on the Sync deck and the toggle swaps in the Focus view and back', () => {
+    render(<Harness initialLines={makeLines(3)} />);
+    expect(screen.queryByTestId('phone-focus-view')).toBeNull();
+    expect(screen.getByRole('list', { name: /lyric lines/i })).toBeInTheDocument();
+    openFocus();
+    expect(screen.getByTestId('phone-focus-view')).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: /lyric lines/i })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));
+    expect(screen.queryByTestId('phone-focus-view')).toBeNull();
+  });
+
+  it('remembers the choice across a remount, and renders without storage', () => {
+    const { unmount } = render(<Harness initialLines={makeLines(3)} />);
+    openFocus();
+    unmount();
+    render(<Harness initialLines={makeLines(3)} />);
+    expect(screen.getByTestId('phone-focus-view')).toBeInTheDocument();
+    cleanup();
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked'); });
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked'); });
+    render(<Harness initialLines={makeLines(3)} />);
+    expect(screen.queryByTestId('phone-focus-view')).toBeNull();
+    openFocus();
+    expect(screen.getByTestId('phone-focus-view')).toBeInTheDocument();
+    get.mockRestore();
+    set.mockRestore();
+  });
+
+  it('is reachable from the Tools sheet', () => {
+    render(<Harness initialLines={makeLines(3)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Focus view' }));
+    expect(screen.getByTestId('phone-focus-view')).toBeInTheDocument();
+  });
+
+  it('shows the cursor line large with its neighbours and stamps it once per tap', () => {
+    render(<Harness initialLines={makeLines(4)} activeLineIndex={1} />);
+    openFocus();
+    expect(screen.getByLabelText('Previous line')).toHaveTextContent('Line 1');
+    expect(screen.getByLabelText('Current line')).toHaveTextContent('Line 2');
+    expect(screen.getByLabelText('Next line')).toHaveTextContent('Line 3');
+    tapMark(/mark line 2/i);
+    expect(latest.lines[1].timestamp).toBe(12.5);
+    expect(latest.lines[2].timestamp).toBeNull();
+  });
+
+  it('a rapid double tap stamps two lines', () => {
+    render(<Harness initialLines={makeLines(4)} />);
+    openFocus();
+    const stamp = screen.getByRole('button', { name: /mark line 1/i });
+    fireEvent.pointerDown(stamp, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.pointerDown(stamp, { isPrimary: true, button: 0, pointerType: 'touch' });
+    expect(latest.lines[0].timestamp).toBe(12.5);
+    expect(latest.lines[1].timestamp).toBe(12.5);
+    expect(latest.activeLineIndex).toBe(2);
+  });
+
+  it('honours autoAdvance off (never forces the advance)', () => {
+    mockSettings = withEditor({ autoAdvance: { enabled: false, skipBlank: false, mode: 'next' } });
+    render(<Harness initialLines={makeLines(3)} />);
+    openFocus();
+    tapMark(/mark line 1/i);
+    expect(latest.lines[0].timestamp).toBe(12.5);
+    expect(latest.activeLineIndex).toBe(0);
+  });
+
+  it('in SRT mode the second tap sets the end time', () => {
+    const { rerender } = render(<Harness initialLines={makeLines(3)} editorMode="srt" playbackPosition={10} />);
+    openFocus();
+    tapMark(/mark line 1/i);
+    expect(latest.lines[0].timestamp).toBe(10);
+    rerender(<Harness initialLines={makeLines(3)} editorMode="srt" playbackPosition={13} />);
+    tapMark(/mark end of line 1/i);
+    expect(latest.lines[0].endTime).toBe(13);
+  });
+
+  it('gives a session viewer no Focus toggle', () => {
+    const collab = {
+      provider: null,
+      me: { subject: 'u', name: 'V', colorIndex: 0, role: 'viewer', conn: 'c', clientId: 1 },
+      locks: {},
+    } as unknown as CollabLockInput;
+    render(<Harness initialLines={makeLines(3)} collab={collab} />);
+    expect(screen.queryByRole('button', { name: 'Focus view' })).toBeNull();
+  });
+
+  it('keeps Focus and Mark for a session editor', () => {
+    const collab = {
+      provider: null,
+      me: { subject: 'u', name: 'E', colorIndex: 0, role: 'editor', conn: 'c', clientId: 1 },
+      locks: {},
+    } as unknown as CollabLockInput;
+    render(<Harness initialLines={makeLines(3)} collab={collab} />);
+    expect(screen.getByRole('button', { name: /mark line 1/i })).toBeInTheDocument();
+    openFocus();
+    tapMark(/mark line 1/i);
+    expect(latest.lines[0].timestamp).toBe(12.5);
+  });
+});
