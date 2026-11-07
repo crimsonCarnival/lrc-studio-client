@@ -55,10 +55,8 @@ const STAFF: NavItem[] = [
   { id: 'admin', path: '/admin', labelKey: 'nav.admin', icon: 'admin_panel_settings', group: 'staff' },
 ];
 
-// route-access treats /sessions as a public vanity profile URL (it is not in its auth
-// list), but the page lists the signed-in user's own sessions, so guests never get it.
-// Profile has no path without an account.
-const ACCOUNT_ONLY = new Set(['sessions', 'profile']);
+// Profile has no path without an account, so guests never get it.
+const ACCOUNT_ONLY = new Set(['profile']);
 
 /**
  * The drawer's entries for this viewer. Guests get only what route-access calls public;
