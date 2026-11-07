@@ -16,7 +16,7 @@ const nameOf = (user: Person) => user.displayName || user.accountName;
 /** A small avatar and name, linking to the profile. */
 export function PersonLink({ user }: { user: Person }) {
   return (
-    <Link to={profilePath(user.accountName)} className="inline-flex items-center gap-1.5 font-medium text-zinc-200 hover:text-primary transition-colors">
+    <Link to={profilePath(user.accountName)} className="inline-flex items-center gap-1.5 coarse:min-h-11 font-medium text-zinc-200 hover:text-primary transition-colors">
       {user.avatarUrl
         ? <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-5 rounded-full object-cover" />
         : <InitialsAvatar name={nameOf(user)} handle={user.accountName} className="size-5 rounded-full text-[9px]" />}

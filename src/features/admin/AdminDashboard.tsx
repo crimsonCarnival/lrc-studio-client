@@ -618,7 +618,7 @@ export default function AdminDashboard() {
         }
         message={
           confirmModal.type === 'role'
-            ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.displayName || confirmModal.user?.accountName, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' })
+            ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.displayName || confirmModal.user?.accountName, role: tk(`admin.table.${confirmModal.role ?? 'user'}`) })
             : confirmModal.type === 'unblock_ip'
               ? t('admin.table.confirmUnblockIp')
               : confirmModal.type === 'unblock_device'

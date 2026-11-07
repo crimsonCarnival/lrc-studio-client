@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import { Tip } from '@ui/tip';
-import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 
 interface AuditLog {
   _id: string;
@@ -14,8 +14,8 @@ interface AuditLog {
 
 export default function AdminAuditTab({ auditLogs }: { auditLogs: AuditLog[] }) {
   const { t } = useTranslation();
-  const inputMethod = useInputMethod();
-  const isMobile = inputMethod === 'touch';
+  // Width, not input method: a narrow mouse window needs the phone layout, a landscape iPad the table.
+  const isMobile = !useBreakpoint('lg');
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

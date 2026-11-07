@@ -4,7 +4,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
-import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 
 interface DeviceForm {
   deviceId: string;
@@ -34,8 +34,8 @@ export default function AdminDevicesTab({
   bannedDevices
 }: AdminDevicesTabProps) {
   const { t } = useTranslation();
-  const inputMethod = useInputMethod();
-  const isMobile = inputMethod === 'touch';
+  // Width, not input method: a narrow mouse window needs the phone layout, a landscape iPad the table.
+  const isMobile = !useBreakpoint('lg');
 
   return (
     <div className={`flex flex-col h-full gap-4 sm:gap-6 ${isMobile ? 'p-4' : 'p-6'}`}>
