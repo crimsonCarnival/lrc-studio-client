@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
@@ -10,6 +10,9 @@ import type { AuthUser } from '@/features/auth/auth.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { UserMenu } from './UserMenu';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
+import { AdminDrawer } from '@/features/admin/AdminDrawer';
 
 interface AdminHeaderProps {
   user?: AuthUser | null;
@@ -35,6 +38,52 @@ export function AdminHeader({ user, logout, settings, updateSetting, i18n, navTo
   useEffect(() => {
     navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [activeTab]);
+
+  const isLg = useBreakpoint('lg');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const closeDrawer = (open: boolean) => {
+    setDrawerOpen(open);
+    if (!open) burgerRef.current?.focus({ preventScroll: true });
+  };
+  const pendingTotal = tabs.filter(tab => tab.id === 'inbox' || tab.id === 'requests').reduce((n, tab) => n + (tab.count ?? 0), 0);
+
+  // Below lg the tab bar gives way to a burger drawer and the open tab's name.
+  if (!isLg) {
+    const current = tabs.find(tab => tab.id === activeTab);
+    return (
+      <header className="fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl border-b border-zinc-800/60">
+        <div className="mx-auto flex h-14 w-full items-center gap-2 px-3">
+          <Button
+            ref={burgerRef}
+            variant="ghost"
+            size="icon"
+            aria-label={t('admin.header.menu')}
+            aria-haspopup="dialog"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+            className="relative -ml-1 size-11 shrink-0"
+          >
+            <Icon name="menu" size={22} />
+            {pendingTotal > 0 && <span aria-hidden="true" className="absolute top-2 right-2 size-2.5 rounded-full border-2 border-zinc-950 bg-love" />}
+          </Button>
+          <h1 className="min-w-0 flex-1 truncate text-base font-bold text-foreground">{current?.label ?? t('admin.dashboard.title')}</h1>
+          {user && (
+            <UserMenu
+              user={user}
+              logout={logout}
+              navTo={navTo}
+              currentTheme={settings?.interface?.theme || 'dark'}
+              customTheme={settings?.interface?.customTheme as string | undefined}
+              updateSetting={updateSetting}
+              i18n={i18n}
+            />
+          )}
+        </div>
+        <AdminDrawer open={drawerOpen} onOpenChange={closeDrawer} tabs={tabs} activeTab={activeTab} />
+      </header>
+    );
+  }
 
   const back = (
     <>

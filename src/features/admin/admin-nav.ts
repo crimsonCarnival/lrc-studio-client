@@ -12,6 +12,16 @@ export const ADMIN_SUBTABS = {
   permissions: ['catalog', 'defaults', 'overrides'],
 } as const satisfies Partial<Record<AdminTabId, readonly string[]>>;
 
+export type AdminNavGroupId = 'queue' | 'people' | 'rewards' | 'records';
+
+/** How the phone drawer groups the tabs. Every tab sits in exactly one group (a test enforces it). */
+export const ADMIN_NAV_GROUPS: readonly { id: AdminNavGroupId; tabs: readonly AdminTabId[] }[] = [
+  { id: 'queue', tabs: ['inbox', 'appeals', 'reports', 'requests'] },
+  { id: 'people', tabs: ['moderation', 'staff', 'permissions'] },
+  { id: 'rewards', tabs: ['badges', 'levels', 'xp'] },
+  { id: 'records', tabs: ['audit'] },
+];
+
 // The admin host serves the dashboard at its root; everywhere else it lives under /admin.
 const base = () => (isAdminHost() ? '' : '/admin');
 
@@ -43,4 +53,11 @@ export function useAdminRoute(): { tab: AdminTabId | null; sub: string | null } 
 export function useAdminSub<T extends keyof typeof ADMIN_SUBTABS>(tab: T, allowed: readonly string[] = ADMIN_SUBTABS[tab]): string {
   const { sub } = useAdminRoute();
   return sub && allowed.includes(sub) ? sub : allowed[0];
+}
+
+/** The permitted tabs split into the drawer's groups, in group order. Empty groups are dropped. */
+export function groupAdminTabs<T extends { id: AdminTabId }>(tabs: readonly T[]): { id: AdminNavGroupId; tabs: T[] }[] {
+  return ADMIN_NAV_GROUPS
+    .map(group => ({ id: group.id, tabs: group.tabs.flatMap(id => tabs.filter(tab => tab.id === id)) }))
+    .filter(group => group.tabs.length > 0);
 }

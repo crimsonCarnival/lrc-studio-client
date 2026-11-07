@@ -4,7 +4,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
-import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 
 interface DeviceForm {
   deviceId: string;
@@ -34,8 +34,8 @@ export default function AdminDevicesTab({
   bannedDevices
 }: AdminDevicesTabProps) {
   const { t } = useTranslation();
-  const inputMethod = useInputMethod();
-  const isMobile = inputMethod === 'touch';
+  // Width, not input method: a narrow mouse window needs the phone layout, a landscape iPad the table.
+  const isMobile = !useBreakpoint('lg');
 
   return (
     <div className={`flex flex-col h-full gap-4 sm:gap-6 ${isMobile ? 'p-4' : 'p-6'}`}>
@@ -46,7 +46,7 @@ export default function AdminDevicesTab({
             placeholder="dv_..."
             value={deviceForm.deviceId}
             onChange={(e) => setDeviceForm(prev => ({ ...prev, deviceId: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <div className={isMobile ? 'w-full' : 'flex-[2] min-w-[300px]'}>
@@ -55,7 +55,7 @@ export default function AdminDevicesTab({
             placeholder={t('admin.table.reasonPlaceholder')}
             value={deviceForm.reason}
             onChange={(e) => setDeviceForm(prev => ({ ...prev, reason: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <Button type="submit" disabled={!deviceForm.deviceId} className={`bg-primary hover:bg-primary-dim text-zinc-950 gap-2 ${isMobile ? 'w-full h-10 coarse:h-11' : ''}`}>
@@ -88,7 +88,7 @@ export default function AdminDevicesTab({
                 <Button
                   variant="ghost"
                   onClick={() => handleUnblockDevice(item.id)}
-                  className="mt-2 h-10 text-emerald-500 hover:bg-emerald-500/10 w-full"
+                  className="mt-2 h-10 coarse:h-11 text-emerald-500 hover:bg-emerald-500/10 w-full"
                 >
                   {t('admin.table.unblock')}
                 </Button>

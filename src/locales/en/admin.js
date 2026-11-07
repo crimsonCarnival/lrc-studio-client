@@ -30,6 +30,8 @@ export default {
       signups: 'Signups (24h/7d/30d)',
       storage: 'Total Storage',
       jobs: 'Lyrics Jobs (24h)',
+      strip: 'Platform stats',
+      jobsValue: '{{ok}} ok / {{failed}} failed',
       jobsTip: 'Lyric fetches and end-time inference run in the last 24h: succeeded vs failed. Not background cron jobs.',
       activeTip: 'Users whose account saw any activity in the last 24h.',
       activeMore: 'and {{count}} more',
@@ -65,6 +67,15 @@ export default {
     },
     totalUsers: 'Total: {{count}} users'
   },
+  card: {
+    toggle: 'Details for {{name}}',
+    email: 'Email',
+    xpAmount: 'XP amount',
+    summary_one: '{{count}} project',
+    summary_other: '{{count}} projects',
+    lastActive: 'last active {{date}}',
+    neverActive: 'never active',
+  },
   header: {
     backToSite: 'Back to Home',
     pending_one: '{{count}} waiting',
@@ -72,6 +83,8 @@ export default {
     dashboardPending_one: 'Admin Dashboard · {{count}} waiting',
     dashboardPending_other: 'Admin Dashboard · {{count}} waiting',
     nav: 'Admin sections',
+    menu: 'Admin menu',
+    groups: { queue: 'Queue', people: 'People', rewards: 'Rewards', records: 'Records' },
   },
   tasks: {
     tab: 'Lyrics tasks',

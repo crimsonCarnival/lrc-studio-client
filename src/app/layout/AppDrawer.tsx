@@ -43,7 +43,7 @@ const GROUP_LABEL: Record<NavGroup, ParseKeys> = {
 };
 const GROUP_ORDER: NavGroup[] = ['main', 'discover', 'you', 'staff'];
 
-const rowBase =
+export const rowBase =
   'flex min-h-11 w-full items-center gap-3 rounded-[calc(var(--radius)*1)] px-3 py-2.5 text-left text-[15px] font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus';
 
 const choice = (selected: boolean) =>

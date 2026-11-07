@@ -4,7 +4,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
-import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 
 interface IpForm {
   ip: string;
@@ -34,8 +34,8 @@ export default function AdminIpsTab({
   bannedIps
 }: AdminIpsTabProps) {
   const { t } = useTranslation();
-  const inputMethod = useInputMethod();
-  const isMobile = inputMethod === 'touch';
+  // Width, not input method: a narrow mouse window needs the phone layout, a landscape iPad the table.
+  const isMobile = !useBreakpoint('lg');
 
   return (
     <div className={`flex flex-col h-full gap-4 sm:gap-6 ${isMobile ? 'p-4' : 'p-6'}`}>
@@ -46,7 +46,7 @@ export default function AdminIpsTab({
             placeholder={t('admin.table.ipPlaceholder')}
             value={ipForm.ip}
             onChange={(e) => setIpForm(prev => ({ ...prev, ip: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <div className={isMobile ? 'w-full' : 'flex-[2] min-w-[300px]'}>
@@ -55,7 +55,7 @@ export default function AdminIpsTab({
             placeholder={t('admin.table.reasonPlaceholder')}
             value={ipForm.reason}
             onChange={(e) => setIpForm(prev => ({ ...prev, reason: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <Button type="submit" disabled={!ipForm.ip} className={`bg-red-600 hover:bg-red-500 text-white gap-2 ${isMobile ? 'w-full h-10 coarse:h-11' : ''}`}>
@@ -88,7 +88,7 @@ export default function AdminIpsTab({
                 <Button
                   variant="ghost"
                   onClick={() => handleUnblockIp(item.id)}
-                  className="mt-2 h-10 text-emerald-500 hover:bg-emerald-500/10 w-full"
+                  className="mt-2 h-10 coarse:h-11 text-emerald-500 hover:bg-emerald-500/10 w-full"
                 >
                   {t('admin.table.unblock')}
                 </Button>

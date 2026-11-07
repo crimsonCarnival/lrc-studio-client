@@ -125,7 +125,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
               min={1}
               value={xpBulkAmount}
               onChange={e => setXpBulkAmount(e.target.value)}
-              className="w-28 h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500/50"
+              className="w-28 h-9 coarse:h-11 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500/50"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -151,7 +151,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
               value={xpBulkIds}
               onChange={e => setXpBulkIds(e.target.value)}
               placeholder={t('admin.xp.accountNamePlaceholder')}
-              className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50"
+              className="h-9 coarse:h-11 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50"
             />
           </label>
         )}

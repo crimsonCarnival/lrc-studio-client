@@ -134,7 +134,7 @@ export default function SudoPasswordModal() {
                 type="submit"
                 disabled={!password}
                 loading={submitting}
-                className="w-full h-10 text-sm lg:h-10 lg:text-sm bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white"
+                className="w-full h-10 coarse:h-11 text-sm lg:h-10 lg:text-sm bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white"
               >
                 {t('admin.sudo.confirm')}
               </Button>
@@ -155,7 +155,7 @@ export default function SudoPasswordModal() {
               variant="outline"
               onClick={handlePasskey}
               disabled={submitting}
-              className="w-full h-10 text-sm lg:h-10 lg:text-sm"
+              className="w-full h-10 coarse:h-11 text-sm lg:h-10 lg:text-sm"
             >
               <Icon name="fingerprint" size={16} />
               {t('admin.sudo.usePasskey')}
@@ -172,7 +172,7 @@ export default function SudoPasswordModal() {
             type="button"
             variant="ghost"
             onClick={handleCancel}
-            className="w-full h-10 text-sm lg:h-10 lg:text-sm"
+            className="w-full h-10 coarse:h-11 text-sm lg:h-10 lg:text-sm"
           >
             {t('admin.sudo.cancel')}
           </Button>
