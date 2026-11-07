@@ -26,7 +26,7 @@ export default function PhoneSelectBar(p: PhoneSelectBarProps) {
     <div role="toolbar" aria-label={t('editor.selection.actions')} className="px-2 pb-safe pt-1">
       <div className="flex items-center gap-2 px-2">
         <p role="status" className="min-w-0 flex-1 truncate text-sm text-subtle">
-          {none ? t('editor.phone.select.empty') : t('editor.phone.select.count', { count: p.count })}
+          {none ? t('editor.phone.select.empty') : t('editor.selection.count', { count: p.count })}
         </p>
         <button type="button" onClick={p.onSelectAll} className="h-11 shrink-0 rounded-lg px-3 text-sm font-semibold text-foreground/80 hover:bg-raised focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus">
           {t('editor.selection.selectAll')}

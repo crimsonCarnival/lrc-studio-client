@@ -58,7 +58,7 @@ export default function PhoneLineSheet(p: PhoneLineSheetProps) {
   const sections = p.lines
     .map((l, i) => ({ l, i }))
     .filter(({ l, i }) => l.type === 'section' && !p.indices.includes(i));
-  const title = isSelection ? t('editor.phone.select.count', { count: p.indices.length })
+  const title = isSelection ? t('editor.selection.count', { count: p.indices.length })
     : isSection ? t('editor.phone.line.sectionTitle')
       : t('editor.lineDrawerTitle', { n: p.lines.slice(0, index).filter((l) => l.type !== 'section').length + 1 });
   const timed = line.timestamp != null;
