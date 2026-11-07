@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { TooltipProvider } from '@ui/tooltip';
 import type { AuthUser } from '@/features/auth/auth.types';
 
@@ -20,7 +20,17 @@ import { AppDrawer } from './AppDrawer';
 const ana: AuthUser = { accountName: 'ana', displayName: 'Ana', permissions: [] };
 
 function Where() {
-  return <div data-testid="where">{useLocation().pathname}</div>;
+  const navigate = useNavigate();
+  return (
+    <>
+      <div data-testid="where">{useLocation().pathname}</div>
+      <button data-testid="redirect" onClick={() => {
+        // MemoryRouter does not touch window.history; a browser router's push replaces the top entry.
+        window.history.pushState({}, '');
+        navigate('/feed');
+      }}>redirect</button>
+    </>
+  );
 }
 
 type HostProps = {
@@ -182,5 +192,28 @@ describe('AppDrawer', () => {
     const dialog = openDrawer();
     expect(within(dialog).getByRole('button', { name: 'settings.options.themes.dark' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(dialog).getByRole('group', { name: 'nav.language' })).toBeInTheDocument();
+  });
+
+  it('pops history once however many times it is asked to close', async () => {
+    render(<Host />);
+    const dialog = openDrawer();
+    const back = vi.spyOn(window.history, 'back');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'common.close' }));
+    await closed();
+    expect(back).toHaveBeenCalledTimes(1);
+    back.mockRestore();
+  });
+
+  it('closes without popping when the route changes under it', async () => {
+    render(<Host />);
+    openDrawer();
+    const back = vi.spyOn(window.history, 'back');
+    act(() => screen.getByTestId('redirect').click());
+    await closed();
+    expect(screen.getByTestId('where')).toHaveTextContent('/feed');
+    expect(back).not.toHaveBeenCalled();
+    back.mockRestore();
   });
 });
