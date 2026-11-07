@@ -1365,7 +1365,7 @@ export default function Editor({
           onViewPublic={onTogglePublicView && !inSession && serverProjectId ? onTogglePublicView : undefined}
           onChangeSong={hasMedia && !inSession ? () => setChangeMediaOpen(true) : undefined}
           onNewProject={onNewProject}
-          onRemoveAll={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
+          onRemoveAll={handleRemoveAllLyrics}
         />
         <PhoneLineSheet
           open={lineSheet.open && lineSheetValid}
@@ -1589,7 +1589,7 @@ export default function Editor({
                 </PopoverItem>
 
                 <PopoverItem
-                  onClick={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
+                  onClick={handleRemoveAllLyrics}
                   className="text-xs text-red-400"
                 >
                   <Icon name="delete" size={16} />

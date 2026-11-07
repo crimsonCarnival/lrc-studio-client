@@ -367,6 +367,9 @@ function AppInner() {
   return (
     <>
       <GuestProjectSaveGate />
+      {/* The app-level confirm (Remove all lyrics, replacing a project by drop) lives in useAppState;
+          nothing rendered it, so those confirmations never appeared and the action never ran. */}
+      {appState.confirmModal}
       <AppLayout
         user={user}
         logout={logout}
