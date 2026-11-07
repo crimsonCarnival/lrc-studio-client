@@ -876,6 +876,13 @@ export default function Editor({
     if (strayFocus) setFocusedTimestamp(null);
   }, [strayFocus, setFocusedTimestamp]);
   const hasCjkAnywhere = useMemo(() => lines.some((l) => l.type !== 'section' && hasCJK(l.text ?? '')), [lines]);
+  // Indices of the lyric (non-section) lines, rebuilt only when the lines change, not on every
+  // playback tick that re-renders the editor.
+  const lyricIndices = useMemo(() => {
+    const out: number[] = [];
+    lines.forEach((l, i) => { if (l.type !== 'section') out.push(i); });
+    return out;
+  }, [lines]);
   const hasLyricLines = useMemo(() => lines.some((l) => l.type !== 'section'), [lines]);
 
   // Raw-text editing is the syncMode=false state of useEditor: rawText holds the draft and the
@@ -1173,7 +1180,7 @@ export default function Editor({
     const cursorLine = lines[activeLineIndex];
     const cursorIsLyric = !!cursorLine && cursorLine.type !== 'section';
     const layerWords = cursorIsLyric ? ((secondaryLayer ? cursorLine.secondaryWords : cursorLine.words) ?? []) : [];
-    const phoneWords: PhoneWordsChip[] = layerWords.map((w) => ({ word: w.word ?? '', time: w.time ?? null, singerIndex: w.singerIndex }));
+    const phoneWords: PhoneWordsChip[] = layerWords.map((w) => ({ word: w.word ?? '', time: w.time ?? null, singerIndex: w.singerIndex, singer: w.singerIndex != null ? cursorLine?.singers?.[w.singerIndex] : undefined }));
     // The word the next Mark will stamp. A focused timestamp wins in applyMark. Otherwise, on a line
     // with no start, applyMark's first press stamps word 0 and starts the line whatever
     // activeWordIndex says; only once the line has a start does the cursor index apply.
@@ -1184,9 +1191,9 @@ export default function Editor({
     const phoneMarkLabel = isWords && phoneActiveWord != null && phoneWords[phoneActiveWord]
       ? t('editor.phone.words.markWord', { word: phoneWords[phoneActiveWord].word })
       : markLabel;
-    const lyricIndices = lines.reduce<number[]>((acc, l, i) => (l.type === 'section' ? acc : [...acc, i]), []);
     const lyricPos = lyricIndices.findIndex((i) => i >= activeLineIndex);
-    const prevLyric = [...lyricIndices].reverse().find((i) => i < activeLineIndex);
+    let prevLyric: number | undefined;
+    for (let k = lyricIndices.length - 1; k >= 0; k--) if (lyricIndices[k] < activeLineIndex) { prevLyric = lyricIndices[k]; break; }
     const nextLyric = lyricIndices.find((i) => i > activeLineIndex);
     const goToLine = (index: number | undefined) => {
       if (index == null) return;

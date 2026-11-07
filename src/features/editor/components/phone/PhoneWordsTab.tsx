@@ -10,6 +10,8 @@ export type PhoneWordsChip = {
   time: number | null;
   /** Index into the line's singers, when the word is attributed. */
   singerIndex?: number | null;
+  /** The singer's name, for the accessible name (the numbered badge is decorative). */
+  singer?: string;
 };
 
 export type StampLayer = 'main' | 'secondary' | 'both';
@@ -66,6 +68,13 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
   const done = p.words.filter((w) => w.time != null).length;
   const selected = p.activeIndex != null ? p.words[p.activeIndex] : undefined;
   const lineLabel = p.lineNumber ? t('editor.phone.words.panel', { number: p.lineNumber.number }) : t('editor.phone.focus.none');
+  const sectionLabel = p.lineNumber ? t('editor.phone.words.section', { number: p.lineNumber.number }) : t('editor.phone.focus.none');
+  const chipName = (w: PhoneWordsChip, isActive: boolean) => {
+    let name = w.time != null ? t('editor.phone.words.chipStamped', { word: w.word, time: formatTime(w.time) }) : t('editor.phone.words.unstamped', { word: w.word });
+    if (w.singer) name = t('editor.phone.words.chipSinger', { name, singer: w.singer });
+    if (isActive) name = t('editor.phone.words.chipNext', { name });
+    return name;
+  };
 
   return (
     <div role="tabpanel" id={p.id} aria-labelledby={p.labelledBy} className="flex flex-1 min-h-0 flex-col short-landscape:flex-row">
@@ -74,7 +83,7 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
         {p.list}
       </div>
       <div className="flex min-h-0 shrink-0 flex-col border-t border-zinc-800 bg-zinc-950/60 short-landscape:w-[min(24rem,48%)] short-landscape:border-t-0 short-landscape:border-l">
-        <section aria-label={lineLabel} className="flex min-h-0 flex-col gap-1.5 px-3 pt-1.5 short-landscape:flex-1">
+        <section aria-label={sectionLabel} className="flex min-h-0 flex-col gap-1.5 px-3 pt-1.5 short-landscape:flex-1">
           <div className="flex items-center gap-1.5">
             <button type="button" onClick={p.onPrevLine} disabled={!p.canPrev} aria-label={t('editor.phone.focus.previous')} className={ROUND_BTN}>
               <Icon name="chevron_left" size={22} />
@@ -93,7 +102,7 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
               <button
                 type="button"
                 onClick={() => p.onCycleSinger!(p.activeIndex!)}
-                aria-label={t('editor.phone.words.changeSinger', { word: selected.word })}
+                aria-label={selected.singer ? t('editor.phone.words.changeSingerFrom', { word: selected.word, singer: selected.singer }) : t('editor.phone.words.changeSinger', { word: selected.word })}
                 className={ROUND_BTN}
               >
                 <Icon name="mic" size={20} />
@@ -142,7 +151,7 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
                       ref={isActive ? activeChip : undefined}
                       type="button"
                       aria-pressed={isActive}
-                      aria-label={stamped ? t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time!) }) : t('editor.phone.words.unstamped', { word: w.word })}
+                      aria-label={chipName(w, isActive)}
                       aria-disabled={p.chipsLocked || undefined}
                       onClick={() => { if (!p.chipsLocked) p.onWordTap(wi); }}
                       className={`relative flex min-h-12 min-w-12 flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-2.5 py-1 text-center transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${isActive

@@ -247,6 +247,26 @@ describe('Phone Words view', () => {
     expect(latest.lines[0].words?.[0].singerIndex).toBeUndefined();
   });
 
+  it('names chips for touch: word, time, singer and whether it is next, with distinct section and list names', () => {
+    const lines = makeLines();
+    lines[0] = { ...lines[0], singers: ['Ann', 'Bo'], words: [{ word: 'Line', time: null }, { word: 'one', time: 1.5 }, { word: 'two', time: null }, { word: 'three', time: null }] };
+    render(<Harness initialLines={lines} />);
+    // Entering Words mode retokenizes the line, so attribute the singer after mounting.
+    fireEvent.click(chips()[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Change singer for one' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Change singer for one, now Ann$/ }));
+    expect(latest.lines[0].words?.[1].singerIndex).toBe(1);
+    fireEvent.click(chips()[0]);
+    const names = chips().map((c) => c.getAttribute('aria-label'));
+    expect(names[0]).toBe('Line, not stamped, next to mark');
+    expect(names[1]).toBe('one, stamped at 00:01.50, singer Bo');
+    expect(names[1]).not.toMatch(/click/i);
+    expect(screen.getByRole('region', { name: 'Line 1 timing' })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Words in line 1' })).toBeInTheDocument();
+    fireEvent.click(chips()[1]);
+    expect(screen.getByRole('button', { name: 'Change singer for one, now Bo' })).toBeInTheDocument();
+  });
+
   it('offers no singer button on a solo line', () => {
     render(<Harness initialLines={makeLines()} />);
     expect(screen.queryByRole('button', { name: /change singer/i })).toBeNull();
