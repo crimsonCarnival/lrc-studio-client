@@ -12,6 +12,7 @@ import { AdminHeader } from './layout/header/AdminHeader';
 import { isAdminPathname } from '@/features/admin/admin-nav';
 import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
+import { showsBottomBar } from './layout/nav-items';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
@@ -87,7 +88,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+  const { mobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
   // Reactive so the dynamic padding formula stays correct on resize.
   const isLg = useBreakpoint('lg');
@@ -100,8 +101,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // whichever is showing owns the desktop player dock.
   const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, phoneEditor: phoneEditorMounted });
 
-  // The editor workspace is a full-screen tool: no app tab bar there, at any width.
-  const showMobileNav = !isEditorPath(location.pathname);
+  // No bottom bar in the editor workspace, setup, the local draft or admin, nor while the
+  // phone editor draws its own chrome (see showsBottomBar).
+  const showMobileNav = showsBottomBar(location.pathname, phoneEditorMounted);
 
   // Compute dynamic bottom padding only for the mobile dock. Desktop slots (editor/header)
   // are in-flow — no space reservation needed. Above the tab bar the dock sits at
@@ -336,9 +338,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           {showMobileNav && (
             <AppMobileNav
               isReady={isReady}
-              mobileTab={mobileTab}
-              setMobileTab={setMobileTab}
-              activepublicId={activepublicId}
+              lines={lines}
+              mediaTitle={mediaTitle}
+              buildProjectPayload={buildProjectPayload}
             />
           )}
 

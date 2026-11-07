@@ -1,5 +1,8 @@
+import type { ParseKeys } from 'i18next';
 import { accessFor } from '@/app/route-access';
+import { isAdminPathname } from '@/features/admin/admin-nav';
 import { isStaff } from '@/features/auth/permissions';
+import { isEditorPath } from '@/features/projects/project-path';
 import { profilePath } from '@/features/profile/profile-path';
 
 export type NavGroup = 'main' | 'discover' | 'you' | 'staff';
@@ -7,7 +10,8 @@ export type NavGroup = 'main' | 'discover' | 'you' | 'staff';
 export type NavItem = {
   id: string;
   path: string;
-  labelKey: string;
+  /** A key of the `nav` locale namespace. */
+  labelKey: ParseKeys;
   icon: string;
   group: NavGroup;
 };
@@ -124,4 +128,15 @@ export function activeNavId(items: NavItem[], pathname: string): string | null {
     if (matches(item, pathname) && (!best || item.path.length > best.path.length)) best = item;
   }
   return best?.id ?? null;
+}
+
+/**
+ * Whether the phone bottom bar shows on this page. Not in the editor workspace (at any
+ * width the editor is a full-screen tool), setup, the local draft, the admin dashboard
+ * (it gets its own navigation) or while the phone editor draws its own chrome.
+ */
+export function showsBottomBar(pathname: string, phoneEditorMounted = false): boolean {
+  if (phoneEditorMounted) return false;
+  if (isEditorPath(pathname) || pathname === '/project/new') return false;
+  return !isAdminPathname(pathname);
 }
