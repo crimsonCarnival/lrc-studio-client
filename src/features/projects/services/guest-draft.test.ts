@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STORAGE_KEYS } from './storage.service';
 import {
-  expectProgrammaticEmpty, guestLyricsCleared, markGuestLyricsCleared, mayWriteGuestDraft, noteLinesBecameEmpty,
+  dropProgrammaticEmptyExpectation, expectProgrammaticEmpty, guestLyricsCleared, markGuestLyricsCleared, mayWriteGuestDraft, noteLinesBecameEmpty,
   resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount,
 } from './guest-draft';
 
@@ -99,5 +99,40 @@ describe('restoreGuestDraft', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('denied'); });
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(restoreGuestDraft()).toBeNull();
+  });
+});
+
+describe('cleared flag across tabs', () => {
+  it('stops applying once another tab has written a different draft', () => {
+    store(2);
+    markGuestLyricsCleared();
+    expect(guestLyricsCleared()).toBe(true);
+    store(4); // another tab
+    expect(guestLyricsCleared()).toBe(false);
+    expect(mayWriteGuestDraft(0)).toBe(false);
+  });
+});
+
+describe('expectation housekeeping', () => {
+  it('dropping the expectation means a later empty transition counts as the user', () => {
+    expectProgrammaticEmpty();
+    dropProgrammaticEmptyExpectation();
+    noteLinesBecameEmpty();
+    expect(guestLyricsCleared()).toBe(true);
+  });
+});
+
+describe('rejected drafts stay recoverable', () => {
+  it('copies unusable raw text, overwriting the previous copy, but not a plain empty draft', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorage.setItem(STORAGE_KEYS.PROJECT, '{"lines":[]}');
+    restoreGuestDraft();
+    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBeNull();
+    localStorage.setItem(STORAGE_KEYS.PROJECT, '{nope');
+    restoreGuestDraft();
+    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBe('{nope');
+    localStorage.setItem(STORAGE_KEYS.PROJECT, '{"lines":[null]}');
+    restoreGuestDraft();
+    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBe('{"lines":[null]}');
   });
 });

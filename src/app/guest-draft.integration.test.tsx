@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { resetGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import App from './App';
+import { markGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 
 // The real App (useAppState + AppRouter + the POP reset effect + handleSetupComplete) under a
 // MemoryRouter. Only the outside world is stubbed: settings, auth, sockets, the player and the
@@ -91,9 +92,10 @@ async function settle(ms = 50) {
     await vi.advanceTimersByTimeAsync(0);
   });
 }
-/** Settles until `cond` holds (lazy chunks may take a few turns), then once more. */
-async function settleUntil(cond: () => boolean, max = 60) {
-  for (let i = 0; i < max && !cond(); i++) await settle(100);
+/** Settles until `cond` holds, with a generous real-time deadline (lazy chunks load slowly under load). */
+async function settleUntil(cond: () => boolean, deadlineMs = 10000) {
+  const end = Date.now() + deadlineMs;
+  for (; !cond() && Date.now() < end;) await settle(100);
   await settle(100);
 }
 /** Lets the 1.5 s guest save timer fire. */
@@ -107,7 +109,7 @@ const SIZE_KEYS = Object.keys(SIZES) as (keyof typeof SIZES)[];
 const savedSizes = SIZE_KEYS.map((k) => Object.getOwnPropertyDescriptor(HTMLElement.prototype, k));
 const originalScrollTo = Element.prototype.scrollTo;
 beforeEach(() => {
-  vi.useFakeTimers({ shouldAdvanceTime: false, toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+  vi.useFakeTimers({ shouldAdvanceTime: false, toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
   localStorage.clear();
   sessionStorage.clear();
   resetGuestLyricsCleared();
@@ -288,5 +290,53 @@ describe('the editor stays up when the user empties it', { timeout: 40000 }, () 
     expect(pageIsBlank()).toBe(false);
     await autosave();
     expect(storedCount()).toBe(0);
+  });
+});
+
+describe('draft intent across redirects and tabs', { timeout: 40000 }, () => {
+  it('keeps a non-empty draft through the editor own REPLACE redirect to setup', async () => {
+    mount('/project/new');
+    await settleUntil(() => screen.queryByRole('button', { name: 'Start Syncing' }) !== null);
+    localStorage.setItem(STORAGE_KEYS.PROJECT, draft(4));
+    markGuestLyricsCleared(); // this tab emptied it, the 1.5 s save has not run yet
+    act(() => { nav.navigate('/project/local'); });
+    await settleUntil(() => nav.type === 'REPLACE', 3000);
+    // Checked before the 1.5 s guest save: the reset itself must not have deleted the draft.
+    expect(nav.location.pathname).toBe('/project/new');
+    expect(nav.type).toBe('REPLACE');
+    expect(storedCount()).toBe(4);
+  });
+
+  it('restores a draft another tab wrote after this tab cleared its lyrics', async () => {
+    localStorage.setItem(STORAGE_KEYS.PROJECT, draft(2));
+    markGuestLyricsCleared();
+    localStorage.setItem(STORAGE_KEYS.PROJECT, draft(4)); // "tab B"
+    mount();
+    await settleUntil(() => shown() === 4);
+    expect(shown()).toBe(4);
+    await autosave();
+    expect(storedCount()).toBe(4);
+  });
+
+  it('a rejected draft is copied to the rejected key before the redirect resets it', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const raw = JSON.stringify({ lines: [null, { a: 1 }] });
+    localStorage.setItem(STORAGE_KEYS.PROJECT, raw);
+    mount();
+    await settleUntil(() => nav.location.pathname === '/project/new');
+    expect(nav.location.pathname).toBe('/project/new');
+    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBe(raw);
+  });
+
+  it('setup needs lyrics, so a new project from setup shows its own lines, not an older kept draft', async () => {
+    const older = JSON.stringify({ lines: [{ text: 'Old one', id: 'o1' }, { text: 'Old two', id: 'o2' }], editorMode: 'lrc', title: 'older' });
+    localStorage.setItem(STORAGE_KEYS.PROJECT, older);
+    mount('/project/new');
+    await settleUntil(() => screen.queryByRole('button', { name: 'Start Syncing' }) !== null);
+    fireEvent.click(screen.getByRole('button', { name: 'Start Syncing' }));
+    await settleUntil(() => shown() === 6);
+    expect(document.body.textContent).not.toContain('Old one');
+    await autosave();
+    expect(storedCount()).toBe(6);
   });
 });

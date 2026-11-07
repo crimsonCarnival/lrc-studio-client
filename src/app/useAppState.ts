@@ -15,7 +15,7 @@ import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { guestLyricsCleared, mayWriteGuestDraft, noteLinesBecameEmpty, resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
+import { guestLyricsCleared, mayWriteGuestDraft, dropProgrammaticEmptyExpectation, noteLinesBecameEmpty, resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
 import { holdsUnsavedEdits, isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
@@ -867,6 +867,7 @@ export function useAppState(user?: AuthUserType | null) {
     // just reset memory itself (expectProgrammaticEmpty).
     if (lines.length > 0) resetGuestLyricsCleared();
     else if (prevLen > 0) noteLinesBecameEmpty();
+    else dropProgrammaticEmptyExpectation();
     if (lines.length === 0 && !guestLyricsCleared()) return;
     const id = setTimeout(() => {
       try {

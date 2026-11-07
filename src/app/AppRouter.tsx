@@ -669,7 +669,7 @@ export function AppRouter({
         guestDraftPending ? null :
         editorReady && lines.length === 0 && !hasMedia && !pendingProject && !restoredMedia
           && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
-          ? <Navigate to="/project/new" replace />
+          ? <Navigate to="/project/new" replace state={{ keepGuestDraft: true }} />
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
       } />
       <Route path=":accountName/projects/:slugId" element={

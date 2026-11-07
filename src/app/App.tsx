@@ -298,9 +298,12 @@ function AppInner() {
   // Reset project state when entering "New Project" — but not when coming from no-media rollback
   useEffect(() => {
     if (routerLocation.pathname === '/project/new' && !(routerLocation.state as { prefill?: unknown } | null)?.prefill) {
-      // Back/Forward (or a direct load) into setup keeps a guest's saved draft: only an explicit
-      // New project (PUSH/REPLACE) discards it.
-      resetAppState({ keepGuestDraft: navigationType === 'POP' && !getAccessToken() });
+      // Back/Forward (or a direct load) into setup keeps a guest's saved draft: and so does the
+      // editor's own redirect to setup (state.keepGuestDraft); only an explicit New project discards it.
+      resetAppState({
+        keepGuestDraft: !getAccessToken()
+          && (navigationType === 'POP' || (routerLocation.state as { keepGuestDraft?: boolean } | null)?.keepGuestDraft === true),
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routerLocation.pathname, (routerLocation.state as { prefill?: unknown } | null)?.prefill]);

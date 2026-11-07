@@ -10,18 +10,33 @@ import { STORAGE_KEYS } from './storage.service';
  */
 let clearedByUser = false;
 let skipNextEmptyTransition = false;
+/** The stored draft as it was when this tab cleared the lyrics (see guestLyricsCleared). */
+let clearedDraftRaw: string | null = null;
+
+const REJECTED_KEY = 'lrc-syncer-project-rejected';
+
+function readRaw(): string | null {
+  try { return localStorage.getItem(STORAGE_KEYS.PROJECT); } catch { return null; }
+}
 
 export function markGuestLyricsCleared(): void {
   clearedByUser = true;
+  clearedDraftRaw = readRaw();
 }
 
 export function resetGuestLyricsCleared(): void {
   clearedByUser = false;
   skipNextEmptyTransition = false;
+  clearedDraftRaw = null;
 }
 
+/**
+ * This tab's user emptied the lyrics AND the stored draft is still what it was then. If another
+ * tab has written a different draft since, that draft is not ours to suppress or overwrite: the
+ * flag is module state of one tab, the draft is shared by all of them.
+ */
 export function guestLyricsCleared(): boolean {
-  return clearedByUser;
+  return clearedByUser && readRaw() === clearedDraftRaw;
 }
 
 /**
@@ -38,7 +53,12 @@ export function noteLinesBecameEmpty(): void {
     skipNextEmptyTransition = false;
     return;
   }
-  clearedByUser = true;
+  markGuestLyricsCleared();
+}
+
+/** Memory was already empty when the app reset it, so no empty transition will consume the expectation. */
+export function dropProgrammaticEmptyExpectation(): void {
+  skipNextEmptyTransition = false;
 }
 
 function newId(): string {
@@ -95,12 +115,18 @@ export type RestoredGuestDraft = {
  * failing the rest. The restore and the "is there a draft" checks all go through it, so they can
  * not disagree about what is restorable.
  */
+function reject(raw: string): null {
+  // Unusable, but it is the user's text: keep it recoverable before anything resets the key.
+  try { localStorage.setItem(REJECTED_KEY, raw); } catch { /* ignore */ }
+  return null;
+}
+
 export function restoreGuestDraft(): RestoredGuestDraft | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PROJECT);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!(parsed && typeof parsed === 'object') || !Array.isArray(parsed.lines)) return null;
+    if (!(parsed && typeof parsed === 'object') || !Array.isArray(parsed.lines)) return reject(raw);
     const lines: Record<string, unknown>[] = [];
     for (const l of parsed.lines) {
       try {
@@ -108,11 +134,12 @@ export function restoreGuestDraft(): RestoredGuestDraft | null {
         if (line) lines.push(line);
       } catch { /* skip this line */ }
     }
-    if (lines.length === 0) return null;
+    if (lines.length === 0) return parsed.lines.length === 0 ? null : reject(raw);
     return { lines, parsed };
   } catch (e) {
     console.warn('Guest draft could not be read', e);
-    return null;
+    const raw = readRaw();
+    return raw ? reject(raw) : null;
   }
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -128,5 +155,5 @@ export function storedGuestDraftLineCount(): number {
  * removed the lyrics, or when no usable draft is stored.
  */
 export function mayWriteGuestDraft(lineCount: number): boolean {
-  return lineCount > 0 || clearedByUser || storedGuestDraftLineCount() === 0;
+  return lineCount > 0 || guestLyricsCleared() || storedGuestDraftLineCount() === 0;
 }
