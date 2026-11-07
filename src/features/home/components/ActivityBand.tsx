@@ -82,7 +82,7 @@ export function ActivityBand({ compact = false }: { compact?: boolean }) {
         )}
 
         <div className="min-w-0">
-          <ActivityHeatmap cellSize={9} cellGap={3} compact={compact} streak={compact ? { current, longest } : undefined} />
+          <ActivityHeatmap cellSize={9} cellGap={3} compact={compact} streak={compact ? { current, longest } : undefined} notes={compact ? [resetHint, t('home.xpTip', { xp })] : undefined} />
         </div>
       </div>
     </section>

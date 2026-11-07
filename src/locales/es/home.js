@@ -129,6 +129,6 @@ export default {
   feedSub: "Actividad de personas que sigues",
   projectCount_one: "{{count}} proyecto",
   projectCount_other: "{{count}} proyectos",
-  activityInfo: "Sobre el mapa de actividad",
+  activityInfo: "Sobre la racha, la XP y el mapa de actividad",
   progressPct: "{{pct}}% sincronizado",
 };

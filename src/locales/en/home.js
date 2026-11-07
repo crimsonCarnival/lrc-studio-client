@@ -135,6 +135,6 @@ export default {
   feedSub: "Activity from people you follow",
   projectCount_one: "{{count}} project",
   projectCount_other: "{{count}} projects",
-  activityInfo: "About the activity map",
+  activityInfo: "About streak, XP and the activity map",
   progressPct: "{{pct}}% synced",
 };

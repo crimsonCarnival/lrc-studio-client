@@ -111,10 +111,13 @@ export default function ActivityHeatmap({
   cellGap = 4,
   streak,
   compact = false,
+  notes,
 }: {
   days?: HeatDay[]; cellSize?: number; cellGap?: number; streak?: { current?: number | null; longest?: number | null } | null;
   /** Phone width: a slim stat row, and the long definition sits behind an info toggle. */
   compact?: boolean;
+  /** Compact only: extra lines (e.g. the streak reset rule) shown with the definition. */
+  notes?: string[];
 } = {}) {
   // One week's horizontal advance. The month labels are absolutely positioned,
   // so they have to step by exactly this or they drift off their column.
@@ -316,7 +319,12 @@ export default function ActivityHeatmap({
             >
               <Icon name="info" size={18} />
             </button>
-            {showDefinition && <p id="heatmap-definition">{t('profile.heatmap.definition')}</p>}
+            {showDefinition && (
+              <div id="heatmap-definition" className="flex flex-col gap-2">
+                {notes?.map((note) => <p key={note}>{note}</p>)}
+                <p>{t('profile.heatmap.definition')}</p>
+              </div>
+            )}
           </>
         ) : (
           <p>{t('profile.heatmap.definition')}</p>
