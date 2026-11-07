@@ -312,7 +312,7 @@ const EditorLineItem = React.memo(({
 
   // Phone rows: a long press opens the line's sheet (not in select mode, where a tap toggles).
   const openLineMenu = useCallback(() => onLineMenu?.(i, line), [onLineMenu, i, line]);
-  const { handleTouchStart, handleTouchEnd, handleTouchMove, consumeLongPress } = useLineGestures({
+  const { handleTouchStart, handleTouchEnd, handleTouchMove, handleTouchCancel, consumeLongPress } = useLineGestures({
     lineIndex: i,
     isSynced,
     settings,
@@ -668,6 +668,7 @@ const EditorLineItem = React.memo(({
         onMouseLeave={handleLineHoverEnd}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         onTouchMove={handleTouchMove}
         draggable={editingLineIndex !== i && (!compact || selectMode)}
         onContextMenu={compact && onLineMenu ? (e) => { e.preventDefault(); if (!selectMode) onLineMenu(i, line); } : undefined}
@@ -784,7 +785,7 @@ const EditorLineItem = React.memo(({
 
         {/* Lyrics text container */}
         <div
-          className={`flex-1 min-w-0 flex flex-col ${editorMode === 'words' ? 'gap-2' : 'gap-1'} overflow-x-hidden pb-0.5 mt-0.5 select-text`}
+          className={`flex-1 min-w-0 flex flex-col ${editorMode === 'words' ? 'gap-2' : 'gap-1'} overflow-x-hidden pb-0.5 mt-0.5 ${compact ? 'select-none' : 'select-text'}`}
           data-no-drag
           onDoubleClick={() => {
             setEditingLineIndex(i);

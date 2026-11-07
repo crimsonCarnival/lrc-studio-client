@@ -60,6 +60,11 @@ export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLin
     clearTimeout(longPressTimerRef.current);
   }, []);
 
+  const handleTouchCancel = useCallback(() => {
+    clearTimeout(longPressTimerRef.current);
+    touchStartRef.current = null;
+  }, []);
+
   /** True once, right after a long press fired: the click that follows its release is not a tap. */
   const consumeLongPress = useCallback(() => {
     const fired = firedRef.current;
@@ -72,5 +77,5 @@ export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLin
     clearTimeout(longPressTimerRef.current);
   }, []);
 
-  return { handleTouchStart, handleTouchEnd, handleTouchMove, consumeLongPress };
+  return { handleTouchStart, handleTouchEnd, handleTouchMove, handleTouchCancel, consumeLongPress };
 }
