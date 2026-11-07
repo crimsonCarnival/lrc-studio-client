@@ -7,7 +7,6 @@ export default {
   project: "Project",
   library: "Library",
   menu: "Menu",
-  close: "Close menu",
   mainNav: "Main navigation",
   tabs: "Quick navigation",
   projects: "Projects",
