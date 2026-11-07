@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
@@ -18,6 +19,8 @@ export type PhoneFocusViewProps = {
   /** Accessible name and text of the stamp area, e.g. "Mark line 3". */
   label: string;
   disabled: boolean;
+  /** Why the stamp area is disabled, shown on it and read with it. */
+  disabledHint?: string;
   /** Back to the lyric list. */
   onClose: () => void;
   onAddMedia?: () => void;
@@ -33,16 +36,17 @@ const NEIGHBOUR = 'min-h-[1.5em] truncate text-center text-[17px] text-foregroun
  * player can stamp. touch-none turns off double-tap zoom and pan on it.
  */
 export default function PhoneFocusView({
-  previous, current, next, onMark, onUndo, canUndo, label, disabled, onClose, onAddMedia,
+  previous, current, next, onMark, onUndo, canUndo, label, disabled, disabledHint, onClose, onAddMedia,
 }: PhoneFocusViewProps) {
   const { t } = useTranslation();
   const { currentTime } = usePlayer();
   const tap = useMarkTap(onMark, disabled);
+  const hintId = useId();
 
   return (
     <div
       data-testid="phone-focus-view"
-      className="flex flex-1 min-h-0 flex-col short-landscape:flex-row select-none [-webkit-touch-callout:none]"
+      className="flex flex-1 min-h-0 flex-col short-landscape:flex-row select-none touch-manipulation [-webkit-touch-callout:none]"
     >
       <div className="flex flex-1 min-h-0 min-w-0 flex-col">
         <div className="flex shrink-0 items-center justify-between gap-2 px-2 pt-1">
@@ -60,14 +64,15 @@ export default function PhoneFocusView({
           </span>
         </div>
         <div className="flex flex-1 min-h-0 flex-col justify-center gap-3 px-5 py-2">
-          <p aria-label={t('editor.phone.focus.previous')} className={NEIGHBOUR}>{previous ?? ''}</p>
-          <p
-            aria-label={t('editor.phone.focus.current')}
-            className="break-words text-center font-heading text-[28px] font-bold leading-tight text-foreground line-clamp-4"
-          >
-            {current ?? t('editor.phone.focus.none')}
+          <p className={NEIGHBOUR}>
+            <span className="sr-only">{t('editor.phone.focus.previous')}: </span>{previous ?? ''}
           </p>
-          <p aria-label={t('editor.phone.focus.next')} className={NEIGHBOUR}>{next ?? ''}</p>
+          <p className="break-words text-center font-heading text-[28px] font-bold leading-tight text-foreground line-clamp-4">
+            <span className="sr-only">{t('editor.phone.focus.current')}: </span>{current ?? t('editor.phone.focus.none')}
+          </p>
+          <p className={NEIGHBOUR}>
+            <span className="sr-only">{t('editor.phone.focus.next')}: </span>{next ?? ''}
+          </p>
         </div>
         <div className="shrink-0 border-t border-zinc-800 bg-zinc-950/60">
           <PhonePlayerStrip onAddMedia={onAddMedia} />
@@ -87,12 +92,19 @@ export default function PhoneFocusView({
         <button
           type="button"
           disabled={disabled}
+          aria-label={label}
+          aria-describedby={disabled && disabledHint ? hintId : undefined}
           {...tap}
           className="flex-1 min-w-0 rounded-[calc(var(--radius)*2)] bg-primary px-4 text-zinc-950 text-[22px] font-bold select-none touch-none [-webkit-touch-callout:none] [-webkit-tap-highlight-color:transparent] transition-transform duration-75 active:scale-[0.98] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
         >
           {label}
+          {disabled && disabledHint && (
+            <span id={hintId} className="mt-1 block text-[13px] font-medium opacity-80">{disabledHint}</span>
+          )}
         </button>
-        <span role="status" aria-live="polite" className="sr-only">{label}</span>
+        {/* One announcement per cursor move: the lyric about to be stamped, then which line it is.
+            The running time is aria-hidden, so playback never re-announces. */}
+        <span role="status" aria-live="polite" className="sr-only">{current ? `${current}. ` : ''}{label}</span>
       </div>
     </div>
   );

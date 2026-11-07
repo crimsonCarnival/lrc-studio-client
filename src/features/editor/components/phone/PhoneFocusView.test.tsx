@@ -71,6 +71,26 @@ describe('PhoneFocusView', () => {
     expect(props.onMark).toHaveBeenCalledTimes(1);
   });
 
+  it('a cancelled pointer resets the swallow flag, like the Mark bar', () => {
+    const { props, stamp } = setup();
+    fireEvent.pointerDown(stamp, down);
+    fireEvent.pointerCancel(stamp, { isPrimary: true, pointerType: 'touch' });
+    fireEvent.click(stamp, { detail: 1 });
+    expect(props.onMark).toHaveBeenCalledTimes(2);
+  });
+
+  it('explains a disabled stamp area', () => {
+    setup({ disabled: true, disabledHint: 'Sync is off' });
+    expect(screen.getByRole('button', { name: /mark line 2/i })).toHaveAccessibleDescription('Sync is off');
+  });
+
+  it('announces the lyric about to be stamped with its line, and names neighbours by text', () => {
+    setup();
+    expect(screen.getByRole('status')).toHaveTextContent('Line two. Mark line 2');
+    expect(screen.getByText('Previous line:').closest('p')).toHaveTextContent('Previous line: Line one');
+    expect(screen.getByTestId('phone-focus-view').className).toContain('touch-manipulation');
+  });
+
   it('Back to list calls onClose', () => {
     const { props } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Back to list' }));

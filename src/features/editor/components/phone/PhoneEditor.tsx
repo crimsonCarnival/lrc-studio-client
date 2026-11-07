@@ -37,7 +37,7 @@ export type PhoneEditorProps = {
    * Focus view, the alternate Sync presentation. Absent for a viewer (nothing to stamp), which
    * also hides the header toggle.
    */
-  focus?: { on: boolean; onToggle: () => void; view: ReactNode };
+  focus?: { on: boolean; onToggle: () => void; view: ReactNode; /** A sheet is open over it: nothing in the view may take a tap or focus. */ inert?: boolean };
   /** Session state the desktop header shows (participants), rendered beside the title. */
   sessionBar?: ReactNode;
   mark: {
@@ -181,7 +181,7 @@ export default function PhoneEditor({
       </div>
 
       {tab === 'sync' && focus?.on && !selectBar ? (
-        <div role="tabpanel" id={panelIds.sync} aria-labelledby={tabIds.sync} className="flex flex-1 min-h-0 flex-col">
+        <div role="tabpanel" id={panelIds.sync} aria-labelledby={tabIds.sync} inert={focus.inert} className="flex flex-1 min-h-0 flex-col">
           {focus.view}
         </div>
       ) : tab === 'sync' ? (

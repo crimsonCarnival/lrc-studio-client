@@ -179,7 +179,7 @@ export default {
       current: "Línea actual",
       next: "Línea siguiente",
       none: "Sin línea",
-      tapHint: "Toca el botón grande para marcar",
+      syncOff: "El modo de sincronización está apagado: tocar no marca.",
     },
     tools: {
       title: "Herramientas",

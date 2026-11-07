@@ -53,6 +53,7 @@ type HarnessProps = {
   playerRef?: { current: unknown };
   /** Render through EditorPage, which picks the layout from the (stubbed) viewport width. */
   viaPage?: boolean;
+  initialSyncMode?: boolean;
 };
 
 let latest: { lines: EditorLine[]; activeLineIndex: number; syncMode: boolean; history: number } = {
@@ -61,7 +62,7 @@ let latest: { lines: EditorLine[]; activeLineIndex: number; syncMode: boolean; h
 
 function Harness({
   initialLines, editorMode = 'lrc', playbackPosition = 12.5, collab, sessionPublicId, activeLineIndex: controlledIndex,
-  isPlaying = false, playerRef, viaPage = false,
+  isPlaying = false, playerRef, viaPage = false, initialSyncMode = true,
 }: HarnessProps) {
   const [lines, setLinesState] = useState(initialLines);
   // A minimal undo stack standing in for useHistory, owned above the editor like the real one.
@@ -79,7 +80,7 @@ function Harness({
     setPast(past.slice(0, -1));
   };
   const [activeLineIndex, setActiveLineIndex] = useState(controlledIndex ?? 0);
-  const [syncMode, setSyncMode] = useState(true);
+  const [syncMode, setSyncMode] = useState(initialSyncMode);
   const [mode, setMode] = useState(editorMode);
   const [ref] = useState(() => playerRef ?? { current: null });
   // Stands in for AppRouter's workspace: the editor is mounted only while it is the view.
@@ -281,6 +282,16 @@ describe('Crossing the lg breakpoint on a mounted editor', () => {
     expect(latest.lines[0].timestamp).toBe(12.5);
   });
 
+  it('does not offer Focus in Words mode below lg and leaves the stored choice alone', () => {
+    localStorage.setItem('lrc-phone-focus-view', '1');
+    render(<Harness viaPage editorMode="words" initialLines={makeLines(3)} />);
+    expect(document.querySelector('[data-phone-editor]')).toBeNull();
+    expect(screen.queryByTestId('phone-focus-view')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Focus view' })).toBeNull();
+    expect(localStorage.getItem('lrc-phone-focus-view')).toBe('1');
+    localStorage.removeItem('lrc-phone-focus-view');
+  });
+
   it('scrolls the cursor line into view when the list remounts on a crossing', async () => {
     mockSettings = withEditor({ scroll: { mode: 'auto', alignment: 'center' } });
     const scrollTo = vi.fn();
@@ -396,9 +407,9 @@ describe('Phone Focus view', () => {
   it('shows the cursor line large with its neighbours and stamps it once per tap', () => {
     render(<Harness initialLines={makeLines(4)} activeLineIndex={1} />);
     openFocus();
-    expect(screen.getByLabelText('Previous line')).toHaveTextContent('Line 1');
-    expect(screen.getByLabelText('Current line')).toHaveTextContent('Line 2');
-    expect(screen.getByLabelText('Next line')).toHaveTextContent('Line 3');
+    expect(screen.getByText('Previous line:').closest('p')).toHaveTextContent('Previous line: Line 1');
+    expect(screen.getByText('Current line:').closest('p')).toHaveTextContent('Current line: Line 2');
+    expect(screen.getByText('Next line:').closest('p')).toHaveTextContent('Next line: Line 3');
     tapMark(/mark line 2/i);
     expect(latest.lines[1].timestamp).toBe(12.5);
     expect(latest.lines[2].timestamp).toBeNull();
@@ -432,6 +443,16 @@ describe('Phone Focus view', () => {
     rerender(<Harness initialLines={makeLines(3)} editorMode="srt" playbackPosition={13} />);
     tapMark(/mark end of line 1/i);
     expect(latest.lines[0].endTime).toBe(13);
+  });
+
+  it('makes the stamp area inert while a sheet is open', () => {
+    render(<Harness initialLines={makeLines(3)} />);
+    openFocus();
+    const stamp = () => screen.getByRole('button', { name: /^mark line 1$/i, hidden: true });
+    expect(stamp().closest('[inert]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(stamp().closest('[inert]')).not.toBeNull();
   });
 
   it('gives a session viewer no Focus toggle', () => {

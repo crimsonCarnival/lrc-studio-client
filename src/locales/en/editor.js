@@ -176,7 +176,7 @@ export default {
       current: "Current line",
       next: "Next line",
       none: "No line",
-      tapHint: "Tap anywhere on the big button to stamp",
+      syncOff: "Sync mode is off, so taps do not stamp.",
     },
     tools: {
       title: "Tools",

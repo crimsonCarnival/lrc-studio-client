@@ -1208,6 +1208,7 @@ export default function Editor({
           focus={readOnly ? undefined : {
             on: phoneFocus,
             onToggle: () => setPhoneFocus(!phoneFocus),
+            inert: toolsOpen || (lineSheet.open && lineSheetValid),
             // Marks through the very handler the Mark bar uses (no forceAdvance), so
             // autoAdvance, SRT end marks and session locks behave the same.
             view: (
@@ -1218,6 +1219,7 @@ export default function Editor({
                 canUndo={canUndo}
                 label={markLabel}
                 disabled={!syncMode || lines.length === 0}
+                disabledHint={!syncMode ? t('editor.phone.focus.syncOff') : undefined}
                 onClose={() => setPhoneFocus(false)}
                 onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
               />
