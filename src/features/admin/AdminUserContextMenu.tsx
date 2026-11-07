@@ -81,10 +81,12 @@ export function AdminUserContextMenu({
               </ContextMenuSub>
             )}
 
-            <ContextMenuItem onClick={() => handleAdjustXP('grant', 100, 'user', user.id || user._id)}>
-              <Icon name="bolt" />
-              {t('admin.table.adjustXp')}
-            </ContextMenuItem>
+            {can.adjustXp && (
+              <ContextMenuItem onClick={() => handleAdjustXP('grant', 100, 'user', user.id || user._id)}>
+                <Icon name="bolt" />
+                {t('admin.table.adjustXp')}
+              </ContextMenuItem>
+            )}
 
             <ContextMenuSeparator />
 
@@ -138,10 +140,12 @@ export function AdminUserContextMenu({
 
             <ContextMenuSeparator />
 
-            <ContextMenuItem variant="destructive" onClick={() => handleDelete(user)}>
-              <Icon name="delete" />
-              {tk('admin.table.delete')}
-            </ContextMenuItem>
+            {can.delete && (
+              <ContextMenuItem variant="destructive" onClick={() => handleDelete(user)}>
+                <Icon name="delete" />
+                {tk('admin.table.delete')}
+              </ContextMenuItem>
+            )}
           </>
         )}
       </ContextMenuContent>

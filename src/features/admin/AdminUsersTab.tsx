@@ -10,6 +10,7 @@ import { SearchField } from '@ui/search-field';
 import { CountryFlag } from '@/shared/ui/CountryFlag';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { AdminUserCard } from './AdminUserCard';
+import { availableUserActions } from './admin-user-actions';
 import { useState as useLocalState } from 'react';
 import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/permissions';
 import { usePresence } from '@/shared/hooks/usePresence';
@@ -117,13 +118,6 @@ export default function AdminUsersTab({
     return as === 'row'
       ? <tr key={`rank-${role}`} className="bg-zinc-950/50"><td colSpan={8} className="px-4 pt-5 pb-2">{label}</td></tr>
       : <div key={`rank-${role}`} className="pt-3 pb-1">{label}</div>;
-  };
-
-  // Can act on this user: not self, and target rank strictly below mine
-  const canActOn = (user: AdminUser) => {
-    const isSelf = user.id === currentUser?.id;
-    const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
-    return !isSelf && targetRank < myRank;
   };
 
   function RoleControl({ user }: { user: AdminUser }) {
@@ -262,6 +256,7 @@ export default function AdminUsersTab({
         <tbody className="divide-y divide-zinc-800/30">
           {users.map((user, index) => {
             const isSelf = user.id === currentUser?.id;
+            const can = availableUserActions(user, { myRank, myPermissions: currentUser?.permissions ?? [], canAssignRoles, assignableRoles });
             return (
               <Fragment key={user.id}>
               {rankHeading(user, index, 'row')}
@@ -360,7 +355,7 @@ export default function AdminUsersTab({
                       <div className="flex items-center gap-1.5">
                         <CountryFlag countryCode={user.country} />
                         <span className="font-mono text-[10px] text-zinc-500">{user.lastIp || '—'} {user.country && `(${user.country})`}</span>
-                        {user.lastIp && canActOn(user) && (
+                        {user.lastIp && can.blockIp && (
                           <Tip content={t('admin.table.blockIp') as string}>
                             <button
                               type="button"
@@ -378,7 +373,7 @@ export default function AdminUsersTab({
                           <Tip content={user.lastDeviceName}>
                             <span className="text-[10px] text-zinc-500 truncate max-w-[140px]">{user.lastDeviceName}</span>
                           </Tip>
-                          {user.lastDeviceId && canActOn(user) && (
+                          {user.lastDeviceId && can.blockDevice && (
                             <Tip content={t('admin.table.blockDevice')}>
                               <button
                                 type="button"
@@ -424,40 +419,44 @@ export default function AdminUsersTab({
                           <Button variant="ghost" size="icon-sm" onClick={() => setXpPopover(null)} aria-label={t('common.close')} className="size-7">✕</Button>
                         </div>
                       )}
-                      {canActOn(user) && (
+                      {can.canAct && (
                         <>
+                          {can.adjustXp && (
                           <Tip content={t('admin.table.adjustXp')} side="top">
                             <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id) ? null : (user.id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
                               <Icon name="bolt" size={14} />
                             </Button>
                           </Tip>
-                          {user.isDeleted ? (
+                          )}
+                          {user.isDeleted ? (can.reactivate &&
                             <Button variant="ghost" size="sm" onClick={() => handleReactivate(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1.5">
                               <Icon name="undo" size={14} /> {t('admin.table.reactivate')}
                             </Button>
                           ) : (
                             <>
-                              {user.appeal?.status === 'pending' ? (
+                              {user.appeal?.status === 'pending' ? (can.reviewAppeal &&
                                 <Button variant="secondary" size="sm" onClick={() => setAppealModal({ isOpen: true, user })} className="h-8 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-1.5">
                                   <Icon name="info" size={14} /> {t('admin.table.reviewAppeal')}
                                 </Button>
                               ) : (
-                                !user.ban?.active && (
+                                can.ban && (
                                   <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5">
                                     <Icon name="block" size={14} /> {t('admin.table.ban')}
                                   </Button>
                                 )
                               )}
-                              {user.ban?.active && user.appeal?.status !== 'pending' && (
+                              {can.unban && (
                                 <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
                                   {t('admin.table.unban')}
                                 </Button>
                               )}
+                              {can.delete && (
                               <Tip content={t('common.actions.deleteUser')}>
                                 <Button aria-label={t('common.actions.deleteUser')} variant="ghost" size="icon" onClick={() => handleDelete(user)} className="size-8 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
                                   <Icon name="delete" size={16} />
                                 </Button>
                               </Tip>
+                              )}
                             </>
                           )}
                         </>

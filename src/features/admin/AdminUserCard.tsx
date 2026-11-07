@@ -127,7 +127,7 @@ export function AdminUserCard({ user, isSelf, online, formatDay, onRefresh, ...r
             </div>
           </dl>
 
-          <div role="group" aria-label={t('admin.table.actions')} className="flex flex-col gap-1.5 border-t border-zinc-700/50 pt-3">
+          <div role="group" aria-label={t('admin.table.actions')} onPointerDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} className="flex flex-col gap-1.5 border-t border-zinc-700/50 pt-3">
             <Button asChild variant="ghost" className={ACTION}>
               <a href={profilePath(user.accountName)} target="_blank" rel="noopener noreferrer">
                 <Icon name="open_in_new" size={16} />{t('admin.table.viewProfile')}
