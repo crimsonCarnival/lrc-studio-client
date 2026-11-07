@@ -3,6 +3,7 @@ import { accessFor } from '@/app/route-access';
 import { isStaff } from '@/features/auth/permissions';
 import { isEditorPath, isProjectViewPath } from '@/features/projects/project-path';
 import { profilePath } from '@/features/profile/profile-path';
+import { isAdminPathname } from '@/features/admin/admin-nav';
 
 export type NavGroup = 'main' | 'discover' | 'you' | 'staff';
 
@@ -130,13 +131,13 @@ export function activeNavId(items: NavItem[], pathname: string): string | null {
 /**
  * Whether the phone bottom bar shows on this page. Not in the editor workspace (at any
  * width the editor is a full-screen tool), setup, the local draft, a live session, the
- * public project view (its own playback bar sits at the bottom edge), or while the phone
- * editor draws its own chrome. Admin keeps the bar until the dashboard gets its own
- * burger (Task 11), so phones keep some navigation there.
+ * public project view (its own playback bar sits at the bottom edge), the admin dashboard
+ * (it has its own burger), or while the phone editor draws its own chrome.
  */
 export function showsBottomBar(pathname: string, phoneEditorMounted = false): boolean {
   if (phoneEditorMounted) return false;
   if (isEditorPath(pathname) || isProjectViewPath(pathname) || pathname === '/project/new') return false;
+  if (isAdminPathname(pathname)) return false;
   return true;
 }
 

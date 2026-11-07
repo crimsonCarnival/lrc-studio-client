@@ -72,6 +72,8 @@ export default {
     dashboardPending_one: 'Panel de Administración · {{count}} pendiente',
     dashboardPending_other: 'Panel de Administración · {{count}} pendientes',
     nav: 'Secciones de administración',
+    menu: 'Menú de administración',
+    groups: { queue: 'Pendientes', people: 'Personas', rewards: 'Recompensas', records: 'Registros' },
   },
   tasks: {
     tab: 'Tareas de letras',

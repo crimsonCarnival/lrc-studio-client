@@ -92,9 +92,10 @@ describe('showsBottomBar', () => {
     ['/ana', true],
     ['/settings', true],
     ['/notifications', true],
-    // Admin keeps the bar until the dashboard gets its own burger.
-    ['/admin', true],
-    ['/admin/moderation/users', true],
+    // The dashboard has its own burger drawer.
+    ['/admin', false],
+    ['/admin/moderation/users', false],
+    ['/administrator', true],
     // The public view has its own playback bar at the bottom edge.
     ['/ana/projects/song-abcdefghij', false],
     ['/ana/projects/song-abcdefghij/edit', false],

@@ -72,6 +72,8 @@ export default {
     dashboardPending_one: 'Admin Dashboard · {{count}} waiting',
     dashboardPending_other: 'Admin Dashboard · {{count}} waiting',
     nav: 'Admin sections',
+    menu: 'Admin menu',
+    groups: { queue: 'Queue', people: 'People', rewards: 'Rewards', records: 'Records' },
   },
   tasks: {
     tab: 'Lyrics tasks',
