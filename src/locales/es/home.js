@@ -127,4 +127,8 @@ export default {
   exploreSub: "Proyectos y listas en tendencia",
   leaderboardSub: "Los mejores creadores del leaderboard",
   feedSub: "Actividad de personas que sigues",
+  projectCount_one: "{{count}} proyecto",
+  projectCount_other: "{{count}} proyectos",
+  activityInfo: "Sobre el mapa de actividad",
+  progressPct: "{{pct}}% sincronizado",
 };
