@@ -120,7 +120,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   useIntersectionLoader(cardRef, id, 'activity');
 
   return (
-    <div ref={cardRef} className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
+    <div ref={cardRef} className="flex gap-3 rounded-[var(--radius-card)] bg-background p-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
       <UserHoverCard accountName={actor.accountName}>
         <Link to={profilePath(actor.accountName)} className="shrink-0 block">
           <StaffRing role={actor.staffRole}>
@@ -134,23 +134,23 @@ export function ActivityCard({ activity }: { activity: Activity }) {
       </UserHoverCard>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-zinc-300 leading-snug">
+        <p className="text-sm text-foreground leading-snug">
           <UserHoverCard accountName={actor.accountName}>
-            <Link to={profilePath(actor.accountName)} className="font-semibold text-white hover:text-primary transition-colors">
+            <Link to={profilePath(actor.accountName)} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
               {actor.displayName || actor.accountName}
             </Link>
           </UserHoverCard>
           {' '}
-          <span className="text-zinc-400">{actionText}</span>
+          <span className="text-subtle">{actionText}</span>
           {isUserFollow && projectTitle && (
             <>
               {' '}
               {targetLink ? (
-                <Link to={targetLink} className="font-semibold text-white hover:text-primary transition-colors">
+                <Link to={targetLink} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
                   {projectTitle}
                 </Link>
               ) : (
-                <span className="font-semibold text-white">{projectTitle}</span>
+                <span className="font-semibold text-foreground">{projectTitle}</span>
               )}
             </>
           )}
@@ -161,7 +161,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
             {coverImage && (
               <img src={coverImage} alt="" className="w-8 h-8 rounded-xs object-cover shrink-0" />
             )}
-            <span className="text-sm font-medium text-zinc-200 group-hover:text-primary transition-colors truncate">
+            <span className="text-sm font-medium text-foreground group-hover:text-primary-ink transition-colors truncate">
               {projectTitle || t('feed.untitled')}
             </span>
           </Link>
@@ -169,7 +169,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
 
         {/* A share's note is the sharer's own words: plain text, escaped by React. */}
         {description && (
-          <p className="mt-1.5 text-sm text-zinc-300 whitespace-pre-wrap break-words">{description}</p>
+          <p className="mt-1.5 text-sm text-foreground whitespace-pre-wrap break-words">{description}</p>
         )}
         {tags && tags.length > 0 && (
           <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={t('projectView.shareTagsLabel')}>
@@ -187,12 +187,12 @@ export function ActivityCard({ activity }: { activity: Activity }) {
 
         {canReact && <ActivityReactions publicId={publicId!} />}
 
-        <p className="text-xs text-zinc-500 mt-1.5">
+        <p className="text-xs text-subtle mt-1.5">
           {relativeTime(createdAt, t)}
         </p>
       </div>
 
-      <Icon name={iconName} size={16} className="text-zinc-600 shrink-0 mt-0.5" />
+      <Icon name={iconName} size={16} className="text-faint shrink-0 mt-0.5" />
     </div>
   );
 }
