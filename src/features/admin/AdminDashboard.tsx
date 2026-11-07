@@ -33,6 +33,7 @@ import type { AdminTabId } from './admin-nav';
 import { useAdminTabs } from './useAdminTabs';
 import SudoPasswordModal from './SudoPasswordModal';
 import { LogoLoader } from '@ui/LogoLoader';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import type { AdminUser, PendingAppeal } from '@/features/admin/admin.types';
 
 /*
@@ -109,6 +110,7 @@ export default function AdminDashboard() {
   const isSuperadmin = currentUser?.role === 'superadmin';
   // The dashboard's tabs live in the header (AdminHeader) and each is a path of its own.
   const visibleTabs = useAdminTabs();
+  const isLg = useBreakpoint('lg');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { tab: routeTab } = useAdminRoute();
@@ -497,8 +499,8 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <AdminStatsCards stats={stats as ComponentProps<typeof AdminStatsCards>["stats"]} />
+      {/* Stats: the tiles on every tab at lg+; on phones one strip, on the first tab only, so the work stays on screen. */}
+      {(isLg || activeTab === visibleTabs[0]?.id) && <AdminStatsCards stats={stats as ComponentProps<typeof AdminStatsCards>["stats"]} />}
 
       {/* Tab Content */}
       <div className="flex-1 flex flex-col min-h-[400px]">

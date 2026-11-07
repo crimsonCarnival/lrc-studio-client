@@ -30,6 +30,8 @@ export default {
       signups: 'Nuevos (24h/7d/30d)',
       storage: 'Almacenamiento Total',
       jobs: 'Tareas de letras (24h)',
+      strip: 'Estadísticas de la plataforma',
+      jobsValue: '{{ok}} correctas / {{failed}} fallidas',
       jobsTip: 'Búsquedas de letras e inferencia de tiempos finales ejecutadas en las últimas 24h: correctas frente a fallidas. No son tareas programadas.',
       activeTip: 'Usuarios cuya cuenta registró actividad en las últimas 24h.',
       activeMore: 'y {{count}} más',

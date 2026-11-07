@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Tip } from '@ui/tip';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { adminPath } from './admin-nav';
 
 interface AdminStats {
@@ -33,6 +34,7 @@ function formatBytes(bytes = 0) {
 
 export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
   const { t } = useTranslation();
+  const isLg = useBreakpoint('lg');
 
   const activeSample = stats?.activeUsersSample ?? [];
   const activeCount = stats?.activeUsers ?? 0;
@@ -84,6 +86,35 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
     { label: t('admin.dashboard.stats.storage'), value: formatBytes(stats?.totalStorage), color: 'text-amber-400', tip: t('admin.dashboard.stats.storageTip') },
     { label: t('admin.dashboard.stats.jobs'), value: `${stats?.jobHealth?.succeeded || 0}✓/${stats?.jobHealth?.failed || 0}✗`, color: 'text-rose-400', tip: t('admin.dashboard.stats.jobsTip'), to: adminPath('audit', 'tasks') },
   ];
+
+  // Phones get one scrolling strip of label and number instead of ten tiles. The jobs pair
+  // is spelled out there: the check and cross glyphs read as noise at that size.
+  if (!isLg) {
+    const strip = [
+      ...cells.slice(0, 9),
+      { ...cells[9], value: t('admin.dashboard.stats.jobsValue', { ok: stats?.jobHealth?.succeeded || 0, failed: stats?.jobHealth?.failed || 0 }), tip: undefined },
+    ];
+    return (
+      <ul aria-label={t('admin.dashboard.stats.strip')} className="mb-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {strip.map((cell, i) => {
+          const body = (
+            <>
+              <span className={`font-heading text-lg font-bold leading-none tabular-nums whitespace-nowrap ${cell.color}`}>{cell.value ?? '—'}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 whitespace-nowrap">{cell.label}</span>
+            </>
+          );
+          const cls = 'flex min-h-11 flex-col justify-center gap-1 rounded-xl border border-zinc-800/60 bg-zinc-900/60 px-3 py-2';
+          return (
+            <li key={i} className="shrink-0">
+              {cell.to
+                ? <Link to={cell.to} className={`${cls} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50`}>{body}</Link>
+                : <div className={cls}>{body}</div>}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
 
   return (
     // Five equal flex cells left ~78px each on a phone, so every label wrapped

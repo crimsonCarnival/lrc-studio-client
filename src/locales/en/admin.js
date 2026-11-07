@@ -30,6 +30,8 @@ export default {
       signups: 'Signups (24h/7d/30d)',
       storage: 'Total Storage',
       jobs: 'Lyrics Jobs (24h)',
+      strip: 'Platform stats',
+      jobsValue: '{{ok}} ok / {{failed}} failed',
       jobsTip: 'Lyric fetches and end-time inference run in the last 24h: succeeded vs failed. Not background cron jobs.',
       activeTip: 'Users whose account saw any activity in the last 24h.',
       activeMore: 'and {{count}} more',
