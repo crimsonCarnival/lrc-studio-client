@@ -44,12 +44,12 @@ const TAG_TYPES = SECTION_TYPES.filter((s) => s.depth !== 0);
 export default function PhoneLineSheet(p: PhoneLineSheetProps) {
   const { t } = useTranslation();
   const [view, setView] = useState<View>(p.initialView ?? 'main');
-  // Re-enter on the requested page each time the sheet opens.
-  const wasOpen = useRef(false);
-  useEffect(() => {
-    if (p.open && !wasOpen.current) setView(p.initialView ?? 'main');
-    wasOpen.current = p.open;
-  }, [p.open, p.initialView]);
+  // Re-enter on the requested page each time the sheet opens, during render so it never paints the wrong page.
+  const [wasOpen, setWasOpen] = useState(p.open);
+  if (p.open !== wasOpen) {
+    setWasOpen(p.open);
+    if (p.open) setView(p.initialView ?? 'main');
+  }
   const isSelection = p.indices.length > 1;
   const index = p.indices[0];
   const line = index != null ? p.lines[index] : undefined;
@@ -94,6 +94,7 @@ export default function PhoneLineSheet(p: PhoneLineSheetProps) {
     </>
   ) : view === 'tag' ? (
     <>
+      {back}
       {TAG_TYPES.map((type) => (
         <DrawerItem key={type.id} iconName="label" label={(t as (key: string) => string)(type.labelKey)} onClick={run(() => p.onTagSection?.(type.id))} />
       ))}

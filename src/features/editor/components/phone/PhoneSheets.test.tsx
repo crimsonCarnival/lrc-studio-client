@@ -484,6 +484,19 @@ describe('Select mode', () => {
     expect(latest.lines.filter((l) => l.type !== 'section')).toHaveLength(3);
   });
 
+  it('the tag chooser opens directly and has a Back row to the selection options', async () => {
+    render(<Harness />);
+    enterSelect();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tools' })).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Line 2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Line 3' }));
+    fireEvent.click(screen.getByRole('button', { name: /tag as section/i }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Verse')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: /back/i }));
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: /tag as section/i })).toBeInTheDocument();
+  });
+
   it('leaves Select mode after the selection is deleted', async () => {
     render(<Harness />);
     enterSelect();
