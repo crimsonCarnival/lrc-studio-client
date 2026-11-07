@@ -147,3 +147,33 @@ describe('PhoneSyncTab', () => {
     expect(screen.getByTestId('phone-list-pane').contains(mark)).toBe(false);
   });
 });
+
+describe('PhoneMarkBar nudge buttons', () => {
+  const nudge = (over = {}) => ({ target: { number: 4 }, amount: 0.1, onEarlier: vi.fn(), onLater: vi.fn(), ...over });
+
+  it('shows no nudge buttons unless the editor passes them', () => {
+    renderBar();
+    expect(screen.queryByRole('button', { name: /^Move line/ })).toBeNull();
+  });
+
+  it('names the line each button moves and calls its own handler on a plain click', async () => {
+    const n = nudge();
+    renderBar({ nudge: n });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Move line 4 earlier by 0.1s' }));
+    await user.click(screen.getByRole('button', { name: 'Move line 4 later by 0.1s' }));
+    expect(n.onEarlier).toHaveBeenCalledTimes(1);
+    expect(n.onLater).toHaveBeenCalledTimes(1);
+  });
+
+  it('tapping a nudge never marks', async () => {
+    const { onMark } = renderBar({ nudge: nudge() });
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Move line 4 later by 0.1s' }));
+    expect(onMark).not.toHaveBeenCalled();
+  });
+
+  it('is disabled when there is no stamped line to move', () => {
+    renderBar({ nudge: nudge({ target: null }) });
+    screen.getAllByRole('button', { name: 'No stamped line to move' }).forEach((b) => expect(b).toBeDisabled());
+  });
+});

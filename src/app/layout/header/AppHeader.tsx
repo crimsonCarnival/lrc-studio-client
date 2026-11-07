@@ -22,6 +22,13 @@ import { UserMenu } from './UserMenu';
 import { ThemeLangSwitcher } from './ThemeLangSwitcher';
 import { HeaderBreadcrumb } from './HeaderBreadcrumb';
 import { GuestAuthButtons } from './GuestAuthButtons';
+import { useGuestAuth } from './use-guest-auth';
+import { useStaffPending } from './use-staff-pending';
+import { CountDot } from '@ui/count-dot';
+import { PhoneNavAccount } from './PhoneNavAccount';
+import { AppDrawer } from '../AppDrawer';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
+import { useNotificationsContext } from '@/features/notifications/NotificationsContext';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/auth.types';
@@ -104,6 +111,16 @@ export function AppHeader({
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const searchOverlayRef = useRef<HTMLDivElement | null>(null);
+  const burgerRef = useRef<HTMLButtonElement | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isLg = useBreakpoint('lg');
+  const { unreadCount } = useNotificationsContext();
+  const staffPending = useStaffPending(user?.permissions);
+  const unverified = !!user?.email && !user?.isVerified;
+  const menuLabel = staffPending > 0
+    ? t('nav.menuPending', { count: staffPending })
+    : unverified ? t('nav.menuUnverified') : t('nav.menu');
+  const goToAuth = useGuestAuth({ isReady, lines, mediaTitle, buildProjectPayload });
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -149,6 +166,10 @@ export function AppHeader({
   // (see useHeaderSlot), so the site nav, search and tour button step aside.
   const isWorkspace = isEditorPage && location.pathname !== '/project/new' && isReady;
 
+  // Below lg the burger drawer replaces the site nav, the avatar menu and the guest
+  // theme/auth buttons. The editor workspace keeps its own header content.
+  const phoneNav = !isLg && !isWorkspace && !isGuestLanding;
+
   const currentTheme = settings?.interface?.theme || 'dark';
   const customTheme = settings?.interface?.customTheme as string | undefined;
 
@@ -174,6 +195,16 @@ export function AppHeader({
     }
   };
 
+  // Drawer navigation keeps the unsaved-changes guard but not navTo's section toggle.
+  const drawerGo = (path: string) => {
+    if (isEditorPage && hasUnsavedChanges()) setUnsavedModalTarget(path);
+    else navigate(path);
+  };
+  const closeDrawer = (open: boolean) => {
+    setDrawerOpen(open);
+    if (!open) burgerRef.current?.focus({ preventScroll: true });
+  };
+
   // Header icon buttons are 40px (44px on touch) at every breakpoint, unlike Button's own icon size.
   const iconBtn = 'size-10 lg:size-10 coarse:size-11';
 
@@ -188,6 +219,24 @@ export function AppHeader({
 
           {/* ── Left: Logo + breadcrumb ── */}
           <div className={`flex items-center gap-4 lg:gap-8 min-w-0 ${isWorkspace ? 'lg:flex-1' : ''}`}>
+            {phoneNav && (
+              <Button
+                ref={burgerRef}
+                variant="ghost"
+                size="icon"
+                aria-label={menuLabel}
+                aria-haspopup="dialog"
+                aria-expanded={drawerOpen}
+                onClick={() => setDrawerOpen(true)}
+                className={`${iconBtn} relative -ml-2 shrink-0`}
+              >
+                <Icon name="menu" size={22} />
+                <CountDot count={staffPending} />
+                {unverified && staffPending === 0 && (
+                  <span aria-hidden="true" className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-amber-400 border-2 border-zinc-950" />
+                )}
+              </Button>
+            )}
             {!(isWorkspace && workspaceView === 'preview') && (
             <HeaderBreadcrumb
               isReady={isReady}
@@ -300,7 +349,9 @@ export function AppHeader({
 
             {/* Auth section — theme/lang live in the user menu for signed-in users (#14),
                 so guests keep the standalone switcher. */}
-            {!user ? (
+            {phoneNav ? (
+              user && <PhoneNavAccount user={user} unverified={unverified} label={menuLabel} onOpen={() => setDrawerOpen(true)} />
+            ) : !user ? (
               <>
                 {!isWorkspace && <ThemeLangSwitcher currentTheme={currentTheme} customTheme={customTheme} updateSetting={updateSetting} i18n={i18n} />}
                 <GuestAuthButtons
@@ -324,6 +375,23 @@ export function AppHeader({
             )}
           </div>
         </div>
+
+        {phoneNav && (
+          <AppDrawer
+            open={drawerOpen}
+            onOpenChange={closeDrawer}
+            user={user}
+            logout={logout}
+            go={drawerGo}
+            onGuestAuth={goToAuth}
+            currentTheme={currentTheme}
+            customTheme={customTheme}
+            updateSetting={updateSetting}
+            i18n={i18n}
+            unreadCount={unreadCount}
+            staffPending={staffPending}
+          />
+        )}
 
         {!isProjectPage && (
           <Suspense fallback={null}>

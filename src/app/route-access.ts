@@ -20,7 +20,7 @@ const seg1 = (path: string): string => path.split('/')[1] || '';
 
 // Auth-only top-level segments (the route + any sub-path under it).
 const AUTH_SEGMENTS = new Set([
-  'settings', 'home', 'library', 'uploads', 'feed', 'notifications', 'reports',
+  'settings', 'home', 'library', 'uploads', 'feed', 'notifications', 'reports', 'sessions',
 ]);
 
 const RULES: Rule[] = [
@@ -34,6 +34,7 @@ const RULES: Rule[] = [
   { test: p => /^\/[^/]+\/projects\/[^/]+$/.test(p), access: 'public' },   // public project view
   { test: p => /^\/verify-email/.test(p), access: 'public' },
   { test: p => /^\/search/.test(p), access: 'public' },
+  { test: p => p === '/guide', access: 'public' },
   { test: p => /^\/explore(\/.*)?$/.test(p), access: 'public' },
   { test: p => p === '/leaderboard', access: 'public' },
   // Collab: anonymous guests join with an invite token and then hold only a collabGuest

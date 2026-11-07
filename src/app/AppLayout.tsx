@@ -12,6 +12,7 @@ import { AdminHeader } from './layout/header/AdminHeader';
 import { isAdminPathname } from '@/features/admin/admin-nav';
 import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
+import { BOTTOM_BAR_CLEARANCE, showsBottomBar } from './layout/nav-items';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
@@ -87,7 +88,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+  const { mobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
   // Reactive so the dynamic padding formula stays correct on resize.
   const isLg = useBreakpoint('lg');
@@ -100,14 +101,15 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // whichever is showing owns the desktop player dock.
   const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, phoneEditor: phoneEditorMounted });
 
-  // The editor workspace is a full-screen tool: no app tab bar there, at any width.
-  const showMobileNav = !isEditorPath(location.pathname);
+  // No bottom bar in the editor workspace, setup, the local draft or the public project
+  // view, nor while the phone editor draws its own chrome (see showsBottomBar).
+  const showMobileNav = showsBottomBar(location.pathname, phoneEditorMounted);
 
   // Compute dynamic bottom padding only for the mobile dock. Desktop slots (editor/header)
-  // are in-flow — no space reservation needed. Above the tab bar the dock sits at
-  // bottom-14 (56px) with a 24px gap = 80px; with no tab bar it sits on the bottom edge.
+  // are in-flow — no space reservation needed. Above the bottom bar the dock sits at
+  // bottom-14 (56px) with a 24px gap, plus the safe-area inset; with no bar it sits on the bottom edge.
   const dynamicPb = playerSlot === 'mobile' && isReady && isPlayerMounted && playerHeight > 0
-    ? `${playerHeight + (showMobileNav ? 80 : 0)}px`
+    ? showMobileNav ? `calc(${playerHeight}px + 5rem + env(safe-area-inset-bottom))` : `${playerHeight}px`
     : undefined;
 
   const isAdminPage = isAdminPathname(location.pathname);
@@ -292,15 +294,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
                       : 'pb-6'
                     // Player will mount on this route but hasn't faded in yet —
                     // reserve its desktop slot too, so nothing jumps when it does.
-                    : 'pb-20 lg:pb-6'
-                  // No player ever mounts here (Home, Explore, Feed, …). pb-20
-                  // stays: it clears AppMobileNav (lg:hidden), unrelated to the
-                  // player. lg:pb-0 overrides it back down on desktop, where
-                  // that nav doesn't exist — the previous lg:pb-6 here had no
-                  // justification and was dead bottom padding; the one time
-                  // this was 'pb-20' alone (no lg: override), pb-20's 80px
-                  // applied on EVERY width, which is worse, not better.
-                  : 'pb-20 lg:pb-0'
+                    : showMobileNav ? 'pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-6' : 'pb-20 lg:pb-6'
+                  // No player ever mounts here (Home, Explore, Feed, …): clear the bottom
+                  // bar where it shows, nothing where it does not. Desktop has no bar.
+                  : showMobileNav ? BOTTOM_BAR_CLEARANCE : 'pb-0'
               }
           `}
             style={{
@@ -336,9 +333,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           {showMobileNav && (
             <AppMobileNav
               isReady={isReady}
-              mobileTab={mobileTab}
-              setMobileTab={setMobileTab}
-              activepublicId={activepublicId}
+              lines={lines}
+              mediaTitle={mediaTitle}
+              buildProjectPayload={buildProjectPayload}
             />
           )}
 

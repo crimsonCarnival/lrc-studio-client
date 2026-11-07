@@ -1,6 +1,8 @@
 // All localStorage keys in one auditable place
 export const STORAGE_KEYS = {
   PROJECT: 'lrc-syncer-project',
+  /** Backup of a guest draft that could not be restored; cleared on sign-in, sign-out and new project. */
+  PROJECT_REJECTED: 'lrc-syncer-project-rejected',
   SHARED_PROJECT: 'lrc-syncer-shared-project',
   ACTIVE_PROJECT_ID: 'lrc-syncer-active-project-id',
   SETTINGS: 'lrc-syncer-settings',

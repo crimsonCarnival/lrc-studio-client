@@ -365,6 +365,7 @@ export function AppRouter({
     collabViewer,
     t,
   } = appState;
+  const guestDraftPending = (appState as { guestDraftPending?: boolean }).guestDraftPending === true;
   const collabStatus = collabSession.status;
   const hasCollabDoc = collabSession.doc !== null;
   const retryCollab = collabSession.retry;
@@ -662,9 +663,13 @@ export function AppRouter({
         </Suspense>
       } />
       <Route path="project/local" element={
+        // A guest's saved draft is about to be restored into memory by useAppState. Mounting the
+        // editor empty first would open it on its (empty) Edit tab, and redirecting to setup would
+        // reset the app state and throw the draft away; render nothing for this one pass instead.
+        guestDraftPending ? null :
         editorReady && lines.length === 0 && !hasMedia && !pendingProject && !restoredMedia
           && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
-          ? <Navigate to="/project/new" replace />
+          ? <Navigate to="/project/new" replace state={{ keepGuestDraft: true }} />
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
       } />
       <Route path=":accountName/projects/:slugId" element={

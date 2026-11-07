@@ -6,6 +6,7 @@ import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
 import { isApiError, isAuthError } from '@/types';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { mayWriteGuestDraft } from '@/features/projects/services/guest-draft';
 import { getSocket } from '@/app/socket.client';
 import { artistDisplay } from '@/features/artists/artist-credits';
 import {
@@ -104,7 +105,7 @@ export function useAutosave({
     const key = isSharedProject ? STORAGE_KEYS.SHARED_PROJECT : STORAGE_KEYS.PROJECT;
     // Only persist to localStorage for guest users.
     // Auth users persist exclusively to the server.
-    if (!getAccessToken()) {
+    if (!getAccessToken() && (key !== STORAGE_KEYS.PROJECT || mayWriteGuestDraft(payload.lines?.length ?? 0))) {
       localStorage.setItem(key, JSON.stringify(payload));
     }
 

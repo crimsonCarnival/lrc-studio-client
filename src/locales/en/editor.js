@@ -166,6 +166,11 @@ export default {
   markLineNumber: "Mark line {{number}}",
   markEndNumber: "Mark end of line {{number}}",
   phone: {
+    nudge: {
+      earlier: "Move line {{number}} earlier by {{amount}}s",
+      later: "Move line {{number}} later by {{amount}}s",
+      none: "No stamped line to move",
+    },
     tabs: "Editor views",
     focus: {
       open: "Focus view",

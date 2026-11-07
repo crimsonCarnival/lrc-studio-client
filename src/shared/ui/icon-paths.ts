@@ -62,6 +62,8 @@ export const ICON_SHAPES: Record<string, IconShape> = {
   delete: { d: ['M4 7h16 M9 7V4.5h6V7', 'M6.5 7l1 13h9l1-13 M10 11v5 M14 11v5'] },
   edit: { d: 'M4 20h4L19 9l-4-4L4 16z M13.5 6.5l4 4' },
   add: { d: 'M12 5v14 M5 12h14' },
+  // Burger for the phone navigation drawer.
+  menu: { d: 'M4 7h16 M4 12h16 M4 17h16' },
   // Not on the sheet: the horizontal stroke of dd, so the -/+ pair matches.
   remove: { d: 'M5 12h14' },
 

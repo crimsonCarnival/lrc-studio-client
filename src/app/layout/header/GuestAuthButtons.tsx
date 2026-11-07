@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
-import { savePendingProject } from '@/features/editor/services/guest-project-db';
-import { flatToSections } from '@/features/editor/utils/sections';
+import { useGuestAuth } from './use-guest-auth';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 interface GuestAuthButtonsProps {
@@ -15,52 +13,8 @@ interface GuestAuthButtonsProps {
 
 export function GuestAuthButtons({ isReady, lines, mediaTitle, buildProjectPayload }: GuestAuthButtonsProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
-  // Persist the in-progress guest draft to IndexedDB before bouncing to auth,
-  // so the work survives the round-trip and is reclaimed after sign-in.
-  const saveToIdb = async () => {
-    const payload = buildProjectPayload ? buildProjectPayload() : { title: mediaTitle || '', lines: lines ?? [] };
-    const idbPayload = {
-      title: payload.title,
-      lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
-      state: {
-        syncMode: payload.syncMode,
-        activeLineIndex: payload.activeLineIndex,
-        playbackPosition: payload.playbackPosition,
-        playbackSpeed: payload.playbackSpeed,
-        saveTime: payload.saveTime,
-      },
-      metadata: payload.metadata,
-      ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
-      ...(payload.uploadedAudio ? {
-        uploadUrl: payload.uploadedAudio.uploadUrl,
-        uploadPublicId: payload.uploadedAudio.publicId || null,
-        fileName: payload.uploadedAudio.fileName || '',
-        duration: payload.uploadedAudio.duration || null,
-      } : {}),
-    };
-    await savePendingProject(idbPayload);
-  };
-
-  const hasDraft = (lines?.length ?? 0) > 0;
-
-  // Guest with unsaved work → stash the draft, then carry them back to it post-auth.
-  const goToAuth = async (target: 'signin' | 'signup') => {
-    const base = target === 'signin' ? '/auth?action=signin' : '/auth/signup';
-    if (isReady && hasDraft) {
-      try {
-        await saveToIdb();
-        navigate(`${base}${base.includes('?') ? '&' : '?'}redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
-      } catch {
-        import('react-hot-toast').then(({ default: toast }) => {
-          toast.error(t('editor.draftSaveFailed'));
-        });
-      }
-    } else {
-      navigate(base);
-    }
-  };
+  const goToAuth = useGuestAuth({ isReady, lines, mediaTitle, buildProjectPayload });
 
   return (
     <div className="flex items-center gap-1 flex-shrink-0">

@@ -15,6 +15,8 @@ interface ActionDrawerProps {
   showClose?: boolean;
   /** Ignore backdrop taps for this long after opening (a long-press release can land on it). */
   backdropGuardMs?: number;
+  /** Where the sheet comes from: the bottom edge (default) or the left, for a navigation drawer. */
+  side?: 'bottom' | 'left';
 }
 
 /**
@@ -26,7 +28,8 @@ export default function ActionDrawer({
   title,
   children,
   showClose = true,
-  backdropGuardMs = 0
+  backdropGuardMs = 0,
+  side = 'bottom',
 }: ActionDrawerProps) {
   const openedAtRef = useRef(0);
   // Prevent scrolling when drawer is open
@@ -54,7 +57,7 @@ export default function ActionDrawer({
               onClose();
             }}
           />
-          <DrawerPanel key="panel" onClose={onClose} title={title} showClose={showClose}>
+          <DrawerPanel key="panel" onClose={onClose} title={title} showClose={showClose} side={side}>
             {children}
           </DrawerPanel>
         </>
@@ -93,7 +96,8 @@ const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:n
  * on open and returns to the opener on close, Tab stays inside, Escape closes. The body
  * scrolls when the content is taller than the screen.
  */
-function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => void; title?: string; showClose: boolean; children?: ReactNode }) {
+function DrawerPanel({ onClose, title, showClose, side, children }: { onClose: () => void; title?: string; showClose: boolean; side: 'bottom' | 'left'; children?: ReactNode }) {
+  const left = side === 'left';
   const { t } = useTranslation();
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -150,16 +154,18 @@ function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => v
       onPointerDownCapture={isPresent ? undefined : swallow}
       onClickCapture={isPresent ? undefined : swallow}
       onKeyDown={handleKeyDown}
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
+      initial={left ? { x: '-100%' } : { y: '100%' }}
+      animate={left ? { x: 0 } : { y: 0 }}
+      exit={left ? { x: '-100%' } : { y: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed bottom-0 left-0 right-0 z-[201] flex max-h-[88dvh] flex-col bg-zinc-950 border-t border-zinc-800 rounded-t-[2rem] shadow-2xl outline-none pb-safe"
+      className={left
+        ? 'fixed inset-y-0 left-0 z-[201] flex w-[min(20rem,88vw)] flex-col bg-zinc-950 border-r border-zinc-800 shadow-2xl outline-none pt-safe pb-safe'
+        : 'fixed bottom-0 left-0 right-0 z-[201] flex max-h-[88dvh] flex-col bg-zinc-950 border-t border-zinc-800 rounded-t-[2rem] shadow-2xl outline-none pb-safe'}
     >
       {/* Drag Handle Indicator */}
-      <div aria-hidden className="w-12 h-1.5 bg-zinc-800 rounded-pill mx-auto mt-3 mb-1 shrink-0" />
+      {!left && <div aria-hidden className="w-12 h-1.5 bg-zinc-800 rounded-pill mx-auto mt-3 mb-1 shrink-0" />}
 
-      <div className="flex shrink-0 items-center justify-between px-6 pt-2 pb-3">
+      <div className={`flex shrink-0 items-center justify-between pb-3 ${left ? 'px-4 pt-3' : 'px-6 pt-2'}`}>
         {title ? <h3 id={titleId} className="text-lg font-semibold text-zinc-100">{title}</h3> : <span />}
         {showClose && (
           <Tip content={t('common.close')}>
@@ -176,7 +182,7 @@ function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => v
         )}
       </div>
 
-      <div data-drawer-body className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-6 pb-8">
+      <div data-drawer-body className={`min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pb-8 ${left ? 'px-3' : 'px-6'}`}>
         {children}
       </div>
     </m.div>

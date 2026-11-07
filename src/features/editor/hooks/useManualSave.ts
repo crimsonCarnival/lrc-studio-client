@@ -9,6 +9,7 @@ import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
 import { isAuthError } from '@/types';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { mayWriteGuestDraft } from '@/features/projects/services/guest-draft';
 
 const _defaultTzFormatter = new Intl.DateTimeFormat();
 const _tzFormatters = new Map<string, Intl.DateTimeFormat>();
@@ -290,7 +291,7 @@ export function useManualSave({
     payload.title = finalTitle;
     // Only persist to localStorage for guest users.
     // Authenticated users save exclusively to the server (prevents stale local data).
-    if (!getAccessToken()) {
+    if (!getAccessToken() && (key !== STORAGE_KEYS.PROJECT || mayWriteGuestDraft(payload.lines?.length ?? 0))) {
       localStorage.setItem(key, JSON.stringify(payload));
     }
     setIsAutosaving(true);

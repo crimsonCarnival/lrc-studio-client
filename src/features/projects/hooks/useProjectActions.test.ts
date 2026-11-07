@@ -30,4 +30,12 @@ describe('resetAppState', () => {
     setup().result.current.resetAppState({ keepGuestDraft: true });
     expect(localStorage.getItem(STORAGE_KEYS.PROJECT)).not.toBeNull();
   });
+
+  it('an explicit new project also discards the rejected-draft backup, but Back keeps it', () => {
+    localStorage.setItem(STORAGE_KEYS.PROJECT_REJECTED, 'old');
+    setup().result.current.resetAppState({ keepGuestDraft: true });
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBe('old');
+    setup().result.current.resetAppState();
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBeNull();
+  });
 });
