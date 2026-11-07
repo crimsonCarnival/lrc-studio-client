@@ -11,13 +11,13 @@ import { Button } from '@ui/button';
 import { LANGUAGES, getLangLabel } from './auth-constants';
 import { isProjectPath } from '@features/projects/project-path';
 
-export function LangSwitcher({ i18n }: { i18n?: I18nInstance }) {
+export function LangSwitcher({ i18n, className = 'h-8 lg:h-8' }: { i18n?: I18nInstance; className?: string }) {
   const currentCode = (i18n?.language || 'en').split('-')[0];
   const currentShort = currentCode.toUpperCase();
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 lg:h-8">
+        <Button variant="outline" size="sm" className={className}>
           <Icon name="language" size={14} />
           {currentShort}
         </Button>

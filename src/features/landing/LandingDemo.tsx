@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { DEMO_LINES, formatStamp } from './demo-lines';
 
 /**
  * The hero's looping editor + preview mock. It owns the playback clock so the
@@ -19,24 +20,8 @@ const TICK_MS = 50;
 // still frame shows a past line, an active line and upcoming ones.
 const STILL_FRAME = 4.4;
 
-// Sample lyric, not UI copy. `cjk` lines have no spaces between words.
-const DEMO_LINES: { t: number; w: string[]; cjk?: boolean }[] = [
-  { t: 0.4, w: ['The', 'stars', 'align', 'above', 'the', 'city', 'lights'] },
-  { t: 3.6, w: ['Midnight', 'echoes', 'through', 'the', 'empty', 'halls'] },
-  { t: 6.8, w: ['She', 'sang', 'a', 'melody', 'that', 'broke', 'the', 'night'] },
-  { t: 10.0, w: ['And', 'disappeared', 'before', 'the', 'morning', 'calls'] },
-  { t: 13.2, w: ['月明かりに', '照らされた', '道を'], cjk: true },
-];
-
 const WORD_COUNT = DEMO_LINES.reduce((n, l) => n + l.w.length, 0);
 const TIMELINE_TICKS = [0, 4, 8, 12, 16];
-
-function formatStamp(seconds: number): string {
-  // Work in whole centiseconds: flooring float seconds turns 6.8 into "06.79".
-  const total = Math.round(seconds * 100);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(Math.floor(total / 6000))}:${pad(Math.floor(total / 100) % 60)}.${pad(total % 100)}`;
-}
 
 const PANEL = 'min-w-0 rounded-[calc(var(--radius)*2.2)] bg-zinc-900 flex flex-col font-lyrics';
 const PANEL_LABEL = 'inline-flex items-center gap-2 text-[15px] font-bold tracking-[0.08em] uppercase text-zinc-100';

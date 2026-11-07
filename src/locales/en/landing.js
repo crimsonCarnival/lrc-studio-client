@@ -11,6 +11,11 @@ export default {
   ctaOpen: 'Open the editor',
   ctaHaveAccount: 'I have an account',
 
+  // Phone copy (below lg): there is no Enter key on a touch screen, so the keyboard wording is swapped for tapping.
+  headlineTap: 'Tap<br/>when the line<br/><accent>lands.</accent>',
+  subTap: 'Load a song, paste the lyrics, tap along. Export an <ext>.lrc</ext> or <ext>.srt</ext> file that works in your player or video editor.',
+  ctaOpenTap: 'Start syncing a song',
+
   demo: {
     editor: 'Editor',
     preview: 'Preview',
@@ -22,6 +27,14 @@ export default {
     enterKey: 'enter',
     play: 'Play demo',
     pause: 'Pause demo',
+    tryIt: 'Try it',
+    tapToStamp: 'Tap to stamp',
+    tapHint: 'Tap the button as each line lands to stamp it.',
+    tapKey: 'tap',
+    stamped: 'Stamped {{stamp}}',
+    allStamped: 'All {{total}} lines stamped.',
+    tryAgain: 'Try again',
+    lineCount: 'Line {{current}} of {{total}}',
   },
 
   how: {
@@ -34,6 +47,13 @@ export default {
     s3Title: 'Get the lyrics',
     s3Desc: 'On the Lyrics tab, paste them or search. Open a result to preview it — if it already comes with timestamps, keep them and skip straight past syncing. You can still fix any line afterwards.',
     s4Title: 'Start syncing, then export',
+    seeExample: 'See an example',
+    hideExample: 'Hide the example',
+    s1Short: 'Name it, then add the song and artist.',
+    s2Short: 'Search YouTube or use your own file.',
+    s3Short: 'Paste the lyrics or search for them.',
+    s4Short: 'Tap each line as it lands, then export.',
+    s4DescTap: "Choose whether the project is public, hit Start syncing, and you're in the editor from the top of this page. Tap on each line, then export as LRC, SRT or word-level.",
     s4Desc: "Choose whether the project is public, hit Start syncing, and you're in the editor from the top of this page. Press Enter on each line, then export as LRC, SRT or word-level.",
   },
 
