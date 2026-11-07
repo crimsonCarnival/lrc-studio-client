@@ -848,7 +848,17 @@ const EditorLineItem = React.memo(({
               the line's progress — are one short line of metadata. So they run
               across the top instead of being stacked into a column narrow enough to
               push the tray's last chip onto an extra row. */}
-          {editorMode === 'words' && (
+          {/* Phone Words rows are navigation only: the line's words live in the Words panel
+              above the Mark bar, so the list shows the text and how far the line has got. */}
+          {editorMode === 'words' && compact && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="min-w-0 flex-1 truncate text-[15px] leading-snug">{line.text}</span>
+              {!!line.words?.length && (
+                <span className="shrink-0 font-mono text-[11px] tabular-nums text-foreground/65">{timedWords}/{line.words.length}</span>
+              )}
+            </div>
+          )}
+          {editorMode === 'words' && !compact && (
             <div className="flex items-center gap-2 min-w-0 relative z-10">
               {lineHandle}
               <WordsModeTimestamp
@@ -915,7 +925,7 @@ const EditorLineItem = React.memo(({
           {/* Chip tray. On the line being worked on it sits on its own recessed
               surface, so the row reads as "header over tray" rather than as a
               lyric line that happens to have grown boxes. */}
-          {editorMode === 'words' && (
+          {editorMode === 'words' && !compact && (
             <div className={isActive ? 'rounded-xl bg-background/40 px-2 py-2 inset-ring inset-ring-hl/60' : ''}>
             <WordsModeChips
               line={line as ComponentProps<typeof WordsModeChips>['line']}

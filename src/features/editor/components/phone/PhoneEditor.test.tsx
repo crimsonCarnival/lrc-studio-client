@@ -282,10 +282,10 @@ describe('Crossing the lg breakpoint on a mounted editor', () => {
     expect(latest.lines[0].timestamp).toBe(12.5);
   });
 
-  it('does not offer Focus in Words mode below lg and leaves the stored choice alone', () => {
+  it('does not offer Focus in Words mode on the phone and leaves the stored choice alone', () => {
     localStorage.setItem('lrc-phone-focus-view', '1');
     render(<Harness viaPage editorMode="words" initialLines={makeLines(3)} />);
-    expect(document.querySelector('[data-phone-editor]')).toBeNull();
+    expect(document.querySelector('[data-phone-editor]')).not.toBeNull();
     expect(screen.queryByTestId('phone-focus-view')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Focus view' })).toBeNull();
     expect(localStorage.getItem('lrc-phone-focus-view')).toBe('1');

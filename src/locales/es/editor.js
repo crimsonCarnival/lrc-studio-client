@@ -181,6 +181,17 @@ export default {
       none: "Sin línea",
       syncOff: "El modo de sincronización está apagado: tocar no marca.",
     },
+    words: {
+      panel: "Palabras de la línea {{number}}",
+      lineOf: "Línea {{number}} de {{total}}",
+      markWord: "Marcar “{{word}}”",
+      noWords: "Esta línea no tiene palabras que sincronizar. Marcar sella la línea completa.",
+      unstamped: "{{word}}, sin marcar",
+      layerGroup: "Capa a marcar",
+      changeSinger: "Cambiar cantante de {{word}}",
+      singerNone: "Sin cantante",
+      wordCount: "{{done}} de {{total}} palabras marcadas",
+    },
     tools: {
       title: "Herramientas",
       timing: "Tiempos",

@@ -27,6 +27,7 @@ import PhoneLineSheet from '../phone/PhoneLineSheet';
 import PhoneSelectBar from '../phone/PhoneSelectBar';
 import PhoneEditTab from '../phone/PhoneEditTab';
 import PhoneFocusView from '../phone/PhoneFocusView';
+import type { PhoneWordsChip } from '../phone/PhoneWordsTab';
 import { focusLines } from '../phone/focus-lines';
 import { usePhoneFocus } from '../phone/usePhoneFocus';
 import type { EditView } from '../phone/PhoneEditTab';
@@ -863,6 +864,14 @@ export default function Editor({
     () => lines.some((l) => l.type !== 'section' && (hasKanji(l.text) || l.words?.some((w) => hasKanji(w.word)))),
     [lines],
   );
+  // The phone Words view stamps what the focused timestamp names, so a focus left on another
+  // line, on a start time from another mode, or on the other layer would silently redirect the
+  // Mark. Only a word of the current layer on the cursor line is a focus this view can show.
+  const strayFocus = phone && editorMode === 'words' && focusedTimestamp != null
+    && (focusedTimestamp.lineIndex !== activeLineIndex || focusedTimestamp.type !== (stampTarget === 'secondary' ? 'secondaryWord' : 'word'));
+  useEffect(() => {
+    if (strayFocus) setFocusedTimestamp(null);
+  }, [strayFocus, setFocusedTimestamp]);
   const hasCjkAnywhere = useMemo(() => lines.some((l) => l.type !== 'section' && hasCJK(l.text ?? '')), [lines]);
   const hasLyricLines = useMemo(() => lines.some((l) => l.type !== 'section'), [lines]);
 
@@ -1153,6 +1162,32 @@ export default function Editor({
         </button>
       </div>
     ) : null;
+    // Words mode: the Sync tab shows the cursor line's words as chips. Everything below reads or
+    // calls what the desktop words view already uses (focused timestamp, stamp target, handleMark).
+    const isWords = editorMode === 'words';
+    const secondaryLayer = stampTarget === 'secondary';
+    const wordKind = secondaryLayer ? 'secondaryWord' as const : 'word' as const;
+    const cursorLine = lines[activeLineIndex];
+    const cursorIsLyric = !!cursorLine && cursorLine.type !== 'section';
+    const layerWords = cursorIsLyric ? ((secondaryLayer ? cursorLine.secondaryWords : cursorLine.words) ?? []) : [];
+    const phoneWords: PhoneWordsChip[] = layerWords.map((w) => ({ word: w.word ?? '', time: w.time ?? null, singerIndex: w.singerIndex }));
+    // A focused timestamp wins over the cursor in applyMark, so the highlight follows it too.
+    const phoneActiveWord: number | null = focusedTimestamp
+      ? (focusedTimestamp.lineIndex === activeLineIndex && focusedTimestamp.type === wordKind ? focusedTimestamp.wordIndex ?? null : null)
+      : phoneWords.length ? Math.min(activeWordIndex, phoneWords.length - 1) : null;
+    const phoneMarkLabel = isWords && phoneActiveWord != null && phoneWords[phoneActiveWord]
+      ? t('editor.phone.words.markWord', { word: phoneWords[phoneActiveWord].word })
+      : markLabel;
+    const lyricIndices = lines.reduce<number[]>((acc, l, i) => (l.type === 'section' ? acc : [...acc, i]), []);
+    const lyricPos = lyricIndices.findIndex((i) => i >= activeLineIndex);
+    const prevLyric = [...lyricIndices].reverse().find((i) => i < activeLineIndex);
+    const nextLyric = lyricIndices.find((i) => i > activeLineIndex);
+    const goToLine = (index: number | undefined) => {
+      if (index == null) return;
+      setFocusedTimestamp(null);
+      setActiveLineIndex(index);
+    };
+    const secondaryAvailable = cursorIsLyric && hasCJK(cursorLine.text ?? '');
     return (
       <>
         <PhoneEditor
@@ -1205,7 +1240,8 @@ export default function Editor({
             />
           ) : undefined}
           onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
-          focus={readOnly ? undefined : {
+          // Focus is a Lines-mode view. Words already works one line at a time, so it is not offered there.
+          focus={readOnly || isWords ? undefined : {
             on: phoneFocus,
             onToggle: () => setPhoneFocus(!phoneFocus),
             inert: toolsOpen || (lineSheet.open && lineSheetValid),
@@ -1233,21 +1269,51 @@ export default function Editor({
             onMark: () => handleMarkWithConfidence(),
             onUndo: undo,
             canUndo,
-            label: markLabel,
+            label: phoneMarkLabel,
             disabled: !syncMode || lines.length === 0,
           }}
+          words={isWords ? {
+            lineNumber: lyricPos >= 0 ? { number: lyricPos + 1, total: lyricIndices.length } : null,
+            words: phoneWords,
+            activeIndex: phoneActiveWord,
+            // Selecting a word is what a chip click does on desktop (minus the seek, which would
+            // make re-stamping a word mark its old time): the next Mark stamps this word.
+            onWordTap: (wi) => {
+              handleSetActiveWordIndex(wi);
+              setFocusedTimestamp({ lineIndex: activeLineIndex, type: wordKind, wordIndex: wi });
+            },
+            onWordMenu: (wi) => openWord(activeLineIndex, wi, layerWords[wi] as Parameters<typeof openWord>[2], secondaryLayer),
+            onCycleSinger: !secondaryLayer && cursorIsLyric && (cursorLine.singers?.length ?? 0) >= 2 && !readOnly
+              ? (wi) => handleCycleWordSinger(activeLineIndex, wi)
+              : undefined,
+            onPrevLine: () => goToLine(prevLyric),
+            onNextLine: () => goToLine(nextLyric),
+            canPrev: prevLyric != null,
+            canNext: nextLyric != null,
+            layer: secondaryAvailable && !readOnly
+              ? { value: stampTarget as 'main' | 'secondary' | 'both', onChange: handleSetStampTarget }
+              : undefined,
+            mark: readOnly ? undefined : {
+              onMark: () => handleMarkWithConfidence(),
+              onUndo: undo,
+              canUndo,
+              label: phoneMarkLabel,
+              disabled: !syncMode || lines.length === 0,
+            },
+          } : undefined}
         />
         <PhoneToolsSheet
           open={toolsOpen}
           onClose={() => setToolsOpen(false)}
           readOnly={readOnly}
-          focusView={{
+          focusView={isWords ? undefined : {
             on: phoneFocus,
             onToggle: () => {
               if (phoneTab !== 'sync') changePhoneTab('sync');
               setPhoneFocus(!phoneFocus);
             },
           }}
+          distributeWords={isWords && cursorIsLyric ? { available: focusLength != null && phoneWords.length > 0, run: handleDistributeWords } : undefined}
           editorMode={editorMode}
           hasLines={hasLyricLines}
           autoStamp={{ blocked: autoStampBlocked, onStart: handleAutoStampStart }}

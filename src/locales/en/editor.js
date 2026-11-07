@@ -178,6 +178,17 @@ export default {
       none: "No line",
       syncOff: "Sync mode is off, so taps do not stamp.",
     },
+    words: {
+      panel: "Words in line {{number}}",
+      lineOf: "Line {{number}} of {{total}}",
+      markWord: "Mark “{{word}}”",
+      noWords: "This line has no words to time. Mark stamps the whole line.",
+      unstamped: "{{word}}, not stamped",
+      layerGroup: "Layer to stamp",
+      changeSinger: "Change singer for {{word}}",
+      singerNone: "No singer",
+      wordCount: "{{done}} of {{total}} words stamped",
+    },
     tools: {
       title: "Tools",
       timing: "Timing",

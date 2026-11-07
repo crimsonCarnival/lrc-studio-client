@@ -6,6 +6,8 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { usePhoneEditorChrome } from '@/app/layout/phone-editor-chrome';
 import PhoneSyncTab from './PhoneSyncTab';
+import PhoneWordsTab from './PhoneWordsTab';
+import type { PhoneWordsTabProps } from './PhoneWordsTab';
 import PhoneMarkBar from './PhoneMarkBar';
 import PhonePlayerStrip from './PhonePlayerStrip';
 
@@ -40,6 +42,11 @@ export type PhoneEditorProps = {
   focus?: { on: boolean; onToggle: () => void; view: ReactNode; /** A sheet is open over it: nothing in the view may take a tap or focus. */ inert?: boolean };
   /** Session state the desktop header shows (participants), rendered beside the title. */
   sessionBar?: ReactNode;
+  /**
+   * Words mode: the Sync tab shows the cursor line's words as chips over the Mark bar, and its
+   * own Mark replaces `mark`. Focus is not offered then (the words view is already one line).
+   */
+  words?: Omit<PhoneWordsTabProps, 'id' | 'labelledBy' | 'list' | 'banner' | 'player'>;
   mark: {
     onMark: () => void;
     onUndo: () => void;
@@ -60,7 +67,7 @@ const TAB_BTN = 'relative flex-1 h-11 text-[15px] font-semibold transition-color
  */
 export default function PhoneEditor({
   title, saveState, visibility, onBack, list, banner, onShowPreview, edit, tab: tabProp, onTabChange, onOpenTools,
-  selectBar, onAddMedia, mark, focus, sessionBar,
+  selectBar, onAddMedia, mark, focus, sessionBar, words,
 }: PhoneEditorProps) {
   const { t } = useTranslation();
   usePhoneEditorChrome();
@@ -184,6 +191,16 @@ export default function PhoneEditor({
         <div role="tabpanel" id={panelIds.sync} aria-labelledby={tabIds.sync} inert={focus.inert} className="flex flex-1 min-h-0 flex-col">
           {focus.view}
         </div>
+      ) : tab === 'sync' && words ? (
+        <PhoneWordsTab
+          {...words}
+          id={panelIds.sync}
+          labelledBy={tabIds.sync}
+          list={list}
+          banner={banner}
+          player={<PhonePlayerStrip onAddMedia={onAddMedia} />}
+          markBar={selectBar}
+        />
       ) : tab === 'sync' ? (
         <PhoneSyncTab
           id={panelIds.sync}

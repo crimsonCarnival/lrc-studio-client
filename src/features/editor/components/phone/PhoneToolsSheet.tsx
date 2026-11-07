@@ -22,6 +22,8 @@ export type PhoneToolsSheetProps = {
   canRedo: boolean;
   onRedo: () => void;
   onClearAllTimestamps: () => void;
+  /** Words mode only: the desktop's "Spread evenly" for the cursor line. */
+  distributeWords?: { available: boolean; run: () => void };
   /** Words mode only: the desktop's "Clear word timestamps". */
   onClearAllWordTimestamps?: () => void;
   unmarkedOnly: boolean;
@@ -130,6 +132,15 @@ export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
           disabled={!p.hasLines}
           onClick={run(p.onClearAllTimestamps)}
         />
+        {isWords && p.distributeWords && (
+          <DrawerItem
+            iconName="horizontal_distribute"
+            label={t('editor.words.distribute')}
+            description={p.distributeWords.available ? t('editor.words.distributeTip') : t('editor.words.distributeUnavailable')}
+            disabled={!p.distributeWords.available}
+            onClick={run(p.distributeWords.run)}
+          />
+        )}
         {isWords && p.onClearAllWordTimestamps && (
           <DrawerItem
             iconName="ink_eraser"

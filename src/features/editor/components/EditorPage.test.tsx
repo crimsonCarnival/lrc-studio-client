@@ -51,8 +51,12 @@ describe('EditorPage layout choice', () => {
     expect(screen.getByTestId('editor').dataset.layout).toBe('desktop');
   });
 
-  it('keeps Words mode on its existing layout below lg until it has a phone view', () => {
+  it('gives a phone the phone editor in Words mode, and the desktop one at lg', () => {
     emulate({ width: 360, touch: true });
+    const { unmount } = render(<EditorPage editorMode="words" />);
+    expect(screen.getByTestId('editor').dataset.layout).toBe('phone');
+    unmount();
+    emulate({ width: 1280, touch: false });
     render(<EditorPage editorMode="words" />);
     expect(screen.getByTestId('editor').dataset.layout).toBe('desktop');
   });

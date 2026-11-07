@@ -28,8 +28,7 @@ interface EditorPageProps {
  */
 export default function EditorPage(props: EditorPageProps) {
   const isLg = useBreakpoint('lg');
-  // Words keeps the existing rendering below lg until it has a phone view of its own.
-  const phone = !isLg && props.editorMode !== 'words';
+  const phone = !isLg;
 
   // AppRouter passes a loose, untyped prop bag (its editorProps are cast to these props).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
