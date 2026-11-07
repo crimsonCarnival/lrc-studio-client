@@ -10,11 +10,14 @@ type UnsavedChangesBarProps = {
   onDiscard: () => void;
 };
 
-/** Floating pill for panels that stage edits and commit them together. */
+/**
+ * Floating pill for panels that stage edits and commit them together. Only the settings
+ * panels use it, a page where the phone bottom bar shows, so below lg it floats above the bar.
+ */
 export default function UnsavedChangesBar({ saving, saveDisabled = false, onSave, onDiscard }: UnsavedChangesBarProps) {
   const { t } = useTranslation();
   return createPortal(
-    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:bottom-5 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
       <div className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/60 rounded-2xl shadow-2xl px-4 py-2.5 pointer-events-auto animate-slide-up-fade">
         <span className="text-xs text-zinc-400 mr-1">
           <span className="font-semibold text-zinc-200">{t('settings.unsavedChanges')}</span>
