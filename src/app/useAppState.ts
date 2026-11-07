@@ -981,14 +981,19 @@ export function useAppState(user?: AuthUserType | null) {
     if (inSessionRef.current || isSharedProjectRef.current || isProjectLoadingRef.current) return;
     if (flushInFlightRef.current || isSavingRef.current || isCreatingProjectRef.current) return;
     if (!hasUnsavedEditsAt(path)) return;
-    if (!getAccessToken() && !activepublicIdRef.current) {
+    if (!getAccessToken()) {
       // Guest: handleManualSave writes the draft before its first await (honouring mayWriteGuestDraft).
       // The same lines are never written twice (hidden then pagehide).
       if (lastGuestFlushRef.current === lines) return;
       lastGuestFlushRef.current = lines;
+    } else if (!activepublicIdRef.current) {
+      // Signed in without a server project (setup, or an unsaved local draft): saving would create
+      // one the user never asked for, so leave it to the explicit save.
+      return;
     }
     flushInFlightRef.current = true;
-    handleManualSave()
+    // silent: the user already left the page, a "Saved" toast over the next one is noise.
+    handleManualSave({ silent: true })
       .catch((e) => console.error('[Save on leave] failed', e))
       .finally(() => { flushInFlightRef.current = false; });
   });
