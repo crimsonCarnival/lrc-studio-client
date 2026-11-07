@@ -358,8 +358,9 @@ describe('save on leave (guest)', { timeout: 40000 }, () => {
   it('writes the draft synchronously when leaving the editor, before the debounce fires', async () => {
     await startSyncing();
     expect(localStorage.getItem(STORAGE_KEYS.PROJECT)).toBeNull();
-    act(() => { nav.navigate('/nope'); });
-    // No timers advanced: only the leave flush can have written this.
+    act(() => { nav.navigate('/a/b/c/d/e'); });
+    await settle(100); // the route transition commits once the lazy page resolves, far inside the 1.5 s debounce
+    // Only the leave flush can have written this.
     expect(storedCount()).toBe(6);
   });
 
@@ -386,16 +387,16 @@ describe('save on leave (guest)', { timeout: 40000 }, () => {
     localStorage.setItem(STORAGE_KEYS.PROJECT, draft(4));
     mount('/project/new');
     await settleUntil(() => screen.queryByRole('button', { name: 'Start Syncing' }) !== null);
-    act(() => { nav.navigate('/nope'); });
+    act(() => { nav.navigate('/a/b/c/d/e'); });
     await settle(2000);
     expect(storedCount()).toBe(4);
   });
 
   it('leaving a page that holds no edits writes nothing', async () => {
-    mount('/nope');
+    mount('/a/b/c/d/e');
     await settle(200);
     const set = vi.spyOn(Storage.prototype, 'setItem');
-    act(() => { nav.navigate('/nope2'); });
+    act(() => { nav.navigate('/a/b/c/d/e'); });
     await settle(2000);
     expect(set.mock.calls.filter(([k]) => k === STORAGE_KEYS.PROJECT)).toHaveLength(0);
   });
