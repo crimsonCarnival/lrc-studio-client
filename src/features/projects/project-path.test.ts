@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   slugify, projectPath, projectEditPath, publicIdFromSlugId,
   isProjectViewPath, isEditorPath, isProjectPath, canonicalPathFromParams,
-  sessionPublicIdFromPath, sessionPath,
+  sessionPublicIdFromPath, sessionPath, holdsUnsavedEdits,
 } from './project-path';
 
 // These cases are copied from the server's project-slug tests: the two
@@ -142,5 +142,20 @@ describe('collab session paths', () => {
       expect(sessionPublicIdFromPath(p)).toBeNull();
       expect(isEditorPath(p)).toBe(false);
     }
+  });
+});
+
+describe('holdsUnsavedEdits', () => {
+  it('covers the canonical edit path, the local draft and setup', () => {
+    expect(holdsUnsavedEdits('/alice/projects/my-song-AbC123xYz0/edit')).toBe(true);
+    expect(holdsUnsavedEdits('/project/local')).toBe(true);
+    expect(holdsUnsavedEdits('/project/new')).toBe(true);
+  });
+
+  it('excludes the public view, a live session and other pages', () => {
+    expect(holdsUnsavedEdits('/alice/projects/my-song-AbC123xYz0')).toBe(false);
+    // A session's edits live in the shared doc; there is nothing for a solo save to lose.
+    expect(holdsUnsavedEdits('/session/AbC123xYz0')).toBe(false);
+    expect(holdsUnsavedEdits('/home')).toBe(false);
   });
 });

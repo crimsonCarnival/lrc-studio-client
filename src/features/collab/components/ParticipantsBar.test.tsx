@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CollabMe, CollabParticipant, CollabPeer } from '../collab.types'
 import { PeersContext } from '../collab-presence-context'
 import { ParticipantsBar } from './ParticipantsBar'
+import { splitParticipants } from '../participants'
 import { TooltipProvider } from '@ui/tooltip'
 
 const getSessionMock = vi.fn()
@@ -160,5 +161,33 @@ describe('ParticipantsBar', () => {
 
     // Luis is immediately gone
     expect(screen.queryByText('Luis')).toBeNull()
+  })
+})
+
+describe('ParticipantsBar overflow (phone header)', () => {
+  const peers: CollabPeer[] = Array.from({ length: 7 }, (_, i) => ({
+    ...luisPeer, clientId: 10 + i, subject: `user:p${i}`, name: `Peer ${i}`,
+  }))
+
+  it('shows the cap plus a +N chip for the rest', () => {
+    renderBar(
+      <PeersContext.Provider value={peers}>
+        <ParticipantsBar me={{ ...meOwner, role: 'editor' }} publicId="sess-1" maxVisible={2} />
+      </PeersContext.Provider>,
+    )
+    const list = screen.getByRole('list', { name: /participants/i })
+    // me plus 7 peers = 8 rows: 2 avatars and the chip.
+    expect(list.querySelectorAll(':scope > li')).toHaveLength(3)
+    expect(screen.getByRole('button', { name: /6 more participants/i })).toHaveTextContent('+6')
+  })
+
+  it('has no chip when everyone fits, and no cap by default', () => {
+    renderBar(
+      <PeersContext.Provider value={peers}>
+        <ParticipantsBar me={{ ...meOwner, role: 'editor' }} publicId="sess-1" />
+      </PeersContext.Provider>,
+    )
+    expect(screen.queryByRole('button', { name: /more participants/i })).toBeNull()
+    expect(splitParticipants([1, 2], 2).hidden).toEqual([])
   })
 })

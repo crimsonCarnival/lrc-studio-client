@@ -80,6 +80,8 @@ html.icons-loading .material-symbols-outlined {
 @custom-variant coarse (@media (pointer: coarse));
 @custom-variant fine (@media (pointer: fine));
 @custom-variant can-hover (@media (hover: hover));
+/* A phone held sideways: wide but short, so stacked panels would leave the list no height. */
+@custom-variant short-landscape (@media (orientation: landscape) and (max-height: 37.5rem));
 
 /* Select — remove native arrow, inject custom chevron with proper spacing */
 select {

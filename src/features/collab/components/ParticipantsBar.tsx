@@ -5,9 +5,10 @@ import type { HocuspocusProvider } from '@hocuspocus/provider'
 import type { CollabMe, CollabParticipant } from '../collab.types'
 import { usePresencePeers } from '../collab-presence-context'
 import { getSession } from '../collab.service'
-import { initialsOf, participantRows, type ParticipantRow } from '../participants'
+import { initialsOf, participantRows, splitParticipants, type ParticipantRow } from '../participants'
 import { Tip } from '@ui/tip'
 import { LazyImage } from '@ui/LazyImage'
+import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover'
 
 function ParticipantAvatar({ p }: { p: ParticipantRow }) {
   const { t } = useTranslation()
@@ -81,10 +82,13 @@ export function ParticipantsBar({
   me,
   publicId,
   provider,
+  maxVisible,
 }: {
   me: CollabMe | null
   publicId: string | null
   provider?: HocuspocusProvider | null
+  /** Avatars shown before the rest collapse into a "+N" chip that lists them (phone header). */
+  maxVisible?: number
 }) {
   const { t } = useTranslation()
   const peers = usePresencePeers()
@@ -146,11 +150,40 @@ export function ParticipantsBar({
   const visibleMembers = members ? (kickedSubjects ? members.filter((m) => !kickedSubjects.has(m.subject)) : members) : null
   const rows = participantRows(me, visiblePeers, visibleMembers)
 
+  const { shown, hidden } = splitParticipants(rows, maxVisible)
+
   return (
     <ul aria-label={t('collab.presence.participants')} className="flex shrink-0 items-center gap-1.5">
-      {rows.map((p) => (
+      {shown.map((p) => (
         <ParticipantAvatar key={p.subject} p={p} />
       ))}
+      {hidden.length > 0 && (
+        <li className="list-none">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={t('collab.presence.more', { count: hidden.length })}
+                className="flex size-11 items-center justify-center rounded-full text-[13px] font-semibold text-foreground/80 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              >
+                +{hidden.length}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-60 p-2">
+              <ul aria-label={t('collab.presence.participants')} className="flex flex-col gap-1">
+                {hidden.map((p) => (
+                  <li key={p.subject} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="truncate text-foreground">{p.name}{p.you ? ` (${t('collab.presence.you')})` : ''}</span>
+                    <span className="shrink-0 text-xs text-subtle">
+                      {t(`collab.presence.role.${p.role}`)}{p.online ? '' : ` · ${t('collab.presence.offline')}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
+        </li>
+      )}
     </ul>
   )
 }

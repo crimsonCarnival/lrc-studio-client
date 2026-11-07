@@ -41,7 +41,7 @@ interface LineActionToolbarProps {
   setEditingTranslations: (arr: unknown[]) => void;
   setEditingSingers: (arr: string[]) => void;
   serializeToRubyMarkup: (words?: Word[]) => string;
-  handleMark: (opts: { forceAdvance?: boolean }) => void;
+  handleMark: () => void;
   playerRef?: RefObject<PlayerHandle | null>;
   /** Play from this line (also moves the cursor line there). Falls back to a bare seek + play. */
   onPlayLine?: () => void;
@@ -127,7 +127,7 @@ const LineActionToolbar = memo(({
         })()}>
           <Button
             size="icon-sm"
-            onClick={(e) => { e.stopPropagation(); handleMark({ forceAdvance: true }); }}
+            onClick={(e) => { e.stopPropagation(); handleMark(); }}
             className={`justify-center border font-semibold rounded-lg flex-shrink-0 text-xs shadow-md animate-in fade-in zoom-in-90 duration-200 ${editorMode === 'words' && line.timestamp != null
               ? stampTarget === 'secondary'
                 ? 'bg-accent-blue/15 hover:bg-accent-blue/25 border-accent-blue/40 text-accent-blue'

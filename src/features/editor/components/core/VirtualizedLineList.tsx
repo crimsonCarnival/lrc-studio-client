@@ -99,6 +99,10 @@ interface VirtualizedLineListProps {
   collapsedSections: ReadonlySet<string>;
   collapsedView: CollapsedView;
   onToggleSectionCollapse: (key: string) => void;
+  /** Phone layout: narrow rows without the drag handle or per-row toolbar (see EditorLineItem). */
+  compactRows?: boolean;
+  /** Phone select mode: rows show checkboxes and the reorder grip, and a tap toggles the line. */
+  selectMode?: boolean;
 }
 
 export default function VirtualizedLineList({
@@ -168,6 +172,8 @@ export default function VirtualizedLineList({
   collapsedSections,
   collapsedView,
   onToggleSectionCollapse,
+  compactRows = false,
+  selectMode = false,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
   // Collab presence: both are null outside a session, which turns every use below off.
@@ -278,11 +284,16 @@ export default function VirtualizedLineList({
       if (el.offsetWidth !== lastWidth) {
         lastWidth = el.offsetWidth;
         remeasureAll();
+        // A phone turned sideways rewraps every row, so the pixel offset no longer points
+        // at the cursor line: bring it back into view once the new sizes are in.
+        if (compactRows && lastScrolledIndex.current >= 0) {
+          requestAnimationFrame(() => prevActiveRefRef.current(lastScrolledIndex.current));
+        }
       }
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [remeasureAll, listRef]);
+  }, [remeasureAll, listRef, compactRows]);
 
   // DOM rows carry the virtual ROW index in data-index; translate a line index to its row
   // element (null when the line is hidden inside a collapsed section or not rendered).
@@ -634,6 +645,8 @@ export default function VirtualizedLineList({
                         sectionLineCount={blockLyricCounts.get(i) ?? 0}
                         isCollapsed={collapsedSections.has(sectionCollapseKey(line, i))}
                         onToggleCollapse={onToggleSectionCollapse}
+                        compact={compactRows}
+                        selectMode={selectMode}
                       />
                     </div>
                   ) : (
@@ -712,6 +725,8 @@ export default function VirtualizedLineList({
                       remoteActive={line.id != null ? remoteActive?.[line.id] : undefined}
                       onToggleLineMode={onToggleLineMode}
                       confidenceInfo={line.id != null ? confidenceById?.get(String(line.id)) : undefined}
+                      compact={compactRows}
+                      selectMode={selectMode}
                     />
                   )}
                 </div>

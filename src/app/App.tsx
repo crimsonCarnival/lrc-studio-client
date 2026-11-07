@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useAppState } from '@/app/useAppState';
+import { getAccessToken } from '@/app/api';
 import { useSettings } from '@/features/settings/useSettings';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
@@ -64,6 +65,7 @@ function AppInner() {
   const { user, logout } = useAuthContext();
   const navigate = useNavigate();
   const routerLocation = useLocation();
+  const navigationType = useNavigationType();
   const { settings, updateSetting, syncFromServer } = useSettings();
 
   const appState = useAppState();
@@ -296,7 +298,9 @@ function AppInner() {
   // Reset project state when entering "New Project" — but not when coming from no-media rollback
   useEffect(() => {
     if (routerLocation.pathname === '/project/new' && !(routerLocation.state as { prefill?: unknown } | null)?.prefill) {
-      resetAppState();
+      // Back/Forward (or a direct load) into setup keeps a guest's saved draft: only an explicit
+      // New project (PUSH/REPLACE) discards it.
+      resetAppState({ keepGuestDraft: navigationType === 'POP' && !getAccessToken() });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routerLocation.pathname, (routerLocation.state as { prefill?: unknown } | null)?.prefill]);

@@ -14,8 +14,8 @@ import { useEditorActivity } from '@/features/auth/hooks/useSessionSocket';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { isStaff } from '@/features/auth/permissions';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import { usePhoneEditorMounted } from '@/app/layout/phone-editor-chrome';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
-import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
@@ -356,6 +356,7 @@ export function AppRouter({
     loadError,
     handleSetupComplete,
     setShowKeyboardHelp,
+    hasUnsavedChanges,
     buildProjectPayload,
     restoredMedia,
     uploadedAudio,
@@ -423,7 +424,7 @@ export function AppRouter({
       : null
   );
 
-  const { mobileTab, setMobileTab, setShowNamingModal } = layoutState;
+  const { mobileTab, setMobileTab, setShowNamingModal, setUnsavedModalTarget } = layoutState;
 
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the
   // phone tab bar already writes, so both ways of switching stay in step.
@@ -443,14 +444,22 @@ export function AppRouter({
   }, [routerPathname]);
 
   const isLgRouter = useBreakpoint('lg');
-  const routerInputMethod = useInputMethod();
+  const phoneEditorMounted = usePhoneEditorMounted();
+  // Same inputs as AppLayout's slot, so both agree on 'phone' while the phone editor is up.
   const playerSlot = usePlayerSlot({
     hideEditor: view === 'preview',
     hidePreview: false,
     focusMode: 'default',
     isLg: isLgRouter,
-    isTouch: routerInputMethod === 'touch',
+    phoneEditor: phoneEditorMounted,
   });
+
+  // The phone editor's back button: same destination and unsaved-changes guard as the
+  // app header's logo, which that layout hides.
+  const handleExitEditor = useCallback(() => {
+    if (hasUnsavedChanges()) setUnsavedModalTarget('/');
+    else navigate('/');
+  }, [hasUnsavedChanges, setUnsavedModalTarget, navigate]);
 
   const handleNewProject = useCallback(() => navigate('/project/new'), [navigate]);
   const handleToggleKeyboardHelp = useCallback(() => {
@@ -495,13 +504,14 @@ export function AppRouter({
     declaredSingers: projectMetadata?.singers || EMPTY_STRING_ARRAY,
     playerSlot,
     onShowPreview: showPreviewView,
+    onExit: handleExitEditor,
     uploadedAudio,
     hasMedia,
     activepublicId: editorPublicId,
     onTogglePublicView: handleViewPublic,
     isPlaying,
     collab,
-    sessionOwner,
+    sessionOwner, sessionPublicId,
     mediaTitle,
     coverImage: projectCoverImage,
     isPublic: projectIsPublic,
@@ -525,7 +535,8 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
-    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner,
+    handleExitEditor,
+    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner, sessionPublicId,
     mediaTitle, projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, activepublicId,
   ]);
 

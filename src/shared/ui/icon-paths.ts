@@ -113,6 +113,9 @@ export const ICON_SHAPES: Record<string, IconShape> = {
   local_fire_department: { d: 'M12 21a6 6 0 0 0 6-6c0-4-3-6-4-10c-2 2-3 4-3 6c-1-1-1.5-2-1.5-3C7.5 10 6 12.5 6 15a6 6 0 0 0 6 6z', fillable: true },
   bolt: { d: 'M13 3L5 13.5h6L10 21l8-10.5h-6z', fillable: true },
   // Drawn on sheet 20 (counterpart capture).
+  center_focus_strong: { d: 'M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9 M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9 M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15 M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15 M14 12a2 2 0 1 1-4 0a2 2 0 1 1 4 0' },
+  subtitles: { d: 'M4.5 5h15a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-15a.5.5 0 0 1-.5-.5v-13A.5.5 0 0 1 4.5 5z M7.5 12h3 M13 12h3.5 M7.5 15.5h6 M16 15.5h.5' },
+  upload_file: { d: 'M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z M14 3.5V8h4 M12 17v-5 M9.5 14l2.5-2.5 2.5 2.5' },
   mic: { d: 'M9 5a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M5.5 11a6.5 6.5 0 0 0 13 0 M12 17.5V21' },
   // Drawn on sheet 09 (the locked showcase slot), in the same geometry.
   lock: { d: 'M7 11V8a5 5 0 0 1 10 0v3 M5.5 11h13v9h-13z' },

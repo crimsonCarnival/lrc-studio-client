@@ -20,6 +20,17 @@ import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
+import PhoneEditor from '../phone/PhoneEditor';
+import type { PhoneTab } from '../phone/PhoneEditor';
+import PhoneToolsSheet from '../phone/PhoneToolsSheet';
+import PhoneLineSheet from '../phone/PhoneLineSheet';
+import PhoneSelectBar from '../phone/PhoneSelectBar';
+import PhoneEditTab from '../phone/PhoneEditTab';
+import PhoneFocusView from '../phone/PhoneFocusView';
+import type { PhoneWordsChip } from '../phone/PhoneWordsTab';
+import { focusLines } from '../phone/focus-lines';
+import { usePhoneFocus } from '../phone/usePhoneFocus';
+import type { EditView } from '../phone/PhoneEditTab';
 import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
 import TaggingToolbar from './TaggingToolbar';
@@ -48,14 +59,17 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
-import type { SessionOwnerControl } from '@/features/collab/components/SessionControl';
+import { ParticipantsBar } from '@/features/collab/components/ParticipantsBar';
+import { SessionControl, SessionStartShield, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
+import { SessionSettingsModal } from '@/features/collab/components/SessionSettingsModal';
+import { useSessionStart } from '@/features/collab/useSessionStart';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
 import { Icon } from '@/shared/ui/Icon';
 import { MorphIcon } from '@/shared/ui/MorphIcon';
-import { linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
-import { hasCJK } from '@/shared/utils/furigana';
+import { getSingerOptionsForSelection, applyTagToSelection, linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
+import { hasCJK, hasKanji } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 // import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
@@ -64,6 +78,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_ARTISTS: string[] = [];
 const WORDS_LOOP_KEY = 'lrc_words_loop_line';
+const PHONE_LINE_HINT_KEY = 'lrc_phone_line_hint';
 
 // Teal is `success`; in the light theme that token is too pale to read as text,
 // so it is mixed toward the foreground there.
@@ -148,6 +163,8 @@ interface EditorProps {
   collab?: CollabLockInput;
   /** Set only for the owner of a saved project: shows Start / Manage session. */
   sessionOwner?: SessionOwnerControl;
+  /** The live session's public id; the phone header lists its participants, as the desktop app header does. */
+  sessionPublicId?: string | null;
   /** Project title and cover, for the publish confirmation and its readiness check. */
   mediaTitle?: string;
   coverImage?: string;
@@ -156,6 +173,10 @@ interface EditorProps {
   onVisibilityChange?: (isPublic: boolean) => void;
   /** False on someone else's project: no visibility chip. */
   canChangeVisibility?: boolean;
+  /** Below `lg` (EditorPage decides): render the phone layout instead of the desktop one. */
+  phone?: boolean;
+  /** Leaves the editor for home, through the unsaved-changes guard. */
+  onExit?: () => void;
 }
 
 export default function Editor({
@@ -199,11 +220,14 @@ export default function Editor({
   isPlaying,
   collab,
   sessionOwner,
+  sessionPublicId,
   mediaTitle,
   coverImage,
   isPublic = false,
   onVisibilityChange,
   canChangeVisibility = true,
+  phone = false,
+  onExit,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -492,8 +516,8 @@ export default function Editor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shiftTime, confidenceIdAt, autoStamp.clearConfidence]);
 
-  const handleMarkWithConfidence = useCallback((opts?: { forceAdvance?: boolean }) => {
-    handleMark(opts);
+  const handleMarkWithConfidence = useCallback(() => {
+    handleMark();
     const id = confidenceIdAt(activeLineIndex);
     if (id) autoStamp.clearConfidence(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -551,7 +575,8 @@ export default function Editor({
     return { synced, total: lyricLines.length, wordCount, charCount, charCountNoSpaces, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
-  const statusSlot = useHeaderSlot('status');
+  // The phone layout draws its own header, so it leaves the app header's slots empty.
+  const statusSlot = useHeaderSlot('status', !phone);
   const [publishOpen, setPublishOpen] = useState(false);
   const serverProjectId = activepublicId && activepublicId !== 'local' && activepublicId !== 'new' ? activepublicId : null;
   const readiness = useMemo(
@@ -559,7 +584,7 @@ export default function Editor({
     [lines, mediaTitle, songArtists, coverImage],
   );
   const publishPrompt = usePublishPrompt(serverProjectId, readiness.complete && !isPublic && !!user && !user.isGuest && canChangeVisibility && !inSession);
-  const actionsSlot = useHeaderSlot('actions');
+  const actionsSlot = useHeaderSlot('actions', !phone);
 
   // 'failed' only while there is still something unsaved: a later autosave that gets the
   // changes through clears the markers, and with them the error.
@@ -653,7 +678,7 @@ export default function Editor({
   // sidebar is not shown, so the full list stays.
   const isLg = useBreakpoint('lg');
   const wordsFocus = isWordsMode && isLg;
-  usePresenceView(wordsFocus ? 'words-focus' : 'editor');
+  usePresenceView(phone ? 'mobile' : wordsFocus ? 'words-focus' : 'editor');
 
   // Counterpart capture (redesign sheet 20). The strip opens itself the first time one is
   // captured, so the shortcut works without finding the button first.
@@ -670,7 +695,8 @@ export default function Editor({
     setCounterpartNaming(id);
   }, [handleCaptureCounterpart]);
   useEffect(() => {
-    if (wordsFocus) return;
+    // The strip is not rendered on the phone, so capturing there would leave hidden state behind.
+    if (wordsFocus || phone) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.isComposing || e.repeat) return;
       const target = e.target as HTMLElement | null;
@@ -681,7 +707,7 @@ export default function Editor({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wordsFocus, captureKeyRaw, captureCounterpartHere]);
+  }, [wordsFocus, phone, captureKeyRaw, captureCounterpartHere]);
   const listView = useMemo(() => {
     if (lineFilter === 'all') return collapsedView;
     const rows = collapsedView.rows.filter((i) => lines[i].type === 'section' || lines[i].timestamp == null || i === activeLineIndex);
@@ -787,6 +813,609 @@ export default function Editor({
     seek(focusStart);
     togglePlay();
   };
+
+  // ── Phone layout state ──
+  // Held here, not in PhoneEditor, because the sheets drive handlers that live in this component
+  // and Tools can switch tabs. None of it touches marking or the cursor.
+  const [phoneTab, setPhoneTab] = useState<PhoneTab>(() => (phone && !syncMode ? 'edit' : 'sync'));
+  const [editView, setEditView] = useState<EditView>('text');
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [phoneFocus, setPhoneFocus] = usePhoneFocus();
+  const [selecting, setSelecting] = useState(false);
+  // Line ids, not indices: a collaborator's insert or delete while the sheet is open must not
+  // retarget it, and if a line vanishes the sheet closes.
+  const [lineSheet, setLineSheet] = useState<{ open: boolean; ids: string[]; view?: 'tag' }>({ open: false, ids: [] });
+  const linesRef = useRef(lines);
+  useLayoutEffect(() => { linesRef.current = lines; });
+  const lineSheetIndices = useMemo(() => {
+    const out: number[] = [];
+    for (const id of lineSheet.ids) {
+      const at = lines.findIndex((l) => l.id === id);
+      if (at >= 0) out.push(at);
+    }
+    return out.sort((a, b) => a - b);
+  }, [lineSheet.ids, lines]);
+  const lineSheetValid = lineSheet.ids.length > 0 && lineSheetIndices.length === lineSheet.ids.length;
+  // Adjusted during render (not in an effect) so a vanished line never leaves the sheet armed to reappear.
+  if (lineSheet.open && !lineSheetValid) setLineSheet({ open: false, ids: [] });
+  const openLineSheetFor = useCallback((indices: number[], view?: 'tag') => {
+    const ids = indices.map((i) => linesRef.current[i]?.id).filter((id): id is string => !!id);
+    if (ids.length > 0 && ids.length === indices.length) setLineSheet({ open: true, ids, view });
+  }, []);
+  const { starting: sessionStarting, start: startSessionFlow } = useSessionStart(sessionOwner?.publicId, handleManualSave ?? undefined);
+  const [sessionManageOpen, setSessionManageOpen] = useState(false);
+  // Where the cursor was before the Edit tab moved it; Mark must keep stamping that line.
+  const cursorBeforeEditRef = useRef<number | null>(null);
+  const restoreCursor = () => {
+    const at = cursorBeforeEditRef.current;
+    cursorBeforeEditRef.current = null;
+    if (at != null) setActiveLineIndex(Math.min(at, Math.max(linesRef.current.length - 1, 0)));
+  };
+  const [lineHintSeen, setLineHintSeen] = useState(() => {
+    try { return localStorage.getItem(PHONE_LINE_HINT_KEY) === '1'; } catch { return false; }
+  });
+  const dismissLineHint = useCallback(() => {
+    setLineHintSeen(true);
+    try { localStorage.setItem(PHONE_LINE_HINT_KEY, '1'); } catch { /* the hint just shows again next visit */ }
+  }, []);
+  const nudgeFine = settings.editor?.nudge?.fine || 0.01;
+  const nudgeDefault = settings.editor?.nudge?.default || 0.1;
+  const hasKanjiAnywhere = useMemo(
+    () => lines.some((l) => l.type !== 'section' && (hasKanji(l.text) || l.words?.some((w) => hasKanji(w.word)))),
+    [lines],
+  );
+  // The phone Words view stamps what the focused timestamp names, so a focus left on another
+  // line, on a start time from another mode, or on the other layer would silently redirect the
+  // Mark. Only a word of the current layer on the cursor line is a focus this view can show.
+  const strayFocus = phone && editorMode === 'words' && focusedTimestamp != null
+    && (focusedTimestamp.lineIndex !== activeLineIndex || focusedTimestamp.type !== (stampTarget === 'secondary' ? 'secondaryWord' : 'word')
+      // A line with no start is stamped from its first word (applyMark's first press); a focus on a
+      // later word would stamp that word with the line still unstarted.
+      || lines[activeLineIndex]?.timestamp == null);
+  useEffect(() => {
+    if (strayFocus) setFocusedTimestamp(null);
+  }, [strayFocus, setFocusedTimestamp]);
+  const hasCjkAnywhere = useMemo(() => lines.some((l) => l.type !== 'section' && hasCJK(l.text ?? '')), [lines]);
+  // Indices of the lyric (non-section) lines, rebuilt only when the lines change, not on every
+  // playback tick that re-renders the editor.
+  const lyricIndices = useMemo(() => {
+    const out: number[] = [];
+    lines.forEach((l, i) => { if (l.type !== 'section') out.push(i); });
+    return out;
+  }, [lines]);
+  const hasLyricLines = useMemo(() => lines.some((l) => l.type !== 'section'), [lines]);
+
+  // Raw-text editing is the syncMode=false state of useEditor: rawText holds the draft and the
+  // 'editor:start-syncing' event applies it (keeping timestamps for unchanged lines). The draft
+  // is applied only if it changed, so merely visiting the tab rewrites nothing.
+  const rawBaselineRef = useRef<string | null>(null);
+  const beginRawEdit = () => {
+    const text = linesToRawText(lines, rawLineText, combinedSingers);
+    rawBaselineRef.current = text;
+    setRawText(text);
+    setSyncMode(false);
+  };
+  const endRawEdit = () => {
+    if (syncMode) return;
+    const changed = rawBaselineRef.current == null || rawText !== rawBaselineRef.current;
+    rawBaselineRef.current = null;
+    if (changed) window.dispatchEvent(new CustomEvent('editor:start-syncing'));
+    else setSyncMode(true);
+  };
+  const openPhoneEdit = (view: EditView) => {
+    if (view === 'line' && cursorBeforeEditRef.current == null) cursorBeforeEditRef.current = activeLineIndex;
+    if (view === 'text') restoreCursor();
+    const inRaw = phoneTab === 'edit' && editView === 'text';
+    if (view === 'text' && !inRaw) beginRawEdit();
+    if (view === 'line' && inRaw) endRawEdit();
+    setEditView(view);
+    setPhoneTab('edit');
+  };
+  const changePhoneTab = (next: PhoneTab) => {
+    if (next === phoneTab) return;
+    if (next === 'edit') openPhoneEdit(editView);
+    else {
+      if (phoneTab === 'edit' && editView === 'text') endRawEdit();
+      restoreCursor();
+      setPhoneTab(next);
+    }
+  };
+  const showPhonePreview = onShowPreview ? () => {
+    restoreCursor();
+    if (phoneTab === 'edit' && editView === 'text') endRawEdit();
+    onShowPreview();
+  } : undefined;
+  const exitSelecting = () => {
+    clearSelection();
+    setSelecting(false);
+  };
+  const openPhoneLineSheet = useCallback((index: unknown) => {
+    if (typeof index === 'number') openLineSheetFor([index]);
+  }, [openLineSheetFor]);
+  // Nothing to sync once the lyrics are gone (e.g. removed all): the Sync tab has nothing to show.
+  if (phone && phoneTab === 'sync' && !syncMode && !hasLyricLines) {
+    setEditView('text');
+    setPhoneTab('edit');
+  }
+  // Delete and Clear (both confirmed, then change the lines and empty the selection) end Select mode.
+  const [prevSelection, setPrevSelection] = useState({ size: selectedLines.size, lines });
+  if (prevSelection.size !== selectedLines.size || prevSelection.lines !== lines) {
+    setPrevSelection({ size: selectedLines.size, lines });
+    if (selecting && prevSelection.size > 0 && selectedLines.size === 0 && prevSelection.lines !== lines) setSelecting(false);
+  }
+  // In select mode a tap toggles the line; otherwise it is the ordinary click.
+  const phoneLineClick = useCallback((i: number, e: unknown) => {
+    if (selecting) handleToggleLine(i);
+    else (handleLineClick as (i: number, e: unknown) => void)(i, e);
+  }, [selecting, handleToggleLine, handleLineClick]);
+
+  // One list, wired identically for both layouts: the phone layout reuses it as is.
+  const lineList = (
+    <VirtualizedLineList
+      lines={lines}
+      displayedActiveIndex={displayedActiveIndex}
+      activeLineIndex={activeLineIndex}
+      isActiveLineLocked={isActiveLineLocked}
+      editorMode={editorMode}
+      awaitingEndMark={awaitingEndMark}
+      focusedTimestamp={focusedTimestamp}
+      setFocusedTimestamp={setFocusedTimestamp}
+      handleLineClick={phone && selecting ? phoneLineClick : handleLineClick}
+      handleLineHover={handleLineHover}
+      handleLineHoverEnd={handleLineHoverEnd}
+      handleDragStart={handleDragStart}
+      handleDragOver={handleDragOver}
+      handleDragEnd={handleDragEnd}
+      handleDrop={handleDrop}
+      dragOverIndex={dragOverIndex}
+      dragIndex={dragIndex}
+      projectSingers={combinedSingers}
+      singerColors={singerColors}
+      selectedLines={selectedLines}
+      settings={settings}
+      editingLineIndex={editingLineIndex}
+      setEditingLineIndex={setEditingLineIndex}
+      editingText={editingText}
+      setEditingText={setEditingText}
+      editingSecondary={editingSecondary}
+      setEditingSecondary={setEditingSecondary}
+      editingTranslations={editingTranslations as unknown[]}
+      setEditingTranslations={setEditingTranslations as (v: unknown[]) => void}
+      editingSingers={editingSingers}
+      setEditingSingers={setEditingSingers}
+      handleSaveLineText={handleSaveLineText}
+      handleInsertSection={handleInsertSection}
+      handleToggleSectionDepth={handleToggleSectionDepth}
+      handleMoveToSection={handleMoveToSection}
+      handleAssignSinger={handleAssignSinger}
+      songArtists={combinedSingers}
+      playerRef={playerRef}
+      setActiveLineIndex={setActiveLineIndex}
+      shiftTime={shiftTimeWithConfidence}
+      handleAddLine={handleAddLine}
+      handleClearLine={handleClearLine}
+      handleDeleteLine={handleDeleteLine}
+      handleToggleCounterpart={handleToggleCounterpart}
+      listRef={listRef}
+      handleMark={handleMarkWithConfidence}
+      handleToggleLine={handleToggleLine}
+      updateSetting={updateSetting}
+      activeWordIndex={activeWordIndex}
+      handleClearWordTimestamp={handleClearWordTimestamp}
+      handleSetActiveWordIndex={handleSetActiveWordIndex}
+      handleSetTimestamp={handleSetTimestampWithConfidence}
+      handleSetWordReading={handleSetWordReading}
+      handleCycleWordSinger={handleCycleWordSinger}
+      stampTarget={stampTarget}
+      handleStampTargetToggle={handleStampTargetToggle}
+      handleSetStampTarget={handleSetStampTarget}
+      playbackPosition={playbackPosition}
+      onWordMenu={openWord}
+      onLineMenu={phone ? openPhoneLineSheet : openLine}
+      modifiedLines={modifiedLines}
+      lockedByOthers={othersLocks}
+      onToggleLineMode={handleToggleLineMode}
+      confidenceById={autoStamp.confidenceById}
+      collapsedSections={collapsedSections}
+      collapsedView={listView}
+      onToggleSectionCollapse={toggleSectionCollapse}
+      compactRows={phone}
+      selectMode={phone && selecting}
+    />
+  );
+
+  const publishPromptNode = publishPrompt.show && !publishOpen ? (
+    <PublishPrompt onPublish={() => { publishPrompt.dismiss(); setPublishOpen(true); }} onDismiss={publishPrompt.dismiss} />
+  ) : null;
+
+  // Dialogs and sheets both layouts open. They portal out, so where they sit in the tree
+  // does not matter, only that they stay mounted whichever layout is showing.
+  const overlays = (
+    <>
+      <ChangeMediaDialog open={changeMediaOpen} onOpenChange={setChangeMediaOpen} />
+
+      {canChangeVisibility && !inSession && (
+        <PublishDialog
+          open={publishOpen}
+          onOpenChange={setPublishOpen}
+          project={{ publicId: serverProjectId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines }}
+          onPublished={onVisibilityChange}
+          onSave={handleManualSave ?? undefined}
+        />
+      )}
+
+      <ResponsiveModal
+        open={!syncMode && !phone}
+        onOpenChange={(open) => {
+          if (!open) {
+            window.dispatchEvent(new CustomEvent('editor:start-syncing'));
+          }
+        }}
+        title={t('editor.editRawText')}
+        dialogProps={{ className: 'max-w-3xl w-[90vw]' }}
+      >
+        <div className="h-[60vh] flex flex-col mt-2 min-h-0">
+          <EditorPasteArea
+            rawText={rawText}
+            setRawText={setRawText}
+            fileInputRef={fileInputRef}
+            handleFileUpload={handleFileUpload}
+            handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
+            singers={combinedSingers}
+          />
+          <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800 shrink-0">
+            <Button onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))} className="font-semibold px-6 text-zinc-950 bg-primary hover:bg-primary/90">
+              {t('editor.done')}
+            </Button>
+          </div>
+        </div>
+      </ResponsiveModal>
+
+      {/* Action Drawer for Mobile Actions */}
+      <EditorActionDrawer
+        activeDrawer={activeDrawer}
+        wordData={wordData}
+        lineData={lineData}
+        selectedCount={selectedLines.size}
+        onClose={closeDrawer}
+        playerRef={playerRef}
+        handleClearWordTimestamp={handleClearWordTimestamp}
+        handleSetWordReading={handleSetWordReading}
+        handleMergeWordWithNext={handleMergeWordWithNext}
+        handleSplitWord={handleSplitWord}
+        handleRegroupLine={handleRegroupLine}
+        lineWordCount={wordData.lineIndex != null ? (lines[wordData.lineIndex]?.words?.length ?? 0) : 0}
+        handleClearLine={handleClearLine}
+        handleDeleteLine={handleDeleteLine}
+        handleBulkClearTimestamps={handleBulkClearTimestamps}
+        handleBulkDelete={handleBulkDelete}
+        handleBulkSingTogether={handleBulkSingTogether}
+        handleBulkSplitSingers={handleBulkSplitSingers}
+        clearSelection={clearSelection}
+        lines={lines}
+        handleMoveToSection={handleMoveToSection}
+        songArtists={combinedSingers}
+      />
+
+      <ResponsiveModal
+        open={lyricsSearchOpen}
+        onOpenChange={setLyricsSearchOpen}
+        title={t('lyricsSearch.findLyrics')}
+        description={t('lyricsSearch.replaceDesc')}
+      >
+        <LyricsSearchBar onImport={handleLyricsSearchImport} publicId={activepublicId} />
+      </ResponsiveModal>
+
+      {confirmModal}
+
+      <FuriganaModal
+        open={furiganaOpen}
+        onOpenChange={setFuriganaOpen}
+        lines={lines}
+        startLineIndex={activeLineIndex}
+        readingFormat={settings.editor?.display?.readingFormat || 'hiragana'}
+        onSetReading={handleSetWordReading}
+        onSetLineText={(lineIndex, text) => {
+          const line = lines[lineIndex];
+          handleSaveLineText(lineIndex, text, line?.secondary, line?.translations, line?.singers);
+        }}
+        onFocusLine={setActiveLineIndex}
+        onMergeWithNext={handleMergeWordWithNext}
+        onSplitWord={handleSplitWord}
+      />
+
+      <SecondaryLyricsModal
+        open={secondaryOpen}
+        onOpenChange={setSecondaryOpen}
+        lines={lines}
+        onApply={handleSetSecondaryLines}
+      />
+
+      <AutoStampModal
+        open={autoStampOpen}
+        phase={autoStamp.phase}
+        errorCode={autoStamp.errorCode}
+        recordProgress={autoStamp.recordProgress}
+        canRecordTab={player.source === 'youtube' && tabAudioSupported()}
+        onRecordTab={autoStamp.startFromTab}
+        pendingResult={autoStamp.pendingResult}
+        confidenceById={autoStamp.confidenceById}
+        lines={lines}
+        confidenceThreshold={settings.autoStamp?.confidenceThreshold ?? 0.8}
+        onCancel={handleAutoStampCancel}
+        onApply={autoStamp.applyPending}
+        onDiscard={autoStamp.discardPending}
+        onClose={handleAutoStampClose}
+        onJumpToLine={handleAutoStampJump}
+      />
+    </>
+  );
+
+  if (phone) {
+    const markLabel = editorMode === 'srt' && awaitingEndMark != null
+      ? t('editor.markEndNumber', { number: focusInfo.lyricNumber })
+      : t('editor.markLineNumber', { number: focusInfo.lyricNumber });
+    const readOnly = collab?.me?.role === 'viewer';
+    const canPublish = canChangeVisibility && !inSession;
+    const openPublish = () => { publishPrompt.dismiss(); setPublishOpen(true); };
+    const autoStampBlocked = !autoStampHasAudio ? 'noAudio' as const
+      : autoStampRunning ? 'running' as const
+        : player.source === 'youtube' && !tabAudioSupported() ? 'youtube' as const : null;
+    const lineSheetSingers = lineSheetIndices.length > 1
+      ? getSingerOptionsForSelection(lines, lineSheetIndices, combinedSingers)
+      : combinedSingers;
+    const hint = !lineHintSeen && hasLyricLines && !selecting && !readOnly && phoneTab === 'sync' ? (
+      <div role="note" className="flex shrink-0 items-center gap-2 border-b border-zinc-800 bg-raised pl-3 text-sm text-subtle">
+        <span className="min-w-0 flex-1 py-1.5">{t('editor.phone.line.hint')}</span>
+        <button type="button" onClick={dismissLineHint} className="h-11 shrink-0 px-3 font-semibold text-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus">
+          {t('editor.phone.line.hintDismiss')}
+        </button>
+      </div>
+    ) : null;
+    // Words mode: the Sync tab shows the cursor line's words as chips. Everything below reads or
+    // calls what the desktop words view already uses (focused timestamp, stamp target, handleMark).
+    const isWords = editorMode === 'words';
+    const secondaryLayer = stampTarget === 'secondary';
+    const wordKind = secondaryLayer ? 'secondaryWord' as const : 'word' as const;
+    const cursorLine = lines[activeLineIndex];
+    const cursorIsLyric = !!cursorLine && cursorLine.type !== 'section';
+    const layerWords = cursorIsLyric ? ((secondaryLayer ? cursorLine.secondaryWords : cursorLine.words) ?? []) : [];
+    const phoneWords: PhoneWordsChip[] = layerWords.map((w) => ({ word: w.word ?? '', time: w.time ?? null, singerIndex: w.singerIndex, singer: w.singerIndex != null ? cursorLine?.singers?.[w.singerIndex] : undefined }));
+    // The word the next Mark will stamp. A focused timestamp wins in applyMark. Otherwise, on a line
+    // with no start, applyMark's first press stamps word 0 and starts the line whatever
+    // activeWordIndex says; only once the line has a start does the cursor index apply.
+    const lineStarted = cursorIsLyric && cursorLine.timestamp != null;
+    const phoneActiveWord: number | null = focusedTimestamp
+      ? (focusedTimestamp.lineIndex === activeLineIndex && focusedTimestamp.type === wordKind ? focusedTimestamp.wordIndex ?? null : null)
+      : phoneWords.length ? (lineStarted ? Math.min(activeWordIndex, phoneWords.length - 1) : 0) : null;
+    const phoneMarkLabel = isWords && phoneActiveWord != null && phoneWords[phoneActiveWord]
+      ? t('editor.phone.words.markWord', { word: phoneWords[phoneActiveWord].word })
+      : markLabel;
+    const lyricPos = lyricIndices.findIndex((i) => i >= activeLineIndex);
+    let prevLyric: number | undefined;
+    for (let k = lyricIndices.length - 1; k >= 0; k--) if (lyricIndices[k] < activeLineIndex) { prevLyric = lyricIndices[k]; break; }
+    const nextLyric = lyricIndices.find((i) => i > activeLineIndex);
+    const goToLine = (index: number | undefined) => {
+      if (index == null) return;
+      setFocusedTimestamp(null);
+      setActiveLineIndex(index);
+    };
+    const secondaryAvailable = cursorIsLyric && hasCJK(cursorLine.text ?? '');
+    return (
+      <>
+        <PhoneEditor
+          title={mediaTitle ?? ''}
+          saveState={inSession ? null : saveState}
+          sessionBar={inSession && sessionPublicId ? <ParticipantsBar me={collab?.me ?? null} publicId={sessionPublicId} provider={collab?.provider} maxVisible={2} /> : null}
+          visibility={canPublish ? <VisibilityChip isPublic={isPublic} onOpen={openPublish} /> : null}
+          onBack={onExit}
+          list={lineList}
+          banner={<>{publishPromptNode}{hint}</>}
+          onShowPreview={showPhonePreview}
+          tab={phoneTab}
+          onTabChange={changePhoneTab}
+          onOpenTools={() => setToolsOpen(true)}
+          edit={(
+            <PhoneEditTab
+              view={editView}
+              onViewChange={openPhoneEdit}
+              rawText={rawText}
+              setRawText={setRawText}
+              fileInputRef={fileInputRef}
+              handleFileUpload={handleFileUpload}
+              handleUrlImport={handleUrlImport as ComponentProps<typeof PhoneEditTab>['handleUrlImport']}
+              singers={combinedSingers}
+              onApplyText={() => { endRawEdit(); restoreCursor(); setPhoneTab('sync'); }}
+              lines={lines}
+              lineIndex={activeLineIndex}
+              onLineIndexChange={setActiveLineIndex}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              editingSecondary={editingSecondary}
+              setEditingSecondary={setEditingSecondary}
+              editingTranslations={editingTranslations as ComponentProps<typeof PhoneEditTab>['editingTranslations']}
+              setEditingTranslations={setEditingTranslations as ComponentProps<typeof PhoneEditTab>['setEditingTranslations']}
+              setEditingLineIndex={setEditingLineIndex}
+              onSaveLine={(index, text, secondary, translations) => handleSaveLineText(index, text, secondary, translations, undefined)}
+            />
+          )}
+          selectBar={selecting ? (
+            <PhoneSelectBar
+              count={selectedLines.size}
+              onDone={exitSelecting}
+              onSelectAll={() => setSelectedLines(new Set(lines.map((_, i) => i)))}
+              onShiftEarlier={() => handleBulkShift(-nudgeDefault)}
+              onShiftLater={() => handleBulkShift(nudgeDefault)}
+              onClearTimestamps={handleBulkClearTimestamps}
+              onDelete={handleBulkDelete}
+              onMore={() => openLineSheetFor([...selectedLines].sort((a, b) => a - b))}
+              onTag={() => openLineSheetFor([...selectedLines].sort((a, b) => a - b), 'tag')}
+            />
+          ) : undefined}
+          onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
+          // Focus is a Lines-mode view. Words already works one line at a time, so it is not offered there.
+          focus={readOnly || isWords ? undefined : {
+            on: phoneFocus,
+            onToggle: () => setPhoneFocus(!phoneFocus),
+            inert: toolsOpen || (lineSheet.open && lineSheetValid),
+            // Marks through the very handler the Mark bar uses so
+            // autoAdvance, SRT end marks and session locks behave the same.
+            view: (
+              <PhoneFocusView
+                {...focusLines(lines, activeLineIndex)}
+                onMark={() => handleMarkWithConfidence()}
+                onUndo={undo}
+                canUndo={canUndo}
+                label={markLabel}
+                disabled={!syncMode || lines.length === 0}
+                disabledHint={!syncMode ? t('editor.phone.focus.syncOff') : undefined}
+                onClose={() => setPhoneFocus(false)}
+                onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
+              />
+            ),
+          }}
+          // A session viewer never reaches the editor (AppRouter shows them the preview);
+          // this keeps Mark away from them even if that ever changes.
+          mark={readOnly ? null : {
+            // The same handler the desktop list uses, so the
+            // autoAdvance setting and SRT end marks behave exactly as they do there.
+            onMark: () => handleMarkWithConfidence(),
+            onUndo: undo,
+            canUndo,
+            label: phoneMarkLabel,
+            disabled: !syncMode || lines.length === 0,
+          }}
+          words={isWords ? {
+            lineNumber: lyricPos >= 0 ? { number: lyricPos + 1, total: lyricIndices.length } : null,
+            words: phoneWords,
+            activeIndex: phoneActiveWord,
+            chipsLocked: !lineStarted,
+            // Selecting a word is what a chip click does on desktop (minus the seek, which would
+            // make re-stamping a word mark its old time): the next Mark stamps this word.
+            onWordTap: (wi) => {
+              handleSetActiveWordIndex(wi);
+              setFocusedTimestamp({ lineIndex: activeLineIndex, type: wordKind, wordIndex: wi });
+            },
+            onWordMenu: (wi) => openWord(activeLineIndex, wi, layerWords[wi] as Parameters<typeof openWord>[2], secondaryLayer),
+            onCycleSinger: !secondaryLayer && cursorIsLyric && (cursorLine.singers?.length ?? 0) >= 2 && !readOnly
+              ? (wi) => handleCycleWordSinger(activeLineIndex, wi)
+              : undefined,
+            onPrevLine: () => goToLine(prevLyric),
+            onNextLine: () => goToLine(nextLyric),
+            canPrev: prevLyric != null,
+            canNext: nextLyric != null,
+            layer: secondaryAvailable && !readOnly
+              ? { value: stampTarget as 'main' | 'secondary' | 'both', onChange: handleSetStampTarget }
+              : undefined,
+            mark: readOnly ? undefined : {
+              onMark: () => handleMarkWithConfidence(),
+              onUndo: undo,
+              canUndo,
+              label: phoneMarkLabel,
+              disabled: !syncMode || lines.length === 0,
+            },
+          } : undefined}
+        />
+        <PhoneToolsSheet
+          open={toolsOpen}
+          onClose={() => setToolsOpen(false)}
+          readOnly={readOnly}
+          focusView={isWords ? undefined : {
+            on: phoneFocus,
+            onToggle: () => {
+              if (phoneTab !== 'sync') changePhoneTab('sync');
+              setPhoneFocus(!phoneFocus);
+            },
+          }}
+          distributeWords={isWords && cursorIsLyric ? { available: focusLength != null && phoneWords.length > 0, run: handleDistributeWords } : undefined}
+          editorMode={editorMode}
+          hasLines={hasLyricLines}
+          autoStamp={{ blocked: autoStampBlocked, onStart: handleAutoStampStart }}
+          shiftAmount={settings.editor?.shiftAllAmount ?? 0.5}
+          onShiftAll={handleApplyOffset}
+          canRedo={canRedo}
+          onRedo={redo}
+          onClearAllTimestamps={handleClearTimestamps}
+          onClearAllWordTimestamps={handleClearAllWordTimestamps}
+          unmarkedOnly={lineFilter === 'unmarked'}
+          onToggleUnmarked={() => setLineFilter((f) => (f === 'all' ? 'unmarked' : 'all'))}
+          onFindLyrics={() => setLyricsSearchOpen(true)}
+          onImport={() => openPhoneEdit('text')}
+          onEditText={() => openPhoneEdit('text')}
+          onSecondary={editorMode === 'lrc' && hasLyricLines ? () => setSecondaryOpen(true) : undefined}
+          onFurigana={hasKanjiAnywhere ? () => setFuriganaOpen(true) : undefined}
+          readingFormat={hasCjkAnywhere ? {
+            katakana: settings.editor?.display?.readingFormat === 'katakana',
+            onToggle: () => updateSetting('editor.display.readingFormat', settings.editor?.display?.readingFormat === 'katakana' ? 'hiragana' : 'katakana'),
+          } : undefined}
+          onSelectLines={() => setSelecting(true)}
+          wordsLocked={wordsLocked}
+          onSetMode={selectMode}
+          onSave={handleManualSave && !inSession ? handleSaveClick : undefined}
+          saving={isSaving}
+          onExport={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
+          onProjectSettings={onOpenProjectSettings}
+          session={sessionOwner ? {
+            live: sessionOwner.live,
+            starting: sessionStarting,
+            onStart: () => void startSessionFlow(),
+            onManage: () => setSessionManageOpen(true),
+          } : undefined}
+          onPublish={canPublish ? openPublish : undefined}
+          onViewPublic={onTogglePublicView && !inSession && serverProjectId ? onTogglePublicView : undefined}
+          onChangeSong={hasMedia && !inSession ? () => setChangeMediaOpen(true) : undefined}
+          onNewProject={onNewProject}
+          onRemoveAll={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
+        />
+        <PhoneLineSheet
+          open={lineSheet.open && lineSheetValid}
+          onClose={() => setLineSheet((cur) => ({ ...cur, open: false }))}
+          initialView={lineSheet.view}
+          indices={lineSheetIndices}
+          lines={lines}
+          singers={lineSheetSingers}
+          nudgeFine={nudgeFine}
+          nudgeCoarse={nudgeDefault}
+          deleteDisabled={lineSheetIndices.some((i) => lines[i]?.id != null && !!othersLocks?.[lines[i].id as string])}
+          onShift={shiftTimeWithConfidence}
+          onClearTimestamp={handleClearLine}
+          onDelete={handleDeleteLine}
+          onAddLine={handleAddLine}
+          onInsertSection={handleInsertSection}
+          onToggleDepth={handleToggleSectionDepth}
+          onAssignSinger={handleAssignSinger}
+          onMoveToSection={handleMoveToSection}
+          onTagSection={(label) => {
+            const { lines: next, indexMap } = applyTagToSelection(lines, new Set(lineSheetIndices), { label });
+            recordIndexMap(indexMap);
+            setLines(next);
+            exitSelecting();
+          }}
+          onEditText={(index) => {
+            if (cursorBeforeEditRef.current == null) cursorBeforeEditRef.current = activeLineIndex;
+            setActiveLineIndex(index);
+            openPhoneEdit('line');
+          }}
+          onToggleCounterpart={handleToggleCounterpart}
+          onBulkSingTogether={handleBulkSingTogether}
+          onBulkSplitSingers={handleBulkSplitSingers}
+        />
+        {sessionStarting && <SessionStartShield />}
+        {sessionOwner?.live && (
+          <SessionSettingsModal
+            open={sessionManageOpen}
+            onOpenChange={setSessionManageOpen}
+            publicId={sessionOwner.publicId}
+            provider={collab?.provider ?? null}
+            locks={collab?.locks ?? {}}
+            lines={lines}
+            onEnded={sessionOwner.onEnded}
+          />
+        )}
+        {overlays}
+      </>
+    );
+  }
 
   return (
     <div
@@ -972,21 +1601,7 @@ export default function Editor({
         actionsSlot,
       )}
 
-      <ChangeMediaDialog open={changeMediaOpen} onOpenChange={setChangeMediaOpen} />
-
-      {canChangeVisibility && !inSession && (
-        <PublishDialog
-          open={publishOpen}
-          onOpenChange={setPublishOpen}
-          project={{ publicId: serverProjectId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines }}
-          onPublished={onVisibilityChange}
-          onSave={handleManualSave ?? undefined}
-        />
-      )}
-
-      {publishPrompt.show && !publishOpen && (
-        <PublishPrompt onPublish={() => { publishPrompt.dismiss(); setPublishOpen(true); }} onDismiss={publishPrompt.dismiss} />
-      )}
+      {publishPromptNode}
 
       {playerPosition === 'top' && (!wordsFocus || !hasMedia) && playerDock}
 
@@ -1106,32 +1721,6 @@ export default function Editor({
       </div>
 
       <div className={`flex flex-col min-h-0 min-w-0 ${wordsFocus ? 'flex-none px-5 sm:px-8 pt-4' : 'flex-1 px-3 sm:px-4 pt-3'}`}>
-        <ResponsiveModal
-          open={!syncMode}
-          onOpenChange={(open) => {
-            if (!open) {
-              window.dispatchEvent(new CustomEvent('editor:start-syncing'));
-            }
-          }}
-          title={t('editor.editRawText')}
-          dialogProps={{ className: 'max-w-3xl w-[90vw]' }}
-        >
-          <div className="h-[60vh] flex flex-col mt-2 min-h-0">
-            <EditorPasteArea
-              rawText={rawText}
-              setRawText={setRawText}
-              fileInputRef={fileInputRef}
-              handleFileUpload={handleFileUpload}
-              handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
-              singers={combinedSingers}
-            />
-            <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800 shrink-0">
-              <Button onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))} className="font-semibold px-6 text-zinc-950 bg-primary hover:bg-primary/90">
-                {t('editor.done')}
-              </Button>
-            </div>
-          </div>
-        </ResponsiveModal>
 
         {/* Sync Mode View */}
         <div data-tour="editor-lines" className={`relative flex flex-col min-h-0 ${wordsFocus ? 'flex-none h-[clamp(150px,26vh,260px)] overflow-y-auto lrc-scroll' : 'flex-1'}`}>
@@ -1202,77 +1791,7 @@ export default function Editor({
             shiftTime={shiftTimeWithConfidence}
             onToggleLineMode={handleToggleLineMode}
           />
-          ) : (
-          <VirtualizedLineList
-            lines={lines}
-            displayedActiveIndex={displayedActiveIndex}
-            activeLineIndex={activeLineIndex}
-            isActiveLineLocked={isActiveLineLocked}
-            editorMode={editorMode}
-            awaitingEndMark={awaitingEndMark}
-            focusedTimestamp={focusedTimestamp}
-            setFocusedTimestamp={setFocusedTimestamp}
-            handleLineClick={handleLineClick}
-            handleLineHover={handleLineHover}
-            handleLineHoverEnd={handleLineHoverEnd}
-            handleDragStart={handleDragStart}
-            handleDragOver={handleDragOver}
-            handleDragEnd={handleDragEnd}
-            handleDrop={handleDrop}
-            dragOverIndex={dragOverIndex}
-            dragIndex={dragIndex}
-            projectSingers={combinedSingers}
-            singerColors={singerColors}
-            selectedLines={selectedLines}
-            settings={settings}
-            editingLineIndex={editingLineIndex}
-            setEditingLineIndex={setEditingLineIndex}
-            editingText={editingText}
-            setEditingText={setEditingText}
-            editingSecondary={editingSecondary}
-            setEditingSecondary={setEditingSecondary}
-            editingTranslations={editingTranslations as unknown[]}
-            setEditingTranslations={setEditingTranslations as (v: unknown[]) => void}
-            editingSingers={editingSingers}
-            setEditingSingers={setEditingSingers}
-            handleSaveLineText={handleSaveLineText}
-            handleInsertSection={handleInsertSection}
-            handleToggleSectionDepth={handleToggleSectionDepth}
-            handleMoveToSection={handleMoveToSection}
-            handleAssignSinger={handleAssignSinger}
-            songArtists={combinedSingers}
-            playerRef={playerRef}
-            setActiveLineIndex={setActiveLineIndex}
-            shiftTime={shiftTimeWithConfidence}
-            handleAddLine={handleAddLine}
-            handleClearLine={handleClearLine}
-            handleDeleteLine={handleDeleteLine}
-            handleToggleCounterpart={handleToggleCounterpart}
-            listRef={listRef}
-            handleMark={handleMarkWithConfidence}
-            handleToggleLine={handleToggleLine}
-            updateSetting={updateSetting}
-            activeWordIndex={activeWordIndex}
-            handleClearWordTimestamp={handleClearWordTimestamp}
-            handleSetActiveWordIndex={handleSetActiveWordIndex}
-            handleSetTimestamp={handleSetTimestampWithConfidence}
-            handleSetWordReading={handleSetWordReading}
-            handleCycleWordSinger={handleCycleWordSinger}
-            stampTarget={stampTarget}
-            handleStampTargetToggle={handleStampTargetToggle}
-            handleSetStampTarget={handleSetStampTarget}
-            playbackPosition={playbackPosition}
-            onWordMenu={openWord}
-            onLineMenu={openLine}
-            modifiedLines={modifiedLines}
-            lockedByOthers={othersLocks}
-            onToggleLineMode={handleToggleLineMode}
-            confidenceById={autoStamp.confidenceById}
-            collapsedSections={collapsedSections}
-            collapsedView={listView}
-            onToggleSectionCollapse={toggleSectionCollapse}
-          />
-          )}
+          ) : lineList}
         </div>
       </div>
 
@@ -1374,83 +1893,7 @@ export default function Editor({
 
       {playerPosition === 'bottom' && (!wordsFocus || !hasMedia) && playerDock}
 
-      {/* Action Drawer for Mobile Actions */}
-      <EditorActionDrawer
-        activeDrawer={activeDrawer}
-        wordData={wordData}
-        lineData={lineData}
-        selectedCount={selectedLines.size}
-        onClose={closeDrawer}
-        playerRef={playerRef}
-        handleClearWordTimestamp={handleClearWordTimestamp}
-        handleSetWordReading={handleSetWordReading}
-        handleMergeWordWithNext={handleMergeWordWithNext}
-        handleSplitWord={handleSplitWord}
-        handleRegroupLine={handleRegroupLine}
-        lineWordCount={wordData.lineIndex != null ? (lines[wordData.lineIndex]?.words?.length ?? 0) : 0}
-        handleClearLine={handleClearLine}
-        handleDeleteLine={handleDeleteLine}
-        handleBulkClearTimestamps={handleBulkClearTimestamps}
-        handleBulkDelete={handleBulkDelete}
-        handleBulkSingTogether={handleBulkSingTogether}
-        handleBulkSplitSingers={handleBulkSplitSingers}
-        clearSelection={clearSelection}
-        lines={lines}
-        handleMoveToSection={handleMoveToSection}
-        songArtists={combinedSingers}
-      />
-
-      <ResponsiveModal
-        open={lyricsSearchOpen}
-        onOpenChange={setLyricsSearchOpen}
-        title={t('lyricsSearch.findLyrics')}
-        description={t('lyricsSearch.replaceDesc')}
-      >
-        <LyricsSearchBar onImport={handleLyricsSearchImport} publicId={activepublicId} />
-      </ResponsiveModal>
-
-      {confirmModal}
-
-      <FuriganaModal
-        open={furiganaOpen}
-        onOpenChange={setFuriganaOpen}
-        lines={lines}
-        startLineIndex={activeLineIndex}
-        readingFormat={settings.editor?.display?.readingFormat || 'hiragana'}
-        onSetReading={handleSetWordReading}
-        onSetLineText={(lineIndex, text) => {
-          const line = lines[lineIndex];
-          handleSaveLineText(lineIndex, text, line?.secondary, line?.translations, line?.singers);
-        }}
-        onFocusLine={setActiveLineIndex}
-        onMergeWithNext={handleMergeWordWithNext}
-        onSplitWord={handleSplitWord}
-      />
-
-      <SecondaryLyricsModal
-        open={secondaryOpen}
-        onOpenChange={setSecondaryOpen}
-        lines={lines}
-        onApply={handleSetSecondaryLines}
-      />
-
-      <AutoStampModal
-        open={autoStampOpen}
-        phase={autoStamp.phase}
-        errorCode={autoStamp.errorCode}
-        recordProgress={autoStamp.recordProgress}
-        canRecordTab={player.source === 'youtube' && tabAudioSupported()}
-        onRecordTab={autoStamp.startFromTab}
-        pendingResult={autoStamp.pendingResult}
-        confidenceById={autoStamp.confidenceById}
-        lines={lines}
-        confidenceThreshold={settings.autoStamp?.confidenceThreshold ?? 0.8}
-        onCancel={handleAutoStampCancel}
-        onApply={autoStamp.applyPending}
-        onDiscard={autoStamp.discardPending}
-        onClose={handleAutoStampClose}
-        onJumpToLine={handleAutoStampJump}
-      />
+      {overlays}
     </div>
   );
 }

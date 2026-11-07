@@ -52,6 +52,9 @@ export default {
   },
   // Presencia: quién más está en la sesión y dónde está.
   presence: {
+    more_one: '{{count}} participante más',
+    more_many: '{{count}} participantes más',
+    more_other: '{{count}} participantes más',
     participants: 'Participantes',
     you: 'Tú',
     online: 'En línea',
