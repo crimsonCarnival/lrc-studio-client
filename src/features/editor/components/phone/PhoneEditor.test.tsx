@@ -47,6 +47,7 @@ type HarnessProps = {
   editorMode?: string;
   playbackPosition?: number;
   collab?: CollabLockInput;
+  sessionPublicId?: string | null;
   activeLineIndex?: number;
   isPlaying?: boolean;
   playerRef?: { current: unknown };
@@ -59,7 +60,7 @@ let latest: { lines: EditorLine[]; activeLineIndex: number; syncMode: boolean; h
 };
 
 function Harness({
-  initialLines, editorMode = 'lrc', playbackPosition = 12.5, collab, activeLineIndex: controlledIndex,
+  initialLines, editorMode = 'lrc', playbackPosition = 12.5, collab, sessionPublicId, activeLineIndex: controlledIndex,
   isPlaying = false, playerRef, viaPage = false,
 }: HarnessProps) {
   const [lines, setLinesState] = useState(initialLines);
@@ -81,6 +82,8 @@ function Harness({
   const [syncMode, setSyncMode] = useState(true);
   const [mode, setMode] = useState(editorMode);
   const [ref] = useState(() => playerRef ?? { current: null });
+  // Stands in for AppRouter's workspace: the editor is mounted only while it is the view.
+  const [view, setView] = useState<'editor' | 'preview'>('editor');
   const index = controlledIndex ?? activeLineIndex;
   useEffect(() => { latest = { lines, activeLineIndex: index, syncMode, history: past.length }; });
   const props = {
@@ -88,12 +91,14 @@ function Harness({
     activeLineIndex: index, setActiveLineIndex, playbackPosition, playerRef: ref,
     undo, redo: vi.fn(), canUndo: past.length > 0, canRedo: false, clearHistory: vi.fn(),
     editorMode: mode, setEditorMode: setMode, handleRemoveAllLyrics: vi.fn(), onNewProject: vi.fn(),
-    collab, mediaTitle: 'Song', isPlaying,
+    collab, sessionPublicId, mediaTitle: 'Song', isPlaying, onShowPreview: () => setView('preview'),
   };
   return (
     <MemoryRouter>
       <TooltipProvider>
-        {viaPage ? <EditorPage {...props} /> : <Editor phone {...props} />}
+        {view === 'preview'
+          ? <button type="button" onClick={() => setView('editor')}>Back to editor</button>
+          : viaPage ? <EditorPage {...props} /> : <Editor phone {...props} />}
       </TooltipProvider>
     </MemoryRouter>
   );
@@ -450,5 +455,70 @@ describe('Phone Focus view', () => {
     openFocus();
     tapMark(/mark line 1/i);
     expect(latest.lines[0].timestamp).toBe(12.5);
+  });
+});
+
+describe('Phone collab session', () => {
+  const sessionAs = (role: string) => ({
+    provider: null,
+    me: { subject: 'u', name: 'Sam', colorIndex: 0, role, conn: 'c', clientId: 1 },
+    locks: {},
+  }) as unknown as CollabLockInput;
+
+  it('a session editor sees the participants in the header and keeps Mark', () => {
+    render(<Harness initialLines={makeLines(3)} collab={sessionAs('editor')} sessionPublicId="abc123" />);
+    expect(screen.getByRole('list', { name: /participants/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mark line 1/i })).toBeInTheDocument();
+  });
+
+  it('shows no participants outside a session', () => {
+    render(<Harness initialLines={makeLines(3)} />);
+    expect(screen.queryByRole('list', { name: /participants/i })).toBeNull();
+  });
+
+  it('the Tools sheet hides save, publish and change song inside a session, as the desktop does', () => {
+    render(<Harness initialLines={makeLines(3)} collab={sessionAs('editor')} sessionPublicId="abc123" />);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    const sheet = within(screen.getByRole('dialog'));
+    expect(sheet.getByRole('button', { name: 'Focus view' })).toBeInTheDocument();
+    expect(sheet.queryByRole('button', { name: /^save$/i })).toBeNull();
+    expect(sheet.queryByRole('button', { name: /publish/i })).toBeNull();
+    expect(sheet.queryByRole('button', { name: /change song/i })).toBeNull();
+  });
+
+  it('a viewer gets no Tools edits, Focus, Mark or publish', () => {
+    render(<Harness initialLines={makeLines(3)} collab={sessionAs('viewer')} sessionPublicId="abc123" />);
+    expect(screen.queryByRole('button', { name: /mark line/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Focus view' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    const sheet = within(screen.getByRole('dialog'));
+    for (const name of [/auto stamp/i, /shift all/i, /find lyrics/i, /^lrc/i, /publish/i, /^save$/i, /remove all/i]) {
+      expect(sheet.queryByRole('button', { name })).toBeNull();
+    }
+  });
+});
+
+describe('Phone Preview round trip', () => {
+  beforeEach(() => { try { localStorage.clear(); } catch { /* none */ } });
+
+  it('keeps the stamped lines and the cursor, and the Mark bar is not part of the preview', () => {
+    render(<Harness initialLines={makeLines(4)} />);
+    tapMark(/mark line 1/i);
+    tapMark(/mark line 2/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    expect(screen.queryByRole('button', { name: /mark line/i })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to editor' }));
+    expect(screen.getByRole('button', { name: /mark line 3/i })).toBeInTheDocument();
+    expect(latest.lines[0].timestamp).toBe(12.5);
+    expect(latest.lines[1].timestamp).toBe(12.5);
+    expect(latest.activeLineIndex).toBe(2);
+  });
+
+  it('returns to the Focus view when it was the chosen presentation', () => {
+    render(<Harness initialLines={makeLines(3)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Focus view' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to editor' }));
+    expect(screen.getByTestId('phone-focus-view')).toBeInTheDocument();
   });
 });
