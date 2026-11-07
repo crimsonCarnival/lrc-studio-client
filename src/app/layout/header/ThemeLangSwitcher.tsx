@@ -5,25 +5,8 @@ import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popove
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
-import { THEMES } from './theme-options';
+import { THEMES, LANGUAGES, getLangLabel } from './theme-options';
 import ThemeModal from '@/features/settings/components/theme/ThemeModal';
-
-const LANG_NAMES: Record<string, Record<string, string>> = {
-  en: { en: 'English', es: 'Inglés' },
-  es: { en: 'Spanish', es: 'Español' },
-};
-
-const LANGUAGES = [
-  { code: 'en', short: 'EN' },
-  { code: 'es', short: 'ES' },
-];
-
-function getLangLabel(code: string, currentLang: string): string {
-  const native = LANG_NAMES[code]?.[code] || code;
-  const translated = LANG_NAMES[code]?.[currentLang];
-  if (!translated || translated === native) return native;
-  return `${native} (${translated})`;
-}
 
 interface ThemeLangSwitcherProps {
   currentTheme: string;
