@@ -25,6 +25,10 @@ import { ActivityBand } from './components/ActivityBand';
 import { FollowingBand } from './components/FollowingBand';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
 import { SelectField } from '@ui/select-field';
+import { useIsNarrow } from '@/shared/hooks/useBreakpoint';
+import { HomeProjectRow } from './components/HomeProjectRow';
+import { HomeResumeRow } from './components/HomeResumeRow';
+import { HomeFilterChips } from './components/HomeFilterChips';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,6 +82,8 @@ export default function HomePage() {
   const { t, dt, i18n } = useDynamicTranslation() as DynamicTranslation;
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  // Below lg the page swaps its tall cards for compact rows; desktop keeps the original layout.
+  const narrow = useIsNarrow();
 
   const [items, setItems] = useState<HomeProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +110,10 @@ export default function HomePage() {
       setDeletingId(null);
     }
   }, [t]);
+
+  const handleSelect = useCallback((_publicId: string, editPath: string | null) => {
+    if (editPath) navigate(editPath);
+  }, [navigate]);
 
   const fetchProjects = useCallback(async () => {
     if (!user) {
@@ -185,14 +195,35 @@ export default function HomePage() {
   const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
   const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
 
+  const newProjectButton = (
+    <Button asChild className={`h-11 gap-2 px-[18px] text-base lg:h-11 lg:px-[18px] lg:text-base ${narrow ? 'w-full' : ''}`}>
+      <Link to="/project/new">
+        <Icon name="add" size={18} />
+        {t('home.createNew')}
+      </Link>
+    </Button>
+  );
+
+  const sortOptions = [
+    { value: 'edited', label: `${t('home.sortBy')} ${t('home.recentlyEdited')}` },
+    { value: 'created', label: `${t('home.sortBy')} ${t('home.recentlyCreated')}` },
+    { value: 'title', label: `${t('home.sortBy')} ${t('home.titleAZ')}` },
+  ];
+  const filterTabs = FILTER_TABS.map((tab) => ({
+    value: tab,
+    label: (t as (k: string) => string)(`home.${tab}`),
+    // No counts while loading: a row of zeros reads as "you have no projects".
+    count: loading ? undefined : tabCounts[tab],
+  }));
+
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden">
       {/* The scroller spans the full width so the gutters beside the centred content scroll it too. */}
-      <div className="pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
+      <div className={`${narrow ? 'pt-4' : 'pt-8'} pb-12 lg:px-12 max-w-7xl mx-auto w-full`}>
         {/* ── Greeting & New Project ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 animate-fade-in px-4 lg:px-0">
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${narrow ? 'mb-4' : 'mb-10'} animate-fade-in px-4 lg:px-0`}>
           <div>
-            <h1 className="text-3xl font-bold text-zinc-100 mb-2 tracking-tight">
+            <h1 className={`${narrow ? 'text-2xl mb-1' : 'text-3xl mb-2'} font-bold text-zinc-100 tracking-tight`}>
               {dt('home.welcome', { name: greetingName, context: user?.id })}
             </h1>
             <p className="text-[15px] text-zinc-400">
@@ -202,12 +233,7 @@ export default function HomePage() {
               )}
             </p>
           </div>
-          <Button asChild className="h-11 gap-2 px-[18px] text-base lg:h-11 lg:px-[18px] lg:text-base">
-            <Link to="/project/new">
-              <Icon name="add" size={18} />
-              {t('home.createNew')}
-            </Link>
-          </Button>
+          {!narrow && newProjectButton}
         </div>
 
         {/* ── Donde lo dejaste ──
@@ -215,10 +241,12 @@ export default function HomePage() {
                Without it the section is simply absent, the bands below render at the top,
                and the card then pops in above them and shoves the page down. ── */}
         {(loading || lastProject) && (
-          <section className="mb-12 animate-fade-in px-4 lg:px-0" aria-busy={loading}>
-            <h2 className="text-sm font-bold text-subtle mb-4">{t('home.resumeLast')}</h2>
+          <section className={`${narrow ? 'mb-4' : 'mb-12'} animate-fade-in px-4 lg:px-0`} aria-busy={loading}>
+            <h2 className={`text-sm font-bold text-subtle ${narrow ? 'mb-2' : 'mb-4'}`}>{t('home.resumeLast')}</h2>
             {loading || !lastProject ? (
-              <SkeletonResumeCard />
+              narrow ? <Skeleton className="h-[82px] w-full" /> : <SkeletonResumeCard />
+            ) : narrow ? (
+              <HomeResumeRow project={lastProject} onOpen={() => openEditor(lastProject)} />
             ) : (
               <article
                 className="group flex cursor-pointer flex-col gap-5 rounded-[var(--radius-card)] bg-background p-[18px] inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state hover:inset-ring-faint sm:flex-row sm:items-center"
@@ -264,113 +292,163 @@ export default function HomePage() {
           </section>
         )}
 
+        {narrow && <div className="mb-6 px-4">{newProjectButton}</div>}
+
         {/* ── Almost done + your activity, side by side on wide screens.
                AlmostDoneBand renders nothing when no project qualifies, in which
                case ActivityBand's flex-1 takes the full row on its own. ── */}
-        <div className="px-4 lg:px-0 mb-8 flex flex-col lg:flex-row lg:items-stretch gap-6">
+        <div className={`px-4 lg:px-0 ${narrow ? 'mb-6 gap-4' : 'mb-8 gap-6'} flex flex-col lg:flex-row lg:items-stretch`}>
           {loading ? (
             <div className="lg:w-[38%] lg:shrink-0" aria-hidden="true">
               <Skeleton className="mb-3 h-5 w-40" />
-              <SkeletonAlmostDone />
+              {narrow ? <Skeleton className="h-[60px] w-[240px]" /> : <SkeletonAlmostDone />}
             </div>
           ) : (
             <AlmostDoneBand
               projects={items}
               onOpen={(publicId) => openEditor(items.find(p => p.publicId === publicId))}
+              compact={narrow}
             />
           )}
-          <ActivityBand />
+          <ActivityBand compact={narrow} />
         </div>
 
-        {/* ── Tus proyectos ── */}
-        <div className="px-4 lg:px-0 animate-fade-in">
-          <div className="flex flex-col gap-4 mb-6 relative z-10">
-            <div className="flex items-end justify-between">
-              <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">{t('home.yourProjects')}</h2>
-            
-              <SearchField
-                compact
-                label={t('home.search')}
-                placeholder={t('home.search')}
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-                clearLabel={t('common.clear')}
-                className="w-56 max-w-full"
-              />
+        {narrow ? (
+          /* ── Tus proyectos, phone: heading + count, full-width search, chip row, compact rows ── */
+          <div className="px-4 animate-fade-in">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">{t('home.yourProjects')}</h2>
+              {!loading && <span className="font-mono text-xs text-subtle">{t('home.projectCount', { count: items.length })}</span>}
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full relative">
-              <CountTabs<HomeFilterTab>
-                label={t('home.yourProjects')}
-                value={filterTab}
-                onChange={setFilterTab}
-                tabs={FILTER_TABS.map((tab) => ({
-                  value: tab,
-                  label: (t as (k: string) => string)(`home.${tab}`),
-                  // No counts while loading: a row of zeros reads as "you have no projects".
-                  count: loading ? undefined : tabCounts[tab],
-                }))}
-              />
+            <SearchField
+              label={t('home.search')}
+              placeholder={t('home.search')}
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              clearLabel={t('common.clear')}
+              className="mb-3 w-full"
+            />
+            <HomeFilterChips<HomeFilterTab>
+              label={t('home.yourProjects')}
+              // Not started is a catch-all that is usually empty: show it only when it has
+              // projects (or is the selected filter), so the row isn't padded with a "0" chip.
+              chips={filterTabs.filter((tab) => tab.value !== 'notStarted' || tab.count !== 0 || filterTab === 'notStarted')}
+              value={filterTab}
+              onChange={setFilterTab}
+              trailing={
+                <SelectField
+                  variant="ghost"
+                  aria-label={t('home.sortBy')}
+                  className="shrink-0 data-[size=default]:h-11"
+                  value={sortBy}
+                  onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title')}
+                  options={sortOptions}
+                />
+              }
+            />
+            <ul className="mt-2 flex flex-col pb-12" aria-busy={loading}>
+              {loading && Array.from({ length: 4 }, (_, i) => <li key={i} className="py-1"><Skeleton className="h-[60px] w-full" /></li>)}
+              {!loading && filteredProjects.map((project) => (
+                <HomeProjectRow
+                  key={project.publicId}
+                  project={project}
+                  ownerAccountName={user?.accountName}
+                  onSelect={handleSelect}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isDeleting={deletingId === project.publicId}
+                  locale={locale}
+                  timezone={timezone}
+                />
+              ))}
+            </ul>
+            {!loading && filteredProjects.length === 0 && (
+              <p className="py-8 text-center text-sm text-subtle">
+                {items.length === 0 ? t('home.noProjects') : t('home.noResultsFound')}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="px-4 lg:px-0 animate-fade-in">
+            <div className="flex flex-col gap-4 mb-6 relative z-10">
+              <div className="flex items-end justify-between">
+                <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">{t('home.yourProjects')}</h2>
+            
+                <SearchField
+                  compact
+                  label={t('home.search')}
+                  placeholder={t('home.search')}
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                  clearLabel={t('common.clear')}
+                  className="w-56 max-w-full"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full relative">
+                <CountTabs<HomeFilterTab>
+                  label={t('home.yourProjects')}
+                  value={filterTab}
+                  onChange={setFilterTab}
+                  tabs={filterTabs}
+                />
 
-              <div className="flex items-center gap-2 relative shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
-                <div className="relative flex items-center">
-                  <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
-                  <SelectField
-                    variant="ghost"
-                    aria-label={t('home.sortBy')}
-                    className="pl-8"
-                    value={sortBy}
-                    onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title')}
-                    options={[
-                      { value: 'edited', label: `${t('home.sortBy')} ${t('home.recentlyEdited')}` },
-                      { value: 'created', label: `${t('home.sortBy')} ${t('home.recentlyCreated')}` },
-                      { value: 'title', label: `${t('home.sortBy')} ${t('home.titleAZ')}` },
-                    ]}
-                  />
+                <div className="flex items-center gap-2 relative shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
+                  <div className="relative flex items-center">
+                    <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
+                    <SelectField
+                      variant="ghost"
+                      aria-label={t('home.sortBy')}
+                      className="pl-8"
+                      value={sortBy}
+                      onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title')}
+                      options={sortOptions}
+                    />
+                  </div>
+                  <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block" />
+                  <Link to="/library"
+                    className="text-xs font-medium text-primary hover:text-primary-dim transition-colors hidden sm:block"
+                  >
+                    {t('home.viewLibrary')}
+                  </Link>
                 </div>
-                <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block" />
-                <Link to="/library"
-                  className="text-xs font-medium text-primary hover:text-primary-dim transition-colors hidden sm:block"
-                >
-                  {t('home.viewLibrary')}
-                </Link>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" aria-busy={loading}>
-            {loading && Array.from({ length: 3 }, (_, i) => <SkeletonProjectCard key={i} />)}
-            {!loading && filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.publicId}
-                project={project}
-                // ProjectCard builds the canonical path from the owner account
-                // name it is given; never rebuild one from publicId here.
-                onSelect={(_publicId, editPath) => { if (editPath) navigate(editPath); }}
-                ownerAccountName={user?.accountName}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isListView={false}
-                isDeleting={deletingId === project.publicId}
-                i18n={i18n}
-                timezone={timezone}
-                // projects.list() returns only the signed-in user's own projects,
-                // so the list itself is the ownership signal — same as Library.
-                isOwner
-              />
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" aria-busy={loading}>
+              {loading && Array.from({ length: 3 }, (_, i) => <SkeletonProjectCard key={i} />)}
+              {!loading && filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.publicId}
+                  project={project}
+                  // ProjectCard builds the canonical path from the owner account
+                  // name it is given; never rebuild one from publicId here.
+                  onSelect={(_publicId, editPath) => { if (editPath) navigate(editPath); }}
+                  ownerAccountName={user?.accountName}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isListView={false}
+                  isDeleting={deletingId === project.publicId}
+                  i18n={i18n}
+                  timezone={timezone}
+                  // projects.list() returns only the signed-in user's own projects,
+                  // so the list itself is the ownership signal — same as Library.
+                  isOwner
+                />
+              ))}
 
-            {/* Start another CTA Card */}
-            <Link to="/project/new"
-              className="group flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border-[1.5px] border-dashed border-hl p-6 text-center text-subtle transition-colors duration-[var(--duration-state)] ease-state hover:border-iris hover:bg-primary-soft hover:text-primary-ink focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
-            >
-              <span className="grid size-[52px] place-items-center rounded-full bg-raised">
-                <Icon name="add" size={24} />
-              </span>
-              <h3 className="text-base font-semibold">{t('home.startAnother')}</h3>
-              <p className="text-sm text-subtle">{t('home.startAnotherDesc')}</p>
-            </Link>
+              {/* Start another CTA Card */}
+              <Link to="/project/new"
+                className="group flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border-[1.5px] border-dashed border-hl p-6 text-center text-subtle transition-colors duration-[var(--duration-state)] ease-state hover:border-iris hover:bg-primary-soft hover:text-primary-ink focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+              >
+                <span className="grid size-[52px] place-items-center rounded-full bg-raised">
+                  <Icon name="add" size={24} />
+                </span>
+                <h3 className="text-base font-semibold">{t('home.startAnother')}</h3>
+                <p className="text-sm text-subtle">{t('home.startAnotherDesc')}</p>
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── From people you follow: hides itself when the feed is empty ── */}
         <div className="px-4 lg:px-0">

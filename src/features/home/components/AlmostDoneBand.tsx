@@ -27,9 +27,12 @@ const MAX_SHOWN = 4;
 export function AlmostDoneBand({
   projects,
   onOpen,
+  compact = false,
 }: {
   projects: AlmostDoneProject[];
   onOpen: (publicId: string) => void;
+  /** Phone width: a single horizontally scrolling strip instead of a stacked card. */
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -50,6 +53,47 @@ export function AlmostDoneBand({
 
   if (items.length === 0) return null;
 
+  const button = (p: (typeof items)[number], className: string) => (
+    <Button
+      key={p.publicId}
+      type="button"
+      variant="ghost"
+      size={null}
+      onClick={() => onOpen(p.publicId)}
+      className={className}
+    >
+      {/* 44px ring, 4px stroke, 2px gap: leaves 32px for the cover. */}
+      <ProgressRing value={p.pct} size={44} label={p.title || t('library.untitled')}>
+        <span className="block size-8 overflow-hidden rounded-full">
+          <ProjectListCover coverImage={p.coverImage} genre={p.metadata?.genre} className="size-8" />
+        </span>
+      </ProgressRing>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-base font-semibold text-foreground">
+          {p.title || t('library.untitled')}
+        </span>
+        <span className="truncate font-mono text-xs font-medium text-subtle">
+          {p.syncedLineCount} / {p.lineCount} {t('home.lines')}
+        </span>
+      </span>
+      <span className="shrink-0 font-mono text-sm font-semibold text-primary-ink tabular-nums">{p.pct}%</span>
+    </Button>
+  );
+
+  if (compact) {
+    return (
+      <section className="flex min-w-0 flex-col">
+        <div className="mb-2 flex items-center gap-2">
+          <Icon name="pending_actions" size={16} className="text-primary-ink" />
+          <h2 className="text-sm font-bold text-subtle">{t('home.almostDone')}</h2>
+        </div>
+        <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 hide-scrollbar">
+          {items.map(p => button(p, 'h-auto w-[240px] shrink-0 snap-start justify-start gap-3 rounded-[var(--radius-card)] bg-background px-3 py-2 text-left font-normal inset-ring inset-ring-hl hover:bg-raised hover:text-foreground'))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="lg:w-[38%] lg:shrink-0 flex flex-col">
       <div className="flex items-center gap-2 mb-3">
@@ -60,32 +104,7 @@ export function AlmostDoneBand({
 
       {/* The ring replaces the old progress bar and wraps the cover thumbnail (sheet 07). */}
       <div className="flex flex-1 flex-col gap-2 rounded-[var(--radius-card)] bg-background p-2 inset-ring inset-ring-hl">
-        {items.map(p => (
-          <Button
-            key={p.publicId}
-            type="button"
-            variant="ghost"
-            size={null}
-            onClick={() => onOpen(p.publicId)}
-            className="h-auto justify-start gap-3.5 rounded-[calc(var(--radius)*1.4)] px-2.5 py-2 text-left font-normal hover:bg-raised hover:text-foreground"
-          >
-            {/* 44px ring, 4px stroke, 2px gap: leaves 32px for the cover. */}
-            <ProgressRing value={p.pct} size={44} label={p.title || t('library.untitled')}>
-              <span className="block size-8 overflow-hidden rounded-full">
-                <ProjectListCover coverImage={p.coverImage} genre={p.metadata?.genre} className="size-8" />
-              </span>
-            </ProgressRing>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-base font-semibold text-foreground">
-                {p.title || t('library.untitled')}
-              </span>
-              <span className="truncate font-mono text-xs font-medium text-subtle">
-                {p.syncedLineCount} / {p.lineCount} {t('home.lines')}
-              </span>
-            </span>
-            <span className="shrink-0 font-mono text-sm font-semibold text-primary-ink tabular-nums">{p.pct}%</span>
-          </Button>
-        ))}
+        {items.map(p => button(p, 'h-auto justify-start gap-3.5 rounded-[calc(var(--radius)*1.4)] px-2.5 py-2 text-left font-normal hover:bg-raised hover:text-foreground'))}
       </div>
     </section>
   );

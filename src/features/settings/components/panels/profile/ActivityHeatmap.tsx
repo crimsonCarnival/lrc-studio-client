@@ -110,7 +110,15 @@ export default function ActivityHeatmap({
   cellSize = 14,
   cellGap = 4,
   streak,
-}: { days?: HeatDay[]; cellSize?: number; cellGap?: number; streak?: { current?: number | null; longest?: number | null } | null } = {}) {
+  compact = false,
+  notes,
+}: {
+  days?: HeatDay[]; cellSize?: number; cellGap?: number; streak?: { current?: number | null; longest?: number | null } | null;
+  /** Phone width: a slim stat row, and the long definition sits behind an info toggle. */
+  compact?: boolean;
+  /** Compact only: extra lines (e.g. the streak reset rule) shown with the definition. */
+  notes?: string[];
+} = {}) {
   // One week's horizontal advance. The month labels are absolutely positioned,
   // so they have to step by exactly this or they drift off their column.
   const step = cellSize + cellGap;
@@ -118,6 +126,7 @@ export default function ActivityHeatmap({
   const [fetched, setFetched] = useState<HeatDay[] | null>(null);
   const data = providedDays ?? fetched;
   const [hovered, setHovered] = useState<GridDay | null>(null);
+  const [showDefinition, setShowDefinition] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -199,9 +208,26 @@ export default function ActivityHeatmap({
   const STAT_VALUE = 'font-heading text-[28px] font-bold leading-[1.15] text-foreground';
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className={`flex flex-col w-full ${compact ? 'gap-3' : 'gap-6'}`}>
       {/* Streak stats (redesign sheet 10). Only where the caller knows the streak. */}
-      {streak && (
+      {streak && compact && (
+        <dl className="grid grid-cols-3 divide-x divide-hl rounded-[calc(var(--radius)*1.4)] bg-background py-2 inset-ring inset-ring-hl">
+          {[
+            { label: t('profile.heatmap.streakDays'), value: streak.current ?? 0, flame: true },
+            { label: t('profile.heatmap.streakLongest'), value: streak.longest ?? 0 },
+            { label: t('profile.heatmap.perYear'), value: total },
+          ].map((stat) => (
+            <div key={stat.label} className="flex min-w-0 flex-col-reverse items-center gap-0.5 px-2">
+              <dt className="max-w-full truncate text-[11px] text-subtle">{stat.label}</dt>
+              <dd className="flex items-center gap-1 font-heading text-xl font-bold leading-none text-foreground tabular-nums">
+                {stat.flame && <Icon name="local_fire_department" size={16} className="text-gold-ink" />}
+                {stat.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {streak && !compact && (
         <div className="grid grid-cols-3 gap-2.5">
           <div className={STAT_CARD}>
             <span className="flex items-center gap-1.5 text-gold-ink">
@@ -220,7 +246,7 @@ export default function ActivityHeatmap({
           </div>
         </div>
       )}
-      <div className="overflow-x-auto pb-4 custom-scrollbar" ref={scrollRef}>
+      <div className={`overflow-x-auto custom-scrollbar ${compact ? 'overscroll-x-contain pb-2' : 'pb-4'}`} ref={scrollRef}>
         <div className="min-w-max flex gap-2">
           <div
             className="grid text-[10px] text-muted-foreground mt-6 text-right select-none"
@@ -266,7 +292,7 @@ export default function ActivityHeatmap({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 text-xs text-muted-foreground min-w-0">
+      <div className={`flex flex-col text-xs text-muted-foreground min-w-0 ${compact ? 'gap-2' : 'gap-3'}`}>
         <p className="text-foreground font-medium">
           {hovered
             ? `${hovered.count} ${t('profile.heatmap.activities')} — ${hovered.date}`
@@ -281,7 +307,28 @@ export default function ActivityHeatmap({
           ))}
           <span>{t('profile.heatmap.more')}</span>
         </div>
-        <p>{t('profile.heatmap.definition')}</p>
+        {compact ? (
+          <>
+            <button
+              type="button"
+              aria-expanded={showDefinition}
+              aria-controls="heatmap-definition"
+              aria-label={t('home.activityInfo')}
+              onClick={() => setShowDefinition((v) => !v)}
+              className="-my-1.5 -ml-2 grid size-11 place-items-center self-start rounded-[calc(var(--radius)*1.4)] text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+            >
+              <Icon name="info" size={18} />
+            </button>
+            {showDefinition && (
+              <div id="heatmap-definition" className="flex flex-col gap-2">
+                {notes?.map((note) => <p key={note}>{note}</p>)}
+                <p>{t('profile.heatmap.definition')}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <p>{t('profile.heatmap.definition')}</p>
+        )}
       </div>
     </div>
   );

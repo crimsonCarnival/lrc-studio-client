@@ -133,4 +133,8 @@ export default {
   exploreSub: "Trending projects & playlists",
   leaderboardSub: "Top creators by sync time",
   feedSub: "Activity from people you follow",
+  projectCount_one: "{{count}} project",
+  projectCount_other: "{{count}} projects",
+  activityInfo: "About streak, XP and the activity map",
+  progressPct: "{{pct}}% synced",
 };

@@ -57,18 +57,21 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
     });
   };
 
+  // Below lg the items are touch targets even with a fine pointer (narrow desktop windows).
+  const item = 'max-lg:min-h-11';
+
   return (C: MenuComponents): ReactNode => (
     <>
       {path && (
         <>
-          <C.Item asChild>
+          <C.Item asChild className={item}>
             <a href={path} target="_blank" rel="noopener noreferrer">
               <Icon name="open_in_new" />
               {t('profile.openInNewTab')}
             </a>
           </C.Item>
 
-          <C.Item onClick={handleCopyLink}>
+          <C.Item onClick={handleCopyLink} className={item}>
             <MorphIcon name={copied ? 'check' : 'link'} size={20} decorative />
             {copied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
           </C.Item>
@@ -78,7 +81,7 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
       {isOwner && onEdit && (
         <>
           <C.Separator />
-          <C.Item onClick={() => onEdit(project)}>
+          <C.Item onClick={() => onEdit(project)} className={item}>
             <Icon name="edit" />
             {t('profile.editProject')}
           </C.Item>
@@ -88,7 +91,7 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
       {isOwner && onDelete && (
         <>
           <C.Separator />
-          <C.Item variant="destructive" onClick={() => onDelete(project)}>
+          <C.Item variant="destructive" onClick={() => onDelete(project)} className={item}>
             <Icon name="delete" />
             {t('profile.deleteProject')}
           </C.Item>
