@@ -46,7 +46,7 @@ export default function AdminIpsTab({
             placeholder={t('admin.table.ipPlaceholder')}
             value={ipForm.ip}
             onChange={(e) => setIpForm(prev => ({ ...prev, ip: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <div className={isMobile ? 'w-full' : 'flex-[2] min-w-[300px]'}>
@@ -55,7 +55,7 @@ export default function AdminIpsTab({
             placeholder={t('admin.table.reasonPlaceholder')}
             value={ipForm.reason}
             onChange={(e) => setIpForm(prev => ({ ...prev, reason: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <Button type="submit" disabled={!ipForm.ip} className={`bg-red-600 hover:bg-red-500 text-white gap-2 ${isMobile ? 'w-full h-10 coarse:h-11' : ''}`}>

@@ -46,7 +46,7 @@ export default function AdminDevicesTab({
             placeholder="dv_..."
             value={deviceForm.deviceId}
             onChange={(e) => setDeviceForm(prev => ({ ...prev, deviceId: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <div className={isMobile ? 'w-full' : 'flex-[2] min-w-[300px]'}>
@@ -55,7 +55,7 @@ export default function AdminDevicesTab({
             placeholder={t('admin.table.reasonPlaceholder')}
             value={deviceForm.reason}
             onChange={(e) => setDeviceForm(prev => ({ ...prev, reason: e.target.value }))}
-            className="bg-zinc-900 border-zinc-800 h-10"
+            className="bg-zinc-900 border-zinc-800 h-10 coarse:h-11"
           />
         </div>
         <Button type="submit" disabled={!deviceForm.deviceId} className={`bg-primary hover:bg-primary-dim text-zinc-950 gap-2 ${isMobile ? 'w-full h-10 coarse:h-11' : ''}`}>

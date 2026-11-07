@@ -168,7 +168,7 @@ export default function AdminUsersTab({
               aria-label={t('admin.dashboard.filters.filterByRole')}
               value={roleFilter}
               onValueChange={setRoleFilter}
-              className={isMobile ? 'flex-1' : ''}
+              className={isMobile ? 'flex-1 min-h-11' : ''}
               options={[
                 { value: '', label: t('admin.dashboard.filters.allRoles') },
                 { value: 'superadmin', label: t('admin.table.superadmin') },
@@ -182,7 +182,7 @@ export default function AdminUsersTab({
             aria-label={t('admin.dashboard.filters.filterByStatus')}
             value={statusFilter}
             onValueChange={setStatusFilter}
-            className={isMobile ? 'flex-1' : ''}
+            className={isMobile ? 'flex-1 min-h-11' : ''}
             options={[
               { value: '', label: t('admin.dashboard.filters.allStatuses') },
               { value: 'active', label: t('admin.dashboard.filters.active') },

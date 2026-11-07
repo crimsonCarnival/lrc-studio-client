@@ -320,7 +320,7 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
                             type="button"
                             aria-pressed={on}
                             onClick={() => toggleUserPerm(user.id ?? '', perm)}
-                            className={`inline-flex items-center gap-1.5 rounded-pill px-2.5 h-7 coarse:h-9 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                            className={`inline-flex items-center gap-1.5 rounded-pill px-2.5 h-7 coarse:h-11 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                               on ? 'bg-primary-soft text-primary-ink' : 'bg-zinc-800/60 text-zinc-500 hover:text-zinc-300'
                             } ${override ? 'ring-1 ring-amber-400/60' : ''}`}
                           >

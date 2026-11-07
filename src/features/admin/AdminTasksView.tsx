@@ -43,7 +43,7 @@ interface TaskPage {
 
 const PAGE_SIZE = 25;
 
-const FILTER_BTN = 'h-8 coarse:h-11 rounded-pill px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
+const FILTER_BTN = 'h-8 coarse:h-11 min-w-11 justify-center rounded-pill px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
 
 /** The lyrics tasks behind the dashboard's "lyrics jobs" count: who ran each, for which project, and how it ended. */
 export default function AdminTasksView() {

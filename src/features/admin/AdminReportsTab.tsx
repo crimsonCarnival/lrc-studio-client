@@ -56,7 +56,7 @@ function FilterTabs<T extends string>({ label, value, options, labelOf, onChange
           role="tab"
           aria-selected={value === o}
           onClick={() => onChange(o)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${value === o ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-3 py-1.5 coarse:min-h-11 rounded-lg text-xs font-medium transition-colors ${value === o ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
         >
           {labelOf(o)}
         </button>
