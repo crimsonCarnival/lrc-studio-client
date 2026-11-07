@@ -30,7 +30,6 @@ export default {
   clear: "Limpiar",
   pagination: {
     previous: "Anterior",
-    prevShort: "Ant.",
     next: "Siguiente"
   },
   loadMore: "Cargar más",
