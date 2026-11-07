@@ -277,7 +277,10 @@ export function useProjectActions({
   }, [setEditLines, setActiveLineIndex, requestConfirm, t, toast, replaceAllBlocked]);
 
   // ── Reset full app state ──────────────────────────────────────────────────
-  const resetAppState = useCallback(() => {
+  // `keepGuestDraft`: clear the in-memory project but leave a guest's saved draft alone. Used when
+  // the setup screen is reached by browser history (Back from the editor), where wiping the draft
+  // would silently destroy work the guest never chose to discard.
+  const resetAppState = useCallback((opts?: { keepGuestDraft?: boolean }) => {
     setLines([]);
     setSyncMode(false);
     setActiveLineIndex(0);
@@ -292,7 +295,7 @@ export function useProjectActions({
     activepublicIdRef.current = null;
     setUploadedAudio(null);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROJECT_ID);
-    localStorage.removeItem(STORAGE_KEYS.PROJECT);
+    if (!opts?.keepGuestDraft) localStorage.removeItem(STORAGE_KEYS.PROJECT);
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
     lastServerSnapshotRef.current = null;
     sessionUploadIdRef.current = null;
