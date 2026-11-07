@@ -88,7 +88,7 @@ export default function AdminDevicesTab({
                 <Button
                   variant="ghost"
                   onClick={() => handleUnblockDevice(item.id)}
-                  className="mt-2 h-10 text-emerald-500 hover:bg-emerald-500/10 w-full"
+                  className="mt-2 h-10 coarse:h-11 text-emerald-500 hover:bg-emerald-500/10 w-full"
                 >
                   {t('admin.table.unblock')}
                 </Button>
