@@ -321,19 +321,6 @@ const EditorLineItem = React.memo(({
     showNudge,
     onLongPress: compact ? (selectMode ? noop : openLineMenu) : undefined,
   });
-  // The visible way in to the same sheet: long-press is invisible, and a desktop mouse in a
-  // narrow window has no hover toolbar to find it on.
-  const lineMoreButton = compact && !selectMode && onLineMenu ? (
-    <button
-      type="button"
-      aria-label={t('editor.phone.line.more', { n: i + 1 })}
-      aria-haspopup="dialog"
-      onClick={(e) => { e.stopPropagation(); onLineMenu(i, line); }}
-      className="relative z-10 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-pill text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
-    >
-      <Icon name="more_vert" size={20} />
-    </button>
-  ) : null;
 
   const handleWordClick = useCallback((e: ReactMouseEvent, w: EditorWord, wi: number, isSecondary?: boolean) => {
     e.stopPropagation();
@@ -432,6 +419,20 @@ const EditorLineItem = React.memo(({
   const lyricNumber = sectionLines
     ? sectionLines.slice(0, i).filter((l) => l.type !== 'section').length + 1
     : i + 1;
+
+  // The visible way in to the same sheet: long-press is invisible, and a desktop mouse in a
+  // narrow window has no hover toolbar to find it on.
+  const lineMoreButton = compact && !selectMode && onLineMenu ? (
+    <button
+      type="button"
+      aria-label={t('editor.phone.line.more', { n: lyricNumber })}
+      aria-haspopup="dialog"
+      onClick={(e) => { e.stopPropagation(); onLineMenu(i, line); }}
+      className="relative z-10 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-pill text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+    >
+      <Icon name="more_vert" size={20} />
+    </button>
+  ) : null;
 
   // Drag handle + line number. Shared by both layouts: in lrc/srt it opens the row,
   // in words mode it opens the header strip above the chip tray.
