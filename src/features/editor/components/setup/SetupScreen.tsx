@@ -39,6 +39,8 @@ import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { useSetupMedia } from '@/features/editor/hooks/useSetupMedia';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
+import SetupStepper, { type SetupStep } from './SetupStepper';
 import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import type { PlayerHandle } from '@/features/player/player.types';
@@ -128,6 +130,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
   const [rightTab, setRightTab] = useState('media');
+  // Below lg the same panels are arranged as three steps; chosen by width, not by input method.
+  const isPhone = !useBreakpoint('lg');
+  const [phoneStep, setPhoneStep] = useState<SetupStep>(prefill ? 2 : 1);
   const { executeRecaptcha } = useGoogleReCaptcha();
   // Cover URL is an escape hatch, not a primary path: hidden until requested.
   const [showCoverUrl, setShowCoverUrl] = useState(false);
@@ -153,7 +158,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   // Audio state, the media library and every path that reaches the player live in
   // useSetupMedia — the one state group here that is genuinely its own (see that file).
-  const revealMediaPanel = useCallback(() => setRightTab('media'), []);
+  const revealMediaPanel = useCallback(() => { setRightTab('media'); setPhoneStep(2); }, []);
   const {
     audio,
     setAudioState,
@@ -418,53 +423,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const filledDetails = [songAlbum, songYear, String(trackNumber ?? ''), genre, songLanguage]
     .filter((v) => !!v && String(v).trim() !== '').length + (projectTags.length > 0 ? 1 : 0);
 
-  return (
-    // max-h-[100dvh] is load-bearing: h-full resolves against an ancestor that
-    // is taller than the window here, so the column came out 808px tall in a
-    // 700px viewport. Its inner scroller then saw scrollHeight === clientHeight,
-    // reported itself already at the bottom, and the last ~100px — the media
-    // panel's Change / Next buttons — were simply cut off with no way to reach
-    // them. dvh rather than vh so a collapsing mobile URL bar is accounted for.
-    <div className="flex flex-col h-full max-h-[100dvh] overflow-hidden">
-      {/* Page header */}
-      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3">
-        {/* Wraps below sm: title, visibility and the primary action do not fit
-            on one 390px row, and the action was the part that fell off the
-            right edge — the one control the screen exists to reach. */}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
-            <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
-              {t('setup.newProjectTitle')}
-            </h2>
-          </div>
-          <div className="flex items-center gap-4 shrink-0 max-sm:w-full max-sm:justify-between">
-            {/* Every new project starts private; publishing is a later, explicit step. */}
-            <Tip content={t('setup.privateHelp')}>
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 select-none">
-                <Icon name="lock" size={14} />
-                <span>{t('setup.private')}</span>
-              </div>
-            </Tip>
-
-            <Button
-              onClick={handleProceed}
-              disabled={!canContinue}
-              className="h-9 coarse:h-11 px-5 shrink-0 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
-            >
-              {t('setup.startToSync')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Two-column body */}
-      <div className="flex-1 min-h-0 px-6 overflow-y-auto lg:overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:h-[calc(100%-1rem)] lg:pb-0">
-
-          {/* Project info — left column on desktop */}
-          <div className="glass rounded-2xl flex flex-col p-4 gap-3 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-1">
-
+  // The three panels are built once and placed by the layout below: the desktop two-column card
+  // pair, or the phone stepper. Same elements, same state; only the arrangement differs.
+  const songFields = (<>
             {/* Essentials: cover anchors the identity fields beside it */}
             <div className="flex gap-3 shrink-0">
               <CoverDropzone
@@ -658,14 +619,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 </div>
               </div>
             </CollapsibleSection>
+  </>);
 
-          </div>
-
-          {/* Media + Lyrics — right column on desktop */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative lg:order-2">
-
-            {/* Rollback notice — shown when project was missing media */}
-            {prefill && (
+  const rollbackNotice = prefill ? (
               <div className="flex items-start gap-3 px-4 py-3 mb-3 rounded-xl bg-amber-500/8 border border-amber-500/20 shrink-0">
                 <span className="text-amber-400 text-base leading-none mt-0.5 shrink-0">⚠</span>
                 <div>
@@ -673,28 +629,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   <p className="text-xs text-amber-400/80 mt-0.5">{t('setup.noMediaDesc')}</p>
                 </div>
               </div>
-            )}
+  ) : null;
 
-            {/* Top-level tab bar: Media | Lyrics */}
-            <div className="flex gap-0 border-b border-zinc-800/60 shrink-0 mb-3">
-              {['media', 'lyrics'].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setRightTab(tab)}
-                  className={`px-4 py-2 coarse:py-3.5 text-xs font-bold border-b-2 -mb-px transition-colors capitalize ${
-                    rightTab === tab
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  {tab === 'media' ? t('setup.tabMedia') : t('setup.tabLyrics')}
-                </button>
-              ))}
-            </div>
-
-            {/* MEDIA PANEL */}
-            {rightTab === 'media' && (
+  const mediaPanel = (
               <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
                 {/* Source sub-tabs: YouTube / File & URL */}
                 <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-1 shrink-0">
@@ -756,7 +693,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         {t('setup.changeAudio')}
                       </Button>
                       <Button
-                        onClick={() => setRightTab('lyrics')}
+                        onClick={() => { setRightTab('lyrics'); setPhoneStep(3); }}
                         className="h-8 coarse:h-11 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
                       >
                         {t('setup.nextLyrics')}
@@ -877,10 +814,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   </div>
                 )}
               </div>
-            )}
+  );
 
-            {/* LYRICS PANEL */}
-            {rightTab === 'lyrics' && (
+  const lyricsPanel = (
               <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
                 {parsedLines ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4 bg-zinc-900/30 rounded-xl border border-zinc-800/50 min-h-[140px]">
@@ -960,7 +896,104 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   </div>
                 )}
               </div>
-            )}
+  );
+
+  if (isPhone) {
+    return (
+      <SetupStepper
+        step={phoneStep}
+        onStepChange={setPhoneStep}
+        done={{ identity: hasIdentity, audio: audioReady, lyrics: hasLyrics }}
+        onStart={handleProceed}
+        onFocusName={() => projectNameInputRef.current?.focus()}
+        notice={rollbackNotice}
+        song={songFields}
+        audio={mediaPanel}
+        lyrics={lyricsPanel}
+      />
+    );
+  }
+
+  return (
+    // max-h-[100dvh] is load-bearing: h-full resolves against an ancestor that
+    // is taller than the window here, so the column came out 808px tall in a
+    // 700px viewport. Its inner scroller then saw scrollHeight === clientHeight,
+    // reported itself already at the bottom, and the last ~100px — the media
+    // panel's Change / Next buttons — were simply cut off with no way to reach
+    // them. dvh rather than vh so a collapsing mobile URL bar is accounted for.
+    <div className="flex flex-col h-full max-h-[100dvh] overflow-hidden">
+      {/* Page header */}
+      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3">
+        {/* Wraps below sm: title, visibility and the primary action do not fit
+            on one 390px row, and the action was the part that fell off the
+            right edge — the one control the screen exists to reach. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
+            <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
+              {t('setup.newProjectTitle')}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4 shrink-0 max-sm:w-full max-sm:justify-between">
+            {/* Every new project starts private; publishing is a later, explicit step. */}
+            <Tip content={t('setup.privateHelp')}>
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 select-none">
+                <Icon name="lock" size={14} />
+                <span>{t('setup.private')}</span>
+              </div>
+            </Tip>
+
+            <Button
+              onClick={handleProceed}
+              disabled={!canContinue}
+              className="h-9 coarse:h-11 px-5 shrink-0 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
+            >
+              {t('setup.startToSync')}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-column body */}
+      <div className="flex-1 min-h-0 px-6 overflow-y-auto lg:overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:h-[calc(100%-1rem)] lg:pb-0">
+
+          {/* Project info — left column on desktop */}
+          <div className="glass rounded-2xl flex flex-col p-4 gap-3 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-1">
+
+            {songFields}
+
+          </div>
+
+          {/* Media + Lyrics — right column on desktop */}
+          <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative lg:order-2">
+
+            {/* Rollback notice — shown when project was missing media */}
+            {rollbackNotice}
+
+            {/* Top-level tab bar: Media | Lyrics */}
+            <div className="flex gap-0 border-b border-zinc-800/60 shrink-0 mb-3">
+              {['media', 'lyrics'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setRightTab(tab)}
+                  className={`px-4 py-2 coarse:py-3.5 text-xs font-bold border-b-2 -mb-px transition-colors capitalize ${
+                    rightTab === tab
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {tab === 'media' ? t('setup.tabMedia') : t('setup.tabLyrics')}
+                </button>
+              ))}
+            </div>
+
+            {/* MEDIA PANEL */}
+            {rightTab === 'media' && mediaPanel}
+
+            {/* LYRICS PANEL */}
+            {rightTab === 'lyrics' && lyricsPanel}
           </div>
         </div>
       </div>

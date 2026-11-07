@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -41,6 +41,19 @@ vi.mock('@/features/player/hooks/useYouTubeAvailability', () => ({
 
 import { TooltipProvider } from '@ui/tooltip';
 import SetupScreen from './SetupScreen';
+
+// The layout is chosen by width (useBreakpoint('lg')), so each test states the window it runs in.
+let width = 1280;
+const originalMatchMedia = window.matchMedia;
+beforeEach(() => {
+  width = 1280;
+  window.matchMedia = vi.fn((query: string) => {
+    const m = /min-width:\s*([\d.]+)(rem|px)/.exec(query);
+    const matches = m ? width >= parseFloat(m[1]) * (m[2] === 'rem' ? 16 : 1) : false;
+    return { matches, media: query, onchange: null, addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn() };
+  }) as unknown as typeof window.matchMedia;
+});
+afterEach(() => { window.matchMedia = originalMatchMedia; });
 
 function renderSetup(state?: unknown, search = '') {
   const playerRef = { current: { loadFromUrl: vi.fn(), loadYouTube: vi.fn(), loadLocalAudio: vi.fn() } };
@@ -198,5 +211,130 @@ describe('SetupScreen: loading media', () => {
 
     expect(playerRef.current.loadYouTube).toHaveBeenCalledWith(uploads[2].uploadUrl);
     expect(playerRef.current.loadFromUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe('SetupScreen: phone steps', () => {
+  const tab = (key: string) => screen.getByRole('tab', { name: new RegExp(key) });
+  const footer = () => document.getElementById('setup-footer-message')!;
+  const typeInto = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+  const pickAudio = () => {
+    fireEvent.click(screen.getByText('setup.tabLocal'));
+    fireEvent.change(document.getElementById('setup-audio-input')!, { target: { files: [new File(['x'], 'song-one.mp3', { type: 'audio/mpeg' })] } });
+  };
+  const typeLyrics = () => fireEvent.change(screen.getByPlaceholderText('setup.pasteLyricsDesc'), { target: { value: 'Line one\nLine two' } });
+
+  beforeEach(() => { vi.clearAllMocks(); width = 360; });
+
+  it('shows Song, Audio and Lyrics steps and moves between them freely', () => {
+    renderSetup();
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
+    expect(tab('stepSong')).toHaveAttribute('aria-current', 'step');
+    fireEvent.click(screen.getByText('setup.stepContinue'));
+    expect(tab('stepAudio')).toHaveAttribute('aria-current', 'step');
+    expect(document.activeElement).toBe(document.getElementById('setup-heading-2'));
+    fireEvent.click(tab('stepLyrics'));
+    expect(tab('stepLyrics')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByText('setup.stepStart')).toBeInTheDocument();
+    fireEvent.click(tab('stepSong'));
+    expect(screen.getByLabelText('setup.songName')).toBeVisible();
+  });
+
+  it('keeps what was entered when moving between steps', () => {
+    renderSetup();
+    typeInto('setup.songName', 'Song one');
+    fireEvent.click(tab('stepAudio'));
+    pickAudio();
+    fireEvent.click(tab('stepLyrics'));
+    typeLyrics();
+    fireEvent.click(tab('stepSong'));
+    expect(screen.getByLabelText('setup.songName')).toHaveValue('Song one');
+    fireEvent.click(tab('stepAudio'));
+    expect(screen.getByText('setup.audioReady')).toBeInTheDocument();
+    fireEvent.click(tab('stepLyrics'));
+    expect(screen.getByPlaceholderText('setup.pasteLyricsDesc')).toHaveValue('Line one\nLine two');
+  });
+
+  it('names the first missing requirement and enables Start only when all are met', () => {
+    renderSetup();
+    fireEvent.click(tab('stepLyrics'));
+    expect(footer()).toHaveTextContent('setup.stepNeedIdentity');
+    expect(screen.getByText('setup.stepStart')).toBeDisabled();
+
+    fireEvent.click(tab('stepSong'));
+    typeInto('setup.projectName', 'Test project');
+    expect(footer()).toHaveTextContent('setup.stepNeedAudio');
+    fireEvent.click(tab('stepAudio'));
+    pickAudio();
+    expect(footer()).toHaveTextContent('setup.stepNeedLyrics');
+    fireEvent.click(tab('stepLyrics'));
+    expect(screen.getByText('setup.stepStart')).toBeDisabled();
+    typeLyrics();
+    expect(footer()).toHaveTextContent('setup.stepReady');
+    expect(screen.getByText('setup.stepStart')).toBeEnabled();
+  });
+
+  it('accepts a song name as the identity, like the desktop rule', () => {
+    renderSetup();
+    typeInto('setup.songName', 'Song one');
+    fireEvent.click(tab('stepAudio'));
+    expect(footer()).toHaveTextContent('setup.stepNeedAudio');
+  });
+
+  it('jumps to the step that needs attention when the message is tapped', () => {
+    renderSetup();
+    typeInto('setup.projectName', 'Test project');
+    fireEvent.click(tab('stepLyrics'));
+    fireEvent.click(footer());
+    expect(tab('stepAudio')).toHaveAttribute('aria-current', 'step');
+    pickAudio();
+    fireEvent.click(tab('stepSong'));
+    fireEvent.click(footer());
+    expect(tab('stepLyrics')).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('sends the same payload as the desktop layout for the same inputs', async () => {
+    const run = async (w: number) => {
+      width = w;
+      const onComplete = vi.fn();
+      const playerRef = { current: { loadFromUrl: vi.fn(), loadYouTube: vi.fn(), loadLocalAudio: vi.fn() } };
+      const { unmount } = render(
+        <MemoryRouter initialEntries={['/project/new']}>
+          <TooltipProvider><SetupScreen onComplete={onComplete} playerRef={playerRef} /></TooltipProvider>
+        </MemoryRouter>,
+      );
+      const phone = w < 1024;
+      typeInto('setup.projectName', 'Test project');
+      typeInto('setup.songName', 'Song one');
+      if (phone) fireEvent.click(tab('stepAudio'));
+      pickAudio();
+      if (phone) fireEvent.click(tab('stepLyrics')); else fireEvent.click(screen.getByText('setup.tabLyrics'));
+      typeLyrics();
+      fireEvent.click(screen.getByText(phone ? 'setup.stepStart' : 'setup.startToSync'));
+      await waitFor(() => expect(onComplete).toHaveBeenCalled());
+      unmount();
+      return onComplete.mock.calls[0][0];
+    };
+    const phone = await run(360);
+    const desktop = await run(1280);
+    // Parsed lines get a fresh random id per parse; everything else must match exactly.
+    const strip = (d: { lines: { id?: string }[] }) => ({ ...d, lines: d.lines.map(({ id: _id, ...rest }) => rest) });
+    expect(strip(phone)).toEqual(strip(desktop));
+    expect(phone.name).toBe('Test project');
+    expect(phone.lines.length).toBeGreaterThan(0);
+  });
+
+  it('uses the two-column layout on a wide window and has no public switch on the phone', () => {
+    width = 1280;
+    const { unmount } = render(
+      <MemoryRouter><TooltipProvider><SetupScreen onComplete={vi.fn()} playerRef={null} /></TooltipProvider></MemoryRouter>,
+    );
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    unmount();
+    width = 360;
+    renderSetup();
+    expect(screen.getByRole('tablist')).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.getByText('setup.private')).toBeInTheDocument();
   });
 });
