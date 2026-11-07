@@ -516,8 +516,8 @@ export default function Editor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shiftTime, confidenceIdAt, autoStamp.clearConfidence]);
 
-  const handleMarkWithConfidence = useCallback((opts?: { forceAdvance?: boolean }) => {
-    handleMark(opts);
+  const handleMarkWithConfidence = useCallback(() => {
+    handleMark();
     const id = confidenceIdAt(activeLineIndex);
     if (id) autoStamp.clearConfidence(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1245,7 +1245,7 @@ export default function Editor({
             on: phoneFocus,
             onToggle: () => setPhoneFocus(!phoneFocus),
             inert: toolsOpen || (lineSheet.open && lineSheetValid),
-            // Marks through the very handler the Mark bar uses (no forceAdvance), so
+            // Marks through the very handler the Mark bar uses so
             // autoAdvance, SRT end marks and session locks behave the same.
             view: (
               <PhoneFocusView
@@ -1264,7 +1264,7 @@ export default function Editor({
           // A session viewer never reaches the editor (AppRouter shows them the preview);
           // this keeps Mark away from them even if that ever changes.
           mark={readOnly ? null : {
-            // The same handler the desktop list uses, without forceAdvance, so the
+            // The same handler the desktop list uses, so the
             // autoAdvance setting and SRT end marks behave exactly as they do there.
             onMark: () => handleMarkWithConfidence(),
             onUndo: undo,

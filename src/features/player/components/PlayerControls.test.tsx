@@ -25,7 +25,8 @@ describe('PlayerControls mobile dock', () => {
     window.addEventListener('editor:mark', marks);
     const { container } = render(<TooltipProvider><PlayerControls variant="mobile" /></TooltipProvider>);
     expect(screen.getAllByRole('button', { name: /change/i }).length).toBeGreaterThan(0);
-    // The old dock had a mark dot that fired editor:mark, which only the mounted editor hears.
+    // The old dock had a mark dot that fired editor:mark. Nothing listens for it any more, so
+    // a dock that dispatches it again would be a Mark that silently does nothing.
     for (const b of container.querySelectorAll('button')) fireEvent.pointerDown(b);
     expect(marks).not.toHaveBeenCalled();
     window.removeEventListener('editor:mark', marks);

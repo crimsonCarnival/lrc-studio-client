@@ -144,15 +144,6 @@ describe('applyMark — auto-advance modes', () => {
     expect(res.nextLines[0].timestamp).toBe(10); // still stamps
   });
 
-  it('advances anyway when forceAdvance overrides the setting', () => {
-    const res = mark({
-      lines: [line('one'), line('two')],
-      forceAdvance: true,
-      settings: settings({ autoAdvance: { enabled: false, mode: 'next', skipBlank: false } }),
-    });
-    expect(res.nextActiveLineIndex).toBe(1);
-  });
-
   it('next-unsynced skips lines that already have a timestamp', () => {
     const lines = [line('one'), line('two', { timestamp: 1 }), line('three', { timestamp: 2 }), line('four')];
     const res = mark({

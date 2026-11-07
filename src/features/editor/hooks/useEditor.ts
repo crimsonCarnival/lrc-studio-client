@@ -689,8 +689,7 @@ export function useEditor({
     [playerRef, setLines, setModifiedLines, focusedTimestamp, editorMode],
   );
 
-  const handleMark = useCallback((opts: { forceAdvance?: boolean } = {}) => {
-    const forceAdvance = opts?.forceAdvance ?? false;
+  const handleMark = useCallback(() => {
     const currentLines = linesRef.current;
     const idx = activeLineIndexRef.current;
     if (idx >= currentLines.length) return;
@@ -715,7 +714,6 @@ export function useEditor({
       stampTarget: stampTargetRef.current,
       focusedTimestamp: focusedTimestampRef.current,
       settings: settings.editor || {},
-      forceAdvance,
     };
     const result = applyMark({ ...markArgs, lines: currentLines, activeLineIndex: idx, awaitingEndMark });
 
@@ -825,14 +823,6 @@ export function useEditor({
     settings.shortcuts?.deselect,
     setEditorMode,
   ]);
-
-  // Listen for touch-driven mark events dispatched by MiniPlayer / gesture handler
-  useEffect(() => {
-    if (!syncMode) return;
-    const handler = () => handleMark();
-    window.addEventListener('editor:mark', handler);
-    return () => window.removeEventListener('editor:mark', handler);
-  }, [syncMode, handleMark]);
 
   // Listen for Start Syncing button dispatched from AppHeader
   useEffect(() => {

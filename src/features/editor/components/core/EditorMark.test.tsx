@@ -7,9 +7,8 @@ import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
 import Editor from './Editor';
 import type { EditorLine } from '@/features/editor/editor.types';
 
-// Desktop marking through the real Editor and useEditor.handleMark: the mark shortcut key,
-// the `editor:mark` window event and the per-row Mark button all honour the auto-advance
-// setting, as the phone Mark button does.
+// Desktop marking through the real Editor and useEditor.handleMark: the mark shortcut key
+// and the per-row Mark button both honour the auto-advance setting, as the phone Mark does.
 let mockSettings: typeof DEFAULT_SETTINGS = DEFAULT_SETTINGS;
 vi.mock('@/features/settings/useSettings', () => ({
   useSettings: () => ({ settings: mockSettings, updateSetting: vi.fn(), updateSettings: vi.fn() }),
@@ -54,7 +53,6 @@ function Harness() {
 }
 
 const pressMarkKey = () => fireEvent.keyDown(window, { key: 'Enter', code: 'Enter' });
-const fireMarkEvent = () => fireEvent(window, new CustomEvent('editor:mark'));
 // The per-row Mark button on the cursor line; it is identified by its pin icon.
 const clickRowMark = () => {
   const pin = document.querySelector('path[d^="M17.657 16.657"]');
@@ -65,7 +63,6 @@ const clickRowMark = () => {
 
 describe.each([
   ['the mark shortcut key', pressMarkKey],
-  ['the editor:mark event', fireMarkEvent],
   ['the per-row Mark button', clickRowMark],
 ])('desktop marking with %s', (_name, mark) => {
   // jsdom has no layout: give the list a viewport so the virtualizer mounts rows.

@@ -32,7 +32,6 @@ interface ApplyMarkParams {
   awaitingEndMark?: number | null;
   focusedTimestamp?: FocusedTimestamp | null;
   settings: EditorSettings;
-  forceAdvance?: boolean;
 }
 
 interface ApplyMarkResult {
@@ -318,7 +317,7 @@ export function activeIndexAfterRemoval(active: number, removed: number[], newLe
   return Math.max(0, Math.min(active - before, newLength - 1));
 }
 
-function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex = 0, stampTarget = 'main', awaitingEndMark, focusedTimestamp, settings, forceAdvance = false }: ApplyMarkParams): ApplyMarkResult {
+function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex = 0, stampTarget = 'main', awaitingEndMark, focusedTimestamp, settings }: ApplyMarkParams): ApplyMarkResult {
   if (activeLineIndex >= lines.length) {
     return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
   }
@@ -349,7 +348,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
           if (nextWordIdx < words.length) {
             return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: nextWordIdx };
           } else {
-            const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, focusedTimestamp.lineIndex, skipBlank, advanceMode) : null;
+            const nextIdx = autoAdvance ? computeNextIndex(lines, focusedTimestamp.lineIndex, skipBlank, advanceMode) : null;
             return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
           }
         }
@@ -381,7 +380,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
       if (!words.length) {
         // No words at all — stamp line only and advance
         updated[activeLineIndex] = { ...line, timestamp: time, source: 'manual' };
-        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
+        const nextIdx = autoAdvance ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
       // Stamp line.timestamp + words[0] in one press. alignLineStart also snaps
@@ -393,7 +392,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
       const stamped: EditorLine = { ...line, source: 'manual', [wordField]: newWords };
       updated[activeLineIndex] = wordField === 'words' ? alignLineStart(stamped, time) : { ...stamped, timestamp: time };
       if (words.length === 1) {
-        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
+        const nextIdx = autoAdvance ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
       return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: 1 };
@@ -412,14 +411,14 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
       const nextWordIdx = clampedIdx + 1;
       if (nextWordIdx >= words.length) {
         // All words stamped — advance line
-        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
+        const nextIdx = autoAdvance ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
       return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: nextWordIdx };
     }
 
     // Safety: advance if out of bounds
-    const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
+    const nextIdx = autoAdvance ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
     return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
   }
 
@@ -449,7 +448,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
         updated = result.lines;
       }
 
-      const nextIdx = (autoAdvance || forceAdvance)
+      const nextIdx = autoAdvance
         ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode)
         : null;
 
@@ -469,7 +468,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
         updated = result.lines;
       }
 
-      const nextIdx = (autoAdvance || forceAdvance)
+      const nextIdx = autoAdvance
         ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode)
         : null;
 
@@ -505,7 +504,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
     updated = result.lines;
   }
 
-  const nextIdx = (autoAdvance || forceAdvance)
+  const nextIdx = autoAdvance
     ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode)
     : null;
 

@@ -102,7 +102,7 @@ interface EditorLineItemProps {
   handleClearLine?: (i: number) => void;
   handleDeleteLine: (i: number) => void;
   handleToggleLine: (i: number) => void;
-  handleMark?: (opts?: { forceAdvance?: boolean }) => void;
+  handleMark?: () => void;
   handleSetWordReading?: (i: number, wi: number, val: string) => void;
   handleCycleWordSinger?: (i: number, wi: number) => void;
   activeWordIndex: number;
