@@ -12,6 +12,7 @@ describe('collab.presence.more plurals', () => {
   ])('%s %i', async (lng, bundle, count, expected) => {
     const i = i18next.createInstance();
     await i.init({ lng, resources: { [lng]: { collab: bundle as never } }, ns: ['collab'], defaultNS: 'collab', interpolation: { escapeValue: false } });
-    expect(i.t('presence.more', { count })).toBe(expected);
+    const t = i.t as unknown as (key: string, opts: { count: number }) => string;
+    expect(t('presence.more', { count })).toBe(expected);
   });
 });
