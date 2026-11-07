@@ -75,9 +75,9 @@ describe('AppMobileNav', () => {
     expect(goToAuth).toHaveBeenCalledWith('signin');
   });
 
-  it('renders nothing until the app is ready', () => {
+  it('shows on pages with no project loaded (isReady is false there)', () => {
     renderBar('/home', ana, [], false);
-    expect(screen.queryByRole('navigation')).toBeNull();
+    expect(screen.getByRole('navigation', { name: 'nav.tabs' })).toBeInTheDocument();
   });
 });
 

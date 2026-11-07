@@ -18,7 +18,9 @@ type AppMobileNavProps = {
 /**
  * Fixed bottom bar, phones only (hidden on lg+). Signed in: Home, Projects, Explore,
  * Profile. Guest: Explore, Draft, Sign in. AppLayout decides where it shows
- * (see showsBottomBar); everything else lives in the burger drawer.
+ * (see showsBottomBar); everything else lives in the burger drawer. `isReady` only
+ * means a project is loaded (it is false on Home or Explore), so it gates the draft
+ * stash for sign-in and never the bar itself.
  */
 export function AppMobileNav({ isReady, lines, mediaTitle, buildProjectPayload }: AppMobileNavProps) {
   const { t } = useTranslation();
@@ -26,8 +28,6 @@ export function AppMobileNav({ isReady, lines, mediaTitle, buildProjectPayload }
   const { trigger: haptic } = useHapticFeedback();
   const { user } = useAuthContext();
   const goToAuth = useGuestAuth({ isReady: !!isReady, lines, mediaTitle, buildProjectPayload });
-
-  if (!isReady) return null;
 
   const items = getBottomBarItems({ user, accountName: user?.accountName, hasDraft: lines.length > 0 });
   const activeId = activeNavId(items, pathname);
