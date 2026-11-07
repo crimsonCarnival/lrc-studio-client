@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { LazyImage } from '@ui/LazyImage';
@@ -6,8 +5,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import type { AuthUser } from '@/features/auth/auth.types';
 
 /** Phone header, signed in: the bell and an avatar that opens the navigation drawer. */
-export function PhoneNavAccount({ user, unverified, onOpen }: { user: AuthUser; unverified: boolean; onOpen: () => void }) {
-  const { t } = useTranslation();
+export function PhoneNavAccount({ user, unverified, label, onOpen }: { user: AuthUser; unverified: boolean; label: string; onOpen: () => void }) {
   const name = user.displayName || user.accountName || user.email || '';
   return (
     <>
@@ -17,7 +15,7 @@ export function PhoneNavAccount({ user, unverified, onOpen }: { user: AuthUser; 
           <button
             type="button"
             onClick={onOpen}
-            aria-label={t('nav.menu')}
+            aria-label={label}
             aria-haspopup="dialog"
             className="relative block size-10 coarse:size-11 cursor-pointer overflow-hidden rounded-full bg-primary-soft shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--hl)] outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-focus"
           >

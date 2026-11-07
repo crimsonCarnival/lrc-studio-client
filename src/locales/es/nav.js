@@ -32,4 +32,7 @@ export default {
   appearance: "Apariencia",
   language: "Idioma",
   verifyEmail: "Verifica tu correo",
+  menuPending_one: "Menú, {{count}} pendiente",
+  menuPending_other: "Menú, {{count}} pendientes",
+  menuUnverified: "Menú, correo sin verificar",
 };

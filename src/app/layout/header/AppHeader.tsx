@@ -117,6 +117,9 @@ export function AppHeader({
   const { unreadCount } = useNotificationsContext();
   const staffPending = useStaffPending(user?.permissions);
   const unverified = !!user?.email && !user?.isVerified;
+  const menuLabel = staffPending > 0
+    ? t('nav.menuPending', { count: staffPending })
+    : unverified ? t('nav.menuUnverified') : t('nav.menu');
   const goToAuth = useGuestAuth({ isReady, lines, mediaTitle, buildProjectPayload });
 
   useEffect(() => {
@@ -221,7 +224,7 @@ export function AppHeader({
                 ref={burgerRef}
                 variant="ghost"
                 size="icon"
-                aria-label={t('nav.menu')}
+                aria-label={menuLabel}
                 aria-haspopup="dialog"
                 aria-expanded={drawerOpen}
                 onClick={() => setDrawerOpen(true)}
@@ -347,7 +350,7 @@ export function AppHeader({
             {/* Auth section — theme/lang live in the user menu for signed-in users (#14),
                 so guests keep the standalone switcher. */}
             {phoneNav ? (
-              user && <PhoneNavAccount user={user} unverified={unverified} onOpen={() => setDrawerOpen(true)} />
+              user && <PhoneNavAccount user={user} unverified={unverified} label={menuLabel} onOpen={() => setDrawerOpen(true)} />
             ) : !user ? (
               <>
                 {!isWorkspace && <ThemeLangSwitcher currentTheme={currentTheme} customTheme={customTheme} updateSetting={updateSetting} i18n={i18n} />}
