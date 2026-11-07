@@ -67,6 +67,15 @@ export default {
     },
     totalUsers: 'Total: {{count}} users'
   },
+  card: {
+    toggle: 'Details for {{name}}',
+    email: 'Email',
+    xpAmount: 'XP amount',
+    summary_one: '{{count}} project',
+    summary_other: '{{count}} projects',
+    lastActive: 'last active {{date}}',
+    neverActive: 'never active',
+  },
   header: {
     backToSite: 'Back to Home',
     pending_one: '{{count}} waiting',
