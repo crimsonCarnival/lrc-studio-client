@@ -11,9 +11,11 @@ interface LineGesturesOptions {
   showNudge: (delta: number) => void;
   /** Phone rows: a long press opens the line's sheet instead of toggling the selection. */
   onLongPress?: () => void;
+  /** A horizontal flick nudges the line's time. Off on phone rows, where a flick is too easy to make by accident while scrolling; nudging lives in the line sheet. Default on. */
+  swipeNudge?: boolean;
 }
 
-export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLine, shiftTime, showNudge, onLongPress }: LineGesturesOptions) {
+export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLine, shiftTime, showNudge, onLongPress, swipeNudge = true }: LineGesturesOptions) {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const firedRef = useRef(false);
@@ -43,13 +45,13 @@ export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLin
     touchStartRef.current = null;
 
     // Only register horizontal swipe: |dx| > 40px, |dy| < 30px, < 500ms
-    if (Math.abs(dx) > 40 && Math.abs(dy) < 30 && elapsed < 500 && isSynced) {
+    if (Math.abs(dx) > 40 && Math.abs(dy) < 30 && elapsed < 500 && isSynced && swipeNudge) {
       const nudge = settings.editor?.nudge?.default || 0.1;
       const delta = dx > 0 ? nudge : -nudge;
       shiftTime(lineIndex, delta);
       showNudge(delta);
     }
-  }, [isSynced, settings.editor?.nudge?.default, shiftTime, showNudge, lineIndex]);
+  }, [isSynced, swipeNudge, settings.editor?.nudge?.default, shiftTime, showNudge, lineIndex]);
 
   const handleTouchMove = useCallback((e: ReactTouchEvent) => {
     // A finger always drifts a little while it holds still; only a real move (a scroll or a

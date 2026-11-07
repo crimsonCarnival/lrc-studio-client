@@ -320,6 +320,7 @@ const EditorLineItem = React.memo(({
     shiftTime,
     showNudge,
     onLongPress: compact ? (selectMode ? noop : openLineMenu) : undefined,
+    swipeNudge: !compact,
   });
 
   const handleWordClick = useCallback((e: ReactMouseEvent, w: EditorWord, wi: number, isSecondary?: boolean) => {
