@@ -167,7 +167,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
     source, isPlaying, isSeeking, currentTime, duration, playbackSpeed,
     hasMedia, loopA, loopB, mediaTitle, songName,
     local, yt, mediaUploads, cdnLoading,
-    syncMode, viewerMode,
+    viewerMode,
     MIN_SPEED, MAX_SPEED, speedPresets: SPEED_PRESETS,
     lines, playbackPosition, audioRef,
     detectedUrlType, mediaPopoverProps, fetchUploads,
@@ -986,15 +986,6 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   <Icon name="skip_next" size={24} />
                   <span className="text-[10px] font-bold mt-1 text-zinc-500">{settings.playback?.seekTime ?? 5}</span>
                 </button>
-
-                {syncMode && (
-                  <button
-                    onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('editor:mark')); }}
-                    className="size-14 rounded-3xl bg-primary/20 border border-primary/40 text-primary active:bg-primary/30 active:scale-95 transition-all flex items-center justify-center shrink-0"
-                  >
-                    <div className="size-4 rounded-full bg-current shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.6)]" />
-                  </button>
-                )}
 
                 {hasMedia && !viewerMode && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
