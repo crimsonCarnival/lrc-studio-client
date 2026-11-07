@@ -56,12 +56,31 @@ describe('PhoneMarkBar', () => {
     expect(windowKey).not.toHaveBeenCalled();
   });
 
-  it('does not swallow an assistive-tech click after a tap whose click never came', () => {
+  it('swallows a click with detail 0 that arrives right after the tap, so one tap is one stamp', () => {
     const { onMark, mark } = renderBar();
     fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
-    fireEvent.pointerUp(mark, { isPrimary: true, pointerType: 'touch' });
-    fireEvent.pointerLeave(mark, { isPrimary: true, pointerType: 'touch' });
-    // Screen-reader activation: a click with no pointer behind it (detail 0).
+    fireEvent.click(mark, { detail: 0 });
+    expect(onMark).toHaveBeenCalledTimes(1);
+  });
+
+  it('marks on an assistive-tech click that comes two seconds after a tap whose click never came', () => {
+    vi.useFakeTimers();
+    try {
+      const { onMark, mark } = renderBar();
+      fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+      fireEvent.pointerUp(mark, { isPrimary: true, pointerType: 'touch' });
+      vi.advanceTimersByTime(2000);
+      fireEvent.click(mark, { detail: 0 });
+      expect(onMark).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('marks on a keyboard press right after a tap: keydown clears the pending tap', () => {
+    const { onMark, mark } = renderBar();
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.keyDown(mark, { key: 'Enter' });
     fireEvent.click(mark, { detail: 0 });
     expect(onMark).toHaveBeenCalledTimes(2);
   });

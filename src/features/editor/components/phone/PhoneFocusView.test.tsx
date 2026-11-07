@@ -71,6 +71,21 @@ describe('PhoneFocusView', () => {
     expect(props.onMark).toHaveBeenCalledTimes(1);
   });
 
+  it('swallows a detail 0 click right after the tap, but marks one two seconds later', () => {
+    vi.useFakeTimers();
+    try {
+      const { props, stamp } = setup();
+      fireEvent.pointerDown(stamp, down);
+      fireEvent.click(stamp, { detail: 0 });
+      expect(props.onMark).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(2000);
+      fireEvent.click(stamp, { detail: 0 });
+      expect(props.onMark).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('a cancelled pointer resets the swallow flag, like the Mark bar', () => {
     const { props, stamp } = setup();
     fireEvent.pointerDown(stamp, down);

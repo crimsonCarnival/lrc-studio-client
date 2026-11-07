@@ -149,6 +149,14 @@ describe('Phone Words view', () => {
     expect(stampedCount(0)).toBe(2);
   });
 
+  it('a tap whose click arrives with detail 0 still stamps one word', () => {
+    render(<Harness initialLines={makeLines()} />);
+    const mark = screen.getByRole('button', { name: /^mark /i });
+    fireEvent.pointerDown(mark, { isPrimary: true, button: 0, pointerType: 'touch' });
+    fireEvent.click(mark, { detail: 0 });
+    expect(stampedCount(0)).toBe(1);
+  });
+
   it('tapping a chip makes it the word the next Mark stamps', () => {
     render(<Harness initialLines={makeLines()} />);
     fireEvent.click(chips()[2]);
@@ -157,6 +165,35 @@ describe('Phone Words view', () => {
     expect(wordTimes(0)).toEqual([null, null, 12.5, null]);
     // The focused word is spent; the cursor moves on to the following word.
     expect(chips()[3]).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('on a line with no start the label names word 1, chips are inert, and marks stamp in order from word 1', () => {
+    render(<Harness initialLines={[{ id: 'a', text: 'Line one two three', timestamp: null }, ...makeLines().slice(1)]} />);
+    expect(screen.getByRole('button', { name: /^mark .line.$/i })).toBeInTheDocument();
+    fireEvent.click(chips()[2]);
+    // Tapping word 3 changes nothing: the highlight and the label still name the word Mark will stamp.
+    expect(chips()[2]).toHaveAttribute('aria-disabled', 'true');
+    expect(chips()[0]).toHaveAttribute('aria-pressed', 'true');
+    expect(chips()[2]).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: /^mark .line.$/i })).toBeInTheDocument();
+    tapMark();
+    expect(wordTimes(0)).toEqual([12.5, null, null, null]);
+    expect(latest.lines[0].timestamp).toBe(12.5);
+    expect(screen.getByRole('button', { name: /^mark .one.$/i })).toBeInTheDocument();
+    tapMark();
+    expect(wordTimes(0)).toEqual([12.5, 12.5, null, null]);
+    expect(chips()[2]).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('never leaves a started line without word 1 stamped first, or a focus on a line with no start', () => {
+    const lines = makeLines();
+    lines[0] = { ...lines[0], timestamp: null };
+    render(<Harness initialLines={lines} />);
+    for (let n = 0; n < 4; n++) tapMark();
+    const times = wordTimes(0) as number[];
+    expect(times.every((t) => t != null)).toBe(true);
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+    expect(latest.lines[0].timestamp).toBe(times[0]);
   });
 
   it('re-stamping the first word of a stamped line moves the line start with it', () => {
