@@ -6,6 +6,7 @@ import i18n from 'i18next';
 import { leaveSubdomainHostOnLogout } from '@/shared/utils/host';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage, clearSettingsKeepAppearance } from '@/features/projects/services/storage.service';
+import { resetGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import type { AuthUser } from '@/features/auth/auth.types';
@@ -110,6 +111,7 @@ export function useAuth() {
     }
     // Clear project data + settings so they don't persist across accounts
     storage.remove(STORAGE_KEYS.PROJECT);
+    resetGuestLyricsCleared();
     storage.remove(STORAGE_KEYS.SHARED_PROJECT);
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
@@ -163,6 +165,7 @@ export function useAuth() {
 
     const clearStaleProjectData = () => {
       storage.remove(STORAGE_KEYS.PROJECT);
+      resetGuestLyricsCleared();
       storage.remove(STORAGE_KEYS.SHARED_PROJECT);
       storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
       clearSettingsKeepAppearance();
@@ -284,6 +287,7 @@ export function useAuth() {
     // Clear any stale project data from a previous session before setting the new user.
     // Prevents a different user's localStorage project from leaking into this session.
     storage.remove(STORAGE_KEYS.PROJECT);
+    resetGuestLyricsCleared();
     storage.remove(STORAGE_KEYS.SHARED_PROJECT);
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
@@ -531,6 +535,7 @@ export function useAuth() {
 
   const removeStorageKeys = useCallback(() => {
     storage.remove(STORAGE_KEYS.PROJECT);
+    resetGuestLyricsCleared();
     storage.remove(STORAGE_KEYS.SHARED_PROJECT);
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);

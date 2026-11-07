@@ -15,7 +15,7 @@ import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { guestLyricsCleared, mayWriteGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
+import { guestLyricsCleared, mayWriteGuestDraft, noteLinesBecameEmpty, resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
 import { holdsUnsavedEdits, isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
@@ -476,51 +476,41 @@ export function useAppState(user?: AuthUserType | null) {
 
   // ——— Guest silent restore (no activepublicId, no auth) ———
   // When a guest visits /project/local or refreshes, restore their last session from localStorage.
-  // Runs on mount, and again on each arrival at /project/local with an empty in-memory project and
-  // a non-empty stored draft (Back to setup keeps the draft but clears memory, so Forward must
-  // bring it back). Idempotent: it only acts while memory is empty, and not after the user
-  // deliberately removed all lyrics.
+  // Runs on mount, and again on each arrival at a new path that is /project/local with an empty
+  // in-memory project and a non-empty stored draft (Back to setup keeps the draft but clears
+  // memory, so Forward must bring it back). It acts only while memory is empty, and not after
+  // the user deliberately removed all lyrics.
+  //
+  // Each arrival is attempted exactly once, whatever the outcome (`restoreAttempted`), and the
+  // route gate (`guestDraftPending`) is open only until that attempt. It is never re-derived from
+  // "no lines + a draft in storage", which would hide the editor for good once the user deletes
+  // the last line, or when the draft turns out to be unusable.
+  const [arrival, setArrival] = useState({ path: routerPathname, n: 0 });
+  if (arrival.path !== routerPathname) setArrival({ path: routerPathname, n: arrival.n + 1 });
+  const arrivalN = arrival.path === routerPathname ? arrival.n : arrival.n + 1;
+  const [restoreAttempted, setRestoreAttempted] = useState(-1);
+  const guestDraftEligible = () => !getAccessToken() && !activepublicId && !inSession
+    && !window.location.hash.startsWith('#s=') && new URLSearchParams(window.location.search).get('fromGuest') !== '1';
+  const guestDraftPending = routerPathname === '/project/local' && restoreAttempted !== arrivalN
+    && lines.length === 0 && guestDraftEligible() && !guestLyricsCleared() && storedGuestDraftLineCount() > 0;
+
   const guestRestoreMounted = useRef(false);
   useEffect(() => {
     const firstRun = !guestRestoreMounted.current;
     guestRestoreMounted.current = true;
-    if (!firstRun && routerPathname !== '/project/local') return;
-    if (!firstRun && (lines.length > 0 || guestLyricsCleared() || storedGuestDraftLineCount() === 0)) return;
-    if (getAccessToken()) return; // auth users restore from server
-    if (activepublicId) return;  // handled by the silent restore effect above
-    if (window.location.hash.startsWith('#s=')) return; // shared project
-    if (sessionPublicIdFromPath(window.location.pathname)) return; // loads from the shared doc
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PROJECT);
-      if (!saved) return;
-      const parsed = JSON.parse(saved);
-      const validLines = (parsed.lines || []).flatMap((l) => {
-        if (!(l && typeof l === 'object')) return [];
-        if (l.type === 'section') return [{ type: 'section', label: l.label || '', depth: l.depth, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
-        if (typeof l.text !== 'string') return [];
-        return [{
-          text: l.text,
-          timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
-          endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
-          adLibOf: typeof l.adLibOf === 'number' && isFinite(l.adLibOf) ? l.adLibOf : undefined,
-          secondary: typeof l.secondary === 'string' ? l.secondary : '',
-          singers: Array.isArray(l.singers) ? l.singers : undefined,
-          translations: Array.isArray(l.translations) ? l.translations : undefined,
-          id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
-          words: Array.isArray(l.words) ? l.words.flatMap((w) => {
-            const word = typeof w.word === 'string' ? w.word : '';
-            return word ? [{
-              word,
-              time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null,
-              ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}),
-            }] : [];
-          }) : undefined,
-        }];
-      });
-      if (validLines.length === 0) return;
-      setSoloLines(validLines);
+    const restore = () => {
+      if (!firstRun && routerPathname !== '/project/local') return;
+      if (!firstRun && (lines.length > 0 || guestLyricsCleared())) return;
+      if (getAccessToken()) return; // auth users restore from server
+      if (activepublicId) return;  // handled by the silent restore effect above
+      if (window.location.hash.startsWith('#s=')) return; // shared project
+      if (sessionPublicIdFromPath(window.location.pathname)) return; // loads from the shared doc
+      const draft = restoreGuestDraft();
+      if (!draft) return;
+      const { lines: validLines, parsed } = draft;
+      setSoloLines(validLines as unknown as EditorLine[]);
+      resetGuestLyricsCleared();
       clearSoloHistory();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSyncMode(parsed.syncMode ?? true);
       const idx = parsed.activeLineIndex;
       if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) {
@@ -554,20 +544,26 @@ export function useAppState(user?: AuthUserType | null) {
         }
       }
       if (parsed.forkedFrom) setForkedFrom(parsed.forkedFrom);
+    };
+    try {
+      restore();
     } catch (e) {
-      console.error('Guest localStorage restore failed', e);
+      console.warn('Guest localStorage restore failed', e);
+    } finally {
+      setRestoreAttempted(arrivalN);
     }
     // Restore cloudinary upload info saved before the auth redirect
     try {
       const raw = sessionStorage.getItem('pendingSetupUpload');
       if (raw) {
         const upload = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setUploadedAudio(upload);
         sessionStorage.removeItem('pendingSetupUpload');
       }
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routerPathname]);
+  }, [arrivalN]);
 
   // ——— Migration Detection (Guest -> Auth) ———
   // If the user just logged in and has local data but no active project ID,
@@ -861,8 +857,16 @@ export function useAppState(user?: AuthUserType | null) {
   // This is intentionally independent of the autosave setting.
   const guestSavePayloadRef = useRef<(() => unknown) | null>(null);
   useEffect(() => { guestSavePayloadRef.current = buildProjectPayload; });
+  const prevGuestLinesLen = useRef(lines.length);
   useEffect(() => {
+    const prevLen = prevGuestLinesLen.current;
+    prevGuestLinesLen.current = lines.length;
     if (getAccessToken() || activepublicId || inSession) return;
+    // Lines coming back ends "the user emptied it"; going from some to none inside the editor is the
+    // user deleting them (last line, bulk delete, undo to empty, an empty import), unless the app
+    // just reset memory itself (expectProgrammaticEmpty).
+    if (lines.length > 0) resetGuestLyricsCleared();
+    else if (prevLen > 0) noteLinesBecameEmpty();
     if (lines.length === 0 && !guestLyricsCleared()) return;
     const id = setTimeout(() => {
       try {
@@ -1108,6 +1112,7 @@ export function useAppState(user?: AuthUserType | null) {
     activepublicId,
     loadProject,
     resetAppState,
+    guestDraftPending,
     handleMediaUpload,
     projectCoverImage,
     setProjectCoverImage,

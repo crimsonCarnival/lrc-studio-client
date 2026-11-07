@@ -4,7 +4,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
 import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { markGuestLyricsCleared } from '@/features/projects/services/guest-draft';
+import { expectProgrammaticEmpty, markGuestLyricsCleared, resetGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import { sanitizeLines } from '@/shared/utils/sanitize-lines';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
@@ -298,6 +298,10 @@ export function useProjectActions({
     setUploadedAudio(null);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     if (!opts?.keepGuestDraft) localStorage.removeItem(STORAGE_KEYS.PROJECT);
+    // Memory is emptied on purpose here, which the guest save effect must not read as the user
+    // deleting their lyrics.
+    if (!opts?.keepGuestDraft) resetGuestLyricsCleared();
+    expectProgrammaticEmpty();
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
     lastServerSnapshotRef.current = null;
     sessionUploadIdRef.current = null;
