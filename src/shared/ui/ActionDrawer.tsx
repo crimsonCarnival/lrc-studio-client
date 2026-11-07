@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode, SyntheticEvent } from 'react';
 import { m, LazyMotion, domAnimation, AnimatePresence, useIsPresent } from 'framer-motion';
 import { Icon } from '@/shared/ui/Icon';
 import { createPortal } from 'react-dom';
@@ -64,16 +64,21 @@ export default function ActionDrawer({
   );
 }
 
+/** While a drawer animates out it keeps catching taps (so none fall through to the page below) but acts on none. */
+const swallow = (e: SyntheticEvent) => {
+  e.stopPropagation();
+  e.preventDefault();
+};
+
 function DrawerBackdrop({ onClick }: { onClick: () => void }) {
-  // While it fades out it must not take taps: a quick second tap would repeat an action.
   const isPresent = useIsPresent();
   return (
     <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onClick}
-      style={isPresent ? undefined : { pointerEvents: 'none' }}
+      onPointerDown={isPresent ? undefined : swallow}
+      onClick={isPresent ? onClick : swallow}
       className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[200]"
     />
   );
@@ -142,7 +147,8 @@ function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => v
       aria-labelledby={title ? titleId : undefined}
       aria-label={title ? undefined : t('common.close')}
       tabIndex={-1}
-      style={isPresent ? undefined : { pointerEvents: 'none' }}
+      onPointerDownCapture={isPresent ? undefined : swallow}
+      onClickCapture={isPresent ? undefined : swallow}
       onKeyDown={handleKeyDown}
       initial={{ y: '100%' }}
       animate={{ y: 0 }}

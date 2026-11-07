@@ -54,6 +54,27 @@ describe('ActionDrawer', () => {
     expect(last).toHaveFocus();
   });
 
+  it('swallows taps while it animates out, so nothing acts twice or falls through', async () => {
+    const onItem = vi.fn();
+    const below = vi.fn();
+    render(
+      <TooltipProvider>
+        <button onClick={below}>below</button>
+        <Host onItem={onItem} />
+      </TooltipProvider>
+    );
+    fireEvent.click(screen.getByText('opener'));
+    const first = screen.getByRole('button', { name: 'First' });
+    const dialog = screen.getByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    // Still mounted while exiting: a tap on the panel or the backdrop does nothing.
+    fireEvent.click(first);
+    fireEvent.click(document.body.querySelector('.fixed.inset-0')!);
+    expect(onItem).not.toHaveBeenCalled();
+    expect(below).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
   it('a disabled item announces itself and does not fire', () => {
     const onItem = vi.fn();
     render(<Host onItem={onItem} />);
