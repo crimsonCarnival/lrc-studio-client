@@ -10,35 +10,39 @@ import { DEMO_LINES, formatStamp } from './demo-lines';
  * the real editor. Uses the same sample lines as the desktop demo.
  *
  * The clock is a readout the user drives against, not decoration, so reduced motion does
- * not stop it; it stops by itself once every line is stamped.
+ * not stop it; it starts on the first tap and stops once every line is stamped.
  */
 
 const TICK_MS = 100;
+// The clock waits at the first line's time and starts running with the first tap, so a visitor
+// who scrolls here later still stamps small, song-like times rather than minutes of page time.
+const START = DEMO_LINES[0].t;
 
 export default function LandingTapDemo() {
   const { t } = useTranslation();
-  const [time, setTime] = useState(0);
+  const [time, setTime] = useState(START);
   const [stamps, setStamps] = useState<number[]>([]);
 
   const total = DEMO_LINES.length;
   const done = stamps.length >= total;
   const current = done ? total - 1 : stamps.length;
 
+  const started = stamps.length > 0;
   useEffect(() => {
-    if (done) return;
+    if (done || !started) return;
     const startedAt = Date.now() - time * 1000;
     const id = setInterval(() => setTime((Date.now() - startedAt) / 1000), TICK_MS);
     return () => clearInterval(id);
     // `time` is read once to resume from where it stood; re-running on every tick would reset the interval.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [done]);
+  }, [started, done]);
 
   const stamp = () => {
     if (done) return;
     setStamps((prev) => [...prev, time]);
   };
   const tap = useMarkTap(stamp, done);
-  const reset = () => { setStamps([]); setTime(0); };
+  const reset = () => { setStamps([]); setTime(START); };
 
   const line = DEMO_LINES[current];
   const prev = current > 0 ? DEMO_LINES[current - 1] : null;

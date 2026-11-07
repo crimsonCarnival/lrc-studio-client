@@ -66,20 +66,20 @@ export default function GuestLanding() {
           <button
             type="button"
             onClick={() => scrollTo()}
-            className="flex items-center gap-2.5 text-[17px] font-bold tracking-tight hover:opacity-80 transition-opacity"
+            className="min-h-11 lg:min-h-0 flex items-center gap-2.5 text-[17px] font-bold tracking-tight hover:opacity-80 transition-opacity"
           >
             <LogoMark className="size-7" decorative />
             {t('app.name')}
           </button>
           <div className="hidden sm:flex gap-5 flex-1 text-[15px]">
             {NAV_LINKS.map(({ id, labelKey }) => (
-              <button key={id} type="button" onClick={() => scrollTo(id)} className="text-foreground/65 hover:text-zinc-100 transition-colors">
+              <button key={id} type="button" onClick={() => scrollTo(id)} className="py-3 lg:py-0 text-foreground/65 hover:text-zinc-100 transition-colors">
                 {t(labelKey)}
               </button>
             ))}
           </div>
           <div className="flex items-center gap-2 ml-auto">
-            <LangSwitcher i18n={i18n} />
+            <LangSwitcher i18n={i18n} className="h-11 lg:h-8" />
             <Link to="/auth/signin" className="h-11 lg:h-10 px-3.5 inline-flex items-center rounded-lg text-[15px] font-medium hover:bg-zinc-900 transition-colors">
               {t('auth.signIn')}
             </Link>
@@ -223,7 +223,7 @@ export default function GuestLanding() {
       <footer className="relative border-t border-zinc-800">
         <div className={`${SECTION} py-7 flex flex-wrap gap-x-6 gap-y-4 text-sm text-foreground/65`}>
           <span suppressHydrationWarning>&copy; {new Date().getFullYear()} {t('app.name')}</span>
-          <a href="https://github.com/crimsonCarnival" target="_blank" rel="noreferrer" className="ml-auto hover:text-zinc-100 underline underline-offset-2 transition-colors">
+          <a href="https://github.com/crimsonCarnival" target="_blank" rel="noreferrer" className="ml-auto py-3 lg:py-0 inline-flex items-center hover:text-zinc-100 underline underline-offset-2 transition-colors">
             GitHub
           </a>
         </div>

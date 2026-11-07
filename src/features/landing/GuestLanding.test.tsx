@@ -94,14 +94,18 @@ describe('LandingTapDemo', () => {
     render(<LandingTapDemo />);
     const btn = screen.getByRole('button', { name: 'Tap to stamp' });
     expect(screen.getByText('Line 1 of 5')).toBeInTheDocument();
-    act(() => { vi.advanceTimersByTime(3600); });
     pointerTap(btn);
     expect(screen.getByText('Line 2 of 5')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(/Stamped \[00:0[34]\.\d\d\]/);
+    expect(screen.getByRole('status')).toHaveTextContent('Stamped [00:00.40]');
+    // The clock runs from the first tap, so a later tap carries a later time.
+    act(() => { vi.advanceTimersByTime(3000); });
+    pointerTap(btn);
+    expect(screen.getByText('Line 3 of 5')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/Stamped \[00:03\.[34]\d\]/);
     // A tap whose trailing click carries detail 1 still counts once.
     fireEvent.pointerDown(btn, { isPrimary: true, button: 0, pointerType: 'touch' });
     fireEvent.click(btn, { detail: 1 });
-    expect(screen.getByText('Line 3 of 5')).toBeInTheDocument();
+    expect(screen.getByText('Line 4 of 5')).toBeInTheDocument();
   });
 
   it('works from the keyboard, once per press', async () => {
