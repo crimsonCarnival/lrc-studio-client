@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { accessFor } from '@/app/route-access';
+import { ADMIN_TABS, adminPath } from '@/features/admin/admin-nav';
 import { activeNavId, getBottomBarItems, getNavItems, SIGN_IN_ID } from './nav-items';
 
 const paths = (items: { path: string }[]) => items.map((i) => i.path);
@@ -83,15 +84,34 @@ describe('activeNavId', () => {
   });
 });
 
-// Reads the real route table (the <Route path="..."> literals in AppRouter) so a new
-// static page has to be put in the menu or listed here with a reason.
+// Reads the real route table (the <Route> elements in AppRouter) so a new static page has
+// to be put in the menu or listed here with a reason. Routes are inline JSX rather than a
+// data table, so this parses the source; every <Route must be understood or the test fails.
 describe('route coverage', () => {
   const source = readFileSync(resolve(process.cwd(), 'src/app/AppRouter.tsx'), 'utf8');
 
+  type Parsed = { literal: string[]; templated: number; index: number; unparsed: string[] };
+
+  const parse = (): Parsed => {
+    const out: Parsed = { literal: [], templated: 0, index: 0, unparsed: [] };
+    const starts = [...source.matchAll(/<Route(?=\s)/g)].map((m) => m.index!);
+    starts.forEach((start, i) => {
+      // The tag's props live between this <Route and the next one (nested routes follow it).
+      const chunk = source.slice(start, starts[i + 1] ?? source.length);
+      const literal = /\bpath=(?:"([^"]*)"|'([^']*)')/.exec(chunk);
+      if (literal) out.literal.push(literal[1] ?? literal[2]);
+      else if (/\bpath=\{`/.test(chunk)) out.templated++;
+      else if (/<Route\s+(?:[^>]*?\s)?index(?=[\s/>])/.test(chunk)) out.index++;
+      else out.unparsed.push(chunk.slice(0, 60).replace(/\s+/g, ' '));
+    });
+    return out;
+  };
+
   const staticRoutes = (): string[] => {
+    const parsed = parse();
     const found = new Set<string>();
-    if (/<Route\s+index\b/.test(source)) found.add('/');
-    for (const [, raw] of source.matchAll(/<Route\s+path="([^"]+)"/g)) {
+    if (parsed.index > 0) found.add('/');
+    for (const raw of parsed.literal) {
       // "settings/:tab?" is the settings page with an optional tab; any other
       // parameter or wildcard makes the route dynamic.
       const optional = raw.replace(/\/:[A-Za-z]+\?$/, '');
@@ -109,24 +129,35 @@ describe('route coverage', () => {
     '/dashboard': 'admin-host alias of the dashboard, which Admin already covers',
   };
 
-  it('finds the route table', () => {
+  const menuPaths = () =>
+    new Set(getNavItems({ user, permissions: ['*'], accountName: 'ana' }).map((i) => i.path));
+
+  it('understands every <Route> element, so none can slip past unseen', () => {
+    const parsed = parse();
+    expect(parsed.unparsed).toEqual([]);
+    const total = (source.match(/<Route(?=\s)/g) ?? []).length;
+    expect(parsed.literal.length + parsed.templated + parsed.index).toBe(total);
     expect(staticRoutes()).toEqual(expect.arrayContaining(['/home', '/explore/playlists', '/settings', '/guide']));
   });
 
   it('puts every static route in the menu or in the excluded list', () => {
-    const inMenu = new Set(
-      getNavItems({ user, permissions: ['*'], accountName: 'ana' })
-        .map((i) => i.path)
-        // Admin's tabs are routes of their own, mapped from ADMIN_TABS rather than literals.
-        .concat('/admin'),
-    );
+    const inMenu = menuPaths();
     const missing = staticRoutes().filter((p) => !inMenu.has(p) && !(p in EXCLUDED));
-    expect(missing).toEqual([]);
+    // Admin is generated from ADMIN_TABS; the next test ties it to the Admin item.
+    expect(missing.filter((p) => p !== '/admin')).toEqual([]);
+  });
+
+  it('ties the ADMIN_TABS routes to the Admin item', () => {
+    expect(parse().templated).toBeGreaterThan(0);
+    expect(source).toContain('ADMIN_TABS.map');
+    const admin = getNavItems({ user, permissions: ['users.view'], accountName: 'ana' }).find((i) => i.id === 'admin');
+    expect(admin?.path).toBe('/admin');
+    for (const tab of ADMIN_TABS) expect(adminPath(tab)).toMatch(/^\/admin\//);
   });
 
   it('keeps the excluded list honest', () => {
     const routes = new Set(staticRoutes());
-    const inMenu = new Set(getNavItems({ user, permissions: ['*'], accountName: 'ana' }).map((i) => i.path));
+    const inMenu = menuPaths();
     for (const p of Object.keys(EXCLUDED)) {
       expect(routes.has(p)).toBe(true);
       expect(inMenu.has(p)).toBe(false);
