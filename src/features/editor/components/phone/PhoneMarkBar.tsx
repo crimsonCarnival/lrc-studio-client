@@ -1,8 +1,7 @@
-import { useRef } from 'react';
-import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { useMarkTap } from './useMarkTap';
 
 type PhoneMarkBarProps = {
   onMark: () => void;
@@ -22,37 +21,7 @@ type PhoneMarkBarProps = {
  */
 export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled = false }: PhoneMarkBarProps) {
   const { t } = useTranslation();
-  const markedOnPointer = useRef(false);
-
-  const handlePointerDown = (e: PointerEvent<HTMLButtonElement>) => {
-    // Browsers differ on whether a disabled button still gets pointer events, so check.
-    // A second finger or a non-primary mouse button is not a tap on Mark either.
-    if (disabled || !e.isPrimary || e.button !== 0) return;
-    // No focus ring, no emulated mouse events, no text selection from a long press.
-    e.preventDefault();
-    markedOnPointer.current = true;
-    onMark();
-  };
-
-  // Only a click that is the tail of the tap just marked is swallowed: it has a pointer
-  // behind it (detail > 0) and follows a marking pointerdown. A click from the keyboard or
-  // assistive tech has detail 0 and always marks, even if a finger left the flag set (a tap
-  // that never produced its click). Clearing the flag on pointerup or pointerleave instead
-  // would not work: on touch both fire before the click, so that click would mark again.
-  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
-    if (disabled) return;
-    const tailOfTap = markedOnPointer.current && e.detail > 0;
-    markedOnPointer.current = false;
-    if (!tailOfTap) onMark();
-  };
-
-  // Enter and Space activate the focused button, which marks through handleClick. Keep the
-  // keypress from also reaching the editor's window shortcuts (Enter is the default mark
-  // key there), or one press would stamp twice.
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    markedOnPointer.current = false;
-    if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
-  };
+  const tap = useMarkTap(onMark, disabled);
 
   return (
     <div className="flex items-center gap-3 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -69,12 +38,7 @@ export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled 
       <button
         type="button"
         disabled={disabled}
-        onPointerDown={handlePointerDown}
-        // A cancelled pointer (the browser took it for a scroll or zoom) gets no click.
-        onPointerCancel={() => { markedOnPointer.current = false; }}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onContextMenu={(e) => e.preventDefault()}
+        {...tap}
         className="flex-1 min-w-0 h-14 rounded-pill bg-primary text-zinc-950 text-[17px] font-bold truncate px-4 select-none touch-manipulation [-webkit-touch-callout:none] [-webkit-tap-highlight-color:transparent] transition-transform duration-75 active:scale-[0.97] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
       >
         {label}
