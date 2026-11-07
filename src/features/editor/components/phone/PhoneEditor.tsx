@@ -9,6 +9,7 @@ import PhoneSyncTab from './PhoneSyncTab';
 import PhoneWordsTab from './PhoneWordsTab';
 import type { PhoneWordsTabProps } from './PhoneWordsTab';
 import PhoneMarkBar from './PhoneMarkBar';
+import type { PhoneNudge } from './PhoneMarkBar';
 import PhonePlayerStrip from './PhonePlayerStrip';
 
 export type PhoneSaveState = 'saving' | 'saved' | 'failed' | 'unsaved';
@@ -32,6 +33,8 @@ export type PhoneEditorProps = {
   onTabChange?: (tab: PhoneTab) => void;
   /** Opens the Tools sheet. Without it the header button stays inert. */
   onOpenTools?: () => void;
+  /** Header Save, so the one action people look for is not buried in the Tools sheet. Absent in a session. */
+  onSave?: () => void;
   /** Select mode: replaces the Mark row, so a selection never shares the thumb zone with Mark. */
   selectBar?: ReactNode;
   onAddMedia?: () => void;
@@ -53,6 +56,7 @@ export type PhoneEditorProps = {
     canUndo: boolean;
     label: string;
     disabled: boolean;
+    nudge?: PhoneNudge;
   } | null;
 };
 
@@ -66,7 +70,7 @@ const TAB_BTN = 'relative flex-1 h-11 text-[15px] font-semibold transition-color
  * pieces in, so marking here is the same handleMark the desktop uses.
  */
 export default function PhoneEditor({
-  title, saveState, visibility, onBack, list, banner, onShowPreview, edit, tab: tabProp, onTabChange, onOpenTools,
+  title, saveState, visibility, onBack, list, banner, onShowPreview, edit, tab: tabProp, onTabChange, onOpenTools, onSave,
   selectBar, onAddMedia, mark, focus, sessionBar, words,
 }: PhoneEditorProps) {
   const { t } = useTranslation();
@@ -160,6 +164,18 @@ export default function PhoneEditor({
             className={`size-11 lg:size-11 shrink-0 ${focus.on ? 'bg-primary/15 text-primary hover:text-primary' : 'text-foreground/80'}`}
           >
             <Icon name="center_focus_strong" size={22} />
+          </Button>
+        )}
+        {onSave && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSave}
+            disabled={saveState === 'saving'}
+            aria-label={t('common.save')}
+            className={`size-11 lg:size-11 shrink-0 ${saveState === 'unsaved' || saveState === 'failed' ? 'bg-primary/15 text-primary hover:text-primary' : 'text-foreground/80'}`}
+          >
+            <Icon name="save" size={22} />
           </Button>
         )}
         <Button

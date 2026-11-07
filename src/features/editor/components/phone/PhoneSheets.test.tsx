@@ -523,7 +523,7 @@ describe('Edit tab', () => {
     const box = screen.getByRole('textbox', { name: /paste|lyrics/i }) as HTMLTextAreaElement;
     expect(box.value).toContain('Line 1');
     fireEvent.change(box, { target: { value: `${box.value}\nLine 3` } });
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /^save$/i })); });
+    await act(async () => { fireEvent.click(within(screen.getByRole('tabpanel')).getByRole('button', { name: /^save$/i })); });
     expect(latest.lines.map((l) => l.text)).toEqual(['Line 1', 'Line 2', 'Line 3']);
     expect(latest.lines.map((l) => l.timestamp)).toEqual([4, 8, null]);
     expect(screen.getByRole('tab', { name: 'Sync' })).toHaveAttribute('aria-selected', 'true');
@@ -546,7 +546,7 @@ describe('Edit tab', () => {
     fireEvent.change(screen.getByLabelText('Secondary lyrics'), { target: { value: 'Romaji' } });
     fireEvent.click(screen.getByRole('button', { name: /add translation/i }));
     fireEvent.change(screen.getByPlaceholderText('Translation'), { target: { value: 'Hello' } });
-    fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    fireEvent.click(within(screen.getByRole('tabpanel')).getByRole('button', { name: /^save$/i }));
     expect(latest.lines[0].text).toBe('Edited');
     expect(latest.lines[0].secondary).toBe('Romaji');
     expect(latest.lines[0].translations?.[0].text).toBe('Hello');
@@ -572,7 +572,72 @@ describe('Edit tab', () => {
     act(() => { vv.dispatchEvent(new Event('resize')); });
     const panel = screen.getByRole('tabpanel').firstElementChild as HTMLElement;
     expect(panel.style.paddingBottom).toBe('400px');
-    expect(screen.getByRole('button', { name: /^save$/i })).toBeInTheDocument();
+    expect(within(screen.getByRole('tabpanel')).getByRole('button', { name: /^save$/i })).toBeInTheDocument();
     Object.defineProperty(window, 'visualViewport', { configurable: true, value: undefined });
+  });
+});
+
+describe('Header Save and the -/+ timestamp buttons beside Mark', () => {
+  const stamped = () => [line(0, { timestamp: 1 }), line(1, { timestamp: 2 }), line(2)];
+
+  it('Save is one tap away in the header, without opening the Tools sheet', () => {
+    render(<Harness user={{ id: 'u1' }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(handleManualSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('a guest who taps the header Save is sent to sign in with the draft kept', async () => {
+    render(<Harness user={undefined} />);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Save' })); });
+    expect(savePendingProject).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('where').textContent).toContain('/auth?action=signin');
+  });
+
+  it('there is no header Save inside a live session, where the server stores the shared doc', () => {
+    const collab = {
+      provider: null,
+      me: { subject: 'u', name: 'Me', colorIndex: 0, role: 'editor', conn: 'c', clientId: 1 },
+      locks: {},
+    } as unknown as CollabLockInput;
+    render(<Harness user={{ id: 'u1' }} collab={collab} activepublicId="abc123" />);
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  });
+
+  it('- moves the line stamped just before the cursor earlier by the nudge step', () => {
+    render(<Harness initialLines={stamped()} startActive={2} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Move line 2 earlier by 0.1s' }));
+    expect(latest.lines[1].timestamp).toBeCloseTo(1.9, 5);
+    expect(latest.lines[0].timestamp).toBe(1);
+    expect(latest.activeLineIndex).toBe(2);
+  });
+
+  it('+ moves it later, and marks nothing', () => {
+    render(<Harness initialLines={stamped()} startActive={2} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Move line 2 later by 0.1s' }));
+    expect(latest.lines[1].timestamp).toBeCloseTo(2.1, 5);
+    expect(latest.lines[2].timestamp).toBeNull();
+  });
+
+  it('moves the cursor line itself when the user has tapped a stamped row', () => {
+    render(<Harness initialLines={stamped()} startActive={0} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Move line 1 later by 0.1s' }));
+    expect(latest.lines[0].timestamp).toBeCloseTo(1.1, 5);
+  });
+
+  it('is disabled, and says why, while no line is stamped yet', () => {
+    render(<Harness />);
+    const none = screen.getAllByRole('button', { name: 'No stamped line to move' });
+    expect(none).toHaveLength(2);
+    none.forEach((b) => expect(b).toBeDisabled());
+  });
+
+  it('a viewer gets no Mark row, so no nudge buttons either', () => {
+    const collab = {
+      provider: null,
+      me: { subject: 'u', name: 'V', colorIndex: 0, role: 'viewer', conn: 'c', clientId: 1 },
+      locks: {},
+    } as unknown as CollabLockInput;
+    render(<Harness initialLines={stamped()} startActive={2} collab={collab} />);
+    expect(screen.queryByRole('button', { name: /^Move line/ })).toBeNull();
   });
 });

@@ -1201,6 +1201,16 @@ export default function Editor({
       setActiveLineIndex(index);
     };
     const secondaryAvailable = cursorIsLyric && hasCJK(cursorLine.text ?? '');
+    // The line -/+ move: the cursor line when it already has a time (the user tapped a stamped row),
+    // otherwise the line stamped just before the cursor (Mark advances, so that is the one to fix).
+    let nudgeTarget: number | null = null;
+    if (cursorIsLyric && cursorLine.timestamp != null) nudgeTarget = activeLineIndex;
+    else {
+      for (let k = lyricIndices.length - 1; k >= 0; k--) {
+        const i = lyricIndices[k];
+        if (i < activeLineIndex && lines[i].timestamp != null) { nudgeTarget = i; break; }
+      }
+    }
     return (
       <>
         <PhoneEditor
@@ -1215,6 +1225,7 @@ export default function Editor({
           tab={phoneTab}
           onTabChange={changePhoneTab}
           onOpenTools={() => setToolsOpen(true)}
+          onSave={handleManualSave && !inSession ? handleSaveClick : undefined}
           edit={(
             <PhoneEditTab
               view={editView}
@@ -1284,6 +1295,13 @@ export default function Editor({
             canUndo,
             label: phoneMarkLabel,
             disabled: !syncMode || lines.length === 0,
+            // Words has its own Mark bar; every other mode gets the -/+ beside Mark.
+            nudge: isWords ? undefined : {
+              target: nudgeTarget != null ? { number: lyricIndices.indexOf(nudgeTarget) + 1 } : null,
+              amount: nudgeDefault,
+              onEarlier: () => { if (nudgeTarget != null) shiftTimeWithConfidence(nudgeTarget, -nudgeDefault); },
+              onLater: () => { if (nudgeTarget != null) shiftTimeWithConfidence(nudgeTarget, nudgeDefault); },
+            },
           }}
           words={isWords ? {
             lineNumber: lyricPos >= 0 ? { number: lyricPos + 1, total: lyricIndices.length } : null,

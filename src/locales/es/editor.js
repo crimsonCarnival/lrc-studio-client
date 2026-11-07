@@ -169,6 +169,11 @@ export default {
   markLineNumber: "Marcar línea {{number}}",
   markEndNumber: "Marcar fin de la línea {{number}}",
   phone: {
+    nudge: {
+      earlier: "Adelantar la línea {{number}} {{amount}} s",
+      later: "Retrasar la línea {{number}} {{amount}} s",
+      none: "No hay ninguna línea marcada para mover",
+    },
     tabs: "Vistas del editor",
     focus: {
       open: "Vista de enfoque",
