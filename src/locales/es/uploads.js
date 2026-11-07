@@ -58,7 +58,7 @@ export default {
   uploadCount: "Subir {{count}} archivo(s)",
   stats: "{{total}} archivos · {{used}} en uso · {{unused}} sin usar",
   fromLink: "Desde enlace",
-  filters: { all: "Todos", youtube: "YouTube", cloud: "Nube", unused: "Sin usar" },
+  filters: { all: "Todos", youtube: "YouTube", cloud: "Archivo", unused: "Sin usar" },
   filterLabel: "Filtrar subidas",
   searchPlaceholder: "Buscar por título…",
   searchLabel: "Buscar subidas",
