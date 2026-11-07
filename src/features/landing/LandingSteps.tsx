@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -210,7 +211,7 @@ function LyricsMock({ t }: { t: TFunction }) {
   );
 }
 
-function StartSyncingMock({ t }: { t: TFunction }) {
+function StartSyncingMock({ t, tap }: { t: TFunction; tap: boolean }) {
   return (
     <div className="flex flex-col font-lyrics text-zinc-100">
       <div className="rounded-[calc(var(--radius)*2.2)] border border-zinc-800 bg-zinc-950 px-5 pt-[18px] pb-5 flex flex-col gap-3.5">
@@ -256,7 +257,7 @@ function StartSyncingMock({ t }: { t: TFunction }) {
           <div className="flex items-center gap-3.5 min-h-[50px] pl-3.5 pr-2 rounded-xl bg-zinc-800 border border-dashed border-zinc-700">
             <TimePill strong><span className="h-6 px-2.5 inline-flex items-center text-xs">{PREVIEW_LINES[1].time}</span></TimePill>
             <span className="flex-1 min-w-0 text-[15px] font-semibold truncate">{PREVIEW_LINES[1].text}</span>
-            <Kbd>{t('landing.demo.enterKey')}</Kbd>
+            <Kbd>{t(tap ? 'landing.demo.tapKey' : 'landing.demo.enterKey')}</Kbd>
           </div>
         </div>
         <div className="flex justify-center"><ModePill t={t} /></div>
@@ -277,13 +278,59 @@ export function Kbd({ children, square }: { children: ReactNode; square?: boolea
   );
 }
 
-export default function LandingSteps({ t }: { t: TFunction }) {
+const COMPACT_STEPS = [
+  { icon: 'edit', title: 'landing.how.s1Title', short: 'landing.how.s1Short' },
+  { icon: 'search', title: 'landing.how.s2Title', short: 'landing.how.s2Short' },
+  { icon: 'description', title: 'landing.how.s3Title', short: 'landing.how.s3Short' },
+  { icon: 'location_on', title: 'landing.how.s4Title', short: 'landing.how.s4Short' },
+] as const;
+
+/** Phone layout: one compact row per step; the full walkthrough with its mocks sits behind a disclosure. */
+function CompactSteps({ t }: { t: TFunction }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col gap-5">
+      <ol className="flex flex-col gap-3">
+        {COMPACT_STEPS.map(({ icon, title, short }, i) => (
+          <li key={title} className="flex items-start gap-3.5 rounded-[calc(var(--radius)*1.4)] bg-zinc-900 border border-zinc-800 p-3.5">
+            <span aria-hidden="true" className="shrink-0 size-11 rounded-[calc(var(--radius)*1)] bg-primary/15 text-primary inline-flex items-center justify-center">
+              <Icon name={icon} size={20} />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold leading-snug"><span className="font-mono text-xs text-primary mr-2">{i + 1}</span>{t(title)}</h3>
+              <p className="mt-0.5 text-sm text-foreground/80">{t(short)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="landing-steps-example"
+        onClick={() => setOpen((o) => !o)}
+        className="self-start h-11 px-4 inline-flex items-center gap-2 rounded-[calc(var(--radius)*1)] border border-zinc-700 text-sm font-semibold hover:bg-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors"
+      >
+        <Icon name={open ? 'expand_less' : 'expand_more'} size={16} />
+        {t(open ? 'landing.how.hideExample' : 'landing.how.seeExample')}
+      </button>
+      <div id="landing-steps-example" hidden={!open} className="flex flex-col gap-12">
+        {open && <FullSteps t={t} tap />}
+      </div>
+    </div>
+  );
+}
+
+function FullSteps({ t, tap }: { t: TFunction; tap: boolean }) {
   return (
     <>
       <Step stamp="00:01.00" title={t('landing.how.s1Title')} desc={t('landing.how.s1Desc')}><ProjectInfoMock t={t} /></Step>
       <Step stamp="00:02.00" title={t('landing.how.s2Title')} desc={t('landing.how.s2Desc')}><MediaMock t={t} /></Step>
       <Step stamp="00:03.00" title={t('landing.how.s3Title')} desc={t('landing.how.s3Desc')}><LyricsMock t={t} /></Step>
-      <Step stamp="00:04.00" title={t('landing.how.s4Title')} desc={t('landing.how.s4Desc')} last><StartSyncingMock t={t} /></Step>
+      <Step stamp="00:04.00" title={t('landing.how.s4Title')} desc={t(tap ? 'landing.how.s4DescTap' : 'landing.how.s4Desc')} last><StartSyncingMock t={t} tap={tap} /></Step>
     </>
   );
+}
+
+export default function LandingSteps({ t, compact }: { t: TFunction; compact: boolean }) {
+  return compact ? <CompactSteps t={t} /> : <FullSteps t={t} tap={false} />;
 }

@@ -11,6 +11,11 @@ export default {
   ctaOpen: 'Abrir el editor',
   ctaHaveAccount: 'Ya tengo cuenta',
 
+  // Texto para móvil (por debajo de lg): en una pantalla táctil no hay tecla Enter, así que se habla de tocar.
+  headlineTap: 'Toca<br/>cuando la línea<br/><accent>entra.</accent>',
+  subTap: 'Carga una canción, pega la letra y toca al ritmo. Exporta un archivo <ext>.lrc</ext> o <ext>.srt</ext> que funciona en tu reproductor o editor de video.',
+  ctaOpenTap: 'Empezar a sincronizar una canción',
+
   demo: {
     editor: 'Editor',
     preview: 'Vista previa',
@@ -22,6 +27,14 @@ export default {
     enterKey: 'enter',
     play: 'Reproducir demo',
     pause: 'Pausar demo',
+    tryIt: 'Pruébalo',
+    tapToStamp: 'Toca para marcar',
+    tapHint: 'Toca el botón cuando entre cada línea para marcarla.',
+    tapKey: 'toca',
+    stamped: 'Marcado {{stamp}}',
+    allStamped: 'Las {{total}} líneas marcadas.',
+    tryAgain: 'Intentar de nuevo',
+    lineCount: 'Línea {{current}} de {{total}}',
   },
 
   how: {
@@ -34,6 +47,13 @@ export default {
     s3Title: 'Consigue la letra',
     s3Desc: 'En la pestaña Letra, pégala o búscala. Abre un resultado para previsualizarlo: si ya viene con marcas de tiempo, consérvalas y sáltate la sincronización. Podrás corregir cualquier línea después.',
     s4Title: 'Empieza a sincronizar y exporta',
+    seeExample: 'Ver un ejemplo',
+    hideExample: 'Ocultar el ejemplo',
+    s1Short: 'Ponle nombre y añade la canción y el artista.',
+    s2Short: 'Busca en YouTube o usa tu propio archivo.',
+    s3Short: 'Pega la letra o búscala.',
+    s4Short: 'Toca cada línea cuando entre y exporta.',
+    s4DescTap: 'Elige si el proyecto es público, pulsa Empezar a sincronizar y estarás en el editor del inicio de esta página. Toca en cada línea y exporta como LRC, SRT o por palabra.',
     s4Desc: 'Elige si el proyecto es público, pulsa Empezar a sincronizar y estarás en el editor del inicio de esta página. Pulsa Enter en cada línea y exporta como LRC, SRT o por palabra.',
   },
 

@@ -2,11 +2,13 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { Icon } from '@/shared/ui/Icon';
 import { LangSwitcher } from '@/features/auth/auth-shared';
 import { LogoMark } from '@/shared/ui/LogoMark';
 import SmoothWavyCanvas from './SmoothWavyCanvas';
 import LandingDemo from './LandingDemo';
+import LandingTapDemo from './LandingTapDemo';
 import LandingSteps, { Kbd } from './LandingSteps';
 
 const SECTION = 'max-w-[1280px] mx-auto px-6';
@@ -32,6 +34,9 @@ export default function GuestLanding() {
   const { t, i18n } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
+  // Width, not input method: below lg there is no Enter key to talk about and the demo is tappable.
+  const wide = useBreakpoint('lg');
+  const tap = !wide;
 
   // The page scrolls inside this container, not the window, so in-page links
   // are buttons that scroll it rather than hash anchors the router would see.
@@ -57,7 +62,7 @@ export default function GuestLanding() {
 
       {/* ── NAV ── */}
       <header className="relative border-b border-zinc-800">
-        <nav className={`${SECTION} py-4 flex items-center gap-6 flex-wrap`}>
+        <nav className={`${SECTION} py-3 lg:py-4 flex items-center gap-x-6 gap-y-2 flex-wrap`}>
           <button
             type="button"
             onClick={() => scrollTo()}
@@ -75,10 +80,10 @@ export default function GuestLanding() {
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <LangSwitcher i18n={i18n} />
-            <Link to="/auth/signin" className="h-10 px-3.5 inline-flex items-center rounded-lg text-[15px] font-medium hover:bg-zinc-900 transition-colors">
+            <Link to="/auth/signin" className="h-11 lg:h-10 px-3.5 inline-flex items-center rounded-lg text-[15px] font-medium hover:bg-zinc-900 transition-colors">
               {t('auth.signIn')}
             </Link>
-            <Link to="/auth/signup" className="h-10 px-4 inline-flex items-center rounded-lg bg-zinc-100 text-zinc-950 text-[15px] font-semibold hover:opacity-90 transition-opacity">
+            <Link to="/auth/signup" className="h-11 lg:h-10 px-4 inline-flex items-center rounded-lg bg-zinc-100 text-zinc-950 text-[15px] font-semibold hover:opacity-90 transition-opacity">
               {t('auth.signUp')}
             </Link>
           </div>
@@ -87,7 +92,7 @@ export default function GuestLanding() {
 
       <main className="relative">
         {/* ── HERO ── */}
-        <section className={`${SECTION} pt-20 pb-24`}>
+        <section className={`${SECTION} pt-10 pb-12 lg:pt-20 lg:pb-24`}>
           <p className="animate-fade-in mb-7 font-mono text-[13px] font-medium tracking-wide text-foreground/65" style={rise(0)}>
             {t('landing.eyebrow')}
           </p>
@@ -96,15 +101,15 @@ export default function GuestLanding() {
               className="animate-fade-in max-w-[760px] font-extrabold leading-[0.95] tracking-[-0.045em]"
               style={{ ...rise(80), fontSize: 'clamp(44px, 7vw, 96px)' }}
             >
-              <Trans i18nKey="landing.headline" components={{ br: <br />, accent: <span className="text-primary" /> }} />
+              <Trans i18nKey={tap ? 'landing.headlineTap' : 'landing.headline'} components={{ br: <br />, accent: <span className="text-primary" /> }} />
             </h1>
             <div className="animate-fade-in flex-[0_1_380px] flex flex-col gap-6" style={rise(160)}>
               <p className="text-lg leading-[1.55] text-foreground/80">
-                <Trans i18nKey="landing.sub" components={{ ext: <span className="font-mono text-[15px] text-zinc-100" /> }} />
+                <Trans i18nKey={tap ? 'landing.subTap' : 'landing.sub'} components={{ ext: <span className="font-mono text-[15px] text-zinc-100" /> }} />
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link to="/project/new" className={CTA_PRIMARY}>
-                  {t('landing.ctaOpen')}<Icon name="arrow_forward" size={16} />
+                  {t(tap ? 'landing.ctaOpenTap' : 'landing.ctaOpen')}<Icon name="arrow_forward" size={16} />
                 </Link>
                 <Link to="/auth/signin" className="h-12 px-[18px] inline-flex items-center rounded-[calc(var(--radius)*1)] font-medium hover:bg-zinc-900 transition-colors">
                   {t('landing.ctaHaveAccount')}
@@ -113,44 +118,47 @@ export default function GuestLanding() {
             </div>
           </div>
 
-          <div className="animate-fade-in mt-[72px]" style={rise(280)}>
-            <LandingDemo reducedMotion={reducedMotion} />
+          <div className="animate-fade-in mt-10 lg:mt-[72px]" style={rise(280)}>
+            {tap ? <LandingTapDemo /> : <LandingDemo reducedMotion={reducedMotion} />}
           </div>
         </section>
 
         {/* ── HOW IT WORKS ── */}
         <section id="how" className="border-t border-zinc-800">
-          <div className={`${SECTION} py-24 flex flex-col gap-[72px]`}>
+          <div className={`${SECTION} py-12 lg:py-24 flex flex-col gap-8 lg:gap-[72px]`}>
             <div className="flex flex-wrap items-end justify-between gap-x-16 gap-y-4">
               <h2 className={H2} style={H2_SIZE}>
                 <Trans i18nKey="landing.how.title" components={{ br: <br /> }} />
               </h2>
               <p className="max-w-[380px] text-foreground/65">{t('landing.how.intro')}</p>
             </div>
-            <LandingSteps t={t} />
+            <LandingSteps t={t} compact={tap} />
           </div>
         </section>
 
         {/* ── EDITOR FEATURES ── */}
         <section id="editor" className="border-t border-zinc-800">
-          <div className={`${SECTION} py-24`}>
-            <h2 className={`${H2} mb-14 max-w-[640px]`} style={H2_SIZE}>{t('landing.features.title')}</h2>
+          <div className={`${SECTION} py-12 lg:py-24`}>
+            <h2 className={`${H2} mb-8 lg:mb-14 max-w-[640px]`} style={H2_SIZE}>{t('landing.features.title')}</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-zinc-800 border border-zinc-800 rounded-[calc(var(--radius)*1.4)] overflow-hidden">
 
-              <article className="bg-zinc-950 p-8 flex flex-col gap-5">
+              <article className="bg-zinc-950 p-5 lg:p-8 flex flex-col gap-5">
                 <div>
                   <h3 className="mb-1.5 text-xl font-bold tracking-tight">{t('landing.features.stampTitle')}</h3>
                   <p className="text-foreground/65">{t('landing.features.stampDesc')}</p>
                 </div>
-                <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2.5 text-[15px]">
-                  <dt><Kbd>{t('landing.demo.enterKey')}</Kbd></dt>
-                  <dd className="text-foreground/80">{t('landing.features.stampKey')}</dd>
-                  <dt className="flex gap-1.5"><Kbd square>←</Kbd><Kbd square>→</Kbd></dt>
-                  <dd className="text-foreground/80">{t('landing.features.nudgeKeys')}</dd>
-                </dl>
+                {/* Keyboard shortcuts: meaningless on a touch screen, so hidden below lg (not rendered there). */}
+                {wide && (
+                  <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2.5 text-[15px]">
+                    <dt><Kbd>{t('landing.demo.enterKey')}</Kbd></dt>
+                    <dd className="text-foreground/80">{t('landing.features.stampKey')}</dd>
+                    <dt className="flex gap-1.5"><Kbd square>←</Kbd><Kbd square>→</Kbd></dt>
+                    <dd className="text-foreground/80">{t('landing.features.nudgeKeys')}</dd>
+                  </dl>
+                )}
               </article>
 
-              <article className="bg-zinc-950 p-8 flex flex-col gap-5">
+              <article className="bg-zinc-950 p-5 lg:p-8 flex flex-col gap-5">
                 <div>
                   <h3 className="mb-1.5 text-xl font-bold tracking-tight">{t('landing.features.wordsTitle')}</h3>
                   <p className="text-foreground/65">{t('landing.features.wordsDesc')}</p>
@@ -167,7 +175,7 @@ export default function GuestLanding() {
                 </div>
               </article>
 
-              <article id="formats" className="lg:col-span-2 bg-zinc-950 p-8 flex flex-wrap items-start gap-x-12 gap-y-6">
+              <article id="formats" className="lg:col-span-2 bg-zinc-950 p-5 lg:p-8 flex flex-wrap items-start gap-x-12 gap-y-6">
                 <div className="flex-[1_1_240px] max-w-[320px]">
                   <h3 className="mb-1.5 text-xl font-bold tracking-tight">{t('landing.features.exportTitle')}</h3>
                   <p className="text-foreground/65">{t('landing.features.exportDesc')}</p>
@@ -190,7 +198,7 @@ export default function GuestLanding() {
 
         {/* ── CTA ── */}
         <section className="border-t border-zinc-800">
-          <div className={`${SECTION} py-28 flex flex-wrap items-end justify-between gap-8`}>
+          <div className={`${SECTION} py-14 lg:py-28 flex flex-wrap items-end justify-between gap-8`}>
             <div>
               <span aria-hidden="true" className="inline-flex items-center h-7 mb-[18px] px-3 rounded-pill bg-primary/25 border border-primary/50 font-mono text-[13px] font-medium text-primary">
                 00:00.00
