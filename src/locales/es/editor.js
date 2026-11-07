@@ -207,6 +207,7 @@ export default {
       later: "Después",
       empty: "Toca líneas para seleccionarlas. Arrastra una línea para reordenar.",
       more: "Cantantes y secciones",
+      tag: "Etiquetar como sección",
     },
     edit: {
       views: "Modo de edición",

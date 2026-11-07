@@ -10,6 +10,7 @@ type PhoneSelectBarProps = {
   onClearTimestamps: () => void;
   onDelete: () => void;
   onMore: () => void;
+  onTag: () => void;
 };
 
 const ACTION = 'flex h-16 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 text-center text-[11px] font-medium leading-tight break-words text-foreground/80 hover:bg-raised aria-disabled:opacity-40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
@@ -47,6 +48,10 @@ export default function PhoneSelectBar(p: PhoneSelectBarProps) {
         <button type="button" aria-disabled={none} onClick={act(p.onClearTimestamps)} className={ACTION}>
           <Icon name="ink_eraser" size={20} />
           {t('editor.selection.clearTimestamps')}
+        </button>
+        <button type="button" aria-disabled={none} onClick={act(p.onTag)} className={ACTION}>
+          <Icon name="label" size={20} />
+          {t('editor.phone.select.tag')}
         </button>
         <button type="button" aria-disabled={none} onClick={act(p.onMore)} className={ACTION}>
           <Icon name="person" size={20} />

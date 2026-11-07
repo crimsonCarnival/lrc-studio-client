@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
@@ -19,6 +20,8 @@ export type PhoneToolsSheetProps = {
   canRedo: boolean;
   onRedo: () => void;
   onClearAllTimestamps: () => void;
+  /** Words mode only: the desktop's "Clear word timestamps". */
+  onClearAllWordTimestamps?: () => void;
   unmarkedOnly: boolean;
   onToggleUnmarked: () => void;
   /** Lyrics */
@@ -40,8 +43,11 @@ export type PhoneToolsSheetProps = {
   saving?: boolean;
   onExport: () => void;
   onProjectSettings?: () => void;
-  /** The owner's Start / Manage session control, rendered as the desktop renders it. */
-  session?: ReactNode;
+  /**
+   * The owner's Start / Manage session rows. Both close this sheet first: the start flow and
+   * the settings modal live in Editor, outside the sheet, so they outlast it.
+   */
+  session?: { live: boolean; starting: boolean; onStart: () => void; onManage: () => void };
   onPublish?: () => void;
   onViewPublic?: () => void;
   onChangeSong?: () => void;
@@ -65,7 +71,14 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
  */
 export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
   const { t } = useTranslation();
+  // The sheet stays mounted while it animates out; a second tap in that window must not repeat the action.
+  const usedRef = useRef(false);
+  useEffect(() => {
+    if (p.open) usedRef.current = false;
+  }, [p.open]);
   const run = (fn: () => void) => () => {
+    if (usedRef.current) return;
+    usedRef.current = true;
     p.onClose();
     fn();
   };
@@ -106,6 +119,15 @@ export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
           disabled={!p.hasLines}
           onClick={run(p.onClearAllTimestamps)}
         />
+        {isWords && p.onClearAllWordTimestamps && (
+          <DrawerItem
+            iconName="ink_eraser"
+            label={t('editor.clearWordTimestamps')}
+            variant="danger"
+            disabled={!p.hasLines}
+            onClick={run(p.onClearAllWordTimestamps)}
+          />
+        )}
         <DrawerItem
           iconName="filter_list"
           label={p.unmarkedOnly ? t('editor.phone.tools.allLines') : t('editor.phone.tools.unmarkedOnly')}
@@ -176,9 +198,12 @@ export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
         {p.onViewPublic && <DrawerItem iconName="visibility" label={t('editor.viewAsPublic')} onClick={run(p.onViewPublic)} />}
         {p.onProjectSettings && <DrawerItem iconName="tune" label={t('editor.projectSettings')} onClick={run(p.onProjectSettings)} />}
         {p.session && (
-          <div className="px-1 [&>button]:ml-0 [&>button]:h-11 [&>button]:w-full [&>button]:justify-start [&>button]:px-3 [&_span]:inline">
-            {p.session}
-          </div>
+          <DrawerItem
+            iconName="group"
+            label={p.session.live ? t('collab.settings.manage') : t('collab.settings.start')}
+            disabled={p.session.starting}
+            onClick={run(p.session.live ? p.session.onManage : p.session.onStart)}
+          />
         )}
         {p.onChangeSong && !p.readOnly && <DrawerItem iconName="swap_horiz" label={t('player.changeSong')} onClick={run(p.onChangeSong)} />}
         {!p.readOnly && (

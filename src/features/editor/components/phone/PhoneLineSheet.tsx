@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
-import { formatSectionLabel } from '@/features/editor/constants/section-types';
+import { SECTION_TYPES, formatSectionLabel } from '@/features/editor/constants/section-types';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 export type PhoneLineSheetProps = {
   open: boolean;
+  /** Opens straight on the section-tag chooser (Select bar's Tag as section). */
+  initialView?: 'tag';
   onClose: () => void;
   /** One line (its options) or the current selection (singers and sections only). */
   indices: number[];
@@ -22,6 +24,8 @@ export type PhoneLineSheetProps = {
   onInsertSection: (afterIndex: number) => void;
   onToggleDepth?: (index: number) => void;
   onAssignSinger: (name: string, indices: number[], slot: number) => void;
+  /** Tags the selection with a standard section type (the desktop TaggingToolbar's action). */
+  onTagSection?: (label: string) => void;
   onMoveToSection: (indices: number[], sectionIndex: number) => void;
   onEditText: (index: number) => void;
   onToggleCounterpart?: (index: number) => void;
@@ -29,7 +33,8 @@ export type PhoneLineSheetProps = {
   onBulkSplitSingers?: () => void;
 };
 
-type View = 'main' | 'singer' | 'section';
+type View = 'main' | 'singer' | 'section' | 'tag';
+const TAG_TYPES = SECTION_TYPES.filter((s) => s.depth !== 0);
 
 /**
  * The options for one line, opened by long-press or the row's "more" button; also the
@@ -38,7 +43,13 @@ type View = 'main' | 'singer' | 'section';
  */
 export default function PhoneLineSheet(p: PhoneLineSheetProps) {
   const { t } = useTranslation();
-  const [view, setView] = useState<View>('main');
+  const [view, setView] = useState<View>(p.initialView ?? 'main');
+  // Re-enter on the requested page each time the sheet opens.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (p.open && !wasOpen.current) setView(p.initialView ?? 'main');
+    wasOpen.current = p.open;
+  }, [p.open, p.initialView]);
   const isSelection = p.indices.length > 1;
   const index = p.indices[0];
   const line = index != null ? p.lines[index] : undefined;
@@ -47,7 +58,14 @@ export default function PhoneLineSheet(p: PhoneLineSheetProps) {
     setView('main');
     p.onClose();
   };
+  // Still mounted while it animates out: a second tap in that window must not repeat the action.
+  const usedRef = useRef(false);
+  useEffect(() => {
+    if (p.open) usedRef.current = false;
+  }, [p.open]);
   const run = (fn: () => void) => () => {
+    if (usedRef.current) return;
+    usedRef.current = true;
     close();
     fn();
   };
@@ -74,6 +92,12 @@ export default function PhoneLineSheet(p: PhoneLineSheetProps) {
       ))}
       <DrawerItem iconName="person_off" label={t('editor.clearSingers')} onClick={run(() => p.onAssignSinger('', p.indices, 0))} />
     </>
+  ) : view === 'tag' ? (
+    <>
+      {TAG_TYPES.map((type) => (
+        <DrawerItem key={type.id} iconName="label" label={(t as (key: string) => string)(type.labelKey)} onClick={run(() => p.onTagSection?.(type.id))} />
+      ))}
+    </>
   ) : view === 'section' ? (
     <>
       {back}
@@ -83,6 +107,7 @@ export default function PhoneLineSheet(p: PhoneLineSheetProps) {
     </>
   ) : isSelection ? (
     <>
+      {p.onTagSection && <DrawerItem iconName="label" label={t('editor.phone.select.tag')} onClick={() => setView('tag')} />}
       {p.singers.length > 0 && <DrawerItem iconName="person" label={t('editor.assignSingerToLines', { count: p.indices.length })} onClick={() => setView('singer')} />}
       {sections.length > 0 && <DrawerItem iconName="layers" label={t('editor.moveToSection')} onClick={() => setView('section')} />}
       {p.onBulkSingTogether && p.singers.length > 1 && <DrawerItem iconName="group" label={t('editor.duetMode')} onClick={run(p.onBulkSingTogether)} />}
@@ -139,7 +164,7 @@ export default function PhoneLineSheet(p: PhoneLineSheetProps) {
   );
 
   return (
-    <ActionDrawer isOpen={p.open} onClose={close} title={title}>
+    <ActionDrawer isOpen={p.open} onClose={close} title={title} backdropGuardMs={300}>
       {/* Keyed by view so the focus lands on the first row of each page. */}
       <div key={view}>{body}</div>
     </ActionDrawer>

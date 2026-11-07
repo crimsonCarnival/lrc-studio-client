@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ChangeEventHandler, Dispatch, FocusEvent, RefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
@@ -42,10 +42,18 @@ type PhoneEditTabProps = {
 };
 
 /** Keeps the field in view once the keyboard has finished opening (focus fires before it does). */
-const revealOnFocus = (e: FocusEvent<HTMLElement>) => {
+const revealOnFocus = (e: FocusEvent<HTMLElement>, timer: { current: ReturnType<typeof setTimeout> | undefined }) => {
   const el = e.currentTarget;
-  setTimeout(() => el.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 300);
+  clearTimeout(timer.current);
+  timer.current = setTimeout(() => el.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 300);
 };
+
+/** Reveal-on-focus whose pending timeout is cleared when the tab unmounts. */
+function useRevealOnFocus() {
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return useCallback((e: FocusEvent<HTMLElement>) => revealOnFocus(e, timer), []);
+}
 
 /**
  * The Edit tab. "All text" is the raw-text editor with the same import controls; "One line"
@@ -56,6 +64,7 @@ const revealOnFocus = (e: FocusEvent<HTMLElement>) => {
 export default function PhoneEditTab(p: PhoneEditTabProps) {
   const { t } = useTranslation();
   const keyboard = useKeyboardInset();
+  const revealOnFocus = useRevealOnFocus();
   return (
     <div className="flex flex-1 min-h-0 flex-col" style={keyboard ? { paddingBottom: keyboard } : undefined} data-keyboard-inset={keyboard}>
       <div className="flex shrink-0 justify-center px-3 py-2">
@@ -110,6 +119,7 @@ function LineEditor(p: PhoneEditTabProps & { bottomSafe: boolean }) {
   const lyricIndices = p.lines.flatMap((l, i) => (l.type === 'section' ? [] : [i]));
   const position = lyricIndices.indexOf(p.lineIndex);
   const [justSaved, setJustSaved] = useState(false);
+  const revealOnFocus = useRevealOnFocus();
 
   // Load the line into the shared editing state whenever the cursor lands on a different
   // line. Keyed on the line's id, so typing is never overwritten by an unrelated update.

@@ -130,8 +130,40 @@ describe('PhoneToolsSheet', () => {
     }
   });
 
-  it('renders the owner session control inside the Project group', () => {
-    setup({ session: <button type="button">Start session</button> });
-    expect(screen.getByRole('button', { name: 'Start session' })).toBeInTheDocument();
+  it('offers Start session, which closes the sheet first and runs once', () => {
+    const onStart = vi.fn();
+    const h = setup({ session: { live: false, starting: false, onStart, onManage: vi.fn() } });
+    const btn = screen.getByRole('button', { name: /edit this project/i });
+    fireEvent.click(btn);
+    fireEvent.click(btn);
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(h.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers Manage session for a live session', () => {
+    const onManage = vi.fn();
+    setup({ session: { live: true, starting: false, onStart: vi.fn(), onManage } });
+    fireEvent.click(screen.getByRole('button', { name: /manage session/i }));
+    expect(onManage).toHaveBeenCalledTimes(1);
+  });
+
+  it('a double activation of an action runs it once', () => {
+    const h = setup();
+    const redo = screen.getByRole('button', { name: /^redo$/i });
+    fireEvent.click(redo);
+    fireEvent.click(redo);
+    expect(h.onRedo).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers Clear word timestamps in Words mode only', () => {
+    const onClear = vi.fn();
+    setup({ editorMode: 'words', onClearAllWordTimestamps: onClear });
+    fireEvent.click(screen.getByRole('button', { name: /clear all word timestamps/i }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides Clear word timestamps outside Words mode', () => {
+    setup({ editorMode: 'lrc', onClearAllWordTimestamps: vi.fn() });
+    expect(screen.queryByRole('button', { name: /clear all word timestamps/i })).toBeNull();
   });
 });

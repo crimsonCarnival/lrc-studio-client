@@ -56,7 +56,10 @@ import { getSingerOptionsForSelection } from '@features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
-import { SessionControl, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
+import { SessionControl, SessionStartShield, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
+import { SessionSettingsModal } from '@/features/collab/components/SessionSettingsModal';
+import { useSessionStart } from '@/features/collab/useSessionStart';
+import { applyTagToSelection } from '@/features/editor/utils/sections';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
@@ -686,7 +689,8 @@ export default function Editor({
     setCounterpartNaming(id);
   }, [handleCaptureCounterpart]);
   useEffect(() => {
-    if (wordsFocus) return;
+    // The strip is not rendered on the phone, so capturing there would leave hidden state behind.
+    if (wordsFocus || phone) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.isComposing || e.repeat) return;
       const target = e.target as HTMLElement | null;
@@ -697,7 +701,7 @@ export default function Editor({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wordsFocus, captureKeyRaw, captureCounterpartHere]);
+  }, [wordsFocus, phone, captureKeyRaw, captureCounterpartHere]);
   const listView = useMemo(() => {
     if (lineFilter === 'all') return collapsedView;
     const rows = collapsedView.rows.filter((i) => lines[i].type === 'section' || lines[i].timestamp == null || i === activeLineIndex);
@@ -811,7 +815,36 @@ export default function Editor({
   const [editView, setEditView] = useState<EditView>('text');
   const [toolsOpen, setToolsOpen] = useState(false);
   const [selecting, setSelecting] = useState(false);
-  const [lineSheet, setLineSheet] = useState<{ open: boolean; indices: number[] }>({ open: false, indices: [] });
+  // Line ids, not indices: a collaborator's insert or delete while the sheet is open must not
+  // retarget it, and if a line vanishes the sheet closes.
+  const [lineSheet, setLineSheet] = useState<{ open: boolean; ids: string[]; view?: 'tag' }>({ open: false, ids: [] });
+  const linesRef = useRef(lines);
+  useLayoutEffect(() => { linesRef.current = lines; });
+  const lineSheetIndices = useMemo(() => {
+    const out: number[] = [];
+    for (const id of lineSheet.ids) {
+      const at = lines.findIndex((l) => l.id === id);
+      if (at >= 0) out.push(at);
+    }
+    return out.sort((a, b) => a - b);
+  }, [lineSheet.ids, lines]);
+  const lineSheetValid = lineSheet.ids.length > 0 && lineSheetIndices.length === lineSheet.ids.length;
+  useEffect(() => {
+    if (lineSheet.open && !lineSheetValid) setLineSheet({ open: false, ids: [] });
+  }, [lineSheet.open, lineSheetValid]);
+  const openLineSheetFor = useCallback((indices: number[], view?: 'tag') => {
+    const ids = indices.map((i) => linesRef.current[i]?.id).filter((id): id is string => !!id);
+    if (ids.length > 0 && ids.length === indices.length) setLineSheet({ open: true, ids, view });
+  }, []);
+  const { starting: sessionStarting, start: startSessionFlow } = useSessionStart(sessionOwner?.publicId, handleManualSave ?? undefined);
+  const [sessionManageOpen, setSessionManageOpen] = useState(false);
+  // Where the cursor was before the Edit tab moved it; Mark must keep stamping that line.
+  const cursorBeforeEditRef = useRef<number | null>(null);
+  const restoreCursor = () => {
+    const at = cursorBeforeEditRef.current;
+    cursorBeforeEditRef.current = null;
+    if (at != null) setActiveLineIndex(Math.min(at, Math.max(linesRef.current.length - 1, 0)));
+  };
   const [lineHintSeen, setLineHintSeen] = useState(() => {
     try { return localStorage.getItem(PHONE_LINE_HINT_KEY) === '1'; } catch { return false; }
   });
@@ -846,6 +879,8 @@ export default function Editor({
     else setSyncMode(true);
   };
   const openPhoneEdit = (view: EditView) => {
+    if (view === 'line' && cursorBeforeEditRef.current == null) cursorBeforeEditRef.current = activeLineIndex;
+    if (view === 'text') restoreCursor();
     const inRaw = phoneTab === 'edit' && editView === 'text';
     if (view === 'text' && !inRaw) beginRawEdit();
     if (view === 'line' && inRaw) endRawEdit();
@@ -857,10 +892,12 @@ export default function Editor({
     if (next === 'edit') openPhoneEdit(editView);
     else {
       if (phoneTab === 'edit' && editView === 'text') endRawEdit();
+      restoreCursor();
       setPhoneTab(next);
     }
   };
   const showPhonePreview = onShowPreview ? () => {
+    restoreCursor();
     if (phoneTab === 'edit' && editView === 'text') endRawEdit();
     onShowPreview();
   } : undefined;
@@ -869,8 +906,22 @@ export default function Editor({
     setSelecting(false);
   };
   const openPhoneLineSheet = useCallback((index: unknown) => {
-    if (typeof index === 'number') setLineSheet({ open: true, indices: [index] });
-  }, []);
+    if (typeof index === 'number') openLineSheetFor([index]);
+  }, [openLineSheetFor]);
+  // Nothing to sync once the lyrics are gone (e.g. removed all): the Sync tab has nothing to show.
+  useEffect(() => {
+    if (phone && phoneTab === 'sync' && !syncMode && !hasLyricLines) {
+      setEditView('text');
+      setPhoneTab('edit');
+    }
+  }, [phone, phoneTab, syncMode, hasLyricLines]);
+  // Delete and Clear (both confirmed, then change the lines and empty the selection) end Select mode.
+  const prevSelectionRef = useRef({ size: selectedLines.size, lines });
+  useEffect(() => {
+    const prev = prevSelectionRef.current;
+    prevSelectionRef.current = { size: selectedLines.size, lines };
+    if (selecting && prev.size > 0 && selectedLines.size === 0 && prev.lines !== lines) setSelecting(false);
+  }, [selectedLines, lines, selecting]);
   // In select mode a tap toggles the line; otherwise it is the ordinary click.
   const phoneLineClick = useCallback((i: number, e: unknown) => {
     if (selecting) handleToggleLine(i);
@@ -1089,8 +1140,8 @@ export default function Editor({
     const autoStampBlocked = !autoStampHasAudio ? 'noAudio' as const
       : autoStampRunning ? 'running' as const
         : player.source === 'youtube' && !tabAudioSupported() ? 'youtube' as const : null;
-    const lineSheetSingers = lineSheet.indices.length > 1
-      ? getSingerOptionsForSelection(lines, lineSheet.indices, combinedSingers)
+    const lineSheetSingers = lineSheetIndices.length > 1
+      ? getSingerOptionsForSelection(lines, lineSheetIndices, combinedSingers)
       : combinedSingers;
     const hint = !lineHintSeen && hasLyricLines && !selecting && !readOnly && phoneTab === 'sync' ? (
       <div role="note" className="flex shrink-0 items-center gap-2 border-b border-zinc-800 bg-raised pl-3 text-sm text-subtle">
@@ -1123,7 +1174,7 @@ export default function Editor({
               handleFileUpload={handleFileUpload}
               handleUrlImport={handleUrlImport as ComponentProps<typeof PhoneEditTab>['handleUrlImport']}
               singers={combinedSingers}
-              onApplyText={() => { endRawEdit(); setPhoneTab('sync'); }}
+              onApplyText={() => { endRawEdit(); restoreCursor(); setPhoneTab('sync'); }}
               lines={lines}
               lineIndex={activeLineIndex}
               onLineIndexChange={setActiveLineIndex}
@@ -1146,7 +1197,8 @@ export default function Editor({
               onShiftLater={() => handleBulkShift(nudgeDefault)}
               onClearTimestamps={handleBulkClearTimestamps}
               onDelete={handleBulkDelete}
-              onMore={() => setLineSheet({ open: true, indices: [...selectedLines].sort((a, b) => a - b) })}
+              onMore={() => openLineSheetFor([...selectedLines].sort((a, b) => a - b))}
+              onTag={() => openLineSheetFor([...selectedLines].sort((a, b) => a - b), 'tag')}
             />
           ) : undefined}
           onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
@@ -1174,6 +1226,7 @@ export default function Editor({
           canRedo={canRedo}
           onRedo={redo}
           onClearAllTimestamps={handleClearTimestamps}
+          onClearAllWordTimestamps={handleClearAllWordTimestamps}
           unmarkedOnly={lineFilter === 'unmarked'}
           onToggleUnmarked={() => setLineFilter((f) => (f === 'all' ? 'unmarked' : 'all'))}
           onFindLyrics={() => setLyricsSearchOpen(true)}
@@ -1192,9 +1245,12 @@ export default function Editor({
           saving={isSaving}
           onExport={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
           onProjectSettings={onOpenProjectSettings}
-          session={sessionOwner ? (
-            <SessionControl owner={sessionOwner} collab={collab} lines={lines} onBeforeStart={handleManualSave ?? undefined} />
-          ) : undefined}
+          session={sessionOwner ? {
+            live: sessionOwner.live,
+            starting: sessionStarting,
+            onStart: () => void startSessionFlow(),
+            onManage: () => setSessionManageOpen(true),
+          } : undefined}
           onPublish={canPublish ? openPublish : undefined}
           onViewPublic={onTogglePublicView && !inSession && serverProjectId ? onTogglePublicView : undefined}
           onChangeSong={hasMedia && !inSession ? () => setChangeMediaOpen(true) : undefined}
@@ -1202,14 +1258,15 @@ export default function Editor({
           onRemoveAll={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
         />
         <PhoneLineSheet
-          open={lineSheet.open}
+          open={lineSheet.open && lineSheetValid}
           onClose={() => setLineSheet((cur) => ({ ...cur, open: false }))}
-          indices={lineSheet.indices}
+          initialView={lineSheet.view}
+          indices={lineSheetIndices}
           lines={lines}
           singers={lineSheetSingers}
           nudgeFine={nudgeFine}
           nudgeCoarse={nudgeDefault}
-          deleteDisabled={lineSheet.indices.some((i) => lines[i]?.id != null && !!othersLocks?.[lines[i].id as string])}
+          deleteDisabled={lineSheetIndices.some((i) => lines[i]?.id != null && !!othersLocks?.[lines[i].id as string])}
           onShift={shiftTimeWithConfidence}
           onClearTimestamp={handleClearLine}
           onDelete={handleDeleteLine}
@@ -1218,11 +1275,33 @@ export default function Editor({
           onToggleDepth={handleToggleSectionDepth}
           onAssignSinger={handleAssignSinger}
           onMoveToSection={handleMoveToSection}
-          onEditText={(index) => { setActiveLineIndex(index); openPhoneEdit('line'); }}
+          onTagSection={(label) => {
+            const { lines: next, indexMap } = applyTagToSelection(lines, new Set(lineSheetIndices), { label });
+            recordIndexMap(indexMap);
+            setLines(next);
+            exitSelecting();
+          }}
+          onEditText={(index) => {
+            if (cursorBeforeEditRef.current == null) cursorBeforeEditRef.current = activeLineIndex;
+            setActiveLineIndex(index);
+            openPhoneEdit('line');
+          }}
           onToggleCounterpart={handleToggleCounterpart}
           onBulkSingTogether={handleBulkSingTogether}
           onBulkSplitSingers={handleBulkSplitSingers}
         />
+        {sessionStarting && <SessionStartShield />}
+        {sessionOwner?.live && (
+          <SessionSettingsModal
+            open={sessionManageOpen}
+            onOpenChange={setSessionManageOpen}
+            publicId={sessionOwner.publicId}
+            provider={collab?.provider ?? null}
+            locks={collab?.locks ?? {}}
+            lines={lines}
+            onEnded={sessionOwner.onEnded}
+          />
+        )}
         {overlays}
       </>
     );

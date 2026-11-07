@@ -17,6 +17,11 @@ vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user
 vi.mock('@/app/socket.client', () => ({ connectSocket: () => ({ on: vi.fn(), off: vi.fn(), emit: vi.fn(), connected: false }) }));
 
 const savePendingProject = vi.fn(async () => undefined);
+const startSession = vi.fn(async () => undefined);
+vi.mock('@/features/collab/collab.service', () => ({ startSession: (...a: unknown[]) => startSession(...(a as [])) }));
+vi.mock('@/features/collab/components/SessionSettingsModal', () => ({
+  SessionSettingsModal: ({ open }: { open: boolean }) => (open ? <div role="dialog" aria-label="Session settings stub" /> : null),
+}));
 vi.mock('@/features/editor/services/guest-project-db', () => ({ savePendingProject: (...a: unknown[]) => savePendingProject(...(a as [])) }));
 
 let playerSource = 'local';
@@ -37,8 +42,12 @@ vi.mock('@/features/player/PlayerContext', () => ({
 const line = (i: number, over: Partial<EditorLine> = {}): EditorLine => ({ id: `l${i}`, text: `Line ${i + 1}`, timestamp: null, ...over });
 const makeLines = (n: number) => Array.from({ length: n }, (_, i) => line(i));
 
-let latest: { lines: EditorLine[]; activeLineIndex: number } = { lines: [], activeLineIndex: 0 };
+let latest: {
+  lines: EditorLine[]; activeLineIndex: number;
+  setLines: (l: EditorLine[]) => void; setSyncMode: (v: boolean) => void;
+} = { lines: [], activeLineIndex: 0, setLines: () => {}, setSyncMode: () => {} };
 const redo = vi.fn();
+const undo = vi.fn();
 const onOpenProjectSettings = vi.fn();
 const onNewProject = vi.fn();
 const onTogglePublicView = vi.fn();
@@ -65,7 +74,7 @@ function Harness({ initialLines = makeLines(3), user, hasMedia = true, collab, a
   const [activeLineIndex, setActiveLineIndex] = useState(startActive);
   const [syncMode, setSyncMode] = useState(true);
   const [mode, setMode] = useState('lrc');
-  useEffect(() => { latest = { lines, activeLineIndex }; });
+  useEffect(() => { latest = { lines, activeLineIndex, setLines, setSyncMode }; });
   return (
     <MemoryRouter>
       <TooltipProvider>
@@ -80,9 +89,9 @@ function Harness({ initialLines = makeLines(3), user, hasMedia = true, collab, a
           setActiveLineIndex={setActiveLineIndex}
           playbackPosition={12.5}
           playerRef={{ current: null }}
-          undo={vi.fn()}
+          undo={undo}
           redo={redo}
-          canUndo={false}
+          canUndo
           canRedo
           clearHistory={vi.fn()}
           editorMode={mode}
@@ -112,7 +121,7 @@ beforeEach(() => {
   // jsdom has no layout: give the scroller a phone viewport and each row a height so the virtualizer renders rows.
   sizeProps.forEach((p) => Object.defineProperty(HTMLElement.prototype, p, { configurable: true, get: () => sizes[p] }));
   playerSource = 'local';
-  [redo, onOpenProjectSettings, onNewProject, onTogglePublicView, handleManualSave, savePendingProject].forEach((m) => m.mockClear());
+  [redo, undo, startSession, onOpenProjectSettings, onNewProject, onTogglePublicView, handleManualSave, savePendingProject].forEach((m) => m.mockClear());
 });
 afterEach(() => {
   sizeProps.forEach((p, i) => { const d = savedSizes[i]; if (d) Object.defineProperty(HTMLElement.prototype, p, d); });
@@ -141,6 +150,34 @@ describe('Tools sheet in the phone editor', () => {
     openTools();
     fireEvent.click(within(tools()).getByRole('button', { name: /^redo$/i }));
     expect(redo).toHaveBeenCalledTimes(1);
+  });
+
+  it('Undo stays reachable after a sheet action', async () => {
+    render(<Harness initialLines={[line(0, { timestamp: 4 })]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Options for line 1' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /clear timestamp/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: /undo/i }));
+    expect(undo).toHaveBeenCalledTimes(1);
+  });
+
+  it('Start session saves, starts once even on a double tap, and closes the sheet', async () => {
+    render(<Harness user={{ id: 'u1' }} activepublicId="abc123" sessionOwner={{ publicId: 'abc123', live: false, onEnded: vi.fn() }} />);
+    openTools();
+    const start = within(tools()).getByRole('button', { name: /edit this project/i });
+    fireEvent.click(start);
+    fireEvent.click(start);
+    await waitFor(() => expect(startSession).toHaveBeenCalledTimes(1));
+    expect(handleManualSave).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tools' })).toBeNull());
+  });
+
+  it('Manage session closes the Tools sheet before opening the settings', async () => {
+    render(<Harness user={{ id: 'u1' }} activepublicId="abc123" sessionOwner={{ publicId: 'abc123', live: true, onEnded: vi.fn() }} />);
+    openTools();
+    fireEvent.click(within(tools()).getByRole('button', { name: /manage session/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tools' })).toBeNull());
+    expect(screen.getByRole('dialog', { name: 'Session settings stub' })).toBeInTheDocument();
   });
 
   it('Project settings, public page and New project reach their handlers', () => {
@@ -238,10 +275,11 @@ describe('Tools sheet in the phone editor', () => {
     expect(latest.activeLineIndex).toBe(0); // SRT: the first mark waits for its end time
   });
 
-  it('Mark still works with the sheet closed, one line per tap', () => {
+  it('Mark still works with the sheet closed, one line per tap', async () => {
     render(<Harness />);
     openTools();
     fireEvent.keyDown(tools(), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tools' })).toBeNull());
     tapMark(/mark line 1/i);
     expect(latest.lines.filter((l) => l.timestamp != null)).toHaveLength(1);
     expect(latest.activeLineIndex).toBe(1);
@@ -367,6 +405,38 @@ describe('Line sheet', () => {
   });
 });
 
+describe('Line sheet targets', () => {
+  it('keeps pointing at its line when another user inserts above it', () => {
+    render(<Harness startActive={1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Options for line 2' }));
+    act(() => { latest.setLines([line(9), ...latest.lines]); });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /insert below/i }));
+    expect(latest.lines.map((l) => l.text)).toEqual(['Line 10', 'Line 1', 'Line 2', '', 'Line 3']);
+  });
+
+  it('closes when its line disappears', async () => {
+    render(<Harness startActive={1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Options for line 2' }));
+    act(() => { latest.setLines(latest.lines.filter((l) => l.id !== 'l1')); });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+});
+
+describe('Phone details', () => {
+  it('the counterpart capture key does nothing on the phone', () => {
+    render(<Harness />);
+    const before = latest.lines;
+    fireEvent.keyDown(window, { key: 'a' });
+    expect(latest.lines).toBe(before);
+  });
+
+  it('removing all lyrics on the Sync tab moves to the Edit tab', async () => {
+    render(<Harness />);
+    act(() => { latest.setSyncMode(false); latest.setLines([]); });
+    await waitFor(() => expect(screen.getByRole('tab', { name: 'Edit' })).toHaveAttribute('aria-selected', 'true'));
+  });
+});
+
 describe('Select mode', () => {
   const enterSelect = () => {
     openTools();
@@ -390,7 +460,7 @@ describe('Select mode', () => {
     enterSelect();
     fireEvent.click(screen.getByRole('button', { name: 'Line 2' }));
     fireEvent.click(screen.getByRole('button', { name: 'Line 3' }));
-    expect(screen.getByText('2 selected')).toBeInTheDocument();
+    expect(screen.getByText('2 lines')).toBeInTheDocument();
     expect(latest.activeLineIndex).toBe(0);
     expect(latest.lines.every((l) => l.timestamp == null)).toBe(true);
   });
@@ -401,6 +471,27 @@ describe('Select mode', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Line 2' }));
     fireEvent.click(screen.getByRole('button', { name: /^earlier$/i }));
     expect(latest.lines.map((l) => l.timestamp)).toEqual([5, 7.9, 9]);
+  });
+
+  it('tags the selected lines as a standard section', async () => {
+    render(<Harness />);
+    enterSelect();
+    fireEvent.click(screen.getByRole('button', { name: 'Line 2' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Tools' })).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: /tag as section/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('Chorus'));
+    await waitFor(() => expect(latest.lines.some((l) => l.type === 'section' && /chorus/i.test(l.label ?? ''))).toBe(true));
+    expect(latest.lines.filter((l) => l.type !== 'section')).toHaveLength(3);
+  });
+
+  it('leaves Select mode after the selection is deleted', async () => {
+    render(<Harness />);
+    enterSelect();
+    fireEvent.click(screen.getByRole('button', { name: 'Line 2' }));
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /mark line/i })).toBeInTheDocument());
+    expect(latest.lines).toHaveLength(2);
   });
 
   it('has no row options button while selecting', () => {
@@ -447,6 +538,16 @@ describe('Edit tab', () => {
     expect(latest.lines[0].secondary).toBe('Romaji');
     expect(latest.lines[0].translations?.[0].text).toBe('Hello');
     expect(latest.lines[0].timestamp).toBe(4);
+  });
+
+  it('editing a line from its sheet gives the Mark cursor back on leaving the tab', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Options for line 1' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /edit text/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next line/i }));
+    expect(latest.activeLineIndex).toBe(1);
+    fireEvent.click(screen.getByRole('tab', { name: 'Sync' }));
+    expect(latest.activeLineIndex).toBe(0);
   });
 
   it('keeps Save visible above the on-screen keyboard', () => {

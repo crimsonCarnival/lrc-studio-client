@@ -204,6 +204,7 @@ export default {
       later: "Later",
       empty: "Tap lines to select them. Drag a line to reorder.",
       more: "Singers and sections",
+      tag: "Tag as section",
     },
     edit: {
       views: "Editing mode",
