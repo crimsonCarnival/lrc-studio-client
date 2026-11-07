@@ -74,21 +74,36 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
         {p.list}
       </div>
       <div className="flex min-h-0 shrink-0 flex-col border-t border-zinc-800 bg-zinc-950/60 short-landscape:w-[min(24rem,48%)] short-landscape:border-t-0 short-landscape:border-l">
-        <section aria-label={lineLabel} className="flex min-h-0 flex-col gap-2 overflow-y-auto px-3 pt-2 max-h-[40dvh] short-landscape:max-h-none short-landscape:flex-1">
-          <div className="flex items-center gap-2">
+        <section aria-label={lineLabel} className="flex min-h-0 flex-col gap-1.5 px-3 pt-1.5 short-landscape:flex-1">
+          <div className="flex items-center gap-1.5">
             <button type="button" onClick={p.onPrevLine} disabled={!p.canPrev} aria-label={t('editor.phone.focus.previous')} className={ROUND_BTN}>
               <Icon name="chevron_left" size={22} />
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <p className="truncate text-sm font-semibold">
+              <p className="truncate text-sm font-semibold leading-tight">
                 {p.lineNumber ? t('editor.phone.words.lineOf', p.lineNumber) : t('editor.phone.focus.none')}
               </p>
               {p.words.length > 0 && (
-                <p className="font-mono text-[11px] tabular-nums text-subtle">
+                <p className="font-mono text-[11px] leading-tight tabular-nums text-subtle">
                   {t('editor.phone.words.wordCount', { done, total: p.words.length })}
                 </p>
               )}
             </div>
+            {selected && p.onCycleSinger && p.activeIndex != null && (
+              <button
+                type="button"
+                onClick={() => p.onCycleSinger!(p.activeIndex!)}
+                aria-label={t('editor.phone.words.changeSinger', { word: selected.word })}
+                className={ROUND_BTN}
+              >
+                <Icon name="mic" size={20} />
+              </button>
+            )}
+            {selected && (
+              <button type="button" onClick={() => p.onWordMenu(p.activeIndex!)} aria-label={t('common.actions.wordActions')} className={ROUND_BTN}>
+                <Icon name="more_horiz" size={20} />
+              </button>
+            )}
             <button type="button" onClick={p.onNextLine} disabled={!p.canNext} aria-label={t('editor.phone.focus.next')} className={ROUND_BTN}>
               <Icon name="chevron_right" size={22} />
             </button>
@@ -117,7 +132,7 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
           {p.words.length === 0 ? (
             <p role="note" className="py-3 text-center text-sm text-subtle">{t('editor.phone.words.noWords')}</p>
           ) : (
-            <ul className="flex flex-wrap gap-2 pb-1" aria-label={lineLabel}>
+            <ul className="lrc-scroll flex min-h-0 max-h-[7.5rem] flex-wrap content-start gap-1.5 overflow-y-auto pb-1 short-landscape:max-h-none short-landscape:flex-1" aria-label={lineLabel}>
               {p.words.map((w, wi) => {
                 const isActive = wi === p.activeIndex;
                 const stamped = w.time != null;
@@ -130,7 +145,7 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
                       aria-label={stamped ? t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time!) }) : t('editor.phone.words.unstamped', { word: w.word })}
                       aria-disabled={p.chipsLocked || undefined}
                       onClick={() => { if (!p.chipsLocked) p.onWordTap(wi); }}
-                      className={`relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-3 py-1.5 text-center transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${isActive
+                      className={`relative flex min-h-12 min-w-12 flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-2.5 py-1 text-center transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${isActive
                         ? 'border-primary bg-primary-soft text-foreground'
                         : stamped
                           ? 'border-hl bg-raised text-foreground'
@@ -154,29 +169,6 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
 
           {p.chipsLocked && p.words.length > 0 && (
             <p className="text-center text-xs text-subtle">{t('editor.phone.words.startFirst')}</p>
-          )}
-
-          {selected && (
-            <div className="flex items-center justify-end gap-2 pb-1">
-              {p.onCycleSinger && p.activeIndex != null && (
-                <button
-                  type="button"
-                  onClick={() => p.onCycleSinger!(p.activeIndex!)}
-                  aria-label={t('editor.phone.words.changeSinger', { word: selected.word })}
-                  className={ROUND_BTN}
-                >
-                  <Icon name="mic" size={20} />
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => p.onWordMenu(p.activeIndex!)}
-                aria-label={t('common.actions.wordActions')}
-                className={ROUND_BTN}
-              >
-                <Icon name="more_horiz" size={20} />
-              </button>
-            </div>
           )}
         </section>
         {p.player}
