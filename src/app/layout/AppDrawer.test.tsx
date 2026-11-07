@@ -49,6 +49,7 @@ function Host({ user = ana, unreadCount = 0, staffPending = 0, start = '/home', 
       <TooltipProvider>
         <button data-testid="burger" onClick={() => setOpen(true)}>burger</button>
         <Where />
+        <button data-testid="external-close" onClick={() => setOpen(false)}>external</button>
         <AppDrawer
           open={isOpen}
           onOpenChange={(o) => {
@@ -241,5 +242,22 @@ describe('AppDrawer', () => {
     unmount();
     render(<Host />);
     expect(within(openDrawer()).queryByRole('link', { name: 'nav.verifyEmail' })).toBeNull();
+  });
+
+  it('does not pop twice when closed from outside while a pop is in flight, and reopens normally', async () => {
+    render(<Host />);
+    const dialog = openDrawer();
+    const back = vi.spyOn(window.history, 'back');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    act(() => screen.getByTestId('external-close').click());
+    await closed();
+    expect(back).toHaveBeenCalledTimes(1);
+    // The next open must still honour close requests.
+    const again = openDrawer();
+    fireEvent.keyDown(again, { key: 'Escape' });
+    await closed();
+    expect(back).toHaveBeenCalledTimes(2);
+    expect(window.history.state?.lrcDrawer).toBeFalsy();
+    back.mockRestore();
   });
 });

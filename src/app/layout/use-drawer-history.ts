@@ -34,6 +34,7 @@ export function useDrawerHistory(open: boolean, onClose: () => void) {
 
   useEffect(() => {
     if (!open) return;
+    closing.current = false;
     window.history.pushState({ ...(window.history.state ?? {}), [MARKER]: true }, '');
     pushed.current = true;
     const onPop = () => { if (pushed.current) finish(); };
@@ -41,11 +42,12 @@ export function useDrawerHistory(open: boolean, onClose: () => void) {
     return () => {
       window.removeEventListener('popstate', onPop);
       clearTimeout(timer.current);
-      // Unmounted or closed from outside while our entry is still on top: drop it quietly.
-      if (pushed.current) {
-        pushed.current = false;
-        if (window.history.state?.[MARKER]) window.history.back();
-      }
+      // Unmounted or closed from outside while our entry is still on top: drop it quietly,
+      // unless a pop is already in flight (a second back() would leave the page).
+      if (pushed.current && !closing.current && window.history.state?.[MARKER]) window.history.back();
+      pushed.current = false;
+      closing.current = false;
+      pending.current = null;
     };
   }, [open, finish]);
 
