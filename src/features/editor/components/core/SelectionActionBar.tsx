@@ -33,7 +33,7 @@ interface SelectionActionBarProps {
   handleBulkShift: (delta: number) => void;
   handleBulkDelete: () => void;
   clearSelection: () => void;
-  handleApplyOffset?: (offset: number) => void;
+  handleApplyOffset?: (direction: 1 | -1) => void;
   handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
   handleBulkSingTogether?: () => void;
   handleBulkSplitSingers?: () => void;
@@ -104,7 +104,7 @@ export default function SelectionActionBar({
             <Button
               variant="ghost"
               size="icon-xs"
-              onClick={() => handleApplyOffset(-shiftAmount)}
+              onClick={() => handleApplyOffset(-1)}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
             >
               <Icon name="keyboard_double_arrow_left" size={16} />
@@ -114,7 +114,7 @@ export default function SelectionActionBar({
             <Button
               variant="ghost"
               size="icon-xs"
-              onClick={() => handleApplyOffset(shiftAmount)}
+              onClick={() => handleApplyOffset(1)}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
             >
               <Icon name="keyboard_double_arrow_right" size={16} />

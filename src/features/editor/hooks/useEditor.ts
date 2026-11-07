@@ -1061,6 +1061,7 @@ export function useEditor({
 
   // ——— Global offset ———
 
+  /** `direction` is +1 or -1 only; the step size is `settings.editor.shiftAllAmount`, applied here. */
   const handleApplyOffset = useCallback((direction) => {
     const amount = settings.editor?.shiftAllAmount ?? 0.5;
     const delta = direction * amount;
