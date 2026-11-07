@@ -829,9 +829,8 @@ export default function Editor({
     return out.sort((a, b) => a - b);
   }, [lineSheet.ids, lines]);
   const lineSheetValid = lineSheet.ids.length > 0 && lineSheetIndices.length === lineSheet.ids.length;
-  useEffect(() => {
-    if (lineSheet.open && !lineSheetValid) setLineSheet({ open: false, ids: [] });
-  }, [lineSheet.open, lineSheetValid]);
+  // Adjusted during render (not in an effect) so a vanished line never leaves the sheet armed to reappear.
+  if (lineSheet.open && !lineSheetValid) setLineSheet({ open: false, ids: [] });
   const openLineSheetFor = useCallback((indices: number[], view?: 'tag') => {
     const ids = indices.map((i) => linesRef.current[i]?.id).filter((id): id is string => !!id);
     if (ids.length > 0 && ids.length === indices.length) setLineSheet({ open: true, ids, view });
@@ -909,19 +908,16 @@ export default function Editor({
     if (typeof index === 'number') openLineSheetFor([index]);
   }, [openLineSheetFor]);
   // Nothing to sync once the lyrics are gone (e.g. removed all): the Sync tab has nothing to show.
-  useEffect(() => {
-    if (phone && phoneTab === 'sync' && !syncMode && !hasLyricLines) {
-      setEditView('text');
-      setPhoneTab('edit');
-    }
-  }, [phone, phoneTab, syncMode, hasLyricLines]);
+  if (phone && phoneTab === 'sync' && !syncMode && !hasLyricLines) {
+    setEditView('text');
+    setPhoneTab('edit');
+  }
   // Delete and Clear (both confirmed, then change the lines and empty the selection) end Select mode.
-  const prevSelectionRef = useRef({ size: selectedLines.size, lines });
-  useEffect(() => {
-    const prev = prevSelectionRef.current;
-    prevSelectionRef.current = { size: selectedLines.size, lines };
-    if (selecting && prev.size > 0 && selectedLines.size === 0 && prev.lines !== lines) setSelecting(false);
-  }, [selectedLines, lines, selecting]);
+  const [prevSelection, setPrevSelection] = useState({ size: selectedLines.size, lines });
+  if (prevSelection.size !== selectedLines.size || prevSelection.lines !== lines) {
+    setPrevSelection({ size: selectedLines.size, lines });
+    if (selecting && prevSelection.size > 0 && selectedLines.size === 0 && prevSelection.lines !== lines) setSelecting(false);
+  }
   // In select mode a tap toggles the line; otherwise it is the ordinary click.
   const phoneLineClick = useCallback((i: number, e: unknown) => {
     if (selecting) handleToggleLine(i);

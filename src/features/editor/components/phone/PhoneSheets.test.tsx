@@ -74,7 +74,7 @@ function Harness({ initialLines = makeLines(3), user, hasMedia = true, collab, a
   const [activeLineIndex, setActiveLineIndex] = useState(startActive);
   const [syncMode, setSyncMode] = useState(true);
   const [mode, setMode] = useState('lrc');
-  useEffect(() => { latest = { lines, activeLineIndex, setLines, setSyncMode }; });
+  useEffect(() => { latest = { lines, activeLineIndex, setLines, setSyncMode }; }, [lines, activeLineIndex]);
   return (
     <MemoryRouter>
       <TooltipProvider>
