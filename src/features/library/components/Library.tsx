@@ -299,7 +299,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             onClose={() => setEditingProject(null)}
             onConfirm={async (data: SetupConfirmData) => {
               try {
-                const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
+                const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, singerColors, singers } = data;
                 const updatedMetadata = {
                   ...editingProject.metadata,
                   description,
@@ -315,13 +315,12 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
                 await projects.patch(editingProject.publicId, {
                   title,
                   coverImage,
-                  public: isPublic,
                   metadata: updatedMetadata,
                 } as Parameters<typeof projects.patch>[1]);
                 // Update local state
                 setItems(prev => prev.map(p =>
                   p.publicId === editingProject.publicId
-                    ? { ...p, title, coverImage, public: isPublic, metadata: updatedMetadata }
+                    ? { ...p, title, coverImage, metadata: updatedMetadata }
                     : p
                 ));
                 setEditingProject(null);
@@ -341,6 +340,8 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             initialGenre={editingProject?.metadata?.genre || ''}
             initialCoverImage={editingProject?.coverImage || ''}
             initialIsPublic={editingProject?.public || false}
+            publicId={editingProject.publicId}
+            onVisibilityChange={(next: boolean) => setItems(prev => prev.map(p => p.publicId === editingProject.publicId ? { ...p, public: next } : p))}
             initialSingerColors={editingProject?.metadata?.singerColors ?? EMPTY_LIST}
             initialSingers={editingProject?.metadata?.singers ?? EMPTY_LIST}
             initialAlbumArt={''}

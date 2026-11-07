@@ -10,7 +10,6 @@ export const PREFERENCES_FIELDS =/* GraphQL */ `
   countryVisibility
   miniProfileBadgesEnabled
   miniProfileBadgeIds
-  defaultProjectPrivacy
   showActivityHeatmap
   showXpProgress
   showAddictionTitle

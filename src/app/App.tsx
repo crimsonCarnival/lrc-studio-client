@@ -36,7 +36,6 @@ interface SetupCompleteData {
   name?: string;
   description?: string;
   tags?: string[];
-  isPublic?: boolean;
   songName?: string;
   artists?: ArtistCredit[];
   songAlbum?: string;
@@ -156,7 +155,6 @@ function AppInner() {
     name,
     description,
     tags,
-    isPublic,
     songName,
     artists,
     songAlbum,
@@ -218,7 +216,7 @@ function AppInner() {
     if (!user) {
       // Guest: handleManualSave writes to localStorage only (no token).
       // The editor's Save button uses the server-side claim flow instead.
-      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, isPublic, lines, editorMode, syncMode: true });
+      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, lines, editorMode, syncMode: true });
       navigate('/project/local');
       return;
     }
@@ -226,7 +224,6 @@ function AppInner() {
     await appState.handleManualSave({
       title: finalTitle,
       metadata: newMetadata,
-      isPublic,
       lines,
       editorMode,
       syncMode: true,

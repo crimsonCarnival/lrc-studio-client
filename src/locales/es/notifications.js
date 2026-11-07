@@ -91,6 +91,8 @@ export default {
   streakWarning_other: 'Tu <0>racha de {{count}} días</0> termina a medianoche, en tu hora. Guarda alguna letra hoy para mantenerla.',
   streakWarningProject_one: 'Tu <0>racha de {{count}} día</0> termina a medianoche, en tu hora. Continúala en <1>{{title}}</1>.',
   streakWarningProject_other: 'Tu <0>racha de {{count}} días</0> termina a medianoche, en tu hora. Continúala en <1>{{title}}</1>.',
+  projectsPrivatized_one: 'Uno de tus proyectos públicos aún tenía líneas sin tiempo, así que se hizo privado. Vuelve a publicarlo cuando esté listo.',
+  projectsPrivatized_other: '{{count}} de tus proyectos públicos aún tenían líneas sin tiempo, así que se hicieron privados. Vuelve a publicarlos cuando estén listos.',
   passwordChanged: 'Tu contraseña fue cambiada.',
   actorAndOther: '{{name}} y 1 otro',
   actorAndOne: '{{name}} y {{other}}',

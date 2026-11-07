@@ -40,6 +40,7 @@ export function useProjectActions({
   sessionUploadIdRef,
   pendingProject,
   setProjectCoverImage,
+  setProjectVisibility,
   mediaTitle,
   projectMetadata,
   duration,
@@ -91,6 +92,7 @@ export function useProjectActions({
       if (project.title) setMediaTitle(project.title);
       setProjectMetadata?.(project.metadata || {});
       setProjectCoverImage?.(project.coverImage || '');
+      setProjectVisibility?.(publicId, project.public === true);
       setForkedFrom(project.forkedFrom || null);
       setActivepublicId(publicId);
       activepublicIdRef.current = publicId;
@@ -122,7 +124,7 @@ export function useProjectActions({
     } finally {
       setIsProjectLoading(false);
     }
-  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActivepublicId, activepublicIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectMetadata, setProjectYtUrl, setUploadedAudio, setProjectCoverImage, setProjectUserId]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActivepublicId, activepublicIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectMetadata, setProjectYtUrl, setUploadedAudio, setProjectCoverImage, setProjectVisibility, setProjectUserId]);
 
   // ── Restore pending (localStorage) project ────────────────────────────────
   const handleRestoreProject = useCallback(() => {

@@ -91,6 +91,8 @@ export default {
   streakWarning_other: 'Your <0>{{count}}-day streak</0> ends at midnight, your time. Save some lyrics today to keep it.',
   streakWarningProject_one: 'Your <0>{{count}}-day streak</0> ends at midnight, your time. Keep it going on <1>{{title}}</1>.',
   streakWarningProject_other: 'Your <0>{{count}}-day streak</0> ends at midnight, your time. Keep it going on <1>{{title}}</1>.',
+  projectsPrivatized_one: '{{count}} of your public projects still had untimed lines, so it was made private. Publish it again when it’s ready.',
+  projectsPrivatized_other: '{{count}} of your public projects still had untimed lines, so they were made private. Publish them again when they’re ready.',
   passwordChanged: 'Your password was changed.',
   actorAndOther: '{{name}} and 1 other',
   actorAndOne: '{{name}} and {{other}}',

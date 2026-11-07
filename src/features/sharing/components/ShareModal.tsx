@@ -12,7 +12,6 @@ import { LogoLoader } from '@ui/LogoLoader';
 
 interface ShareState {
   copied: boolean;
-  privacy: string;
   includeTime: boolean;
   customTime: number;
   includeLoop: boolean;
@@ -21,7 +20,6 @@ interface ShareState {
 
 type ShareAction =
   | { type: 'SET_COPIED'; payload: boolean }
-  | { type: 'SET_PRIVACY'; payload: string }
   | { type: 'SET_INCLUDE_TIME'; payload: boolean }
   | { type: 'SET_CUSTOM_TIME'; payload: number }
   | { type: 'SET_INCLUDE_LOOP'; payload: boolean }
@@ -34,7 +32,6 @@ type ShareAction =
 function shareReducer(state: ShareState, action: ShareAction): ShareState {
   switch (action.type) {
     case 'SET_COPIED': return { ...state, copied: action.payload };
-    case 'SET_PRIVACY': return { ...state, privacy: action.payload };
     case 'SET_INCLUDE_TIME': return { ...state, includeTime: action.payload };
     case 'SET_CUSTOM_TIME': return { ...state, customTime: action.payload };
     case 'SET_INCLUDE_LOOP': return { ...state, includeLoop: action.payload };
@@ -83,14 +80,16 @@ export function SharePanel({
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(shareReducer, {
     copied: false,
-    privacy: isPublic ? 'public' : 'private',
     includeTime: false,
     customTime: Math.floor(playbackPosition),
     includeLoop: false,
     loadingStep: 0,
   });
 
-  const { copied, privacy, includeTime, customTime, includeLoop, loadingStep } = state;
+  // Never flipped here: the visibility is whatever the server last accepted, and changing it
+  // goes through the publish confirmation.
+  const privacy = isPublic ? 'public' : 'private';
+  const { copied, includeTime, customTime, includeLoop, loadingStep } = state;
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Snapshot the loop once, when the panel opens. A loop that is set while the
@@ -139,9 +138,7 @@ export function SharePanel({
   })();
 
   const handlePrivacyToggle = () => {
-    const newPrivacy = privacy === 'public' ? 'private' : 'public';
-    dispatch({ type: 'SET_PRIVACY', payload: newPrivacy });
-    if (onPrivacyChange) onPrivacyChange(newPrivacy);
+    onPrivacyChange?.(privacy === 'public' ? 'private' : 'public');
   };
 
   useEffect(() => {

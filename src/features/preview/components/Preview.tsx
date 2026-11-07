@@ -29,6 +29,8 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import { artistRoster } from '@/features/artists/artist-credits';
+import { useShareFlow } from '@/features/sharing/hooks/useShareFlow';
+import { PublishDialog } from '@/features/projects/components/PublishDialog';
 
 interface PreviewLineLite {
   secondary?: string;
@@ -65,6 +67,11 @@ interface PreviewProps {
   onShowEditor?: () => void;
   /** Opens the public project page; absent until the project has been saved. */
   onViewPublic?: () => void;
+  /** Server-confirmed visibility of the open project. */
+  isPublic?: boolean;
+  onVisibilityChange?: (isPublic: boolean) => void;
+  coverImage?: string;
+  mediaTitle?: string;
   /** Moves the editor cursor, used to send the user to the first untimed line. */
   setActiveLineIndex?: (index: number) => void;
   /** When 'preview', this panel owns the player dock (editor is hidden). */
@@ -83,36 +90,15 @@ export default function Preview(props: PreviewProps) {
   const singerColors = (props.projectMetadata as { singerColors?: string[] } | undefined)?.singerColors;
   const { updateSetting } = useSettings();
 
-  // Privacy state for sharing (default public)
-  const [isPublic, setIsPublic] = useState(project?.public ?? true);
+  // Visibility is owned by the app state (read when the project loads); changing it goes
+  // through PublishDialog, which confirms and reports back only what the server accepted.
   const [forksEnabled, setForksEnabled] = useState(project?.forksEnabled !== false);
   useEffect(() => {
-    if (project && typeof project.public === 'boolean') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsPublic(project.public);
-    }
     if (project) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForksEnabled(project.forksEnabled !== false);
     }
   }, [project]);
-
-  // True while the visibility change is on its way to the server: the publish button
-  // shows it as in flight instead of claiming the new state early.
-  const [privacyPending, setPrivacyPending] = useState(false);
-  const handlePrivacyChange = async (newPrivacy: string) => {
-    const newIsPublic = newPrivacy === 'public';
-    setIsPublic(newIsPublic);
-    if (activepublicId) {
-      setPrivacyPending(true);
-      try {
-        await projects.patch(activepublicId, { public: newIsPublic } as Parameters<typeof projects.patch>[1]);
-      } catch {
-        setIsPublic(!newIsPublic);
-      } finally {
-        setPrivacyPending(false);
-      }
-    }
-  };
 
   const handleForksEnabledChange = async (enabled: boolean) => {
     setForksEnabled(enabled);
@@ -192,7 +178,13 @@ export default function Preview(props: PreviewProps) {
     handleCopy,
   }: UsePreviewResult = usePreview(props);
 
-  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, sessionMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
+  const { lines, isPublic = false, onVisibilityChange, coverImage, mediaTitle, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, sessionMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
+
+  // Share never publishes on its own: a private project is confirmed in PublishDialog first.
+  const handleManualSave = props.handleManualSave as (() => Promise<boolean>) | undefined;
+  const { publishOpen, setPublishOpen, requestShare, onPublished } = useShareFlow({
+    publicId: activepublicId, isPublic, showLink: exportToUrl, save: handleManualSave, onVisibilityChange,
+  });
 
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
@@ -222,8 +214,9 @@ export default function Preview(props: PreviewProps) {
       const rect = shareTriggerRef.current.getBoundingClientRect();
       setShareAnchor({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
     }
-    exportToUrl();
-  }, [shareModal, setShareModal, exportToUrl]);
+    // Someone else's shared project is only ever shown, never published from here.
+    if (isSharedProject) exportToUrl(); else requestShare();
+  }, [shareModal, setShareModal, requestShare, isSharedProject, exportToUrl]);
 
   const { user } = useAuthContext();
 
@@ -248,7 +241,7 @@ export default function Preview(props: PreviewProps) {
 
   const subtitle = [songInfo.title, songInfo.artist].filter(Boolean).join(' · ');
   const alignment = settings.interface?.previewAlignment || 'left';
-  const canPublish = !!activepublicId && !viewerMode && !sessionMode && !isSharedProject;
+  const canPublish = !!activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && !viewerMode && !sessionMode && !isSharedProject;
   const untimedCount = lineStats.total - lineStats.timed;
 
   const viewToggles = [
@@ -355,21 +348,16 @@ export default function Preview(props: PreviewProps) {
                 // aria-disabled keeps the tooltip reachable when the project is not saved yet.
                 aria-disabled={!canPublish}
                 aria-pressed={canPublish ? isPublic : undefined}
-                loading={privacyPending}
-                onClick={() => { if (canPublish) handlePrivacyChange(isPublic ? 'private' : 'public'); }}
+                onClick={() => { if (canPublish) setPublishOpen(true); }}
                 // Live is foam, not the accent: it is a state, and the accent is kept for the
                 // action that gets you there. Hovering it offers the undo (redesign sheet 16).
                 className={`group/publish h-10 lg:h-10 coarse:h-11 min-w-[124px] px-4 lg:px-4 gap-2 text-[15px] lg:text-[15px] ${!canPublish
                   ? 'bg-raised text-faint shadow-none cursor-not-allowed hover:bg-raised active:bg-raised'
-                  : privacyPending
-                    ? 'bg-primary-off text-subtle shadow-none hover:bg-primary-off'
-                    : isPublic
-                      ? 'bg-foam-soft text-foam-ink shadow-none inset-ring inset-ring-foam hover:bg-foam-soft active:bg-foam-soft'
-                      : ''}`}
+                  : isPublic
+                    ? 'bg-foam-soft text-foam-ink shadow-none inset-ring inset-ring-foam hover:bg-foam-soft active:bg-foam-soft'
+                    : ''}`}
               >
-                {privacyPending ? (
-                  isPublic ? t('preview.publishing') : t('preview.unpublishing')
-                ) : canPublish && isPublic ? (
+                {canPublish && isPublic ? (
                   <>
                     <Icon name="check" size={16} className="group-hover/publish:hidden group-focus-visible/publish:hidden" />
                     <span className="group-hover/publish:hidden group-focus-visible/publish:hidden">{t('preview.published')}</span>
@@ -617,7 +605,7 @@ export default function Preview(props: PreviewProps) {
           <SharePanel
             {...shareModal}
             isPublic={isPublic}
-            onPrivacyChange={handlePrivacyChange}
+            onPrivacyChange={() => setPublishOpen(true)}
             forksEnabled={forksEnabled}
             onForksEnabledChange={activepublicId ? handleForksEnabledChange : undefined}
             playbackPosition={playbackPosition}
@@ -626,6 +614,15 @@ export default function Preview(props: PreviewProps) {
           />
         </div>,
         document.body
+      )}
+      {canPublish && (
+        <PublishDialog
+          open={publishOpen}
+          onOpenChange={setPublishOpen}
+          project={{ publicId: activepublicId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines: lines as EditorLine[] }}
+          onPublished={onPublished}
+          onSave={handleManualSave}
+        />
       )}
     </>
   );

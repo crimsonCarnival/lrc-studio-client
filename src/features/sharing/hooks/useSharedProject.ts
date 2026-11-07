@@ -1,15 +1,13 @@
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { projects, uploads, getAccessToken } from '@/app/api';
-import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { projects } from '@/app/api';
+import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { useSettings } from '@/features/settings/useSettings';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { useProjectSocket } from './useProjectSocket';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import { sanitizeLines } from '@/shared/utils/sanitize-lines';
-import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 // Legacy URL-encoded share fallbacks
 async function decompressFromBase64(str) {
@@ -32,28 +30,18 @@ export function useSharedProject({
   setRestoredPosition,
   setRestoredSpeed,
   setIsProjectLoading,
-  setActivepublicId,
   setShareModal,
   activepublicIdRef,
   lines,
-  editorMode,
-  syncMode,
-  mediaTitle,
-  projectMetadata,
-  duration,
   projectYtUrl,
   uploadedAudio,
-  restoredMedia,
 }) {
   const { t } = useTranslation();
-  const { executeRecaptcha } = useGoogleReCaptcha();
   const { updateSetting } = useSettings();
 
   const [isSharedProject, setIsSharedProject] = useState(false);
   const [sharedReadOnly, setSharedReadOnly] = useState(true);
   const [shareModal, _setShareModal] = useState<unknown>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [lastShareData, setLastShareData] = useState<any>(null);
   const isSharedProjectRef = useRef(false);
   const sharedReadOnlyRef = useRef(true);
 
@@ -171,106 +159,25 @@ export function useSharedProject({
     setLines(updater);
   }, [setLines, forkFromShared]);
 
-  // ── Export to shareable URL ───────────────────────────────────────────────
-  const exportToUrl = useCallback(async () => {
-    // If we already have a share link, show it immediately while we update in the background
-    if (lastShareData) {
-      setShareModalState(lastShareData);
-    } else {
-      setShareModalState({ loading: 'media' });
+  // ── Show the share link ───────────────────────────────────────────────────
+  // Never publishes and never saves: making a project public is PublishDialog's job (see
+  // useShareFlow). This only presents the link of a project that is already public.
+  const exportToUrl = useCallback(() => {
+    const sharedId = activepublicIdRef.current;
+    if (!sharedId || sharedId === 'local' || sharedId === 'new') {
+      toast.error(t('project.publishNeedsSave'));
+      return;
     }
-
-    try {
-      let sharedId = activepublicIdRef.current;
-      let uploadIdToSave: string | null = null;
-
-      // Get the effective upload - check current state first, then fall back to restored
-      const effectiveUpload = uploadedAudio
-        || (restoredMedia?.type === 'cloudinary' ? {
-          id: restoredMedia.id,
-          uploadUrl: restoredMedia.url,
-          publicId: restoredMedia.publicId,
-          fileName: restoredMedia.fileName,
-          duration: restoredMedia.duration,
-        } : null);
-      const effectiveYtUrl = projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '');
-
-      // Only persist upload records to the database for authenticated users.
-      // Guests cannot own DB records and the project creation below also requires auth.
-      if (getAccessToken()) {
-        if (effectiveUpload?.id) {
-          uploadIdToSave = effectiveUpload.id;
-        } else if (effectiveUpload) {
-          try {
-            const { upload } = await uploads.saveMedia({
-              source: 'cloudinary',
-              uploadUrl: effectiveUpload.uploadUrl,
-              publicId: effectiveUpload.publicId,
-              fileName: effectiveUpload.fileName,
-              title: effectiveUpload.fileName?.replace(/\.[^/.]+$/, '') || '',
-              duration: effectiveUpload.duration,
-            });
-            uploadIdToSave = upload.id;
-          } catch (err) {
-            console.error(err);
-          }
-        } else if (effectiveYtUrl) {
-          try {
-            const { upload } = await uploads.saveMedia({
-              source: 'youtube',
-              uploadUrl: effectiveYtUrl,
-              fileName: '',
-              title: undefined,
-              duration: duration || null,
-            });
-            uploadIdToSave = upload.id;
-          } catch (err) {
-            console.error(err);
-          }
-        }
-      }
-
-      const projectData = {
-        title: mediaTitle || '',
-        metadata: projectMetadata,
-        lyrics: { editorMode, sections: flatToSections(lines.map((l) => ({ ...l, id: undefined }))) },
-        state: { syncMode, activeLineIndex: 0, playbackPosition: 0, playbackSpeed: 1 },
-        public: true,
-      };
-      if (uploadIdToSave) (projectData as { uploadId?: string }).uploadId = uploadIdToSave;
-
-      if (sharedId) {
-        if (!lastShareData) setShareModalState({ loading: 'saving' });
-        try { await projects.update(sharedId, projectData); }
-        catch (err) { console.error(err); sharedId = null; }
-      }
-      if (!sharedId) {
-        if (!lastShareData) setShareModalState({ loading: 'recaptcha' });
-        const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'share_project');
-        if (!lastShareData) setShareModalState({ loading: 'creating' });
-        const result = await projects.create({ ...projectData, recaptchaToken });
-        sharedId = result.publicId;
-        setActivepublicId(sharedId);
-        activepublicIdRef.current = sharedId;
-        localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, sharedId);
-      }
-
-      const finalData = {
-        url: `${window.location.origin}/share/${sharedId}`,
-        ytUrl: projectYtUrl,
-        uploadedAudio,
-        mediaSource: uploadedAudio ? 'cloudinary' : (projectYtUrl ? 'youtube' : 'none'),
-        linesCount: lines.length,
-        hasSynced: lines.some((l) => l.timestamp != null),
-        readOnly: true,
-      };
-      setLastShareData(finalData);
-      setShareModalState(finalData);
-    } catch {
-      setShareModalState(null);
-      toast.error(t('project.shareFailed'));
-    }
-  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activepublicIdRef, setActivepublicId, setShareModalState, executeRecaptcha, lastShareData, restoredMedia]);
+    setShareModalState({
+      url: `${window.location.origin}/share/${sharedId}`,
+      ytUrl: projectYtUrl,
+      uploadedAudio,
+      mediaSource: uploadedAudio ? 'cloudinary' : (projectYtUrl ? 'youtube' : 'none'),
+      linesCount: lines.length,
+      hasSynced: lines.some((l) => l.timestamp != null),
+      readOnly: true,
+    });
+  }, [lines, projectYtUrl, uploadedAudio, t, activepublicIdRef, setShareModalState]);
 
   return {
     isSharedProject, setIsSharedProject,

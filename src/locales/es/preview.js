@@ -30,8 +30,6 @@ export default {
   viewAsPublic: "Ver como público",
   publish: "Publicar",
   published: "Publicado",
-  publishing: "Publicando",
-  unpublishing: "Despublicando",
   unpublish: "Despublicar",
   publishTip: "Hace público el proyecto para que otros puedan verlo",
   unpublishTip: "El proyecto es público. Haz clic para volverlo privado",

@@ -33,6 +33,11 @@ interface AppModalsProps {
   setUnsavedModalTarget: (v: string | null) => void;
   sourceInfo?: unknown;
   songSingers?: string[];
+  /** Real visibility of the open project (the settings modal shows it read-only). */
+  isPublic?: boolean;
+  /** Server id; absent for an unsaved, local or shared project, which hides the change button. */
+  publicId?: string | null;
+  onVisibilityChange?: (isPublic: boolean) => void;
 }
 
 /**
@@ -56,6 +61,9 @@ export function AppModals({
   setUnsavedModalTarget,
   sourceInfo,
   songSingers,
+  isPublic = false,
+  publicId,
+  onVisibilityChange,
 }: AppModalsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -87,6 +95,9 @@ export function AppModals({
             initialSingers={projectMetadata?.singers ?? EMPTY_SINGERS}
             initialCoverImage={projectCoverImage || ''}
             initialAlbumArt={''}
+            initialIsPublic={isPublic}
+            publicId={publicId ?? undefined}
+            onVisibilityChange={onVisibilityChange}
             isEditing={true}
             sourceInfo={sourceInfo}
             songSingers={songSingers}

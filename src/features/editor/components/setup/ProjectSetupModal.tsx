@@ -21,7 +21,7 @@ import { useArtistImport } from '@/features/artists/useArtistImport';
 import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renumber } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
-import { Switch } from '@/shared/ui/switch';
+import { PublishDialog } from '@/features/projects/components/PublishDialog';
 import toast from 'react-hot-toast';
 import { songMetadata } from '@/app/api';
 import SingersInput from './SingersInput';
@@ -95,7 +95,6 @@ interface ProjectSetupForm {
   songYear: string;
   genre: string;
   coverImage: string;
-  isPublic: boolean;
   singerColors?: string[];
   singers: string[];
 }
@@ -113,7 +112,6 @@ export interface ProjectSetupConfirm {
   songYear: string;
   genre: string;
   coverImage: string;
-  isPublic: boolean;
   singerColors?: string[];
   /** Present only when the caller passed `initialSingers` (i.e. it persists the roster). */
   singers?: string[];
@@ -137,6 +135,10 @@ interface ProjectSetupModalProps {
   /** Opt-in: pass to show the singer roster editor; omit where the caller can't persist it. */
   initialSingers?: string[];
   isEditing?: boolean;
+  /** The saved project being edited. Enables the visibility row, which opens the publish flow. */
+  publicId?: string;
+  /** Reports a visibility change the server accepted, so the caller can update its own copy. */
+  onVisibilityChange?: (isPublic: boolean) => void;
   sourceInfo?: SourceInfo | null;
   songSingers?: string[];
 }
@@ -158,6 +160,8 @@ export default function ProjectSetupModal({
   initialSingerColors = EMPTY_COLORS,
   initialSingers,
   isEditing = false,
+  publicId,
+  onVisibilityChange,
   sourceInfo = null,
   songSingers = [],
 }: ProjectSetupModalProps) {
@@ -180,10 +184,14 @@ export default function ProjectSetupModal({
     songYear: initialSongYear || '',
     genre: initialGenre || '',
     coverImage: initialCoverImage || '',
-    isPublic: initialIsPublic || false,
     singers: initialSingers || [],
   }));
   const primaryText = primaryArtistText(form.artists);
+  // Visibility is read-only here. It changes only through the publish dialog, which reports back
+  // what the server accepted; `confirmedPublic` holds that until the caller's copy catches up.
+  const [confirmedPublic, setConfirmedPublic] = useState<boolean | null>(null);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const visiblePublic = confirmedPublic ?? initialIsPublic;
 
   // Sync form when the modal is opened or when the underlying data changes
   // (e.g. switching between projects without unmounting the component)
@@ -201,14 +209,13 @@ export default function ProjectSetupModal({
         songYear: initialSongYear || '',
         genre: initialGenre || '',
         coverImage: initialCoverImage || '',
-        isPublic: initialIsPublic || false,
         singerColors: initialSingerColors || [],
         singers: initialSingers || [],
       });
     }
   // `initialArtists` is compared by content through `initialArtistsKey`: callers build a new array every render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialArtistsKey, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic, initialSingerColors, initialSingers]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialArtistsKey, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialSingerColors, initialSingers]);
 
 
   const addTag = (text: string) => {
@@ -311,7 +318,6 @@ export default function ProjectSetupModal({
       songYear: form.songYear.trim(),
       genre: form.genre,
       coverImage: form.coverImage.trim(),
-      isPublic: form.isPublic,
       singerColors: (form.singerColors || []).map((c) => c || ''),
       ...(initialSingers !== undefined ? { singers: form.singers } : {}),
     });
@@ -630,21 +636,22 @@ export default function ProjectSetupModal({
               <div className="flex flex-row items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/50">
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5">
-                    {form.isPublic ? <Icon name="language" size={14} className="text-zinc-400" /> : <Icon name="lock" size={14} className="text-zinc-400" />}
+                    {visiblePublic ? <Icon name="language" size={14} className="text-zinc-400" /> : <Icon name="lock" size={14} className="text-zinc-400" />}
                     <span className="text-xs font-semibold text-zinc-300">
-                      {form.isPublic ? t('project.visibilityPublic') : t('project.visibilityPrivate')}
+                      {visiblePublic ? t('project.visibilityPublic') : t('project.visibilityPrivate')}
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500">
-                    {form.isPublic
+                    {visiblePublic
                       ? t('project.publicDescription')
                       : t('project.privateDescription')}
                   </span>
                 </div>
-                <Switch
-                  checked={form.isPublic}
-                  onCheckedChange={(checked) => setForm(f => ({ ...f, isPublic: checked }))}
-                />
+                {publicId && (
+                  <Button type="button" variant="outline" onClick={() => setPublishOpen(true)} className="h-10 coarse:h-11 lg:h-10 shrink-0 px-3 text-[13px]">
+                    {t('project.visibilityManage')}
+                  </Button>
+                )}
               </div>
 
             </div>
@@ -671,6 +678,20 @@ export default function ProjectSetupModal({
           </div>
         </div>
       </div>
+      {publicId && (
+        <PublishDialog
+          open={publishOpen}
+          onOpenChange={setPublishOpen}
+          project={{
+            publicId,
+            isPublic: visiblePublic,
+            title: form.name,
+            artists: form.artists.map((c) => c.name),
+            coverImage: form.coverImage,
+          }}
+          onPublished={(next) => { setConfirmedPublic(next); onVisibilityChange?.(next); }}
+        />
+      )}
     </>
   );
 

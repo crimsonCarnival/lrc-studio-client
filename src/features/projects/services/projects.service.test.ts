@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { normalizeMetadata } from './projects.service';
+import { describe, expect, it, vi } from 'vitest';
+
+const gql = vi.hoisted(() => ({ gqlRequest: vi.fn() }));
+vi.mock('@/app/graphql.client', () => gql);
+
+import { normalizeMetadata, projectsService } from './projects.service';
 
 const credit = (name: string, role: 'primary' | 'featured', order = 0) => ({ name, role, order, artistId: 'abc' });
 
@@ -38,5 +42,15 @@ describe('normalizeMetadata (what a save sends)', () => {
   it('passes null and undefined through', () => {
     expect(normalizeMetadata(null)).toBeNull();
     expect(normalizeMetadata(undefined)).toBeUndefined();
+  });
+});
+
+describe('projectsService.create', () => {
+  it('always sends public:false, whatever the caller passed (every create site goes through here)', async () => {
+    gql.gqlRequest.mockResolvedValue({ createProject: { publicId: 'x' } });
+    await projectsService.create({ title: 'T', public: true } as Parameters<typeof projectsService.create>[0]);
+    await projectsService.create({ title: 'T' } as Parameters<typeof projectsService.create>[0]);
+    for (const call of gql.gqlRequest.mock.calls) expect(call[1].input.public).toBe(false);
+    expect(gql.gqlRequest).toHaveBeenCalledTimes(2);
   });
 });

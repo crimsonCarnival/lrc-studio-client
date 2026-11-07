@@ -226,6 +226,11 @@ export function useAppState(user?: AuthUserType | null) {
   const [projectCoverImage, setProjectCoverImage] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null); // 'project', 'upload', 'user', etc.
   const [projectUserId, setProjectUserId] = useState<string | null>(null);
+  // Remembered against the project it was read for, so a project created or opened later
+  // never inherits the previous one's visibility: anything unknown is private.
+  const [visibility, setVisibility] = useState<{ publicId: string; isPublic: boolean } | null>(null);
+  const projectIsPublic = visibility !== null && visibility.publicId === activepublicId && visibility.isPublic;
+  const setProjectVisibility = useCallback((publicId: string, isPublic: boolean) => setVisibility({ publicId, isPublic }), []);
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastServerSnapshotRef = useRef<any>(null);
@@ -377,6 +382,7 @@ export function useAppState(user?: AuthUserType | null) {
           if (project.title) setMediaTitle(project.title);
           // Always assign: a project without a cover must clear the previous project's.
           setProjectCoverImage(project.coverImage || '');
+          setProjectVisibility(activepublicId, project.public === true);
           setForkedFrom((project.forkedFrom as ForkedFrom) || null);
           if (project.metadata) {
             const m = project.metadata as ProjectMetadata;
@@ -594,18 +600,11 @@ export function useAppState(user?: AuthUserType | null) {
     setRestoredPosition,
     setRestoredSpeed,
     setIsProjectLoading,
-    setActivepublicId,
     setShareModal: undefined, // hook owns its own state
     activepublicIdRef,
     lines,
-    editorMode,
-    syncMode,
-    mediaTitle,
-    projectMetadata,
-    duration,
     projectYtUrl,
     uploadedAudio,
-    restoredMedia,
   });
 
   // In a session a viewer's edits are dropped here: the server refuses them, and
@@ -771,6 +770,7 @@ export function useAppState(user?: AuthUserType | null) {
     sessionUploadIdRef,
     pendingProject,
     setProjectCoverImage,
+    setProjectVisibility,
     mediaTitle,
     projectMetadata,
     duration,
@@ -1103,6 +1103,8 @@ export function useAppState(user?: AuthUserType | null) {
     handleMediaUpload,
     projectCoverImage,
     setProjectCoverImage,
+    projectIsPublic,
+    setProjectVisibility,
     isProjectLoading,
     loadError,
     setLoadError,

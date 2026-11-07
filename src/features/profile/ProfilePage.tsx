@@ -804,7 +804,7 @@ export default function ProfilePage() {
               onClose={() => setEditingProject(null)}
               onConfirm={async (data: ProjectSetupConfirm) => {
                 try {
-                  const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
+                  const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, singerColors, singers } = data;
                   const updatedMetadata = {
                     ...(editingProject.metadata as Record<string, unknown>),
                     description,
@@ -820,14 +820,13 @@ export default function ProfilePage() {
                   await projects.patch(editingProject.publicId, {
                     title,
                     coverImage,
-                    public: isPublic,
                     metadata: updatedMetadata
                   });
                   setProfile(prev => prev ? {
                     ...prev,
                     projects: prev.projects.map(p =>
                       p.publicId === editingProject.publicId
-                        ? { ...p, title, coverImage, public: isPublic, metadata: updatedMetadata }
+                        ? { ...p, title, coverImage, metadata: updatedMetadata }
                         : p
                     )
                   } : prev);
@@ -847,6 +846,11 @@ export default function ProfilePage() {
               initialGenre={meta.genre || ''}
               initialCoverImage={editingProject.coverImage || ''}
               initialIsPublic={editingProject.public || false}
+              publicId={editingProject.publicId}
+              onVisibilityChange={(next: boolean) => setProfile(prev => prev ? {
+                ...prev,
+                projects: prev.projects.map(p => p.publicId === editingProject.publicId ? { ...p, public: next } : p),
+              } : prev)}
               initialSingerColors={meta.singerColors ?? EMPTY_LIST}
               initialSingers={meta.singers ?? EMPTY_LIST}
               isEditing={true}
