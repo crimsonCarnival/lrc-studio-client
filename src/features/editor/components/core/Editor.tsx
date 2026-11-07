@@ -868,7 +868,10 @@ export default function Editor({
   // line, on a start time from another mode, or on the other layer would silently redirect the
   // Mark. Only a word of the current layer on the cursor line is a focus this view can show.
   const strayFocus = phone && editorMode === 'words' && focusedTimestamp != null
-    && (focusedTimestamp.lineIndex !== activeLineIndex || focusedTimestamp.type !== (stampTarget === 'secondary' ? 'secondaryWord' : 'word'));
+    && (focusedTimestamp.lineIndex !== activeLineIndex || focusedTimestamp.type !== (stampTarget === 'secondary' ? 'secondaryWord' : 'word')
+      // A line with no start is stamped from its first word (applyMark's first press); a focus on a
+      // later word would stamp that word with the line still unstarted.
+      || lines[activeLineIndex]?.timestamp == null);
   useEffect(() => {
     if (strayFocus) setFocusedTimestamp(null);
   }, [strayFocus, setFocusedTimestamp]);
@@ -1171,10 +1174,13 @@ export default function Editor({
     const cursorIsLyric = !!cursorLine && cursorLine.type !== 'section';
     const layerWords = cursorIsLyric ? ((secondaryLayer ? cursorLine.secondaryWords : cursorLine.words) ?? []) : [];
     const phoneWords: PhoneWordsChip[] = layerWords.map((w) => ({ word: w.word ?? '', time: w.time ?? null, singerIndex: w.singerIndex }));
-    // A focused timestamp wins over the cursor in applyMark, so the highlight follows it too.
+    // The word the next Mark will stamp. A focused timestamp wins in applyMark. Otherwise, on a line
+    // with no start, applyMark's first press stamps word 0 and starts the line whatever
+    // activeWordIndex says; only once the line has a start does the cursor index apply.
+    const lineStarted = cursorIsLyric && cursorLine.timestamp != null;
     const phoneActiveWord: number | null = focusedTimestamp
       ? (focusedTimestamp.lineIndex === activeLineIndex && focusedTimestamp.type === wordKind ? focusedTimestamp.wordIndex ?? null : null)
-      : phoneWords.length ? Math.min(activeWordIndex, phoneWords.length - 1) : null;
+      : phoneWords.length ? (lineStarted ? Math.min(activeWordIndex, phoneWords.length - 1) : 0) : null;
     const phoneMarkLabel = isWords && phoneActiveWord != null && phoneWords[phoneActiveWord]
       ? t('editor.phone.words.markWord', { word: phoneWords[phoneActiveWord].word })
       : markLabel;
@@ -1276,6 +1282,7 @@ export default function Editor({
             lineNumber: lyricPos >= 0 ? { number: lyricPos + 1, total: lyricIndices.length } : null,
             words: phoneWords,
             activeIndex: phoneActiveWord,
+            chipsLocked: !lineStarted,
             // Selecting a word is what a chip click does on desktop (minus the seek, which would
             // make re-stamping a word mark its old time): the next Mark stamps this word.
             onWordTap: (wi) => {

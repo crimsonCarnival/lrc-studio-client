@@ -27,6 +27,8 @@ export type PhoneWordsTabProps = {
   /** The word the next Mark stamps, or null when a different timestamp is focused. */
   activeIndex: number | null;
   onWordTap: (index: number) => void;
+  /** The line has no start yet: its first Mark must stamp word 1, so the chips only show state. */
+  chipsLocked?: boolean;
   onWordMenu: (index: number) => void;
   /** Absent unless the line has two or more singers. */
   onCycleSinger?: (index: number) => void;
@@ -126,7 +128,8 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
                       type="button"
                       aria-pressed={isActive}
                       aria-label={stamped ? t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time!) }) : t('editor.phone.words.unstamped', { word: w.word })}
-                      onClick={() => p.onWordTap(wi)}
+                      aria-disabled={p.chipsLocked || undefined}
+                      onClick={() => { if (!p.chipsLocked) p.onWordTap(wi); }}
                       className={`relative flex min-h-14 min-w-14 flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-3 py-1.5 text-center transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${isActive
                         ? 'border-primary bg-primary-soft text-foreground'
                         : stamped
@@ -147,6 +150,10 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
                 );
               })}
             </ul>
+          )}
+
+          {p.chipsLocked && p.words.length > 0 && (
+            <p className="text-center text-xs text-subtle">{t('editor.phone.words.startFirst')}</p>
           )}
 
           {selected && (

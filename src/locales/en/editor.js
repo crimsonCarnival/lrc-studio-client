@@ -180,6 +180,7 @@ export default {
       panel: "Words in line {{number}}",
       lineOf: "Line {{number}} of {{total}}",
       markWord: "Mark “{{word}}”",
+      startFirst: "Mark the first word to start this line. Then you can tap any word to re-mark it.",
       noWords: "This line has no words to time. Mark stamps the whole line.",
       unstamped: "{{word}}, not stamped",
       layerGroup: "Layer to stamp",

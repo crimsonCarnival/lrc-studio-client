@@ -183,6 +183,7 @@ export default {
       panel: "Palabras de la línea {{number}}",
       lineOf: "Línea {{number}} de {{total}}",
       markWord: "Marcar “{{word}}”",
+      startFirst: "Marca la primera palabra para iniciar esta línea. Después puedes tocar cualquier palabra para volver a marcarla.",
       noWords: "Esta línea no tiene palabras que sincronizar. Marcar sella la línea completa.",
       unstamped: "{{word}}, sin marcar",
       layerGroup: "Capa a marcar",
