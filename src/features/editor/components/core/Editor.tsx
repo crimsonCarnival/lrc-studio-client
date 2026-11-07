@@ -58,6 +58,7 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
+import { ParticipantsBar } from '@/features/collab/components/ParticipantsBar';
 import { SessionControl, SessionStartShield, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
 import { SessionSettingsModal } from '@/features/collab/components/SessionSettingsModal';
 import { useSessionStart } from '@/features/collab/useSessionStart';
@@ -161,6 +162,8 @@ interface EditorProps {
   collab?: CollabLockInput;
   /** Set only for the owner of a saved project: shows Start / Manage session. */
   sessionOwner?: SessionOwnerControl;
+  /** The live session's public id; the phone header lists its participants, as the desktop app header does. */
+  sessionPublicId?: string | null;
   /** Project title and cover, for the publish confirmation and its readiness check. */
   mediaTitle?: string;
   coverImage?: string;
@@ -216,6 +219,7 @@ export default function Editor({
   isPlaying,
   collab,
   sessionOwner,
+  sessionPublicId,
   mediaTitle,
   coverImage,
   isPublic = false,
@@ -1154,6 +1158,7 @@ export default function Editor({
         <PhoneEditor
           title={mediaTitle ?? ''}
           saveState={inSession ? null : saveState}
+          sessionBar={inSession && sessionPublicId ? <ParticipantsBar me={collab?.me ?? null} publicId={sessionPublicId} provider={collab?.provider} /> : null}
           visibility={canPublish ? <VisibilityChip isPublic={isPublic} onOpen={openPublish} /> : null}
           onBack={onExit}
           list={lineList}

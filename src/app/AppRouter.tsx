@@ -511,7 +511,7 @@ export function AppRouter({
     onTogglePublicView: handleViewPublic,
     isPlaying,
     collab,
-    sessionOwner,
+    sessionOwner, sessionPublicId,
     mediaTitle,
     coverImage: projectCoverImage,
     isPublic: projectIsPublic,
@@ -536,7 +536,7 @@ export function AppRouter({
     playerSlot,
     showPreviewView,
     handleExitEditor,
-    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner,
+    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner, sessionPublicId,
     mediaTitle, projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, activepublicId,
   ]);
 
