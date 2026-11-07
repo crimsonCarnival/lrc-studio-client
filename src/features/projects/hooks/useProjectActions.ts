@@ -4,6 +4,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
 import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { markGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import { sanitizeLines } from '@/shared/utils/sanitize-lines';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
@@ -270,6 +271,7 @@ export function useProjectActions({
     if (replaceAllBlocked?.()) return;
     requestConfirm(t('confirm.removeLyrics'), () => {
       if (replaceAllBlocked?.()) return;
+      markGuestLyricsCleared();
       setEditLines([]);
       setActiveLineIndex(0);
       toast.success(t('editor.toast.allRemoved'));

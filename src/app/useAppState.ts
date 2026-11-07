@@ -15,6 +15,7 @@ import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { guestLyricsCleared, mayWriteGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
 import { holdsUnsavedEdits, isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
@@ -45,7 +46,8 @@ export function useAppState(user?: AuthUserType | null) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   // `/session/:publicId`: lines and editor mode come from the shared doc instead of a project.
-  const sessionPublicId = sessionPublicIdFromPath(useLocation().pathname);
+  const routerPathname = useLocation().pathname;
+  const sessionPublicId = sessionPublicIdFromPath(routerPathname);
   const inSession = sessionPublicId !== null;
 
 
@@ -474,14 +476,20 @@ export function useAppState(user?: AuthUserType | null) {
 
   // ——— Guest silent restore (no activepublicId, no auth) ———
   // When a guest visits /project/local or refreshes, restore their last session from localStorage.
-  const guestRestoreRan = useRef(false);
+  // Runs on mount, and again on each arrival at /project/local with an empty in-memory project and
+  // a non-empty stored draft (Back to setup keeps the draft but clears memory, so Forward must
+  // bring it back). Idempotent: it only acts while memory is empty, and not after the user
+  // deliberately removed all lyrics.
+  const guestRestoreMounted = useRef(false);
   useEffect(() => {
-    if (guestRestoreRan.current) return;
+    const firstRun = !guestRestoreMounted.current;
+    guestRestoreMounted.current = true;
+    if (!firstRun && routerPathname !== '/project/local') return;
+    if (!firstRun && (lines.length > 0 || guestLyricsCleared() || storedGuestDraftLineCount() === 0)) return;
     if (getAccessToken()) return; // auth users restore from server
     if (activepublicId) return;  // handled by the silent restore effect above
     if (window.location.hash.startsWith('#s=')) return; // shared project
     if (sessionPublicIdFromPath(window.location.pathname)) return; // loads from the shared doc
-    guestRestoreRan.current = true;
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PROJECT);
       if (!saved) return;
@@ -559,7 +567,7 @@ export function useAppState(user?: AuthUserType | null) {
       }
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [routerPathname]);
 
   // ——— Migration Detection (Guest -> Auth) ———
   // If the user just logged in and has local data but no active project ID,
@@ -855,11 +863,11 @@ export function useAppState(user?: AuthUserType | null) {
   useEffect(() => { guestSavePayloadRef.current = buildProjectPayload; });
   useEffect(() => {
     if (getAccessToken() || activepublicId || inSession) return;
-    if (lines.length === 0) return;
+    if (lines.length === 0 && !guestLyricsCleared()) return;
     const id = setTimeout(() => {
       try {
-        const payload = guestSavePayloadRef.current?.();
-        if (payload) localStorage.setItem(STORAGE_KEYS.PROJECT, JSON.stringify(payload));
+        const payload = guestSavePayloadRef.current?.() as { lines?: unknown[] } | undefined;
+        if (payload && mayWriteGuestDraft(payload.lines?.length ?? 0)) localStorage.setItem(STORAGE_KEYS.PROJECT, JSON.stringify(payload));
       } catch { /* ignore quota errors */ }
     }, 1500);
     return () => clearTimeout(id);
