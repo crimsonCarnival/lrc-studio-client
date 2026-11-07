@@ -15,7 +15,11 @@ vi.mock('@/features/projects/components/PublishDialog', () => ({
   ),
 }));
 
+const leaveEditor = vi.hoisted(() => vi.fn());
+vi.mock('@/app/history-guard', () => ({ leaveEditor }));
+
 import { AppModals } from './AppModals';
+const BACK_TARGET = '\0back';
 
 function renderModals(props: Partial<React.ComponentProps<typeof AppModals>> = {}) {
   render(
@@ -54,5 +58,23 @@ describe('AppModals describe suggestion', () => {
     renderModals({ isPublic: false, publicId: null });
     expect(await screen.findByText('project.visibilityPrivate', {}, { timeout: 10000 })).toBeInTheDocument();
     expect(screen.queryByText('editor.assist.describe.suggest')).not.toBeInTheDocument();
+  });
+});
+
+describe('AppModals unsaved-changes dialog', () => {
+  it('Discard hands the target to leaveEditor and closes', async () => {
+    const setUnsavedModalTarget = vi.fn();
+    renderModals({ unsavedModalTarget: BACK_TARGET, setUnsavedModalTarget });
+    fireEvent.click(await screen.findByText('common.discardAndLeave', {}, { timeout: 10000 }));
+    expect(setUnsavedModalTarget).toHaveBeenCalledWith(null);
+    expect(leaveEditor).toHaveBeenCalledWith(BACK_TARGET, expect.any(Function));
+  });
+
+  it('Save saves first, then leaves', async () => {
+    const handleManualSave = vi.fn().mockResolvedValue(undefined);
+    renderModals({ unsavedModalTarget: '/', handleManualSave });
+    fireEvent.click(await screen.findByText('common.saveAndLeave', {}, { timeout: 10000 }));
+    await waitFor(() => expect(leaveEditor).toHaveBeenCalledWith('/', expect.any(Function)));
+    expect(handleManualSave).toHaveBeenCalled();
   });
 });
