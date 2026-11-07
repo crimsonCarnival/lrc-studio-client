@@ -52,6 +52,7 @@ export default {
   },
   // Presence: who else is in the session and where they are.
   presence: {
+    more: '{{count}} more participants',
     participants: 'Participants',
     you: 'You',
     online: 'Online',

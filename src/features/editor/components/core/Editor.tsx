@@ -1158,7 +1158,7 @@ export default function Editor({
         <PhoneEditor
           title={mediaTitle ?? ''}
           saveState={inSession ? null : saveState}
-          sessionBar={inSession && sessionPublicId ? <ParticipantsBar me={collab?.me ?? null} publicId={sessionPublicId} provider={collab?.provider} /> : null}
+          sessionBar={inSession && sessionPublicId ? <ParticipantsBar me={collab?.me ?? null} publicId={sessionPublicId} provider={collab?.provider} maxVisible={2} /> : null}
           visibility={canPublish ? <VisibilityChip isPublic={isPublic} onOpen={openPublish} /> : null}
           onBack={onExit}
           list={lineList}

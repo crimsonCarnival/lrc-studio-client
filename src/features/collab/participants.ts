@@ -72,3 +72,9 @@ export function initialsOf(name: string): string {
   const initials = words.map((w) => [...w][0].toLocaleUpperCase()).join('')
   return initials || '?'
 }
+
+/** Splits the rows at the cap; with no cap, or room for all of them, nothing is hidden. */
+export function splitParticipants<T>(rows: T[], maxVisible?: number): { shown: T[]; hidden: T[] } {
+  if (maxVisible == null || rows.length <= maxVisible) return { shown: rows, hidden: [] }
+  return { shown: rows.slice(0, maxVisible), hidden: rows.slice(maxVisible) }
+}
