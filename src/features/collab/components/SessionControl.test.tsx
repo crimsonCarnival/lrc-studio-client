@@ -31,16 +31,16 @@ beforeEach(() => {
 describe('SessionControl', () => {
   it('does not start a session over a failed save', async () => {
     renderControl(() => Promise.resolve(false))
-    await userEvent.click(screen.getByRole('button', { name: /start session/i }))
+    await userEvent.click(screen.getByRole('button', { name: /edit this project with someone else/i }))
     await waitFor(() => expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/could not start the session/i)))
     expect(startSession).not.toHaveBeenCalled()
-    expect(screen.getByRole('button', { name: /start session/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /edit this project with someone else/i })).toBeEnabled()
   })
 
   it('starts the session once the save succeeded', async () => {
     startSession.mockResolvedValue({})
     renderControl(() => Promise.resolve(true))
-    await userEvent.click(screen.getByRole('button', { name: /start session/i }))
+    await userEvent.click(screen.getByRole('button', { name: /edit this project with someone else/i }))
     expect(await screen.findByText('session page')).toBeInTheDocument()
     expect(startSession).toHaveBeenCalledWith('k3x9a2c7qm')
   })
@@ -52,7 +52,7 @@ describe('SessionControl', () => {
     const onKey = vi.fn()
     window.addEventListener('keydown', onKey)
     renderControl(() => Promise.resolve(true))
-    await userEvent.click(screen.getByRole('button', { name: /start session/i }))
+    await userEvent.click(screen.getByRole('button', { name: /edit this project with someone else/i }))
     await waitFor(() => expect(startSession).toHaveBeenCalled())
 
     expect(screen.getByTestId('session-starting-shield')).toBeInTheDocument()
