@@ -129,10 +129,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const prefill = (location.state as { prefill?: Prefill } | null)?.prefill || null;
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
-  const [rightTab, setRightTab] = useState('media');
   // Below lg the same panels are arranged as three steps; chosen by width, not by input method.
   const isPhone = !useBreakpoint('lg');
+  // One source of truth: the desktop Media | Lyrics tab is the phone step (2 | 3).
   const [phoneStep, setPhoneStep] = useState<SetupStep>(prefill ? 2 : 1);
+  const rightTab = phoneStep === 3 ? 'lyrics' : 'media';
+  const setRightTab = useCallback((tab: string) => setPhoneStep(tab === 'lyrics' ? 3 : 2), []);
   const { executeRecaptcha } = useGoogleReCaptcha();
   // Cover URL is an escape hatch, not a primary path: hidden until requested.
   const [showCoverUrl, setShowCoverUrl] = useState(false);
@@ -158,7 +160,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   // Audio state, the media library and every path that reaches the player live in
   // useSetupMedia — the one state group here that is genuinely its own (see that file).
-  const revealMediaPanel = useCallback(() => { setRightTab('media'); setPhoneStep(2); }, []);
+  const revealMediaPanel = useCallback(() => setPhoneStep(2), []);
   const {
     audio,
     setAudioState,
@@ -693,7 +695,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         {t('setup.changeAudio')}
                       </Button>
                       <Button
-                        onClick={() => { setRightTab('lyrics'); setPhoneStep(3); }}
+                        onClick={() => setRightTab('lyrics')}
                         className="h-8 coarse:h-11 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
                       >
                         {t('setup.nextLyrics')}
@@ -826,6 +828,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     <div className="text-center px-4">
                       <p className="text-sm font-semibold text-zinc-200">{t('setup.lyricsReady')}</p>
                       <p className="text-xs text-zinc-500 mt-0.5">{t('setup.linesCount', { count: parsedLines.length })}</p>
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-pill bg-zinc-800 text-[10px] font-semibold uppercase tracking-wider text-zinc-300">{parsedLines.some((l) => l.timestamp != null) ? t('setup.lyricsTimed') : t('setup.lyricsPlain')}</span>
                       {lyricsFileName && <p className="text-xs text-zinc-400 truncate max-w-xs mt-0.5">{lyricsFileName}</p>}
                     </div>
                     <Button
@@ -904,6 +907,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
         step={phoneStep}
         onStepChange={setPhoneStep}
         done={{ identity: hasIdentity, audio: audioReady, lyrics: hasLyrics }}
+        canStart={canContinue}
         onStart={handleProceed}
         onFocusName={() => projectNameInputRef.current?.focus()}
         notice={rollbackNotice}

@@ -225,4 +225,6 @@ export default {
   stepNeedAudio: "Elige el audio para empezar a sincronizar.",
   stepNeedLyrics: "Añade la letra para empezar a sincronizar.",
   stepReady: "Todo listo. Puedes empezar a sincronizar.",
+  lyricsTimed: "Con tiempos",
+  lyricsPlain: "Texto plano",
 };

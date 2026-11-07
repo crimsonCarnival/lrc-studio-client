@@ -12,6 +12,8 @@ type SetupStepperProps = {
   onStepChange: (step: SetupStep) => void;
   /** Which of the three Start-syncing requirements are met (the same flags SetupScreen's rule uses). */
   done: { identity: boolean; audio: boolean; lyrics: boolean };
+  /** SetupScreen's own Start rule (the one the desktop button uses); `done` only drives the message and ticks. */
+  canStart: boolean;
   onStart: () => void;
   onFocusName: () => void;
   notice: ReactNode;
@@ -33,7 +35,7 @@ type TkFn = (k: string) => string;
  * first time it is visited and is then only hidden, so search results and open sections survive
  * moving back and forth.
  */
-export default function SetupStepper({ step, onStepChange, done, onStart, onFocusName, notice, song, audio, lyrics }: SetupStepperProps) {
+export default function SetupStepper({ step, onStepChange, done, canStart, onStart, onFocusName, notice, song, audio, lyrics }: SetupStepperProps) {
   const { t } = useTranslation();
   const keyboard = useKeyboardInset();
   const [visited, setVisited] = useState<ReadonlySet<SetupStep>>(() => new Set([step]));
@@ -42,17 +44,22 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
   const headings = useRef<Partial<Record<SetupStep, HTMLHeadingElement | null>>>({});
   const tabs = useRef<Partial<Record<SetupStep, HTMLButtonElement | null>>>({});
   const bodyRef = useRef<HTMLDivElement>(null);
-  const skipFocus = useRef(true);
+  const prevStep = useRef(step);
   const focusName = useRef(false);
+  // The parent passes a fresh arrow every render; read it through a ref so it never re-runs the effect.
+  const onFocusNameRef = useRef(onFocusName);
+  useEffect(() => { onFocusNameRef.current = onFocusName; });
 
   // Focus follows the step so a screen reader announces where it landed; a jump to the name
-  // field focuses that field instead.
+  // field focuses that field instead. It must act only when the step really changed: this
+  // component re-renders on every keystroke in any field.
   useEffect(() => {
-    if (skipFocus.current) { skipFocus.current = false; return; }
-    if (focusName.current) { focusName.current = false; onFocusName(); return; }
+    if (prevStep.current === step) return;
+    prevStep.current = step;
+    if (focusName.current) { focusName.current = false; onFocusNameRef.current(); return; }
     headings.current[step]?.focus({ preventScroll: true });
     bodyRef.current?.scrollTo?.({ top: 0 });
-  }, [step, onFocusName]);
+  }, [step]);
 
   // A focused field must not end up behind the keyboard.
   const reveal = (e: { target: EventTarget }) => {
@@ -78,13 +85,12 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
   };
 
   const onTabKeys = (e: KeyboardEvent) => {
-    const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!delta) return;
-    const next = (step + delta) as SetupStep;
+    const next: number = e.key === 'Home' ? 1 : e.key === 'End' ? 3
+      : e.key === 'ArrowRight' ? step + 1 : e.key === 'ArrowLeft' ? step - 1 : 0;
     if (next < 1 || next > 3) return;
     e.preventDefault();
-    onStepChange(next);
-    tabs.current[next]?.focus();
+    onStepChange(next as SetupStep);
+    tabs.current[next as SetupStep]?.focus();
   };
 
   const panels: Record<SetupStep, ReactNode> = {
@@ -96,7 +102,9 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
   return (
     <div
       data-setup-stepper
-      className="flex flex-col h-full max-h-[100dvh] overflow-hidden"
+      // Phone layout, by width: the panels' own sizes are tuned for a pointer, so raise the
+      // controls inside to 44px here instead of relying on the coarse-pointer variant.
+      className="flex flex-col h-full max-h-[100dvh] overflow-hidden [&_button]:min-h-11 [&_input]:min-h-11 [&_[role=tab]]:min-h-11"
       style={keyboard ? { paddingBottom: keyboard } : undefined}
       onFocus={reveal}
     >
@@ -147,6 +155,8 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
       </div>
 
       <div ref={bodyRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-3">
+        {/* Steps mount on their first visit and are then kept (hidden and inert, so nothing in
+            them can take focus) so child-local state such as search results survives going back. */}
         {STEPS.map((n) => (
           <section
             key={n}
@@ -154,6 +164,7 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
             id={`setup-panel-${n}`}
             aria-labelledby={`setup-heading-${n}`}
             hidden={step !== n}
+            inert={step !== n}
             className={n === 1 ? 'flex flex-col gap-2' : 'h-full flex flex-col gap-2'}
           >
             <h2
@@ -180,7 +191,7 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
         >
           {message}
         </button>
-        {step < 3 ? (
+        {step < 3 && !canStart ? (
           <Button
             type="button"
             onClick={() => onStepChange((step + 1) as SetupStep)}
@@ -193,7 +204,7 @@ export default function SetupStepper({ step, onStepChange, done, onStart, onFocu
           <Button
             type="button"
             onClick={onStart}
-            disabled={!!missing}
+            disabled={!canStart}
             aria-describedby="setup-footer-message"
             className="h-11 px-5 shrink-0 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 text-sm disabled:shadow-none"
           >

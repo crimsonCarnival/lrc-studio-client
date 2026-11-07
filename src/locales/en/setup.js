@@ -225,4 +225,6 @@ export default {
   stepNeedAudio: "Pick the audio to start syncing.",
   stepNeedLyrics: "Add the lyrics to start syncing.",
   stepReady: "All set. You can start syncing.",
+  lyricsTimed: "Timed",
+  lyricsPlain: "Plain text",
 };
