@@ -64,7 +64,7 @@ export default {
   uploadCount: "Upload {{count}} file(s)",
   stats: "{{total}} files · {{used}} in use · {{unused}} unused",
   fromLink: "From link",
-  filters: { all: "All", youtube: "YouTube", cloud: "Cloud", unused: "Unused" },
+  filters: { all: "All", youtube: "YouTube", cloud: "File", unused: "Unused" },
   filterLabel: "Filter uploads",
   searchPlaceholder: "Search by title…",
   searchLabel: "Search uploads",
