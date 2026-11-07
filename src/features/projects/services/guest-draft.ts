@@ -1,3 +1,4 @@
+import { getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from './storage.service';
 
 /**
@@ -13,7 +14,6 @@ let skipNextEmptyTransition = false;
 /** The stored draft as it was when this tab cleared the lyrics (see guestLyricsCleared). */
 let clearedDraftRaw: string | null = null;
 
-const REJECTED_KEY = 'lrc-syncer-project-rejected';
 
 function readRaw(): string | null {
   try { return localStorage.getItem(STORAGE_KEYS.PROJECT); } catch { return null; }
@@ -117,8 +117,16 @@ export type RestoredGuestDraft = {
  */
 function reject(raw: string): null {
   // Unusable, but it is the user's text: keep it recoverable before anything resets the key.
-  try { localStorage.setItem(REJECTED_KEY, raw); } catch { /* ignore */ }
+  // Guests only: a signed-in user's local copy is not a guest draft, and the backup must not
+  // outlive the person on a shared device (it is removed on sign-in, sign-out and new project).
+  if (!getAccessToken()) {
+    try { localStorage.setItem(STORAGE_KEYS.PROJECT_REJECTED, raw); } catch { /* ignore */ }
+  }
   return null;
+}
+
+export function clearRejectedGuestDraft(): void {
+  try { localStorage.removeItem(STORAGE_KEYS.PROJECT_REJECTED); } catch { /* ignore */ }
 }
 
 export function restoreGuestDraft(): RestoredGuestDraft | null {

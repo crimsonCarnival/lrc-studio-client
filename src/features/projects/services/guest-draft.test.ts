@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as api from '@/app/api';
 import { STORAGE_KEYS } from './storage.service';
 import {
   dropProgrammaticEmptyExpectation, expectProgrammaticEmpty, guestLyricsCleared, markGuestLyricsCleared, mayWriteGuestDraft, noteLinesBecameEmpty,
-  resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount,
+  clearRejectedGuestDraft, resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount,
 } from './guest-draft';
 
 const store = (n: number) => localStorage.setItem(STORAGE_KEYS.PROJECT, JSON.stringify({ lines: Array.from({ length: n }, (_, i) => ({ text: `Line ${i}`, id: `l${i}` })) }));
@@ -127,12 +128,31 @@ describe('rejected drafts stay recoverable', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     localStorage.setItem(STORAGE_KEYS.PROJECT, '{"lines":[]}');
     restoreGuestDraft();
-    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBeNull();
     localStorage.setItem(STORAGE_KEYS.PROJECT, '{nope');
     restoreGuestDraft();
-    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBe('{nope');
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBe('{nope');
     localStorage.setItem(STORAGE_KEYS.PROJECT, '{"lines":[null]}');
     restoreGuestDraft();
-    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBe('{"lines":[null]}');
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBe('{"lines":[null]}');
+  });
+});
+
+describe('rejected-draft backup and sign-in state', () => {
+  it('is not written for a signed-in user', () => {
+    vi.spyOn(api, 'getAccessToken').mockReturnValue(true as never);
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorage.setItem(STORAGE_KEYS.PROJECT, '{nope');
+    restoreGuestDraft();
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBeNull();
+  });
+
+  it('is removed by clearRejectedGuestDraft (sign-out, sign-in, new project)', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorage.setItem(STORAGE_KEYS.PROJECT, '{nope');
+    restoreGuestDraft();
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBe('{nope');
+    clearRejectedGuestDraft();
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBeNull();
   });
 });

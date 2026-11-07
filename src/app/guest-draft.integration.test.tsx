@@ -325,7 +325,7 @@ describe('draft intent across redirects and tabs', { timeout: 40000 }, () => {
     mount();
     await settleUntil(() => nav.location.pathname === '/project/new');
     expect(nav.location.pathname).toBe('/project/new');
-    expect(localStorage.getItem('lrc-syncer-project-rejected')).toBe(raw);
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT_REJECTED)).toBe(raw);
   });
 
   it('setup needs lyrics, so a new project from setup shows its own lines, not an older kept draft', async () => {
