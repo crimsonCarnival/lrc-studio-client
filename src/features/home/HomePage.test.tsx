@@ -117,6 +117,20 @@ describe('HomePage', () => {
       expect(rowTitles()).toEqual(['Alpha Song']);
     });
 
+    it('hides the Not started chip when it has no projects, and shows it otherwise', async () => {
+      api.list.mockResolvedValue(PROJECTS.filter((p) => p.publicId !== 'p3'));
+      await renderHome();
+      const group = screen.getByRole('group', { name: 'home.yourProjects' });
+      expect(within(group).queryByRole('button', { name: /home\.notStarted/ })).toBeNull();
+      expect(within(group).getAllByRole('button').map((b) => b.textContent)).toEqual(['home.all2', 'home.inProgress1', 'home.completed1']);
+    });
+
+    it('shows the Not started chip when a project is not started', async () => {
+      await renderHome();
+      const group = screen.getByRole('group', { name: 'home.yourProjects' });
+      expect(within(group).getByRole('button', { name: /home\.notStarted/ })).toHaveTextContent('1');
+    });
+
     it('sorts by edit time, title and creation time', async () => {
       await renderHome();
       expect(rowTitles()).toEqual(['Beta Song', 'Alpha Song', 'Gamma Song']);

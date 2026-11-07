@@ -330,14 +330,16 @@ export default function HomePage() {
             />
             <HomeFilterChips<HomeFilterTab>
               label={t('home.yourProjects')}
-              chips={filterTabs}
+              // Not started is a catch-all that is usually empty: show it only when it has
+              // projects (or is the selected filter), so the row isn't padded with a "0" chip.
+              chips={filterTabs.filter((tab) => tab.value !== 'notStarted' || tab.count !== 0 || filterTab === 'notStarted')}
               value={filterTab}
               onChange={setFilterTab}
               trailing={
                 <SelectField
                   variant="ghost"
                   aria-label={t('home.sortBy')}
-                  className="h-11 shrink-0"
+                  className="shrink-0 data-[size=default]:h-11"
                   value={sortBy}
                   onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title')}
                   options={sortOptions}
