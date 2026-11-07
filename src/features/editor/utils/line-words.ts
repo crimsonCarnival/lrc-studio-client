@@ -2,17 +2,17 @@ import { hasCJK, parseRubyMarkup } from '@/shared/utils/furigana';
 import { groupMorphemes } from '@/features/editor/utils/morpheme-group';
 import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 
+/** Singer attribution belongs to a word, so it only follows a word whose text is unchanged. */
+function keepSinger(old: EditorWord | undefined, text: string): Pick<EditorWord, 'singerIndex'> {
+  return old && old.word === text && old.singerIndex != null ? { singerIndex: old.singerIndex } : {};
+}
+
 /**
  * Gives one line the `words[]` that Words mode edits, called when the editor enters that mode.
  * A line whose words already spell its text is returned as-is, so stamped times, readings and
  * singer attribution survive switching modes. Otherwise the line is tokenized again, and
  * times (plus singer/reading where the word is unchanged) are carried over by character position.
  */
-/** Singer attribution belongs to a word, so it only follows a word whose text is unchanged. */
-function keepSinger(old: EditorWord | undefined, text: string): Pick<EditorWord, 'singerIndex'> {
-  return old && old.word === text && old.singerIndex != null ? { singerIndex: old.singerIndex } : {};
-}
-
 export function ensureLineWords(line: EditorLine): EditorLine {
   const rawValue = (line.text || '').trim();
   if (!rawValue) return line;

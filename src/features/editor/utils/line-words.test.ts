@@ -55,4 +55,25 @@ describe('ensureLineWords', () => {
     const section = { type: 'section', label: 'Verse', text: '' } as EditorLine;
     expect(ensureLineWords(section)).toBe(section);
   });
+
+  // handleSaveLineText feeds the edited raw text (which may hold ruby markup) plus the previous words.
+  it('keeps singers on unchanged words when a line is edited with the old words passed in', () => {
+    const prev = stamped();
+    const out = ensureLineWords({ ...prev, text: 'hello big wide world', words: prev.words });
+    expect(out.words!.map((w) => w.word)).toEqual(['hello', 'big', 'wide', 'world']);
+    expect(out.words![0]).toMatchObject({ time: 1, singerIndex: 0, reading: 'heh-loh' });
+    expect(out.words![1]).toMatchObject({ time: 1.5, singerIndex: 1 });
+  });
+
+  it('keeps the singer of an unchanged word when ruby markup is present', () => {
+    const line: EditorLine = {
+      id: 'e', text: '{愛|あい} you', timestamp: 0,
+      words: [{ word: '愛', time: 1, singerIndex: 1 }, { word: 'you', time: 2, singerIndex: 0 }],
+    };
+    const out = ensureLineWords(line);
+    expect(out.words).toEqual([
+      { word: '愛', time: 1, reading: 'あい', singerIndex: 1 },
+      { word: 'you', time: 2, singerIndex: 0 },
+    ]);
+  });
 });
