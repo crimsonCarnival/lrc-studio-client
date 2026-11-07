@@ -31,6 +31,8 @@ type AppDrawerProps = {
   updateSetting?: (path: string, value: unknown) => void;
   i18n?: I18nInstance;
   unreadCount?: number;
+  /** Requests to review plus open reports, for the Admin item. */
+  staffPending?: number;
 };
 
 const GROUP_LABEL: Record<NavGroup, ParseKeys> = {
@@ -54,7 +56,7 @@ const choice = (selected: boolean) =>
  * appearance controls that used to live in the avatar menu. Slides in from the left.
  */
 export function AppDrawer({
-  open, onOpenChange, user, logout, go, onGuestAuth, currentTheme, customTheme, updateSetting, i18n, unreadCount = 0,
+  open, onOpenChange, user, logout, go, onGuestAuth, currentTheme, customTheme, updateSetting, i18n, unreadCount = 0, staffPending = 0,
 }: AppDrawerProps) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
@@ -76,11 +78,18 @@ export function AppDrawer({
   const renderItem = (item: NavItem): ReactNode => {
     const active = item.id === activeId;
     const badge = item.id === 'notifications' && unreadCount > 0 ? unreadCount : 0;
+    const dashboardCount = item.id === 'admin' ? staffPending : 0;
     const cls = `${rowBase} ${active ? 'bg-primary/10 text-primary' : 'text-foreground/85 hover:bg-raised active:bg-raised'}`;
     const inner = (
       <>
         <span aria-hidden="true" className="inline-flex shrink-0"><Icon name={item.icon} size={20} filled={active} /></span>
         <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
+        {dashboardCount > 0 && (
+          <span className="rounded-pill bg-love px-1.5 font-mono text-[11px] font-bold leading-5 text-primary-foreground tabular-nums">
+            <span aria-hidden="true">{dashboardCount > 99 ? '99+' : dashboardCount}</span>
+            <span className="sr-only">{t('admin.header.dashboardPending', { count: dashboardCount })}</span>
+          </span>
+        )}
         {badge > 0 && (
           <span className="rounded-pill bg-love px-1.5 font-mono text-[11px] font-bold leading-5 text-primary-foreground tabular-nums">
             <span aria-hidden="true">{badge > 99 ? '99+' : badge}</span>
@@ -139,6 +148,17 @@ export function AppDrawer({
                 {t('auth.signUp')}
               </button>
             </div>
+          )}
+
+          {user?.email && !user.isVerified && (
+            <Link
+              to="/settings"
+              className={`${rowBase} border border-amber-400/40 text-foreground/90 hover:bg-raised`}
+              onClick={(e) => guardedLinkClick(e, () => requestClose(() => go('/settings')))}
+            >
+              <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full bg-amber-400" />
+              <span className="min-w-0 flex-1">{t('nav.verifyEmail')}</span>
+            </Link>
           )}
 
           <nav aria-label={t('nav.mainNav')} className="space-y-4">

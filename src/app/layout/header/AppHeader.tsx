@@ -23,6 +23,8 @@ import { ThemeLangSwitcher } from './ThemeLangSwitcher';
 import { HeaderBreadcrumb } from './HeaderBreadcrumb';
 import { GuestAuthButtons } from './GuestAuthButtons';
 import { useGuestAuth } from './use-guest-auth';
+import { useStaffPending } from './use-staff-pending';
+import { CountDot } from '@ui/count-dot';
 import { PhoneNavAccount } from './PhoneNavAccount';
 import { AppDrawer } from '../AppDrawer';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
@@ -113,6 +115,8 @@ export function AppHeader({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isLg = useBreakpoint('lg');
   const { unreadCount } = useNotificationsContext();
+  const staffPending = useStaffPending(user?.permissions);
+  const unverified = !!user?.email && !user?.isVerified;
   const goToAuth = useGuestAuth({ isReady, lines, mediaTitle, buildProjectPayload });
 
   useEffect(() => {
@@ -221,9 +225,13 @@ export function AppHeader({
                 aria-haspopup="dialog"
                 aria-expanded={drawerOpen}
                 onClick={() => setDrawerOpen(true)}
-                className={`${iconBtn} -ml-2 shrink-0`}
+                className={`${iconBtn} relative -ml-2 shrink-0`}
               >
                 <Icon name="menu" size={22} />
+                <CountDot count={staffPending} />
+                {unverified && staffPending === 0 && (
+                  <span aria-hidden="true" className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-amber-400 border-2 border-zinc-950" />
+                )}
               </Button>
             )}
             {!(isWorkspace && workspaceView === 'preview') && (
@@ -339,7 +347,7 @@ export function AppHeader({
             {/* Auth section — theme/lang live in the user menu for signed-in users (#14),
                 so guests keep the standalone switcher. */}
             {phoneNav ? (
-              user && <PhoneNavAccount user={user} onOpen={() => setDrawerOpen(true)} />
+              user && <PhoneNavAccount user={user} unverified={unverified} onOpen={() => setDrawerOpen(true)} />
             ) : !user ? (
               <>
                 {!isWorkspace && <ThemeLangSwitcher currentTheme={currentTheme} customTheme={customTheme} updateSetting={updateSetting} i18n={i18n} />}
@@ -378,6 +386,7 @@ export function AppHeader({
             updateSetting={updateSetting}
             i18n={i18n}
             unreadCount={unreadCount}
+            staffPending={staffPending}
           />
         )}
 

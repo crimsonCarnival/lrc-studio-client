@@ -6,7 +6,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import type { AuthUser } from '@/features/auth/auth.types';
 
 /** Phone header, signed in: the bell and an avatar that opens the navigation drawer. */
-export function PhoneNavAccount({ user, onOpen }: { user: AuthUser; onOpen: () => void }) {
+export function PhoneNavAccount({ user, unverified, onOpen }: { user: AuthUser; unverified: boolean; onOpen: () => void }) {
   const { t } = useTranslation();
   const name = user.displayName || user.accountName || user.email || '';
   return (
@@ -26,6 +26,9 @@ export function PhoneNavAccount({ user, onOpen }: { user: AuthUser; onOpen: () =
               : <InitialsAvatar name={name} handle={user.accountName} className="size-full text-[17px]" />}
           </button>
         </StaffRing>
+        {unverified && (
+          <span aria-hidden="true" className="pointer-events-none absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-zinc-950 bg-amber-400" />
+        )}
       </div>
     </>
   );

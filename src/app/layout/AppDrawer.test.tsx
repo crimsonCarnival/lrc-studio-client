@@ -36,12 +36,13 @@ function Where() {
 type HostProps = {
   user?: AuthUser | null;
   unreadCount?: number;
+  staffPending?: number;
   start?: string;
   go?: (p: string) => void;
   onGuestAuth?: (t: 'signin' | 'signup') => void;
 };
 
-function Host({ user = ana, unreadCount = 0, start = '/home', go = vi.fn(), onGuestAuth = vi.fn() }: HostProps) {
+function Host({ user = ana, unreadCount = 0, staffPending = 0, start = '/home', go = vi.fn(), onGuestAuth = vi.fn() }: HostProps) {
   const [isOpen, setOpen] = useState(false);
   return (
     <MemoryRouter initialEntries={[start]}>
@@ -61,6 +62,7 @@ function Host({ user = ana, unreadCount = 0, start = '/home', go = vi.fn(), onGu
           currentTheme="dark"
           i18n={{ language: 'en', changeLanguage: vi.fn() } as never}
           unreadCount={unreadCount}
+          staffPending={staffPending}
         />
       </TooltipProvider>
     </MemoryRouter>
@@ -215,5 +217,29 @@ describe('AppDrawer', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/feed');
     expect(back).not.toHaveBeenCalled();
     back.mockRestore();
+  });
+
+  it('counts what waits on staff on the Admin item', () => {
+    render(<Host user={{ ...ana, permissions: ['users.ban'] }} staffPending={4} />);
+    const admin = within(openDrawer()).getByRole('link', { name: /nav\.admin/ });
+    expect(admin).toHaveTextContent('admin.header.dashboardPending:4');
+  });
+
+  it('shows no count on Admin when nothing waits', () => {
+    render(<Host user={{ ...ana, permissions: ['users.ban'] }} />);
+    expect(within(openDrawer()).getByRole('link', { name: /nav\.admin/ })).not.toHaveTextContent('dashboardPending');
+  });
+
+  it('adds a Verify email row to Settings for an unverified email', () => {
+    render(<Host user={{ ...ana, email: 'a@example.test', isVerified: false }} />);
+    expect(within(openDrawer()).getByRole('link', { name: 'nav.verifyEmail' })).toHaveAttribute('href', '/settings');
+  });
+
+  it('has no Verify email row once verified or without an email', () => {
+    const { unmount } = render(<Host user={{ ...ana, email: 'a@example.test', isVerified: true }} />);
+    expect(within(openDrawer()).queryByRole('link', { name: 'nav.verifyEmail' })).toBeNull();
+    unmount();
+    render(<Host />);
+    expect(within(openDrawer()).queryByRole('link', { name: 'nav.verifyEmail' })).toBeNull();
   });
 });

@@ -31,4 +31,5 @@ export default {
   unread: "{{count}} sin leer",
   appearance: "Apariencia",
   language: "Idioma",
+  verifyEmail: "Verifica tu correo",
 };
