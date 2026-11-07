@@ -4,6 +4,7 @@ import { lyrics } from '@/app/api';
 import { matchKey } from '@/shared/utils/keyboard';
 import { parseRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import { groupMorphemes } from '@/features/editor/utils/morpheme-group';
+import { ensureLineWords } from '@/features/editor/utils/line-words';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -337,72 +338,7 @@ export function useEditor({
   useEffect(() => {
     if (editorMode !== 'words') return;
 
-    setLines((prev) =>
-      prev.map((line) => {
-        const rawValue = (line.text || '').trim();
-        if (!rawValue) return line;
-
-        const { plainText, segments } = parseRubyMarkup(rawValue);
-        const hasMarkup = segments.some(s => s.reading);
-
-        // If no markup and already has words that match the current text, skip
-        if (!hasMarkup && line.words?.length) {
-          const existingText = line.words.map(w => w.word).join('');
-          if (existingText === plainText) return line;
-        }
-
-        // Build a map from old char positions so timestamps survive edits if text didn't change too much
-        const oldWordAtPos = new Map<number, EditorWord>();
-        // Text→reading fallback for when position-based matching misses (e.g. 々 boundary shifts)
-        const oldReadingByText = new Map<string, string>();
-        let flat = 0;
-        for (const w of line.words || []) {
-          for (let k = 0; k < [...(w.word || "")].length; k++) oldWordAtPos.set(flat + k, w);
-          flat += [...(w.word || "")].length;
-          if (w.reading) oldReadingByText.set(w.word || "", w.reading);
-        }
-
-        let charPos = 0;
-        const newWords: EditorWord[] = [];
-        const isCJKText = hasCJK(plainText);
-
-        for (const seg of segments) {
-          const segChars = [...seg.text];
-          if (seg.reading) {
-            // Annotated segment — store as one word with the reading
-            const anchor = oldWordAtPos.get(charPos);
-            newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
-            charPos += segChars.length;
-          } else if (isCJKText) {
-            // Grouped by morpheme so a chip is a unit someone sings; see
-            // morpheme-group.ts for why the per-character split was wrong.
-            for (const token of groupMorphemes(seg.text)) {
-              const old = oldWordAtPos.get(charPos);
-              const w: EditorWord = { word: token.text, time: old?.time ?? null };
-              const inherited = (old?.reading && old.word === token.text)
-                ? old.reading
-                : oldReadingByText.get(token.text) ?? oldReadingByText.get(token.kanji);
-              if (inherited) w.reading = inherited;
-              newWords.push(w);
-              charPos += [...token.text].length;
-            }
-          } else {
-            // Pure Latin
-            const tokens = seg.text.split(/\s+/).filter(Boolean);
-            for (const token of tokens) {
-              const old = oldWordAtPos.get(charPos);
-              newWords.push({ word: token, time: old?.time ?? null });
-              charPos += [...token].length;
-            }
-          }
-        }
-
-        const filteredWords = newWords.filter(w => (w.word || "").trim());
-        if (filteredWords.length === 0) return line;
-
-        return { ...line, text: plainText, words: filteredWords };
-      })
-    );
+    setLines((prev) => prev.map(ensureLineWords));
     // setLines is a stable useState setter
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editorMode]);
@@ -906,52 +842,10 @@ export function useEditor({
       const textChanged = plainText !== (prevLine.text || '');
       // Always generate words if they are missing or text changed
       if (textChanged || hasMarkup || !line.words) {
-        const isCJKText = hasCJK(plainText || '');
-        // Build a map from old char positions so timestamps survive edits
-        const oldWordAtPos = new Map<number, EditorWord>();
-        const oldReadingByText = new Map<string, string>();
-        let flat = 0;
-        for (const w of prevLine.words || []) {
-          for (let k = 0; k < [...(w.word || "")].length; k++) oldWordAtPos.set(flat + k, w);
-          flat += [...(w.word || "")].length;
-          if (w.reading) oldReadingByText.set(w.word || "", w.reading);
-        }
-        let charPos = 0;
-        const newWords: EditorWord[] = [];
-        for (const seg of segments) {
-          const segChars = [...seg.text];
-          if (seg.reading) {
-            // Multi-char annotated segment — store as one word with the reading
-            const anchor = oldWordAtPos.get(charPos);
-            newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
-            charPos += segChars.length;
-          } else if (isCJKText) {
-            // Mixed CJK+Latin: group by morpheme, so a chip is a unit someone
-            // sings. Splitting every non-kanji character apart \u2014 the old
-            // behaviour \u2014 produced chips that match nothing in the audio, cannot
-            // hold a reading, and never line up with the romaji layer.
-            for (const token of groupMorphemes(seg.text)) {
-              const old = oldWordAtPos.get(charPos);
-              const w: EditorWord = { word: token.text, time: old?.time ?? null };
-              // A reading survives a regroup if the same text carried one before,
-              // whichever token it used to sit on.
-              const inherited = (old?.reading && old.word === token.text)
-                ? old.reading
-                : oldReadingByText.get(token.text) ?? oldReadingByText.get(token.kanji);
-              if (inherited) w.reading = inherited;
-              newWords.push(w);
-              charPos += [...token.text].length;
-            }
-          } else {
-            const tokens = seg.text.trim().split(/\s+/).filter(Boolean);
-            for (const token of tokens) {
-              const old = oldWordAtPos.get(charPos);
-              newWords.push({ word: token, time: old?.time ?? null });
-              charPos += [...token].length;
-            }
-          }
-        }
-        line.words = newWords.filter(w => (w.word || "").trim());
+        // Same carry-over rules as entering Words mode (times, readings, singers for unchanged words).
+        line.words = plainText.trim()
+          ? ensureLineWords({ ...line, text: newText, words: prevLine.words }).words
+          : [];
       }
       line.mode = normalizeLineMode(line);
       updated[index] = line;
