@@ -79,7 +79,10 @@ function DrawerPanel({ onClose, title, showClose, children }: { onClose: () => v
     const first = panel?.querySelector<HTMLElement>('[data-drawer-body]')?.querySelector<HTMLElement>(FOCUSABLE) ?? panel;
     first?.focus({ preventScroll: true });
     return () => {
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
+      // Skipped when the choice opened another dialog, which has taken focus by now.
+      const holder = document.activeElement;
+      const orphaned = !holder || holder === document.body || !!panel?.contains(holder);
+      if (orphaned && opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
 

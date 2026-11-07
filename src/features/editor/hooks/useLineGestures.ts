@@ -9,23 +9,29 @@ interface LineGesturesOptions {
   handleToggleLine: (lineIndex: number) => void;
   shiftTime: (lineIndex: number, delta: number) => void;
   showNudge: (delta: number) => void;
+  /** Phone rows: a long press opens the line's sheet instead of toggling the selection. */
+  onLongPress?: () => void;
 }
 
-export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLine, shiftTime, showNudge }: LineGesturesOptions) {
+export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLine, shiftTime, showNudge, onLongPress }: LineGesturesOptions) {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const firedRef = useRef(false);
 
   const handleTouchStart = useCallback((e: ReactTouchEvent) => {
     const touch = e.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    firedRef.current = false;
 
     // Long-press → select (500ms)
     clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = setTimeout(() => {
-      handleToggleLine(lineIndex);
+      firedRef.current = true;
+      if (onLongPress) onLongPress();
+      else handleToggleLine(lineIndex);
       touchStartRef.current = null; // cancel swipe
     }, 500);
-  }, [handleToggleLine, lineIndex]);
+  }, [handleToggleLine, lineIndex, onLongPress]);
 
   const handleTouchEnd = useCallback((e: ReactTouchEvent) => {
     clearTimeout(longPressTimerRef.current);
@@ -45,9 +51,20 @@ export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLin
     }
   }, [isSynced, settings.editor?.nudge?.default, shiftTime, showNudge, lineIndex]);
 
-  const handleTouchMove = useCallback(() => {
-    // Cancel long-press if finger moved
+  const handleTouchMove = useCallback((e: ReactTouchEvent) => {
+    // A finger always drifts a little while it holds still; only a real move (a scroll or a
+    // swipe) cancels the long press.
+    const start = touchStartRef.current;
+    const touch = e.touches[0];
+    if (start && touch && Math.hypot(touch.clientX - start.x, touch.clientY - start.y) < 10) return;
     clearTimeout(longPressTimerRef.current);
+  }, []);
+
+  /** True once, right after a long press fired: the click that follows its release is not a tap. */
+  const consumeLongPress = useCallback(() => {
+    const fired = firedRef.current;
+    firedRef.current = false;
+    return fired;
   }, []);
 
   // Cleanup: only clear longPressTimerRef (nudgeTimerRef and wordClickTimerRef stay in EditorLineItem)
@@ -55,5 +72,5 @@ export function useLineGestures({ lineIndex, isSynced, settings, handleToggleLin
     clearTimeout(longPressTimerRef.current);
   }, []);
 
-  return { handleTouchStart, handleTouchEnd, handleTouchMove };
+  return { handleTouchStart, handleTouchEnd, handleTouchMove, consumeLongPress };
 }

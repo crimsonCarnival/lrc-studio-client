@@ -23,8 +23,15 @@ export type PhoneEditorProps = {
   banner?: ReactNode;
   /** Switches the workspace to the preview. */
   onShowPreview?: () => void;
-  /** Opens the raw-text lyrics editor (the Edit tab's stand-in until it gets its own view). */
-  onEditText?: () => void;
+  /** The Edit tab body (PhoneEditTab). */
+  edit?: ReactNode;
+  /** Controlled tab. Without it the editor keeps the tab itself. */
+  tab?: PhoneTab;
+  onTabChange?: (tab: PhoneTab) => void;
+  /** Opens the Tools sheet. Without it the header button stays inert. */
+  onOpenTools?: () => void;
+  /** Select mode: replaces the Mark row, so a selection never shares the thumb zone with Mark. */
+  selectBar?: ReactNode;
   onAddMedia?: () => void;
   mark: {
     onMark: () => void;
@@ -35,7 +42,7 @@ export type PhoneEditorProps = {
   } | null;
 };
 
-type PhoneTab = 'sync' | 'edit';
+export type PhoneTab = 'sync' | 'edit';
 
 const TAB_BTN = 'relative flex-1 h-11 text-[15px] font-semibold transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus';
 
@@ -45,11 +52,17 @@ const TAB_BTN = 'relative flex-1 h-11 text-[15px] font-semibold transition-color
  * pieces in, so marking here is the same handleMark the desktop uses.
  */
 export default function PhoneEditor({
-  title, saveState, visibility, onBack, list, banner, onShowPreview, onEditText, onAddMedia, mark,
+  title, saveState, visibility, onBack, list, banner, onShowPreview, edit, tab: tabProp, onTabChange, onOpenTools,
+  selectBar, onAddMedia, mark,
 }: PhoneEditorProps) {
   const { t } = useTranslation();
   usePhoneEditorChrome();
-  const [tab, setTab] = useState<PhoneTab>('sync');
+  const [innerTab, setInnerTab] = useState<PhoneTab>('sync');
+  const tab = tabProp ?? innerTab;
+  const setTab = (next: PhoneTab) => {
+    setInnerTab(next);
+    onTabChange?.(next);
+  };
 
   const saveLabel = saveState === 'saving' ? t('project.saving')
     : saveState === 'saved' ? t('project.saved')
@@ -122,13 +135,14 @@ export default function PhoneEditor({
           )}
         </div>
         {visibility}
-        {/* The Tools sheet opens from here once it exists (mobile redesign, task 4). */}
         <Button
           variant="ghost"
           size="icon"
           aria-label={t('common.moreActions')}
-          aria-disabled="true"
-          className="size-11 lg:size-11 shrink-0 text-foreground/40"
+          aria-haspopup="dialog"
+          aria-disabled={onOpenTools ? undefined : 'true'}
+          onClick={onOpenTools}
+          className={`size-11 lg:size-11 shrink-0 ${onOpenTools ? 'text-foreground/80' : 'text-foreground/40'}`}
         >
           <Icon name="more_vert" size={22} />
         </Button>
@@ -153,17 +167,11 @@ export default function PhoneEditor({
           list={list}
           banner={banner}
           player={<PhonePlayerStrip onAddMedia={onAddMedia} />}
-          markBar={mark ? <PhoneMarkBar {...mark} /> : undefined}
+          markBar={selectBar ?? (mark ? <PhoneMarkBar {...mark} /> : undefined)}
         />
       ) : (
-        <div role="tabpanel" id={panelIds.edit} aria-labelledby={tabIds.edit} className="flex flex-1 min-h-0 flex-col items-center justify-center gap-4 overflow-y-auto px-6 pb-safe text-center">
-          <p className="max-w-sm text-[15px] text-subtle">{t('editor.phone.editPlaceholder')}</p>
-          {onEditText && (
-            <Button onClick={onEditText} className="h-11 gap-2 px-5 font-semibold text-zinc-950 bg-primary hover:bg-primary-dim">
-              <Icon name="edit" size={18} />
-              {t('editor.backToEdit')}
-            </Button>
-          )}
+        <div role="tabpanel" id={panelIds.edit} aria-labelledby={tabIds.edit} className="flex flex-1 min-h-0 flex-col">
+          {edit}
         </div>
       )}
     </div>

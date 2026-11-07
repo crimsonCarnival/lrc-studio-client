@@ -101,6 +101,8 @@ interface VirtualizedLineListProps {
   onToggleSectionCollapse: (key: string) => void;
   /** Phone layout: narrow rows without the drag handle or per-row toolbar (see EditorLineItem). */
   compactRows?: boolean;
+  /** Phone select mode: rows show checkboxes and the reorder grip, and a tap toggles the line. */
+  selectMode?: boolean;
 }
 
 export default function VirtualizedLineList({
@@ -171,6 +173,7 @@ export default function VirtualizedLineList({
   collapsedView,
   onToggleSectionCollapse,
   compactRows = false,
+  selectMode = false,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
   // Collab presence: both are null outside a session, which turns every use below off.
@@ -642,6 +645,8 @@ export default function VirtualizedLineList({
                         sectionLineCount={blockLyricCounts.get(i) ?? 0}
                         isCollapsed={collapsedSections.has(sectionCollapseKey(line, i))}
                         onToggleCollapse={onToggleSectionCollapse}
+                        compact={compactRows}
+                        selectMode={selectMode}
                       />
                     </div>
                   ) : (
@@ -721,6 +726,7 @@ export default function VirtualizedLineList({
                       onToggleLineMode={onToggleLineMode}
                       confidenceInfo={line.id != null ? confidenceById?.get(String(line.id)) : undefined}
                       compact={compactRows}
+                      selectMode={selectMode}
                     />
                   )}
                 </div>

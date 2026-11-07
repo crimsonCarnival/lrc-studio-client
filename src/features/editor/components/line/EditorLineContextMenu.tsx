@@ -38,6 +38,8 @@ interface Props {
   handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
   songArtists?: string[];
   handleToggleCounterpart?: (lineIndex: number) => void;
+  /** Phone rows open the line sheet instead (see PhoneLineSheet). */
+  disabled?: boolean;
 }
 
 export function EditorLineContextMenu({
@@ -57,6 +59,7 @@ export function EditorLineContextMenu({
   handleAssignSinger,
   songArtists,
   handleToggleCounterpart,
+  disabled = false,
 }: Props) {
   const { t } = useTranslation();
 
@@ -72,7 +75,7 @@ export function EditorLineContextMenu({
   if (isSection) {
     return (
       <ContextMenu>
-        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuTrigger asChild disabled={disabled}>{children}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuLabel>{t('editor.sectionDefault')}</ContextMenuLabel>
           {handleAddLine && (
@@ -100,7 +103,7 @@ export function EditorLineContextMenu({
   if (isMultiSelect) {
     return (
       <ContextMenu>
-        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuTrigger asChild disabled={disabled}>{children}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuLabel>{t('editor.selection.count', { count: selectedCount})}</ContextMenuLabel>
           {handleClearLine && (
@@ -159,7 +162,7 @@ export function EditorLineContextMenu({
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuTrigger asChild disabled={disabled}>{children}</ContextMenuTrigger>
       <ContextMenuContent>
         {handleAddLine && (
           <>

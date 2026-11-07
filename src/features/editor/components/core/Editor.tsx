@@ -21,6 +21,12 @@ import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import PhoneEditor from '../phone/PhoneEditor';
+import type { PhoneTab } from '../phone/PhoneEditor';
+import PhoneToolsSheet from '../phone/PhoneToolsSheet';
+import PhoneLineSheet from '../phone/PhoneLineSheet';
+import PhoneSelectBar from '../phone/PhoneSelectBar';
+import PhoneEditTab from '../phone/PhoneEditTab';
+import type { EditView } from '../phone/PhoneEditTab';
 import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
 import TaggingToolbar from './TaggingToolbar';
@@ -46,17 +52,18 @@ import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
+import { getSingerOptionsForSelection } from '@features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
-import type { SessionOwnerControl } from '@/features/collab/components/SessionControl';
+import { SessionControl, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
 import { Icon } from '@/shared/ui/Icon';
 import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
-import { hasCJK } from '@/shared/utils/furigana';
+import { hasCJK, hasKanji } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 // import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
@@ -65,6 +72,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_ARTISTS: string[] = [];
 const WORDS_LOOP_KEY = 'lrc_words_loop_line';
+const PHONE_LINE_HINT_KEY = 'lrc_phone_line_hint';
 
 // Teal is `success`; in the light theme that token is too pale to read as text,
 // so it is mixed toward the foreground there.
@@ -796,6 +804,79 @@ export default function Editor({
     togglePlay();
   };
 
+  // ── Phone layout state ──
+  // Held here, not in PhoneEditor, because the sheets drive handlers that live in this component
+  // and Tools can switch tabs. None of it touches marking or the cursor.
+  const [phoneTab, setPhoneTab] = useState<PhoneTab>(() => (phone && !syncMode ? 'edit' : 'sync'));
+  const [editView, setEditView] = useState<EditView>('text');
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+  const [lineSheet, setLineSheet] = useState<{ open: boolean; indices: number[] }>({ open: false, indices: [] });
+  const [lineHintSeen, setLineHintSeen] = useState(() => {
+    try { return localStorage.getItem(PHONE_LINE_HINT_KEY) === '1'; } catch { return false; }
+  });
+  const dismissLineHint = useCallback(() => {
+    setLineHintSeen(true);
+    try { localStorage.setItem(PHONE_LINE_HINT_KEY, '1'); } catch { /* the hint just shows again next visit */ }
+  }, []);
+  const nudgeFine = settings.editor?.nudge?.fine || 0.01;
+  const nudgeDefault = settings.editor?.nudge?.default || 0.1;
+  const hasKanjiAnywhere = useMemo(
+    () => lines.some((l) => l.type !== 'section' && (hasKanji(l.text) || l.words?.some((w) => hasKanji(w.word)))),
+    [lines],
+  );
+  const hasCjkAnywhere = useMemo(() => lines.some((l) => l.type !== 'section' && hasCJK(l.text ?? '')), [lines]);
+  const hasLyricLines = useMemo(() => lines.some((l) => l.type !== 'section'), [lines]);
+
+  // Raw-text editing is the syncMode=false state of useEditor: rawText holds the draft and the
+  // 'editor:start-syncing' event applies it (keeping timestamps for unchanged lines). The draft
+  // is applied only if it changed, so merely visiting the tab rewrites nothing.
+  const rawBaselineRef = useRef<string | null>(null);
+  const beginRawEdit = () => {
+    const text = linesToRawText(lines, rawLineText, combinedSingers);
+    rawBaselineRef.current = text;
+    setRawText(text);
+    setSyncMode(false);
+  };
+  const endRawEdit = () => {
+    if (syncMode) return;
+    const changed = rawBaselineRef.current == null || rawText !== rawBaselineRef.current;
+    rawBaselineRef.current = null;
+    if (changed) window.dispatchEvent(new CustomEvent('editor:start-syncing'));
+    else setSyncMode(true);
+  };
+  const openPhoneEdit = (view: EditView) => {
+    const inRaw = phoneTab === 'edit' && editView === 'text';
+    if (view === 'text' && !inRaw) beginRawEdit();
+    if (view === 'line' && inRaw) endRawEdit();
+    setEditView(view);
+    setPhoneTab('edit');
+  };
+  const changePhoneTab = (next: PhoneTab) => {
+    if (next === phoneTab) return;
+    if (next === 'edit') openPhoneEdit(editView);
+    else {
+      if (phoneTab === 'edit' && editView === 'text') endRawEdit();
+      setPhoneTab(next);
+    }
+  };
+  const showPhonePreview = onShowPreview ? () => {
+    if (phoneTab === 'edit' && editView === 'text') endRawEdit();
+    onShowPreview();
+  } : undefined;
+  const exitSelecting = () => {
+    clearSelection();
+    setSelecting(false);
+  };
+  const openPhoneLineSheet = useCallback((index: unknown) => {
+    if (typeof index === 'number') setLineSheet({ open: true, indices: [index] });
+  }, []);
+  // In select mode a tap toggles the line; otherwise it is the ordinary click.
+  const phoneLineClick = useCallback((i: number, e: unknown) => {
+    if (selecting) handleToggleLine(i);
+    else (handleLineClick as (i: number, e: unknown) => void)(i, e);
+  }, [selecting, handleToggleLine, handleLineClick]);
+
   // One list, wired identically for both layouts: the phone layout reuses it as is.
   const lineList = (
     <VirtualizedLineList
@@ -807,7 +888,7 @@ export default function Editor({
       awaitingEndMark={awaitingEndMark}
       focusedTimestamp={focusedTimestamp}
       setFocusedTimestamp={setFocusedTimestamp}
-      handleLineClick={handleLineClick}
+      handleLineClick={phone && selecting ? phoneLineClick : handleLineClick}
       handleLineHover={handleLineHover}
       handleLineHoverEnd={handleLineHoverEnd}
       handleDragStart={handleDragStart}
@@ -858,7 +939,7 @@ export default function Editor({
       handleSetStampTarget={handleSetStampTarget}
       playbackPosition={playbackPosition}
       onWordMenu={openWord}
-      onLineMenu={openLine}
+      onLineMenu={phone ? openPhoneLineSheet : openLine}
       modifiedLines={modifiedLines}
       lockedByOthers={othersLocks}
       onToggleLineMode={handleToggleLineMode}
@@ -867,6 +948,7 @@ export default function Editor({
       collapsedView={listView}
       onToggleSectionCollapse={toggleSectionCollapse}
       compactRows={phone}
+      selectMode={phone && selecting}
     />
   );
 
@@ -891,7 +973,7 @@ export default function Editor({
       )}
 
       <ResponsiveModal
-        open={!syncMode}
+        open={!syncMode && !phone}
         onOpenChange={(open) => {
           if (!open) {
             window.dispatchEvent(new CustomEvent('editor:start-syncing'));
@@ -1001,26 +1083,76 @@ export default function Editor({
     const markLabel = editorMode === 'srt' && awaitingEndMark != null
       ? t('editor.markEndNumber', { number: focusInfo.lyricNumber })
       : t('editor.markLineNumber', { number: focusInfo.lyricNumber });
+    const readOnly = collab?.me?.role === 'viewer';
+    const canPublish = canChangeVisibility && !inSession;
+    const openPublish = () => { publishPrompt.dismiss(); setPublishOpen(true); };
+    const autoStampBlocked = !autoStampHasAudio ? 'noAudio' as const
+      : autoStampRunning ? 'running' as const
+        : player.source === 'youtube' && !tabAudioSupported() ? 'youtube' as const : null;
+    const lineSheetSingers = lineSheet.indices.length > 1
+      ? getSingerOptionsForSelection(lines, lineSheet.indices, combinedSingers)
+      : combinedSingers;
+    const hint = !lineHintSeen && hasLyricLines && !selecting && !readOnly && phoneTab === 'sync' ? (
+      <div role="note" className="flex shrink-0 items-center gap-2 border-b border-zinc-800 bg-raised pl-3 text-sm text-subtle">
+        <span className="min-w-0 flex-1 py-1.5">{t('editor.phone.line.hint')}</span>
+        <button type="button" onClick={dismissLineHint} className="h-11 shrink-0 px-3 font-semibold text-primary focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus">
+          {t('editor.phone.line.hintDismiss')}
+        </button>
+      </div>
+    ) : null;
     return (
       <>
         <PhoneEditor
           title={mediaTitle ?? ''}
           saveState={inSession ? null : saveState}
-          visibility={canChangeVisibility && !inSession ? (
-            <VisibilityChip isPublic={isPublic} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
-          ) : null}
+          visibility={canPublish ? <VisibilityChip isPublic={isPublic} onOpen={openPublish} /> : null}
           onBack={onExit}
           list={lineList}
-          banner={publishPromptNode}
-          onShowPreview={onShowPreview}
-          onEditText={lines.length > 0 ? () => {
-            setRawText(linesToRawText(lines, rawLineText, combinedSingers));
-            setSyncMode(false);
-          } : undefined}
+          banner={<>{publishPromptNode}{hint}</>}
+          onShowPreview={showPhonePreview}
+          tab={phoneTab}
+          onTabChange={changePhoneTab}
+          onOpenTools={() => setToolsOpen(true)}
+          edit={(
+            <PhoneEditTab
+              view={editView}
+              onViewChange={openPhoneEdit}
+              rawText={rawText}
+              setRawText={setRawText}
+              fileInputRef={fileInputRef}
+              handleFileUpload={handleFileUpload}
+              handleUrlImport={handleUrlImport as ComponentProps<typeof PhoneEditTab>['handleUrlImport']}
+              singers={combinedSingers}
+              onApplyText={() => { endRawEdit(); setPhoneTab('sync'); }}
+              lines={lines}
+              lineIndex={activeLineIndex}
+              onLineIndexChange={setActiveLineIndex}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              editingSecondary={editingSecondary}
+              setEditingSecondary={setEditingSecondary}
+              editingTranslations={editingTranslations as ComponentProps<typeof PhoneEditTab>['editingTranslations']}
+              setEditingTranslations={setEditingTranslations as ComponentProps<typeof PhoneEditTab>['setEditingTranslations']}
+              setEditingLineIndex={setEditingLineIndex}
+              onSaveLine={(index, text, secondary, translations) => handleSaveLineText(index, text, secondary, translations, undefined)}
+            />
+          )}
+          selectBar={selecting ? (
+            <PhoneSelectBar
+              count={selectedLines.size}
+              onDone={exitSelecting}
+              onSelectAll={() => setSelectedLines(new Set(lines.map((_, i) => i)))}
+              onShiftEarlier={() => handleBulkShift(-nudgeDefault)}
+              onShiftLater={() => handleBulkShift(nudgeDefault)}
+              onClearTimestamps={handleBulkClearTimestamps}
+              onDelete={handleBulkDelete}
+              onMore={() => setLineSheet({ open: true, indices: [...selectedLines].sort((a, b) => a - b) })}
+            />
+          ) : undefined}
           onAddMedia={inSession ? undefined : () => setChangeMediaOpen(true)}
           // A session viewer never reaches the editor (AppRouter shows them the preview);
           // this keeps Mark away from them even if that ever changes.
-          mark={collab?.me?.role === 'viewer' ? null : {
+          mark={readOnly ? null : {
             // The same handler the desktop list uses, without forceAdvance, so the
             // autoAdvance setting and SRT end marks behave exactly as they do there.
             onMark: () => handleMarkWithConfidence(),
@@ -1029,6 +1161,67 @@ export default function Editor({
             label: markLabel,
             disabled: !syncMode || lines.length === 0,
           }}
+        />
+        <PhoneToolsSheet
+          open={toolsOpen}
+          onClose={() => setToolsOpen(false)}
+          readOnly={readOnly}
+          editorMode={editorMode}
+          hasLines={hasLyricLines}
+          autoStamp={{ blocked: autoStampBlocked, onStart: handleAutoStampStart }}
+          shiftAmount={settings.editor?.shiftAllAmount ?? 0.5}
+          onShiftAll={handleApplyOffset}
+          canRedo={canRedo}
+          onRedo={redo}
+          onClearAllTimestamps={handleClearTimestamps}
+          unmarkedOnly={lineFilter === 'unmarked'}
+          onToggleUnmarked={() => setLineFilter((f) => (f === 'all' ? 'unmarked' : 'all'))}
+          onFindLyrics={() => setLyricsSearchOpen(true)}
+          onImport={() => openPhoneEdit('text')}
+          onEditText={() => openPhoneEdit('text')}
+          onSecondary={editorMode === 'lrc' && hasLyricLines ? () => setSecondaryOpen(true) : undefined}
+          onFurigana={hasKanjiAnywhere ? () => setFuriganaOpen(true) : undefined}
+          readingFormat={hasCjkAnywhere ? {
+            katakana: settings.editor?.display?.readingFormat === 'katakana',
+            onToggle: () => updateSetting('editor.display.readingFormat', settings.editor?.display?.readingFormat === 'katakana' ? 'hiragana' : 'katakana'),
+          } : undefined}
+          onSelectLines={() => setSelecting(true)}
+          wordsLocked={wordsLocked}
+          onSetMode={selectMode}
+          onSave={handleManualSave && !inSession ? handleSaveClick : undefined}
+          saving={isSaving}
+          onExport={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
+          onProjectSettings={onOpenProjectSettings}
+          session={sessionOwner ? (
+            <SessionControl owner={sessionOwner} collab={collab} lines={lines} onBeforeStart={handleManualSave ?? undefined} />
+          ) : undefined}
+          onPublish={canPublish ? openPublish : undefined}
+          onViewPublic={onTogglePublicView && !inSession && serverProjectId ? onTogglePublicView : undefined}
+          onChangeSong={hasMedia && !inSession ? () => setChangeMediaOpen(true) : undefined}
+          onNewProject={onNewProject}
+          onRemoveAll={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
+        />
+        <PhoneLineSheet
+          open={lineSheet.open}
+          onClose={() => setLineSheet((cur) => ({ ...cur, open: false }))}
+          indices={lineSheet.indices}
+          lines={lines}
+          singers={lineSheetSingers}
+          nudgeFine={nudgeFine}
+          nudgeCoarse={nudgeDefault}
+          deleteDisabled={lineSheet.indices.some((i) => lines[i]?.id != null && !!othersLocks?.[lines[i].id as string])}
+          onShift={shiftTimeWithConfidence}
+          onClearTimestamp={handleClearLine}
+          onDelete={handleDeleteLine}
+          onAddLine={handleAddLine}
+          onInsertSection={handleInsertSection}
+          onToggleDepth={handleToggleSectionDepth}
+          onAssignSinger={handleAssignSinger}
+          onMoveToSection={handleMoveToSection}
+          onEditText={(index) => { setActiveLineIndex(index); openPhoneEdit('line'); }}
+          onToggleCounterpart={handleToggleCounterpart}
+          onBulkSingTogether={handleBulkSingTogether}
+          onBulkSplitSingers={handleBulkSplitSingers}
         />
         {overlays}
       </>

@@ -122,6 +122,8 @@ interface EditorLineItemProps {
   /** Phone layout: no drag handle and no per-row action toolbar, so the lyric keeps the width.
    *  Mark lives in the phone Mark bar; line actions move to a sheet. */
   compact?: boolean;
+  /** Phone select mode: a tap toggles the line, checkboxes and the reorder grip show. */
+  selectMode?: boolean;
   handleToggleCounterpart?: (lineIndex: number) => void;
   /** Section markers only: number of lyric lines until the next marker (0 = no chevron). */
   sectionLineCount?: number;
@@ -134,6 +136,7 @@ interface EditorLineItemProps {
 }
 
 const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
+const noop = () => {};
 
 const EditorLineItem = React.memo(({
   line,
@@ -207,6 +210,7 @@ const EditorLineItem = React.memo(({
   onToggleLineMode,
   confidenceInfo,
   compact = false,
+  selectMode = false,
   activeSingers,
   handleToggleCounterpart,
   sectionLineCount = 0,
@@ -306,14 +310,30 @@ const EditorLineItem = React.memo(({
     nudgeTimerRef.current = setTimeout(() => setNudgeIndicator(null), duration);
   }, [settings.editor?.syncFlashDuration]);
 
-  const { handleTouchStart, handleTouchEnd, handleTouchMove } = useLineGestures({
+  // Phone rows: a long press opens the line's sheet (not in select mode, where a tap toggles).
+  const openLineMenu = useCallback(() => onLineMenu?.(i, line), [onLineMenu, i, line]);
+  const { handleTouchStart, handleTouchEnd, handleTouchMove, consumeLongPress } = useLineGestures({
     lineIndex: i,
     isSynced,
     settings,
     handleToggleLine,
     shiftTime,
     showNudge,
+    onLongPress: compact ? (selectMode ? noop : openLineMenu) : undefined,
   });
+  // The visible way in to the same sheet: long-press is invisible, and a desktop mouse in a
+  // narrow window has no hover toolbar to find it on.
+  const lineMoreButton = compact && !selectMode && onLineMenu ? (
+    <button
+      type="button"
+      aria-label={t('editor.phone.line.more', { n: i + 1 })}
+      aria-haspopup="dialog"
+      onClick={(e) => { e.stopPropagation(); onLineMenu(i, line); }}
+      className="relative z-10 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-pill text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+    >
+      <Icon name="more_vert" size={20} />
+    </button>
+  ) : null;
 
   const handleWordClick = useCallback((e: ReactMouseEvent, w: EditorWord, wi: number, isSecondary?: boolean) => {
     e.stopPropagation();
@@ -419,6 +439,7 @@ const EditorLineItem = React.memo(({
     <div className="flex items-center gap-1 shrink-0 z-10">
       <Tip content={t('editor.dragToReorder')}>
         <div
+          aria-hidden
           className="cursor-grab active:cursor-grabbing text-faint opacity-60 group-hover:opacity-100 hover:text-subtle transition-[color,opacity] p-0.5 -ml-1 select-none"
         >
           <Icon name="drag_indicator" size={14} />
@@ -426,7 +447,7 @@ const EditorLineItem = React.memo(({
       </Tip>
       {(settings.editor?.showLineNumbers ?? true) && (
         <div className="w-5 shrink-0 flex items-center justify-center select-none">
-          {selectedLines.size > 0 ? (
+          {selectedLines.size > 0 || selectMode ? (
             <Checkbox
               checked={selectedLines.has(i)}
               onCheckedChange={() => handleToggleLine(i)}
@@ -461,6 +482,7 @@ const EditorLineItem = React.memo(({
         deleteDisabled={!!lockHolder}
         handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
         onToggleDepth={onToggleDepth}
+        disabled={compact}
       >
         <div
           ref={isActive ? activeLineRef : undefined}
@@ -569,7 +591,18 @@ const EditorLineItem = React.memo(({
           })()}
           <div className="flex-1 h-px ml-2.5 mb-2.5 bg-hl" />
 
-          {selectedLines.size === 0 && (
+          {compact && onLineMenu && !selectMode && (
+            <button
+              type="button"
+              aria-label={t('editor.phone.line.sectionTitle')}
+              aria-haspopup="dialog"
+              onClick={(e) => { e.stopPropagation(); onLineMenu(i, line); }}
+              className="relative z-10 -mr-1 mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-pill text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+            >
+              <Icon name="more_vert" size={20} />
+            </button>
+          )}
+          {!compact && selectedLines.size === 0 && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 bottom-0 mb-1 flex items-center gap-1 pl-6 pr-2 bg-gradient-to-l from-zinc-900 via-zinc-900 to-transparent">
               <Tip content={isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}>
                 <button
@@ -609,12 +642,15 @@ const EditorLineItem = React.memo(({
       handleAssignSinger={handleAssignSinger}
       songArtists={songArtists}
       handleToggleCounterpart={handleToggleCounterpart}
+      disabled={compact}
     >
       <div
         ref={isActive ? activeLineRef : null}
         role="button"
         aria-label={line.text || `Line ${lyricNumber}`}
         onClick={(e) => {
+          // The click that ends a long press is not a tap on the line.
+          if (compact && consumeLongPress()) return;
           if (!selection.range) {
             setSelection({ start: null, end: null, range: null });
           }
@@ -632,7 +668,8 @@ const EditorLineItem = React.memo(({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
-        draggable={editingLineIndex !== i}
+        draggable={editingLineIndex !== i && (!compact || selectMode)}
+        onContextMenu={compact && onLineMenu ? (e) => { e.preventDefault(); if (!selectMode) onLineMenu(i, line); } : undefined}
         onDragStart={(e) => {
           // Only allow dragging if the target is the handle or the container itself (not text/inputs)
           const target = e.target as HTMLElement;
@@ -651,7 +688,7 @@ const EditorLineItem = React.memo(({
         // One height and padding for every state (redesign sheet 13): the row never jumps when
         // the cursor lands on it, and the surface alone says what it is. Outline = the line
         // marking acts on (gold while it has an unsaved edit), soft fill = multi-selected.
-        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2 py-2.5' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[calc(var(--radius)*1.4)] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
+        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2 py-2.5' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[calc(var(--radius)*1.4)] ${compact ? '[-webkit-touch-callout:none]' : ''} transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
           ? `bg-primary-soft inset-ring ${isModified ? 'inset-ring-gold' : 'inset-ring-iris/50'}`
           : isCursor
             // Locked (playback will not move it) reads stronger than merely selected.
@@ -693,7 +730,7 @@ const EditorLineItem = React.memo(({
         {!isActive && confidenceTint && (
           <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-pill opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
         )}
-        {editorMode !== 'words' && !compact && lineHandle}
+        {editorMode !== 'words' && (!compact || selectMode) && lineHandle}
 
         {editorMode !== 'words' && (
           <span
@@ -988,6 +1025,7 @@ const EditorLineItem = React.memo(({
           focusedTimestamp={focusedTimestamp}
         />
         )}
+        {lineMoreButton}
         {/* Word meter, at the very end of the row so it lines up down the list whatever the
             hover toolbar beside it is showing. Foam when every word carries its own time. */}
         {editorMode !== 'words' && !!line.words?.length && (
