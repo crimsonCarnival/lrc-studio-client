@@ -268,7 +268,7 @@ export function useManualSave({
    * boolean is for callers that must not go on with unsaved edits (starting a collab session).
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string } = {}): Promise<boolean> => {
+  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string; silent?: boolean } = {}): Promise<boolean> => {
     // A create is in flight: the project is not on the server yet, so the edits are unsaved.
     if (isCreatingProjectRef.current) return false;
     // No-op in a collab session: the shared doc is persisted server-side (see useAutosave).
@@ -353,7 +353,7 @@ export function useManualSave({
           try {
             await projects.patch(activepublicIdRef.current, manualPatch);
             updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
-            toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
+            if (!overrides.silent) toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
           } catch (firstErr) {
             let err = firstErr;
             // 401 / 403: access token expired — attempt one silent refresh then retry.
@@ -369,7 +369,7 @@ export function useManualSave({
                 // Retry the save with the fresh token (cookies are sent automatically)
                 await projects.patch(activepublicIdRef.current, manualPatch);
                 updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode: payload.editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
-                toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
+                if (!overrides.silent) toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
                 return true; // retry succeeded
               } catch (retryErr) {
                 // The session is fine, so this is a real refusal (e.g. not the owner): report it below.

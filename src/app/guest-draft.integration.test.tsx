@@ -345,3 +345,59 @@ describe('draft intent across redirects and tabs', { timeout: 40000 }, () => {
     expect(storedCount()).toBe(6);
   });
 });
+
+describe('save on leave (guest)', { timeout: 40000 }, () => {
+  const startSyncing = async () => {
+    mount('/project/new');
+    await settleUntil(() => screen.queryByRole('button', { name: 'Start Syncing' }) !== null);
+    fireEvent.click(screen.getByRole('button', { name: 'Start Syncing' }));
+    await settleUntil(() => shown() === 6);
+    localStorage.removeItem(STORAGE_KEYS.PROJECT); // as if the 1.5 s debounce had not fired yet
+  };
+
+  it('writes the draft synchronously when leaving the editor, before the debounce fires', async () => {
+    await startSyncing();
+    expect(localStorage.getItem(STORAGE_KEYS.PROJECT)).toBeNull();
+    act(() => { nav.navigate('/a/b/c/d/e'); });
+    await settle(100); // the route transition commits once the lazy page resolves, far inside the 1.5 s debounce
+    // Only the leave flush can have written this.
+    expect(storedCount()).toBe(6);
+  });
+
+  it('writes the draft when the page is hidden, once for hidden plus pagehide', async () => {
+    await startSyncing();
+    const set = vi.spyOn(Storage.prototype, 'setItem');
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+    act(() => { window.dispatchEvent(new Event('pagehide')); });
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    expect(storedCount()).toBe(6);
+    expect(set.mock.calls.filter(([k]) => k === STORAGE_KEYS.PROJECT)).toHaveLength(1);
+  });
+
+  it('does not write while staying on the editor, across re-renders and the debounce', async () => {
+    await startSyncing();
+    const set = vi.spyOn(Storage.prototype, 'setItem');
+    act(() => { nav.navigate('/project/local?t=3'); });
+    await settle(300);
+    expect(set.mock.calls.filter(([k]) => k === STORAGE_KEYS.PROJECT)).toHaveLength(0);
+  });
+
+  it('an empty setup screen never overwrites a stored draft when left', async () => {
+    localStorage.setItem(STORAGE_KEYS.PROJECT, draft(4));
+    mount('/project/new');
+    await settleUntil(() => screen.queryByRole('button', { name: 'Start Syncing' }) !== null);
+    act(() => { nav.navigate('/a/b/c/d/e'); });
+    await settle(2000);
+    expect(storedCount()).toBe(4);
+  });
+
+  it('leaving a page that holds no edits writes nothing', async () => {
+    mount('/a/b/c/d/e');
+    await settle(200);
+    const set = vi.spyOn(Storage.prototype, 'setItem');
+    act(() => { nav.navigate('/a/b/c/d/e'); });
+    await settle(2000);
+    expect(set.mock.calls.filter(([k]) => k === STORAGE_KEYS.PROJECT)).toHaveLength(0);
+  });
+});

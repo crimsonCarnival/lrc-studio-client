@@ -16,6 +16,7 @@ import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { guestLyricsCleared, mayWriteGuestDraft, dropProgrammaticEmptyExpectation, noteLinesBecameEmpty, resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
+import { useSaveOnLeave } from './useSaveOnLeave';
 import { holdsUnsavedEdits, isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
@@ -929,9 +930,11 @@ export function useAppState(user?: AuthUserType | null) {
 
 
 
-  const hasUnsavedChanges = useCallback(() => {
+  // `path` is the page the edits belong to. Callers that run after a navigation (save on leave)
+  // pass the page just left, since window.location already points at the new one.
+  const hasUnsavedEditsAt = useCallback((path: string) => {
     // Only editor routes (local, new, or a project's /edit page) can have unsaved changes.
-    if (!holdsUnsavedEdits(window.location.pathname)) return false;
+    if (!holdsUnsavedEdits(path)) return false;
 
     // Unsaved local project with actual content
     if (!activepublicId && lines.length > 0) return true;
@@ -964,6 +967,36 @@ export function useAppState(user?: AuthUserType | null) {
     }
     return false;
   }, [activepublicId, lines, mediaTitle, projectMetadata, syncMode, activeLineIndex, editorMode, buildProjectPayload]);
+  const hasUnsavedChanges = useCallback(() => hasUnsavedEditsAt(window.location.pathname), [hasUnsavedEditsAt]);
+
+  // ——— Save on leave ———
+  // Leaving the editor (system Back, a link, closing the tab, switching apps) saves pending edits
+  // instead of asking. Nothing to do in a session (the server stores the shared doc), for a shared
+  // or still-loading project, or while a save is already running.
+  const flushInFlightRef = useRef(false);
+  const lastGuestFlushRef = useRef<unknown>(null);
+  const isSavingRef = useRef(isSaving);
+  useLayoutEffect(() => { isSavingRef.current = isSaving; });
+  useSaveOnLeave(routerPathname, (path) => {
+    if (inSessionRef.current || isSharedProjectRef.current || isProjectLoadingRef.current) return;
+    if (flushInFlightRef.current || isSavingRef.current || isCreatingProjectRef.current) return;
+    if (!hasUnsavedEditsAt(path)) return;
+    if (!getAccessToken()) {
+      // Guest: handleManualSave writes the draft before its first await (honouring mayWriteGuestDraft).
+      // The same lines are never written twice (hidden then pagehide).
+      if (lastGuestFlushRef.current === lines) return;
+      lastGuestFlushRef.current = lines;
+    } else if (!activepublicIdRef.current) {
+      // Signed in without a server project (setup, or an unsaved local draft): saving would create
+      // one the user never asked for, so leave it to the explicit save.
+      return;
+    }
+    flushInFlightRef.current = true;
+    // silent: the user already left the page, a "Saved" toast over the next one is noise.
+    handleManualSave({ silent: true })
+      .catch((e) => console.error('[Save on leave] failed', e))
+      .finally(() => { flushInFlightRef.current = false; });
+  });
 
   // ——— Page Exit Guard (Unsaved Changes) ———
   useEffect(() => {
