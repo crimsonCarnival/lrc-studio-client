@@ -99,6 +99,13 @@ describe('AppDrawer', () => {
     ]);
   });
 
+  it('carries the app branding: the logo mark and the app name', () => {
+    render(<Host />);
+    const dialog = openDrawer();
+    expect(within(dialog).getByText('app.name')).toBeInTheDocument();
+    expect(dialog.querySelector('svg[viewBox="0 0 64 64"]')).not.toBeNull();
+  });
+
   it('shows who is signed in and a sign out button, but no sign in or up', () => {
     render(<Host />);
     const dialog = openDrawer();

@@ -25,9 +25,11 @@ interface HeaderBreadcrumbProps {
   // Editor workspace only: shows "Library /" before the title. Guarded for
   // unsaved changes by the parent.
   onLibrary?: () => void;
+  // Phone navigation: the logo lives in the burger drawer, so the bar gives its space to the title.
+  hideLogo?: boolean;
 }
 
-export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings, onLibrary }: HeaderBreadcrumbProps) {
+export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings, onLibrary, hideLogo }: HeaderBreadcrumbProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,12 +85,14 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
 
   return (
     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
-      <button
-        onClick={onLogoClick}
-        className="size-7 sm:size-8 coarse:size-11 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-      >
-        <LogoMark className="size-full" />
-      </button>
+      {!hideLogo && (
+        <button
+          onClick={onLogoClick}
+          className="size-7 sm:size-8 coarse:size-11 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <LogoMark className="size-full" />
+        </button>
+      )}
 
       <div className="flex items-center gap-1.5 min-w-0">
         {isReady ? (
@@ -170,7 +174,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
             <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
             {isSettingsPage ? (
               // Settings keeps its own guarded back button in-page, so the header shows the title only.
-              <span className="font-mono text-xs font-medium text-subtle truncate uppercase tracking-[0.1em] max-w-[20vw] sm:max-w-none">
+              <span className={`font-mono text-xs font-medium text-subtle truncate uppercase tracking-[0.1em] ${hideLogo ? 'max-w-[32vw]' : 'max-w-[20vw]'} sm:max-w-none`}>
                 {breadcrumbTitle}
               </span>
             ) : (
@@ -184,7 +188,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 {/* Capped on narrow screens: the header's action icons are
                     44px each on touch, and without a ceiling here the last two
                     (notifications, user menu) get pushed off-screen. */}
-                <span className="font-mono text-xs font-medium text-subtle group-hover:text-foreground truncate uppercase tracking-[0.1em] transition-colors max-w-[20vw] sm:max-w-none">
+                <span className={`font-mono text-xs font-medium text-subtle group-hover:text-foreground truncate uppercase tracking-[0.1em] transition-colors ${hideLogo ? 'max-w-[32vw]' : 'max-w-[20vw]'} sm:max-w-none`}>
                   {backTitle}
                 </span>
               </button>

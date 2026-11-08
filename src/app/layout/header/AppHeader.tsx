@@ -248,6 +248,7 @@ export function AppHeader({
               onLogoClick={goHomeOrWarn}
               onProjectSettings={isReady && setShowNamingModal ? () => setShowNamingModal(true) : undefined}
               onLibrary={isWorkspace ? () => navTo('/library') : undefined}
+              hideLogo={phoneNav}
             />
             )}
             <div id="workspace-header-status" className="empty:hidden flex items-center" />
