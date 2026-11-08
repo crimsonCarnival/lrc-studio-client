@@ -1,14 +1,17 @@
-import { lazy, Suspense, useMemo, useRef } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef } from 'react';
 import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlayer } from '@features/player/PlayerContext';
 import SpeedControl from '@features/player/components/SpeedControl';
 import VolumeControl from '@features/player/components/VolumeControl';
 import { useSettings } from '@/features/settings/useSettings';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { buildSectionSegments } from './section-segments';
+import { SectionString } from './SectionString';
 
 const WaveformDisplay = lazy(() => import('@features/player/components/WaveformDisplay'));
 
@@ -78,6 +81,8 @@ interface PublicPlaybackBarProps {
   /** Extra controls ahead of the full-lyrics toggle (the public view's visualizer picker). */
   controlsSlot?: ReactNode;
   onHidePlayer?: () => void;
+  /** Height of the bar in px (0 when it is not rendered), for layouts that sit above it. */
+  onHeightChange?: (height: number) => void;
   children?: ReactNode;
 }
 
@@ -92,6 +97,7 @@ export default function PublicPlaybackBar({
   endSlot,
   controlsSlot,
   onHidePlayer,
+  onHeightChange,
   children,
 }: PublicPlaybackBarProps) {
   const { t } = useTranslation();
@@ -103,7 +109,22 @@ export default function PublicPlaybackBar({
     togglePlay, seek, applySpeed, handleLoopChange,
   } = usePlayer();
 
+  // Phones get the compact section string instead of the waveform or the segmented bar.
+  const isPhone = !useBreakpoint('lg');
   const barRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
+  const heightCb = useRef(onHeightChange);
+  useEffect(() => { heightCb.current = onHeightChange; });
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const report = () => heightCb.current?.(el.offsetHeight);
+    report();
+    const observer = new ResizeObserver(report);
+    observer.observe(el);
+    return () => { observer.disconnect(); heightCb.current?.(0); };
+  }, [hasMedia, hasInitialMedia]);
+  const sectionSegments = useMemo(() => buildSectionSegments(lines, duration), [lines, duration]);
   const segments = useMemo(() => buildSegments(lines, duration), [lines, duration]);
   const lineStarts = useMemo(
     () => lines
@@ -114,7 +135,7 @@ export default function PublicPlaybackBar({
 
   const ready = !!hasMedia;
   const seekTime: number = settings.playback?.seekTime ?? 5;
-  const showWaveform = Boolean(settings.playback?.showWaveform && source === 'local' && local.localUrl);
+  const showWaveform = !isPhone && Boolean(settings.playback?.showWaveform && source === 'local' && local.localUrl);
   const hasLoop = loopA != null && loopB != null && duration > 0;
 
   const timeAt = (clientX: number) => {
@@ -173,6 +194,7 @@ export default function PublicPlaybackBar({
 
   return (
     <footer
+      ref={footerRef}
       // Below lg the document scrolls as one column (the shell only clamps to
       // the viewport from lg up), so the bar is pinned to the viewport there;
       // the page carries matching bottom padding.
@@ -227,7 +249,11 @@ export default function PublicPlaybackBar({
 
       {/* Progress: one segment per section. The padding is hit area only. With a
           waveform, the waveform is the seek bar and carries the sections itself. */}
-      {!showWaveform && <div
+      {isPhone && (
+        <SectionString segments={sectionSegments} currentTime={currentTime} duration={duration} ready={ready} onSeek={seek} />
+      )}
+
+      {!isPhone && !showWaveform && <div
         ref={barRef}
         role="slider"
         tabIndex={ready ? 0 : -1}
@@ -280,7 +306,7 @@ export default function PublicPlaybackBar({
         )}
       </div>}
 
-      {hasLabels && !showWaveform && (
+      {hasLabels && !isPhone && !showWaveform && (
         <div className="max-lg:hidden flex gap-1" aria-hidden>
           {segments.map((seg, i) => (
             <span
@@ -294,12 +320,7 @@ export default function PublicPlaybackBar({
         </div>
       )}
 
-      <div className="lg:hidden flex justify-between font-mono text-[11px] tabular-nums text-muted-foreground">
-        <span>{clock(currentTime)}</span>
-        <span>{clock(duration)}</span>
-      </div>
-
-      <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-x-2 gap-y-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-x-4">
+            <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-x-2 gap-y-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-x-4">
         <div className="max-lg:hidden min-w-0 flex items-center gap-4">
           <span className="font-mono text-sm tabular-nums whitespace-nowrap text-foreground">
             {clock(currentTime)} <span className="text-muted-foreground">/ {clock(duration)}</span>

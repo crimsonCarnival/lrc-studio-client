@@ -6,6 +6,11 @@ import PublicPlaybackBar from './PublicPlaybackBar';
 
 const mockTogglePlay = vi.fn();
 const mockSeek = vi.fn();
+const mockWide = vi.hoisted(() => ({ value: false }));
+const mockSettings = vi.hoisted(() => ({ showWaveform: false }));
+
+vi.mock('@/shared/hooks/useBreakpoint', () => ({ useBreakpoint: () => mockWide.value }));
+vi.mock('@features/player/components/WaveformDisplay', () => ({ default: () => <div data-testid="waveform" /> }));
 
 vi.mock('@features/player/PlayerContext', () => ({
   usePlayer: () => ({
@@ -18,7 +23,7 @@ vi.mock('@features/player/PlayerContext', () => ({
     isSeeking: false,
     loopA: null,
     loopB: null,
-    local: {},
+    local: { localUrl: 'blob:x' },
     yt: {},
     audioRef: { current: null },
     MIN_SPEED: 0.5,
@@ -36,7 +41,7 @@ vi.mock('@/features/settings/useSettings', () => ({
     settings: {
       playback: {
         seekTime: 5,
-        showWaveform: false,
+        showWaveform: mockSettings.showWaveform,
       },
     },
   }),
@@ -95,3 +100,39 @@ describe('PublicPlaybackBar hide player button', () => {
   });
 });
 
+
+describe('PublicPlaybackBar progress by width', () => {
+  const lines = [
+    { type: 'section', label: 'Verse one', text: '' },
+    { text: 'Line one', timestamp: 5 },
+    { type: 'section', label: 'Chorus one', text: '' },
+    { text: 'Line two', timestamp: 40 },
+  ] as never[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSettings.showWaveform = true;
+  });
+
+  it('on phones renders the section string and no waveform', () => {
+    mockWide.value = false;
+    render(<TooltipProvider><PublicPlaybackBar lines={lines} hasInitialMedia /></TooltipProvider>);
+    expect(screen.getByRole('slider', { name: 'player.seekPlayback' })).toBeInTheDocument();
+    expect(document.querySelectorAll('[data-segment]')).toHaveLength(2);
+    expect(screen.queryByTestId('waveform')).toBeNull();
+  });
+
+  it('seeks through the player seek function from the string', () => {
+    mockWide.value = false;
+    render(<TooltipProvider><PublicPlaybackBar lines={lines} hasInitialMedia /></TooltipProvider>);
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'player.seekPlayback' }), { key: 'ArrowRight' });
+    expect(mockSeek).toHaveBeenCalledWith(15);
+  });
+
+  it('from lg up keeps the waveform and not the string', async () => {
+    mockWide.value = true;
+    render(<TooltipProvider><PublicPlaybackBar lines={lines} hasInitialMedia /></TooltipProvider>);
+    expect(await screen.findByTestId('waveform')).toBeInTheDocument();
+    expect(document.querySelector('[data-segment]')).toBeNull();
+  });
+});
