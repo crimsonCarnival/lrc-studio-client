@@ -719,7 +719,7 @@ export default function PublicLyrics({
       // Phones: in the controls row above the lyrics, so it never covers them. Desktop: floating,
       // in the same row as the info panel's toggle (top-23 = 64px header + 28px), and to its left
       // while that toggle is showing.
-      className={`z-20 flex w-fit items-center rounded-lg border border-zinc-700/50 bg-zinc-950/70 p-0.5 shadow-lg backdrop-blur-md lg:absolute lg:top-23 ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
+      className={`z-20 flex w-fit items-center rounded-lg border border-border bg-card p-0.5 lg:absolute lg:top-23 ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
     >
       {(['left', 'center', 'right'] as const).map((align) => {
         const label = t(ALIGN_LABEL_KEYS[align]);
@@ -730,7 +730,7 @@ export default function PublicLyrics({
               onClick={() => handleAlignmentChange(align)}
               aria-pressed={alignment === align}
               aria-label={label}
-              className={`grid place-items-center size-7 coarse:size-11 rounded-xs transition-all ${alignment === align ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`grid place-items-center size-7 coarse:size-11 rounded-xs transition-all ${alignment === align ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Icon name={`format_align_${align}`} size={15} />
             </button>
@@ -754,7 +754,7 @@ export default function PublicLyrics({
   const zoomHint = (
     <div
       aria-live="polite"
-      className={`pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700/50 bg-zinc-950/80 px-3 py-1.5 font-mono text-sm tabular-nums text-zinc-200 shadow-lg backdrop-blur-md transition-opacity duration-200 ${zoomHintVisible ? 'opacity-100' : 'opacity-0'}`}
+      className={`pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card px-3 py-1.5 font-mono text-sm tabular-nums text-foreground transition-opacity duration-200 ${zoomHintVisible ? 'opacity-100' : 'opacity-0'}`}
     >
       {zoomHintVisible ? t('projectView.zoom.current', { value: `${Math.round(zoom * 100)}%` }) : null}
     </div>
@@ -774,11 +774,11 @@ export default function PublicLyrics({
   // scrolling/centering area so its own height never affects line layout.
   const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
     <div className="relative z-10 shrink-0 px-6 pt-16 sm:pt-20 lg:pt-24 pb-0 sm:px-10 lg:px-14">
-      {/* The contour lines run behind the title and its rule; fade them out where the header sits. */}
+      {/* The contour lines run behind the title and its rule; hide them where the header sits. Solid and confined to the header: it used to spill a gradient onto the first lyric line, and nothing here depends on playback state. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+1.5rem)]"
-        style={{ background: 'linear-gradient(to bottom, var(--background) 80%, transparent)' }}
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-full"
+        style={{ background: 'var(--background)' }}
       />
       <SectionDivider
         label={activeSection?.label}

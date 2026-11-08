@@ -29,7 +29,7 @@ export function LyricsZoomControl({ zoom, onZoomChange, className }: LyricsZoomC
             type="button"
             aria-label={t('projectView.zoom.current', { value: pct(zoom) })}
             className={cn(
-              'flex h-8 coarse:h-11 items-center gap-1 rounded-lg border border-zinc-700/50 bg-zinc-950/70 px-2 text-xs font-mono font-medium tabular-nums text-zinc-300 shadow-lg backdrop-blur-md',
+              'flex h-8 coarse:h-11 items-center gap-1 rounded-lg border border-border bg-card px-2 text-xs font-mono font-medium tabular-nums text-muted-foreground',
               className,
             )}
           >
