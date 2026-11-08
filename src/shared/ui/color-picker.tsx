@@ -83,7 +83,13 @@ export function ColorPicker({ value, onChange, 'aria-label': ariaLabel, classNam
           style={{ backgroundColor: value }}
         />
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 border-0 bg-popover p-3 text-popover-foreground ring-1 ring-foreground/10 lg:min-w-0">
+      {/* Inline z-index: the picker is routinely opened from inside a Dialog (z-[99999]), which
+          would otherwise cover the popover's default z-popover (9995). */}
+      <PopoverContent
+        align="start"
+        style={{ zIndex: 100000 }}
+        className="w-56 border-0 bg-popover p-3 text-popover-foreground ring-1 ring-foreground/10 lg:min-w-0"
+      >
         <div
           {...square}
           role="slider"
