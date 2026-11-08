@@ -74,11 +74,11 @@ export default function SavePasswordModal({
           <Button onClick={onSave} className="w-full">
             {t('auth.savePassword.save')}
           </Button>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={onSkip} className="flex-1 text-zinc-400">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button variant="ghost" onClick={onSkip} className="h-auto min-h-11 flex-1 whitespace-normal py-2 text-center text-zinc-400">
               {t('auth.savePassword.notNow')}
             </Button>
-            <Button variant="ghost" onClick={onNeverAsk} className="flex-1 text-zinc-500">
+            <Button variant="ghost" onClick={onNeverAsk} className="h-auto min-h-11 flex-1 whitespace-normal py-2 text-center text-zinc-500">
               {t('auth.savePassword.never')}
             </Button>
           </div>

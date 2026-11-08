@@ -87,7 +87,7 @@ export default function VerifyEmailPage() {
         <h1 className="text-xl font-bold text-zinc-100">{t('auth.verification.landingError')}</h1>
         <p className="text-sm text-zinc-400">{getMessage()}</p>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <Button asChild variant="outline" className="rounded-xl h-10 font-bold px-6"><Link to="/">
           {t('auth.verification.goToHome')}
         </Link></Button>

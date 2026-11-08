@@ -498,7 +498,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
             <LoadingSpinner size="md" />
           </div>
         ) : error ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6 mt-8 py-10">
             <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
               <Icon name="error" size={28} className="text-zinc-500" />
             </div>
@@ -508,7 +508,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
             </Button>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6 mt-8 py-10">
             <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
               <Icon name="music_note" size={28} className="text-zinc-500" />
             </div>

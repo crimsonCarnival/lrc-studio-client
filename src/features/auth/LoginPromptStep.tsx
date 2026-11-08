@@ -77,11 +77,11 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           <Button onClick={handleCreatePasskey} loading={loading} className="h-[52px] w-full text-[17px] lg:h-[52px] lg:text-[17px]">
             {t('auth.savedAccount.createPasskey')}
           </Button>
-          <div className="grid grid-cols-2 gap-2">
-            <Button onClick={onSave} disabled={loading} variant="outline" className="h-[52px] text-[17px] lg:h-[52px] lg:text-[17px]">
+          <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2">
+            <Button onClick={onSave} disabled={loading} variant="outline" className="h-auto min-h-13 w-full whitespace-normal px-4 py-2 text-center text-[17px] lg:h-auto lg:min-h-13 lg:text-[17px]">
               {t('auth.savedAccount.save')}
             </Button>
-            <Button onClick={onSkip} disabled={loading} variant="ghost" className="h-11 text-[15px] lg:h-11 lg:text-[15px]">
+            <Button onClick={onSkip} disabled={loading} variant="ghost" className="h-auto min-h-11 w-full whitespace-normal px-4 py-2 text-center text-[15px] lg:h-auto lg:min-h-11 lg:text-[15px]">
               {t('auth.savedAccount.skip')}
             </Button>
           </div>
