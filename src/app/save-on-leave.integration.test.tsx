@@ -108,9 +108,9 @@ const shown = () => NAMES.filter((n) => document.body.textContent?.includes(`Lin
 
 async function removeFirstLine() {
   fireEvent.click(screen.getByRole('button', { name: 'Options for line 1' }));
-  await settle(100);
+  await settleUntil(() => screen.queryByRole('dialog') !== null);
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /remove this line/i }));
-  await settle(100);
+  await settleUntil(() => screen.queryByRole('button', { name: /^confirm$/i }) !== null);
   fireEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
   await settle(200);
 }
@@ -156,7 +156,9 @@ describe('save on leave (signed in, real App)', { timeout: 40000 }, () => {
     expect(shown()).toBe(2);
     h.save.mockClear(); // only the leave flush is under test
     act(() => { nav('/a/b/c/d/e'); });
-    await settle(100); // router transitions commit after the lazy route resolves
+    // The router commits the transition only after the lazy route chunk resolves, which can take
+    // far longer than a fixed wait under load: wait for the flush, then settle to catch a second one.
+    await settleUntil(() => h.save.mock.calls.length >= 1);
     expect(h.save).toHaveBeenCalledTimes(1);
     expect(h.save).toHaveBeenCalledWith({ silent: true });
   });
