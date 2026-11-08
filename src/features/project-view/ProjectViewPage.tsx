@@ -333,6 +333,20 @@ function ProjectViewPageInner() {
     });
   }, []);
 
+  // Below lg the collapsed details bar is pinned just above the fixed playback bar,
+  // so it stays put while the lyrics move. Both heights are measured, not guessed.
+  const [playbarHeight, setPlaybarHeight] = useState(0);
+  const [infoBarHeight, setInfoBarHeight] = useState(0);
+  useLayoutEffect(() => {
+    const el = rightPanelRef.current;
+    if (!infoCollapsed || !el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => setInfoBarHeight(el.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [infoCollapsed, loading]);
+
   const [playerHidden, setPlayerHidden] = useState(() => {
     try { return localStorage.getItem(PLAYER_HIDDEN_KEY) === '1'; } catch { return false; }
   });
@@ -561,10 +575,11 @@ function ProjectViewPageInner() {
             ref={rightPanelRef}
             tabIndex={0}
             aria-label={t('projectView.aboutProject')}
-            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 ${playerHidden ? 'max-lg:pb-12' : 'max-lg:pb-64'} ${infoCollapsed ? 'lg:hidden' : ''}`}
+            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t ${infoCollapsed ? 'lg:hidden max-lg:fixed max-lg:inset-x-0 max-lg:z-20 max-lg:max-h-[40dvh] bg-card' : `bg-card/40 ${playerHidden ? 'max-lg:pb-12' : 'max-lg:pb-64'}`}`}
+            style={infoCollapsed ? { bottom: playerHidden ? 'env(safe-area-inset-bottom)' : playbarHeight } : undefined}
           >
             <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20 lg:top-16" />
-            <div className="px-5 pt-6 pb-6 lg:px-7 lg:pt-23 flex flex-col gap-4 min-h-full">
+            <div className={`px-5 lg:px-7 lg:pt-23 flex flex-col gap-4 min-h-full ${infoCollapsed ? 'max-lg:pt-2 max-lg:pb-2 lg:pb-6' : 'pt-6 pb-6'}`}>
               <ProjectInfoPanel
                 project={displayProject!}
                 cover={cover}
@@ -603,6 +618,14 @@ function ProjectViewPageInner() {
               )}
             </div>
           </div>
+          {/* The collapsed bar is fixed, so this keeps the lyrics clear of it and of the playback bar. */}
+          {infoCollapsed && (
+            <div
+              aria-hidden
+              className="shrink-0 lg:hidden"
+              style={{ height: infoBarHeight + (playerHidden ? 0 : playbarHeight) }}
+            />
+          )}
         </div>
 
         {/* ── Playback bar: a sibling of the 2-col row, so it spans the page.
@@ -616,6 +639,7 @@ function ProjectViewPageInner() {
           onToggleFullLyrics={toggleFullLyrics}
           controlsSlot={<VisualizerButton />}
           onHidePlayer={togglePlayerHidden}
+          onHeightChange={setPlaybarHeight}
           startSlot={canFork ? (
             <Tip content={t('projectView.forkButton')}>
               <Button
