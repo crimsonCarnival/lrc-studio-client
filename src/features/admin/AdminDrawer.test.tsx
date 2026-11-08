@@ -13,7 +13,7 @@ import { AdminDrawer } from './AdminDrawer';
 import { ADMIN_NAV_GROUPS, ADMIN_TABS, groupAdminTabs, type AdminTabId } from './admin-nav';
 import type { AdminTab } from './useAdminTabs';
 
-const tab = (id: AdminTabId, count?: number): AdminTab => ({ id, icon: 'x', label: `label-${id}`, count });
+const tab = (id: AdminTabId, count?: number): AdminTab => ({ id, icon: 'close', label: `label-${id}`, count });
 const ALL = ADMIN_TABS.map((id) => tab(id));
 
 function Where() {
