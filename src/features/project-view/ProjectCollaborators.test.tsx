@@ -18,7 +18,8 @@ import { ProjectCollaborators } from './ProjectCollaborators';
 
 const ana: ProjectCollaborator = {
   id: 'user:1', name: 'ana', isGuest: false,
-  user: { id: '1', accountName: 'ana', displayName: 'Ana B', avatarUrl: null },
+  // The API only fills these four fields of the generated (full) User type.
+  user: { id: '1', accountName: 'ana', displayName: 'Ana B', avatarUrl: null } as ProjectCollaborator['user'],
 };
 const guest: ProjectCollaborator = { id: 'guest:9', name: 'Visitor', isGuest: true, user: null };
 

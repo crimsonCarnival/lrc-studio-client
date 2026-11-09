@@ -14,6 +14,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "lint": "eslint .",
+    "codegen": "node scripts/codegen.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "type-check": "tsc"
@@ -81,6 +82,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@graphql-codegen/cli": "7.4.6",
+    "@graphql-codegen/typescript": "6.1.2",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",

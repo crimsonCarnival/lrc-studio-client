@@ -39,3 +39,5 @@ redesign/
 .codegraph/
 
 tsconfig.tsbuildinfo
+# graphql-codegen schema snapshot
+.codegen/

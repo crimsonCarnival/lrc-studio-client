@@ -1,15 +1,3 @@
-/**
- * GraphQL TypeScript types. HAND-MAINTAINED — codegen was removed (its cli/plugin
- * version skew duplicated every base type). When the server GraphQL schema changes,
- * edit the affected type here by hand (add/remove fields, types, enum members).
- * Operation result/variables types are not generated; call sites type gqlRequest
- * inline (e.g. gqlRequest<{ field: T }>(QUERY)).
- */
-
-/** Internal type. DO NOT USE DIRECTLY. */
-type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-/** Internal type. DO NOT USE DIRECTLY. */
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 /** All built-in and custom scalars, mapped to their actual values */
@@ -25,6 +13,7 @@ export type Activity = {
   actor: FollowUser;
   coverImage?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  /** PROJECT_SHARED only: the sharer's note and tags. */
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   projectTitle: Scalars['String']['output'];
@@ -47,10 +36,56 @@ export type ActivityType =
   | 'PROJECT_STARRED'
   | 'USER_FOLLOWED';
 
+export type AddictionLevel = {
+  description: LocalizedString;
+  id: Scalars['String']['output'];
+  order: Scalars['Float']['output'];
+  requirements: AddictionLevelRequirements;
+  title: LocalizedString;
+};
+
+export type AddictionLevelInput = {
+  description?: InputMaybe<LocalizedStringInput>;
+  id: Scalars['String']['input'];
+  order?: InputMaybe<Scalars['Float']['input']>;
+  requirements?: InputMaybe<AddictionLevelRequirementsInput>;
+  title: LocalizedStringInput;
+};
+
+export type AddictionLevelRequirements = {
+  karaokeLines?: Maybe<Scalars['Int']['output']>;
+  musicSyncedMinutes?: Maybe<Scalars['Int']['output']>;
+  publicProjects?: Maybe<Scalars['Int']['output']>;
+  starsReceived?: Maybe<Scalars['Int']['output']>;
+  syncedLines?: Maybe<Scalars['Int']['output']>;
+  totalProjects?: Maybe<Scalars['Int']['output']>;
+  wordsTimestamped?: Maybe<Scalars['Int']['output']>;
+};
+
+export type AddictionLevelRequirementsInput = {
+  karaokeLines?: InputMaybe<Scalars['Int']['input']>;
+  musicSyncedMinutes?: InputMaybe<Scalars['Int']['input']>;
+  publicProjects?: InputMaybe<Scalars['Int']['input']>;
+  starsReceived?: InputMaybe<Scalars['Int']['input']>;
+  syncedLines?: InputMaybe<Scalars['Int']['input']>;
+  totalProjects?: InputMaybe<Scalars['Int']['input']>;
+  wordsTimestamped?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AddictionLevelUpdateInput = {
+  description?: InputMaybe<LocalizedStringInput>;
+  order?: InputMaybe<Scalars['Float']['input']>;
+  requirements?: InputMaybe<AddictionLevelRequirementsInput>;
+  title?: InputMaybe<LocalizedStringInput>;
+};
+
 export type AdvancedSettings = {
   autoSave?: Maybe<AutoSaveSettings>;
   autoSaveIndicator?: Maybe<Scalars['String']['output']>;
   confirmDestructive?: Maybe<Scalars['Boolean']['output']>;
+  dateStyle?: Maybe<Scalars['String']['output']>;
+  hourCycle?: Maybe<Scalars['String']['output']>;
+  showUtcOffset?: Maybe<Scalars['Boolean']['output']>;
   timezone?: Maybe<Scalars['String']['output']>;
 };
 
@@ -58,7 +93,49 @@ export type AdvancedSettingsInput = {
   autoSave?: InputMaybe<AutoSaveSettingsInput>;
   autoSaveIndicator?: InputMaybe<Scalars['String']['input']>;
   confirmDestructive?: InputMaybe<Scalars['Boolean']['input']>;
+  dateStyle?: InputMaybe<Scalars['String']['input']>;
+  hourCycle?: InputMaybe<Scalars['String']['input']>;
+  showUtcOffset?: InputMaybe<Scalars['Boolean']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ArtistCredit = {
+  artistId?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  role: ArtistRole;
+};
+
+export type ArtistCreditInput = {
+  name: Scalars['String']['input'];
+  role: ArtistRole;
+};
+
+export type ArtistParseFlag = {
+  code: ArtistParseFlagCode;
+  source: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type ArtistParseFlagCode =
+  | 'ambiguous_separator'
+  | 'duplicate_removed'
+  | 'empty_feat_segment'
+  | 'unbalanced_bracket'
+  | 'weak_marker';
+
+export type ArtistRole =
+  | 'featured'
+  | 'primary';
+
+export type ArtistSuggestion = {
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type ArtistSuggestionPage = {
+  items: Array<ArtistSuggestion>;
+  total: Scalars['Int']['output'];
 };
 
 export type AutoAdvanceSettings = {
@@ -93,18 +170,30 @@ export type AutoSaveSettingsInput = {
   timeInterval?: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type AutoStampSettings = {
+  applyMode?: Maybe<Scalars['String']['output']>;
+  confidenceThreshold?: Maybe<Scalars['Float']['output']>;
+  fuzzyTolerance?: Maybe<Scalars['Float']['output']>;
+};
+
+export type AutoStampSettingsInput = {
+  applyMode?: InputMaybe<Scalars['String']['input']>;
+  confidenceThreshold?: InputMaybe<Scalars['Float']['input']>;
+  fuzzyTolerance?: InputMaybe<Scalars['Float']['input']>;
+};
+
 export type BadgeDef = {
   autoGrant: Scalars['Boolean']['output'];
   color: Scalars['String']['output'];
   conditionType: Scalars['String']['output'];
   conditionValue?: Maybe<Scalars['Int']['output']>;
-  description: Scalars['String']['output'];
+  description: LocalizedString;
   holderCount: Scalars['Int']['output'];
   holderPct: Scalars['Float']['output'];
   icon: Scalars['String']['output'];
   id: Scalars['String']['output'];
   isBuiltin: Scalars['Boolean']['output'];
-  label: Scalars['String']['output'];
+  label: LocalizedString;
   rarity: Scalars['String']['output'];
   xpReward: Scalars['Int']['output'];
 };
@@ -114,20 +203,76 @@ export type BadgeDefInput = {
   color: Scalars['String']['input'];
   conditionType: Scalars['String']['input'];
   conditionValue?: InputMaybe<Scalars['Int']['input']>;
-  description?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<LocalizedStringInput>;
   icon?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
-  label: Scalars['String']['input'];
+  label: LocalizedStringInput;
   rarity?: InputMaybe<Scalars['String']['input']>;
   xpReward?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type BlockedUser = {
+  accountName: Scalars['String']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  blockedAt?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type CollabInvite = {
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  revoked: Scalars['Boolean']['output'];
+  /** editor or viewer. */
+  role: Scalars['String']['output'];
+};
+
+export type CollabKickResult = {
+  /** The invite a kicked guest joined with, now revoked, so every other guest on that link is cut off too. Null for a signed-in user. */
+  revokedInviteId?: Maybe<Scalars['ID']['output']>;
+};
+
+/** Someone in a live collaborative session. subject is user:<id> or guest:<id>. */
+export type CollabParticipant = {
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  /** 1-8, maps to --color-collab-<n>. */
+  colorIndex: Scalars['Int']['output'];
+  /** Guests only, owner only: the invite they joined with. Kicking a guest revokes it. */
+  inviteId?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+  /** owner, editor or viewer. */
+  role: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+};
+
+export type CollabSession = {
+  allowGuests: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Owner only; empty for everyone else. */
+  invites: Array<CollabInvite>;
+  members: Array<CollabParticipant>;
+  publicId: Scalars['String']['output'];
+};
+
+/** A live session in the caller's session list, with the project it is about. */
+export type CollabSessionSummary = {
+  createdAt: Scalars['String']['output'];
+  lastActivityAt: Scalars['String']['output'];
+  memberCount: Scalars['Int']['output'];
+  publicId: Scalars['String']['output'];
+  /** The caller's role: owner, editor or viewer. */
+  role: Scalars['String']['output'];
+  songArtist: Scalars['String']['output'];
+  songName: Scalars['String']['output'];
+  title: Scalars['String']['output'];
 };
 
 export type ContentStats = {
   addictionId: Scalars['String']['output'];
   addictionTitle: LocalizedString;
-  averageLinesPerProject: Scalars['Int']['output'];
-  averageProjectCompletion: Scalars['Int']['output'];
-  completionPercentage: Scalars['Int']['output'];
+  averageLinesPerProject: Scalars['Float']['output'];
+  averageProjectCompletion: Scalars['Float']['output'];
+  completionPercentage: Scalars['Float']['output'];
   currentStreak: Scalars['Int']['output'];
   forksReceived: Scalars['Int']['output'];
   fullySyncedProjects: Scalars['Int']['output'];
@@ -139,7 +284,7 @@ export type ContentStats = {
   musicSyncedSeconds: Scalars['Int']['output'];
   publicProjects: Scalars['Int']['output'];
   starsReceived: Scalars['Int']['output'];
-  syncTrendPercentage: Scalars['Int']['output'];
+  syncTrendPercentage: Scalars['Float']['output'];
   syncedLines: Scalars['Int']['output'];
   totalLines: Scalars['Int']['output'];
   totalProjects: Scalars['Int']['output'];
@@ -158,7 +303,6 @@ export type CreatePlaylistInput = {
 
 export type CreateProjectInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
-  /** Attribution for what triggered creation (e.g. "uploads_library"), carried from the `ref` URL param. */
   createdFrom?: InputMaybe<Scalars['String']['input']>;
   lyrics?: InputMaybe<ProjectLyricsInput>;
   metadata?: InputMaybe<ProjectMetadataInput>;
@@ -179,8 +323,8 @@ export type DisplaySettings = {
   languageLayout?: Maybe<Scalars['String']['output']>;
   readingFormat?: Maybe<Scalars['String']['output']>;
   showNextLine?: Maybe<Scalars['Boolean']['output']>;
-  translationLayout?: Maybe<Scalars['String']['output']>;
   singerColors?: Maybe<Array<Scalars['String']['output']>>;
+  translationLayout?: Maybe<Scalars['String']['output']>;
 };
 
 export type DisplaySettingsInput = {
@@ -191,8 +335,8 @@ export type DisplaySettingsInput = {
   languageLayout?: InputMaybe<Scalars['String']['input']>;
   readingFormat?: InputMaybe<Scalars['String']['input']>;
   showNextLine?: InputMaybe<Scalars['Boolean']['input']>;
-  translationLayout?: InputMaybe<Scalars['String']['input']>;
   singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
+  translationLayout?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EditorSettings = {
@@ -290,17 +434,15 @@ export type FollowUser = {
   accountName: Scalars['String']['output'];
   allowsTags: Scalars['Boolean']['output'];
   avatarUrl?: Maybe<Scalars['String']['output']>;
-  /** Subject to the user's country visibility preference. */
   country?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
-  /** The profile summary fields are only loaded by searchUsers; null elsewhere. */
   followerCount?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
   level?: Maybe<Scalars['Int']['output']>;
   projectCount?: Maybe<Scalars['Int']['output']>;
-  totalStarsReceived?: Maybe<Scalars['Int']['output']>;
   staffRole?: Maybe<Scalars['String']['output']>;
+  totalStarsReceived?: Maybe<Scalars['Int']['output']>;
 };
 
 export type ForkedFrom = {
@@ -335,12 +477,16 @@ export type HistorySettingsInput = {
 };
 
 export type InterfaceSettings = {
+  /** JSON of the user's own theme (client/src/shared/theme/custom-theme.ts), at most 600 characters. */
+  customTheme?: Maybe<Scalars['String']['output']>;
   defaultLanguage?: Maybe<Scalars['String']['output']>;
   editorWidth?: Maybe<Scalars['Float']['output']>;
   focusContrast?: Maybe<Scalars['String']['output']>;
   focusMode?: Maybe<Scalars['String']['output']>;
   fontSize?: Maybe<Scalars['String']['output']>;
   fontWeight?: Maybe<Scalars['String']['output']>;
+  /** Keep the chosen theme on this browser after signing out. Default true. */
+  keepThemeOnSignOut?: Maybe<Scalars['Boolean']['output']>;
   layoutSwap?: Maybe<Scalars['Boolean']['output']>;
   lockLayout?: Maybe<Scalars['Boolean']['output']>;
   mobileTab?: Maybe<Scalars['String']['output']>;
@@ -348,18 +494,20 @@ export type InterfaceSettings = {
   previewAlignment?: Maybe<Scalars['String']['output']>;
   spacing?: Maybe<Scalars['String']['output']>;
   theme?: Maybe<Scalars['String']['output']>;
-  customTheme?: Maybe<Scalars['String']['output']>;
   toastPosition?: Maybe<Scalars['String']['output']>;
-  keepThemeOnSignOut?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type InterfaceSettingsInput = {
+  /** JSON of the user's own theme (client/src/shared/theme/custom-theme.ts), at most 600 characters. */
+  customTheme?: InputMaybe<Scalars['String']['input']>;
   defaultLanguage?: InputMaybe<Scalars['String']['input']>;
   editorWidth?: InputMaybe<Scalars['Float']['input']>;
   focusContrast?: InputMaybe<Scalars['String']['input']>;
   focusMode?: InputMaybe<Scalars['String']['input']>;
   fontSize?: InputMaybe<Scalars['String']['input']>;
   fontWeight?: InputMaybe<Scalars['String']['input']>;
+  /** Keep the chosen theme on this browser after signing out. Default true. */
+  keepThemeOnSignOut?: InputMaybe<Scalars['Boolean']['input']>;
   layoutSwap?: InputMaybe<Scalars['Boolean']['input']>;
   lockLayout?: InputMaybe<Scalars['Boolean']['input']>;
   mobileTab?: InputMaybe<Scalars['String']['input']>;
@@ -367,9 +515,7 @@ export type InterfaceSettingsInput = {
   previewAlignment?: InputMaybe<Scalars['String']['input']>;
   spacing?: InputMaybe<Scalars['String']['input']>;
   theme?: InputMaybe<Scalars['String']['input']>;
-  customTheme?: InputMaybe<Scalars['String']['input']>;
   toastPosition?: InputMaybe<Scalars['String']['input']>;
-  keepThemeOnSignOut?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type LeaderboardResult = {
@@ -377,6 +523,23 @@ export type LeaderboardResult = {
   total: Scalars['Int']['output'];
   users: Array<LeaderboardUser>;
 };
+
+export type LeaderboardSort =
+  | 'LINES'
+  | 'PROJECTS'
+  | 'RANK'
+  | 'STARS'
+  | 'TIME_SYNCED'
+  | 'XP';
+
+export type LeaderboardSortDirection =
+  | 'ASC'
+  | 'DESC';
+
+export type LeaderboardTimeframe =
+  | 'ALL_TIME'
+  | 'MONTH'
+  | 'WEEK';
 
 export type LeaderboardUser = {
   accountName: Scalars['String']['output'];
@@ -388,11 +551,11 @@ export type LeaderboardUser = {
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
   rankScore: Scalars['Float']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
   totalStarsReceived: Scalars['Int']['output'];
-  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type Line = {
@@ -430,11 +593,20 @@ export type LineInput = {
   words?: InputMaybe<Array<WordInput>>;
 };
 
-/** One positional line write within ProjectLyricsInput.lines. */
 export type LinePatchInput = {
   line: LineInput;
   lineIdx: Scalars['Int']['input'];
   sectionIdx: Scalars['Int']['input'];
+};
+
+export type LocalizedString = {
+  en: Scalars['String']['output'];
+  es: Scalars['String']['output'];
+};
+
+export type LocalizedStringInput = {
+  en: Scalars['String']['input'];
+  es?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Lyrics = {
@@ -448,32 +620,6 @@ export type Lyrics = {
   version?: Maybe<Scalars['Int']['output']>;
 };
 
-export type ArtistCredit = {
-  artistId?: Maybe<Scalars['ID']['output']>;
-  name: Scalars['String']['output'];
-  order: Scalars['Int']['output'];
-  role: ArtistRole;
-};
-
-export type ArtistCreditInput = {
-  name: Scalars['String']['input'];
-  role: ArtistRole;
-};
-
-export type ArtistRole =
-  | 'featured'
-  | 'primary';
-
-export type ArtistSuggestion = {
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-};
-
-export type ArtistSuggestionPage = {
-  items: Array<ArtistSuggestion>;
-  total: Scalars['Int']['output'];
-};
-
 export type MusicLibraryEntry = {
   album: Scalars['String']['output'];
   artist: Scalars['String']['output'];
@@ -485,35 +631,99 @@ export type MusicLibraryEntry = {
 
 export type Mutation = {
   addProjectToPlaylist: Playlist;
+  /** Write in a report's conversation (its reporter or a moderator). parentId answers a message. */
+  addReportMessage: ReportMessage;
+  addWallComment: WallComment;
+  adminCreateAddictionLevel: AddictionLevel;
   adminCreateBadge: BadgeDef;
+  adminDeleteAddictionLevel: Scalars['Boolean']['output'];
   adminDeleteBadge: Scalars['Boolean']['output'];
   adminGrantBadge: Scalars['Boolean']['output'];
   adminRetroactiveScan: RetroactiveResult;
   adminRevokeBadge: Scalars['Boolean']['output'];
+  adminShadowBan: Scalars['Boolean']['output'];
+  adminUnshadowBan: Scalars['Boolean']['output'];
+  adminUpdateAddictionLevel: AddictionLevel;
   adminUpdateBadge: BadgeDef;
+  blockUser: Scalars['Boolean']['output'];
+  /** The wall's owner blocks a commenter and removes everything they wrote on the wall. Returns how many. */
+  blockWallCommenter: Scalars['Int']['output'];
   cloneProject: Project;
+  /** Returns the raw invite token. It is stored hashed and never returned again. */
+  createCollabInvite: Scalars['String']['output'];
   createPlaylist: Playlist;
   createProject: Project;
   deleteMedia: Scalars['Boolean']['output'];
   deletePlaylist: Scalars['Boolean']['output'];
   deleteProject: Scalars['Boolean']['output'];
+  deleteWallComment: Scalars['Boolean']['output'];
+  /** The author only, shortly after posting. */
+  editWallComment: WallComment;
+  endCollabSession: Scalars['Boolean']['output'];
+  /** targetType: wall_comment, user, project or playlist; targetId is its id (a project's publicId also works). reason depends on the type. alsoBlock (accounts only) blocks it too. */
+  fileReport: Scalars['Boolean']['output'];
   follow: Scalars['Boolean']['output'];
+  incrementPlaylistShare: Scalars['Boolean']['output'];
+  incrementPlaylistView: Scalars['Boolean']['output'];
+  incrementProjectShare: Scalars['Boolean']['output'];
+  kickCollabParticipant: CollabKickResult;
+  /** wall.restrict: lift someone's commenting restriction. */
+  liftWallRestriction: Scalars['Boolean']['output'];
+  /** The wall's owner or a moderator: approve or reject a held comment, hide or unhide one. */
+  moderateWallComment: Scalars['Boolean']['output'];
+  /** The wall's owner or a moderator: delete everything authorId wrote on the wall. Returns how many. */
+  purgeWallComments: Scalars['Int']['output'];
   reactToProject: ProjectReactions;
+  registerProjectView?: Maybe<ProjectViewResult>;
+  /** Owner only. Removes a collaborator credit and stops it being re-added. id is the credit's subject. */
+  removeProjectCollaborator: Scalars['Boolean']['output'];
   removeProjectFromPlaylist: Playlist;
   reorderPlaylist: Playlist;
+  /** reason: spam | harassment | hate | sexual | other */
+  reportWallComment: Scalars['Boolean']['output'];
   resetSettings: Scalars['Boolean']['output'];
+  /** Moderators only. action: dismiss or action. Acting on a project or playlist deletes it and needs sudo. */
+  resolveReportGroup: Scalars['Boolean']['output'];
+  /** Moderators only. action: dismiss | delete */
+  resolveWallReport: Scalars['Boolean']['output'];
+  /** wall.restrict: stop someone commenting on walls for hours (1, 24, 168 or 720; null until lifted). Returns the end, or 'forever'. */
+  restrictWallCommenter?: Maybe<Scalars['String']['output']>;
+  reviewRequest: StaffRequest;
+  revokeCollabInvite: Scalars['Boolean']['output'];
   saveMedia: Upload;
   savePlaylist: Scalars['Boolean']['output'];
   sendVerificationEmail: Scalars['Boolean']['output'];
+  setCollabGuestAccess: Scalars['Boolean']['output'];
+  setCollabRole: Scalars['Boolean']['output'];
+  /** What you hear about a followed user's projects: off, uploads or all. */
+  setFollowNotify: Scalars['Boolean']['output'];
   setForksEnabled: Project;
+  /** The IANA timezone (e.g. America/Bogota) whose calendar days the user's streak and heatmap count. */
+  setTimezone: Scalars['Boolean']['output'];
+  /** Like (liked: true) or unlike a wall comment. Idempotent. */
+  setWallCommentLike: WallLikeResult;
+  /** The wall's owner only; one pinned top-level comment per wall. */
+  setWallCommentPin: Scalars['Boolean']['output'];
+  /** Add (on: true) or take back the viewer's emoji reaction on a comment. */
+  setWallCommentReaction: Array<WallReaction>;
+  setWallSubscription: Scalars['Boolean']['output'];
+  /** Stop (or resume) hearing about replies in the thread the comment belongs to. */
+  setWallThreadMute: Scalars['Boolean']['output'];
+  /** Put someone else's public project on your profile; your followers see it in their feed. On a project you already shared, edits the note instead. */
   shareToProfile: Scalars['Boolean']['output'];
   starProject: Project;
+  /** Idempotent: returns the live session if one exists. */
+  startCollabSession: CollabSession;
+  submitRequest: StaffRequest;
+  unblockUser: Scalars['Boolean']['output'];
   unfollow: Scalars['Boolean']['output'];
   unsavePlaylist: Scalars['Boolean']['output'];
+  /** Take a share back, along with its feed entry. Idempotent. */
   unshareFromProfile: Scalars['Boolean']['output'];
   unstarProject: Project;
   updateLyrics: Lyrics;
   updatePlaylist: Playlist;
+  updatePreferences: UserPreferences;
   updateProfile: User;
   updateProject: Project;
   updateSettings: Settings;
@@ -527,8 +737,32 @@ export type MutationAddProjectToPlaylistArgs = {
 };
 
 
+export type MutationAddReportMessageArgs = {
+  body: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['ID']['input']>;
+  reportId: Scalars['ID']['input'];
+};
+
+
+export type MutationAddWallCommentArgs = {
+  accountName: Scalars['String']['input'];
+  body: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationAdminCreateAddictionLevelArgs = {
+  input: AddictionLevelInput;
+};
+
+
 export type MutationAdminCreateBadgeArgs = {
   input: BadgeDefInput;
+};
+
+
+export type MutationAdminDeleteAddictionLevelArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -554,14 +788,49 @@ export type MutationAdminRevokeBadgeArgs = {
 };
 
 
+export type MutationAdminShadowBanArgs = {
+  feed: Scalars['Boolean']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  search: Scalars['Boolean']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationAdminUnshadowBanArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationAdminUpdateAddictionLevelArgs = {
+  id: Scalars['String']['input'];
+  input: AddictionLevelUpdateInput;
+};
+
+
 export type MutationAdminUpdateBadgeArgs = {
   id: Scalars['String']['input'];
   input: BadgeDefInput;
 };
 
 
+export type MutationBlockUserArgs = {
+  accountName: Scalars['String']['input'];
+};
+
+
+export type MutationBlockWallCommenterArgs = {
+  authorId: Scalars['ID']['input'];
+};
+
+
 export type MutationCloneProjectArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateCollabInviteArgs = {
+  publicId: Scalars['String']['input'];
+  role: Scalars['String']['input'];
 };
 
 
@@ -590,13 +859,87 @@ export type MutationDeleteProjectArgs = {
 };
 
 
+export type MutationDeleteWallCommentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationEditWallCommentArgs = {
+  body: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationEndCollabSessionArgs = {
+  publicId: Scalars['String']['input'];
+};
+
+
+export type MutationFileReportArgs = {
+  alsoBlock?: InputMaybe<Scalars['Boolean']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+  reason: Scalars['String']['input'];
+  targetId: Scalars['ID']['input'];
+  targetType: Scalars['String']['input'];
+};
+
+
 export type MutationFollowArgs = {
   accountName: Scalars['String']['input'];
 };
 
 
+export type MutationIncrementPlaylistShareArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIncrementPlaylistViewArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIncrementProjectShareArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationKickCollabParticipantArgs = {
+  publicId: Scalars['String']['input'];
+  subject: Scalars['String']['input'];
+};
+
+
+export type MutationLiftWallRestrictionArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationModerateWallCommentArgs = {
+  action: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationPurgeWallCommentsArgs = {
+  accountName: Scalars['String']['input'];
+  authorId: Scalars['ID']['input'];
+};
+
+
 export type MutationReactToProjectArgs = {
   emoji: Scalars['String']['input'];
+  publicId: Scalars['String']['input'];
+};
+
+
+export type MutationRegisterProjectViewArgs = {
+  publicId: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveProjectCollaboratorArgs = {
+  id: Scalars['ID']['input'];
   publicId: Scalars['String']['input'];
 };
 
@@ -613,6 +956,46 @@ export type MutationReorderPlaylistArgs = {
 };
 
 
+export type MutationReportWallCommentArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  reason: Scalars['String']['input'];
+};
+
+
+export type MutationResolveReportGroupArgs = {
+  action: Scalars['String']['input'];
+  targetId: Scalars['ID']['input'];
+  targetType: Scalars['String']['input'];
+};
+
+
+export type MutationResolveWallReportArgs = {
+  action: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRestrictWallCommenterArgs = {
+  hours?: InputMaybe<Scalars['Int']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationReviewRequestArgs = {
+  decision: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationRevokeCollabInviteArgs = {
+  inviteId: Scalars['ID']['input'];
+  publicId: Scalars['String']['input'];
+};
+
+
 export type MutationSaveMediaArgs = {
   input: SaveMediaInput;
 };
@@ -623,14 +1006,22 @@ export type MutationSavePlaylistArgs = {
 };
 
 
-export type MutationShareToProfileArgs = {
-  input?: InputMaybe<ProfileShareInput>;
-  publicId: Scalars['ID']['input'];
+export type MutationSetCollabGuestAccessArgs = {
+  allowGuests: Scalars['Boolean']['input'];
+  publicId: Scalars['String']['input'];
 };
 
 
-export type MutationUnshareFromProfileArgs = {
-  publicId: Scalars['ID']['input'];
+export type MutationSetCollabRoleArgs = {
+  publicId: Scalars['String']['input'];
+  role: Scalars['String']['input'];
+  subject: Scalars['String']['input'];
+};
+
+
+export type MutationSetFollowNotifyArgs = {
+  accountName: Scalars['String']['input'];
+  level: Scalars['String']['input'];
 };
 
 
@@ -640,8 +1031,66 @@ export type MutationSetForksEnabledArgs = {
 };
 
 
+export type MutationSetTimezoneArgs = {
+  timezone: Scalars['String']['input'];
+};
+
+
+export type MutationSetWallCommentLikeArgs = {
+  id: Scalars['ID']['input'];
+  liked: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetWallCommentPinArgs = {
+  id: Scalars['ID']['input'];
+  pinned: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetWallCommentReactionArgs = {
+  emoji: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  on: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetWallSubscriptionArgs = {
+  accountName: Scalars['String']['input'];
+  subscribed: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetWallThreadMuteArgs = {
+  id: Scalars['ID']['input'];
+  muted: Scalars['Boolean']['input'];
+};
+
+
+export type MutationShareToProfileArgs = {
+  input?: InputMaybe<ProfileShareInput>;
+  publicId: Scalars['ID']['input'];
+};
+
+
 export type MutationStarProjectArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationStartCollabSessionArgs = {
+  publicId: Scalars['String']['input'];
+};
+
+
+export type MutationSubmitRequestArgs = {
+  payload: Scalars['String']['input'];
+  type: Scalars['String']['input'];
+};
+
+
+export type MutationUnblockUserArgs = {
+  accountName: Scalars['String']['input'];
 };
 
 
@@ -652,6 +1101,11 @@ export type MutationUnfollowArgs = {
 
 export type MutationUnsavePlaylistArgs = {
   playlistId: Scalars['ID']['input'];
+};
+
+
+export type MutationUnshareFromProfileArgs = {
+  publicId: Scalars['ID']['input'];
 };
 
 
@@ -669,6 +1123,11 @@ export type MutationUpdateLyricsArgs = {
 export type MutationUpdatePlaylistArgs = {
   id: Scalars['ID']['input'];
   input: UpdatePlaylistInput;
+};
+
+
+export type MutationUpdatePreferencesArgs = {
+  input: UpdatePreferencesInput;
 };
 
 
@@ -693,10 +1152,93 @@ export type MutationUpdateShowcaseArgs = {
   showcasePublic?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+/** One of the viewer's own reports. The preview is null once the target is gone or no longer visible to them. */
+export type MyReport = {
+  comment?: Maybe<ReportCommentTarget>;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Messages in this report's conversation. */
+  messageCount: Scalars['Int']['output'];
+  note: Scalars['String']['output'];
+  playlist?: Maybe<ReportPlaylistTarget>;
+  project?: Maybe<ReportProjectTarget>;
+  reason: Scalars['String']['output'];
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  /** open, dismissed or actioned. */
+  status: Scalars['String']['output'];
+  targetId: Scalars['ID']['output'];
+  targetType: Scalars['String']['output'];
+  user?: Maybe<ReportUserTarget>;
+};
+
+export type MyReports = {
+  reports: Array<MyReport>;
+  total: Scalars['Int']['output'];
+};
+
+export type MyWallReports = {
+  reports: Array<WallReport>;
+  total: Scalars['Int']['output'];
+};
+
 export type NameChange = {
   changedAt: Scalars['String']['output'];
   from: Scalars['String']['output'];
   to: Scalars['String']['output'];
+};
+
+export type NotificationPreferences = {
+  appeal_result: Scalars['Boolean']['output'];
+  badge_awarded: Scalars['Boolean']['output'];
+  comment_like: Scalars['Boolean']['output'];
+  follow: Scalars['Boolean']['output'];
+  followed_project: Scalars['Boolean']['output'];
+  fork: Scalars['Boolean']['output'];
+  level_up: Scalars['Boolean']['output'];
+  mention: Scalars['Boolean']['output'];
+  new_device: Scalars['Boolean']['output'];
+  playlist_saved: Scalars['Boolean']['output'];
+  project_mention: Scalars['Boolean']['output'];
+  reaction: Scalars['Boolean']['output'];
+  /** Staff with users.ban: a comment, an account, a project or a playlist was reported. */
+  report: Scalars['Boolean']['output'];
+  report_message: Scalars['Boolean']['output'];
+  /** A moderator reviewed one of your reports (any kind). */
+  report_reviewed: Scalars['Boolean']['output'];
+  star: Scalars['Boolean']['output'];
+  star_milestone: Scalars['Boolean']['output'];
+  streak_warning: Scalars['Boolean']['output'];
+  wall_comment: Scalars['Boolean']['output'];
+  /** Staff with users.ban: a wall comment was reported. */
+  wall_report: Scalars['Boolean']['output'];
+  /** A moderator reviewed one of your reports. */
+  wall_report_reviewed: Scalars['Boolean']['output'];
+  xp_changed: Scalars['Boolean']['output'];
+};
+
+export type NotificationPreferencesInput = {
+  appeal_result?: InputMaybe<Scalars['Boolean']['input']>;
+  badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
+  comment_like?: InputMaybe<Scalars['Boolean']['input']>;
+  follow?: InputMaybe<Scalars['Boolean']['input']>;
+  followed_project?: InputMaybe<Scalars['Boolean']['input']>;
+  fork?: InputMaybe<Scalars['Boolean']['input']>;
+  level_up?: InputMaybe<Scalars['Boolean']['input']>;
+  mention?: InputMaybe<Scalars['Boolean']['input']>;
+  new_device?: InputMaybe<Scalars['Boolean']['input']>;
+  playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
+  project_mention?: InputMaybe<Scalars['Boolean']['input']>;
+  reaction?: InputMaybe<Scalars['Boolean']['input']>;
+  report?: InputMaybe<Scalars['Boolean']['input']>;
+  report_message?: InputMaybe<Scalars['Boolean']['input']>;
+  report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
+  star?: InputMaybe<Scalars['Boolean']['input']>;
+  star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
+  streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_report?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
+  xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type NudgeSettings = {
@@ -709,6 +1251,19 @@ export type NudgeSettingsInput = {
   coarse?: InputMaybe<Scalars['Float']['input']>;
   default?: InputMaybe<Scalars['Float']['input']>;
   fine?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type ParsedArtistCredit = {
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  role: ArtistRole;
+};
+
+export type ParsedArtists = {
+  artists: Array<ParsedArtistCredit>;
+  display: Scalars['String']['output'];
+  flags: Array<ArtistParseFlag>;
+  title?: Maybe<Scalars['String']['output']>;
 };
 
 export type PlaybackSettings = {
@@ -769,118 +1324,10 @@ export type PlaylistSortMode =
   | 'MANUAL'
   | 'STARS';
 
-/** A person credited for editing a project in a live session. `user` is null for guests. */
-export type ProjectCollaborator = {
-  id: Scalars['ID']['output'];
-  isGuest: Scalars['Boolean']['output'];
-  name: Scalars['String']['output'];
-  user?: Maybe<Pick<User, 'id' | 'accountName' | 'displayName' | 'avatarUrl'>>;
-};
-
-export type Project = {
-  collaborators?: Array<ProjectCollaborator>;
-  boostCount?: Maybe<Scalars['Int']['output']>;
-  contentUpdatedAt?: Maybe<Scalars['String']['output']>;
-  coverImage?: Maybe<Scalars['String']['output']>;
-  createdAt?: Maybe<Scalars['String']['output']>;
-  createdFrom?: Maybe<Scalars['String']['output']>;
-  expiresAt?: Maybe<Scalars['String']['output']>;
-  forkCount?: Maybe<Scalars['Int']['output']>;
-  forkedFrom?: Maybe<ForkedFrom>;
-  forksEnabled?: Maybe<Scalars['Boolean']['output']>;
-  /** True when at least one word carries a timestamp. */
-  hasWordSync?: Maybe<Scalars['Boolean']['output']>;
-  id: Scalars['ID']['output'];
-  isBoostedByMe?: Maybe<Scalars['Boolean']['output']>;
-  isForkedByMe?: Maybe<Scalars['Boolean']['output']>;
-  isSharedToProfileByMe?: Maybe<Scalars['Boolean']['output']>;
-  isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
-  lineCount?: Maybe<Scalars['Int']['output']>;
-  lyrics?: Maybe<Lyrics>;
-  lyricsId?: Maybe<Scalars['ID']['output']>;
-  metadata?: Maybe<ProjectMetadata>;
-  myProfileShare?: Maybe<ProfileShareNote>;
-  profileShareCount?: Maybe<Scalars['Int']['output']>;
-  public?: Maybe<Scalars['Boolean']['output']>;
-  publicId: Scalars['String']['output'];
-  readOnly?: Maybe<Scalars['Boolean']['output']>;
-  shareCount?: Maybe<Scalars['Int']['output']>;
-  /**
-   * Readable URL slug (artist + song name, else title). `String!` on the server,
-   * optional here because most selections omit it; `projectPath` derives it when absent.
-   */
-  slug: Scalars['String']['output'];
-  starCount?: Maybe<Scalars['Int']['output']>;
-  state?: Maybe<ProjectState>;
-  syncedLineCount?: Maybe<Scalars['Int']['output']>;
-  title?: Maybe<Scalars['String']['output']>;
-  trendingScore?: Maybe<Scalars['Float']['output']>;
-  type?: Maybe<Scalars['String']['output']>;
-  updatedAt?: Maybe<Scalars['String']['output']>;
-  upload?: Maybe<Upload>;
-  uploadId?: Maybe<Scalars['ID']['output']>;
-  user?: Maybe<User>;
-  userId?: Maybe<Scalars['ID']['output']>;
-  viewCount?: Maybe<Scalars['Int']['output']>;
-};
-
-export type ProjectLyricsInput = {
-  editorMode?: InputMaybe<Scalars['String']['input']>;
-  language?: InputMaybe<Scalars['String']['input']>;
-  line?: InputMaybe<LineInput>;
-  lineIdx?: InputMaybe<Scalars['Int']['input']>;
-  /** Several lines changed in one save, line count and section markers unchanged. */
-  lines?: InputMaybe<Array<LinePatchInput>>;
-  sectionIdx?: InputMaybe<Scalars['Int']['input']>;
-  sections?: InputMaybe<Array<SectionInput>>;
-  word?: InputMaybe<WordInput>;
-  wordIndex?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type ProjectMetadata = {
-  albumArt?: Maybe<Scalars['String']['output']>;
-  /** Ordered credits, primaries first. `[]` on legacy rows. */
-  artists: Array<ArtistCredit>;
-  description?: Maybe<Scalars['String']['output']>;
-  genre?: Maybe<Scalars['String']['output']>;
-  singerColors?: Maybe<Array<Scalars['String']['output']>>;
-  singers?: Maybe<Array<Scalars['String']['output']>>;
-  songAlbum?: Maybe<Scalars['String']['output']>;
-  /** Read-only display string derived from `artists` (`A feat. B`). */
-  songArtist?: Maybe<Scalars['String']['output']>;
-  songGenre?: Maybe<Scalars['String']['output']>;
-  songLanguage?: Maybe<Scalars['String']['output']>;
-  songName?: Maybe<Scalars['String']['output']>;
-  songYear?: Maybe<Scalars['String']['output']>;
-  tags?: Maybe<Array<Scalars['String']['output']>>;
-  trackCount?: Maybe<Scalars['Int']['output']>;
-  trackNumber?: Maybe<Scalars['Int']['output']>;
-  previewUrl?: Maybe<Scalars['String']['output']>;
-  explicit?: Maybe<Scalars['Boolean']['output']>;
-};
-
-export type ProjectMetadataInput = {
-  albumArt?: InputMaybe<Scalars['String']['input']>;
-  /** Omitted keeps the stored credits; `[]` clears them. `songArtist` is no longer accepted. */
-  artists?: InputMaybe<Array<ArtistCreditInput>>;
-  description?: InputMaybe<Scalars['String']['input']>;
-  genre?: InputMaybe<Scalars['String']['input']>;
-  singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
-  singers?: InputMaybe<Array<Scalars['String']['input']>>;
-  songAlbum?: InputMaybe<Scalars['String']['input']>;
-  songGenre?: InputMaybe<Scalars['String']['input']>;
-  songLanguage?: InputMaybe<Scalars['String']['input']>;
-  songName?: InputMaybe<Scalars['String']['input']>;
-  songYear?: InputMaybe<Scalars['String']['input']>;
-  tags?: InputMaybe<Array<Scalars['String']['input']>>;
-  trackCount?: InputMaybe<Scalars['Int']['input']>;
-  trackNumber?: InputMaybe<Scalars['Int']['input']>;
-  previewUrl?: InputMaybe<Scalars['String']['input']>;
-  explicit?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
+/** description: up to 500 chars. tags: up to 10, each one word of up to 30 chars; a leading # is dropped. */
 export type ProfileShareInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  /** On a project already shared: post it again (new date, new feed entry) instead of editing the note. */
   reshare?: InputMaybe<Scalars['Boolean']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -900,6 +1347,114 @@ export type ProfileShareNote = {
 export type ProfileSharePage = {
   hasMore: Scalars['Boolean']['output'];
   items: Array<ProfileShareItem>;
+};
+
+export type Project = {
+  /** @deprecated Boost became Share to profile; use profileShareCount. */
+  boostCount?: Maybe<Scalars['Int']['output']>;
+  /** Oldest contribution first. Empty when the viewer cannot read the project. */
+  collaborators: Array<ProjectCollaborator>;
+  contentUpdatedAt?: Maybe<Scalars['String']['output']>;
+  coverImage?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  createdFrom?: Maybe<Scalars['String']['output']>;
+  expiresAt?: Maybe<Scalars['String']['output']>;
+  forkCount?: Maybe<Scalars['Int']['output']>;
+  forkedFrom?: Maybe<ForkedFrom>;
+  forksEnabled?: Maybe<Scalars['Boolean']['output']>;
+  hasWordSync?: Maybe<Scalars['Boolean']['output']>;
+  id: Scalars['ID']['output'];
+  /** @deprecated Use isSharedToProfileByMe. */
+  isBoostedByMe?: Maybe<Scalars['Boolean']['output']>;
+  isForkedByMe?: Maybe<Scalars['Boolean']['output']>;
+  isSharedToProfileByMe?: Maybe<Scalars['Boolean']['output']>;
+  isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
+  lineCount?: Maybe<Scalars['Int']['output']>;
+  lyrics?: Maybe<Lyrics>;
+  lyricsId?: Maybe<Scalars['ID']['output']>;
+  metadata?: Maybe<ProjectMetadata>;
+  /** The viewer's own share of this project, null when they have not shared it. */
+  myProfileShare?: Maybe<ProfileShareNote>;
+  profileShareCount?: Maybe<Scalars['Int']['output']>;
+  public?: Maybe<Scalars['Boolean']['output']>;
+  publicId: Scalars['String']['output'];
+  readOnly?: Maybe<Scalars['Boolean']['output']>;
+  shareCount?: Maybe<Scalars['Int']['output']>;
+  slug: Scalars['String']['output'];
+  starCount?: Maybe<Scalars['Int']['output']>;
+  state?: Maybe<ProjectState>;
+  syncedLineCount?: Maybe<Scalars['Int']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  trendingScore?: Maybe<Scalars['Float']['output']>;
+  type?: Maybe<Scalars['String']['output']>;
+  updatedAt?: Maybe<Scalars['String']['output']>;
+  upload?: Maybe<Upload>;
+  uploadId?: Maybe<Scalars['ID']['output']>;
+  user?: Maybe<User>;
+  userId?: Maybe<Scalars['ID']['output']>;
+  viewCount?: Maybe<Scalars['Int']['output']>;
+};
+
+/** Someone, other than the owner, who edited a project in a collaborative session. */
+export type ProjectCollaborator = {
+  /** The credit's subject (user:<id> or guest:<id>); pass it to removeProjectCollaborator. */
+  id: Scalars['ID']['output'];
+  isGuest: Scalars['Boolean']['output'];
+  /** Current display name for users, the typed name for guests. */
+  name: Scalars['String']['output'];
+  /** The signed-in collaborator; null for guests. Only id, accountName, displayName and avatarUrl are guaranteed populated; do not select anything else. */
+  user?: Maybe<User>;
+};
+
+export type ProjectLyricsInput = {
+  editorMode?: InputMaybe<Scalars['String']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  line?: InputMaybe<LineInput>;
+  lineIdx?: InputMaybe<Scalars['Int']['input']>;
+  lines?: InputMaybe<Array<LinePatchInput>>;
+  sectionIdx?: InputMaybe<Scalars['Int']['input']>;
+  sections?: InputMaybe<Array<SectionInput>>;
+  word?: InputMaybe<WordInput>;
+  wordIndex?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ProjectMetadata = {
+  albumArt?: Maybe<Scalars['String']['output']>;
+  artists: Array<ArtistCredit>;
+  description?: Maybe<Scalars['String']['output']>;
+  explicit?: Maybe<Scalars['Boolean']['output']>;
+  genre?: Maybe<Scalars['String']['output']>;
+  previewUrl?: Maybe<Scalars['String']['output']>;
+  singerColors?: Maybe<Array<Scalars['String']['output']>>;
+  singers?: Maybe<Array<Scalars['String']['output']>>;
+  songAlbum?: Maybe<Scalars['String']['output']>;
+  songArtist?: Maybe<Scalars['String']['output']>;
+  songGenre?: Maybe<Scalars['String']['output']>;
+  songLanguage?: Maybe<Scalars['String']['output']>;
+  songName?: Maybe<Scalars['String']['output']>;
+  songYear?: Maybe<Scalars['String']['output']>;
+  tags?: Maybe<Array<Scalars['String']['output']>>;
+  trackCount?: Maybe<Scalars['Int']['output']>;
+  trackNumber?: Maybe<Scalars['Int']['output']>;
+};
+
+export type ProjectMetadataInput = {
+  albumArt?: InputMaybe<Scalars['String']['input']>;
+  artists?: InputMaybe<Array<ArtistCreditInput>>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  explicit?: InputMaybe<Scalars['Boolean']['input']>;
+  genre?: InputMaybe<Scalars['String']['input']>;
+  previewUrl?: InputMaybe<Scalars['String']['input']>;
+  singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
+  singers?: InputMaybe<Array<Scalars['String']['input']>>;
+  songAlbum?: InputMaybe<Scalars['String']['input']>;
+  songGenre?: InputMaybe<Scalars['String']['input']>;
+  songLanguage?: InputMaybe<Scalars['String']['input']>;
+  songName?: InputMaybe<Scalars['String']['input']>;
+  songYear?: InputMaybe<Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  trackCount?: InputMaybe<Scalars['Int']['input']>;
+  trackNumber?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type ProjectPage = {
@@ -934,9 +1489,29 @@ export type ProjectStats = {
   title: Scalars['String']['output'];
 };
 
+/**
+ * Outcome of registering a view. `counted` is false when the view was seen but
+ * deliberately not counted — the viewer already counted today, is the owner, the
+ * project is private, or the caller had no stable identity.
+ */
+export type ProjectViewResult = {
+  counted: Scalars['Boolean']['output'];
+  viewCount: Scalars['Int']['output'];
+};
+
+export type PublicBadgeDef = {
+  color: Scalars['String']['output'];
+  description: LocalizedString;
+  holderCount: Scalars['Int']['output'];
+  holderPct: Scalars['Float']['output'];
+  icon: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  label: LocalizedString;
+  rarity: Scalars['String']['output'];
+};
+
 export type PublicUser = {
   accountName: Scalars['String']['output'];
-  /** Null unless the owner enabled preferences.showActivityHeatmap (server-enforced). */
   activityHeatmap?: Maybe<Array<ActivityHeatmapDay>>;
   avatarUrl?: Maybe<Scalars['String']['output']>;
   badges: Array<UserBadge>;
@@ -945,14 +1520,14 @@ export type PublicUser = {
   coverImageUrl?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
+  /** off, uploads or all: what the viewer is told about this user's projects. off unless following. */
+  followNotify: Scalars['String']['output'];
   followerCount: Scalars['Int']['output'];
   followingCount: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   isAdmin: Scalars['Boolean']['output'];
   isBlockedByMe: Scalars['Boolean']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
-  /** off, uploads or all: what the viewer hears about this user's projects. */
-  followNotify: Scalars['String']['output'];
   isFollowingMe: Scalars['Boolean']['output'];
   isVerified: Scalars['Boolean']['output'];
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
@@ -962,18 +1537,23 @@ export type PublicUser = {
   projectCount: Scalars['Int']['output'];
   projects: Array<Project>;
   showFollowers: Scalars['Boolean']['output'];
+  showXpProgress: Scalars['Boolean']['output'];
   showcasePublic: Scalars['Boolean']['output'];
   showcasedBadges: Array<ShowcasedBadge>;
-  showXpProgress: Scalars['Boolean']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
   totalStarsReceived: Scalars['Int']['output'];
-  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
+  addictionLevels: Array<AddictionLevel>;
+  adminAddictionLevels: Array<AddictionLevel>;
   badgeDefinitions: Array<BadgeDef>;
+  blockedUsers: Array<BlockedUser>;
+  /** The live session, for its owner or a signed-in member; null otherwise. */
+  collabSession?: Maybe<CollabSession>;
   exploreStats: ExploreStats;
   feed: FeedResult;
   followList: FollowListResult;
@@ -981,15 +1561,38 @@ export type Query = {
   health: HealthStatus;
   leaderboard: LeaderboardResult;
   me?: Maybe<User>;
+  myArtistSuggestions: ArtistSuggestionPage;
+  /** Live sessions the caller owns or is a signed-in member of. */
+  myCollabSessions: Array<CollabSessionSummary>;
   myMusicLibrary: Array<MusicLibraryEntry>;
+  myPreferences: UserPreferences;
+  /** The viewer's own reports and what became of them, newest first. */
+  myReports: MyReports;
+  myRequests: Array<StaffRequest>;
+  /** The viewer's own reports and what became of them. */
+  myWallReports: MyWallReports;
+  /** Targets with open reports, for moderators (users.ban). */
+  openReportCount: Scalars['Int']['output'];
+  parseArtists: ParsedArtists;
+  pendingRequests: Array<StaffRequest>;
   playlist?: Maybe<Playlist>;
   playlists: Array<Playlist>;
   popularPlaylists: PlaylistPage;
+  /** Projects a user shared to their profile, newest share first. */
+  profileShares: ProfileSharePage;
   project?: Maybe<Project>;
   projectReactions: ProjectReactions;
   projects: Array<Project>;
+  publicBadgeDefinitions: Array<PublicBadgeDef>;
   publicProfile?: Maybe<PublicUser>;
   publicProject?: Maybe<Project>;
+  /** Reports grouped by target, for moderators (users.ban). status: open (default), dismissed or actioned; targetType filters. */
+  reportGroups: Array<ReportGroup>;
+  /** A report's conversation, for its reporter and moderators (users.ban). */
+  reportMessages: Array<ReportMessage>;
+  requestCapabilities: RequestCapabilities;
+  requestCounts: RequestCounts;
+  reviewedRequests: Array<StaffRequest>;
   savedPlaylists: Array<Playlist>;
   searchProjects: SearchResult;
   searchUsers: Array<FollowUser>;
@@ -1002,6 +1605,27 @@ export type Query = {
   userActivityHeatmap: Array<ActivityHeatmapDay>;
   userContentStats: ContentStats;
   userShowcase: Array<ShowcasedBadge>;
+  /** A page of a wall (0-based). With focus, the page holding that comment, with the replies on the way to it in full; after is ignored (kept for older clients). */
+  wall: Wall;
+  /** One comment as the viewer sees it; null when it isn't shown to them. */
+  wallComment?: Maybe<WallComment>;
+  /** A comment's earlier versions, oldest first, then the current one. */
+  wallCommentHistory: Array<WallCommentRevision>;
+  wallCommentLikers: WallLikers;
+  /** Comments with open reports, for moderators (users.ban). */
+  wallOpenReportCount: Scalars['Int']['output'];
+  /** More replies to a comment, after the first offset. */
+  wallReplies: Array<WallComment>;
+  /** Reported wall comments grouped by comment, for moderators (users.ban). */
+  wallReportGroups: Array<WallReportGroup>;
+  /** Reported wall comments, for moderators (users.ban). */
+  wallReports: Array<WallReport>;
+  xpLevelCurve: Array<XpLevelThreshold>;
+};
+
+
+export type QueryCollabSessionArgs = {
+  publicId: Scalars['String']['input'];
 };
 
 
@@ -1023,29 +1647,37 @@ export type QueryGetShareArgs = {
 };
 
 
-export type LeaderboardTimeframe =
-  | 'ALL_TIME'
-  | 'MONTH'
-  | 'WEEK';
-
-export type LeaderboardSort =
-  | 'LINES'
-  | 'PROJECTS'
-  | 'RANK'
-  | 'STARS'
-  | 'TIME_SYNCED'
-  | 'XP';
-
-export type LeaderboardSortDirection =
-  | 'ASC'
-  | 'DESC';
-
 export type QueryLeaderboardArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<LeaderboardSort>;
   sortDir?: InputMaybe<LeaderboardSortDirection>;
   timeframe?: InputMaybe<LeaderboardTimeframe>;
+};
+
+
+export type QueryMyArtistSuggestionsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  prefix: Scalars['String']['input'];
+};
+
+
+export type QueryMyReportsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyWallReportsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryParseArtistsArgs = {
+  artist: Scalars['String']['input'];
+  title?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1060,6 +1692,13 @@ export type QueryPlaylistsArgs = {
 
 
 export type QueryPopularPlaylistsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryProfileSharesArgs = {
+  accountName: Scalars['String']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -1083,11 +1722,24 @@ export type QueryProjectsArgs = {
 
 export type QueryPublicProfileArgs = {
   accountName: Scalars['String']['input'];
+  asVisitor?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
 export type QueryPublicProjectArgs = {
   publicId: Scalars['String']['input'];
+};
+
+
+export type QueryReportGroupsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  targetType?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryReportMessagesArgs = {
+  reportId: Scalars['ID']['input'];
 };
 
 
@@ -1137,9 +1789,169 @@ export type QueryUserShowcaseArgs = {
   accountName: Scalars['String']['input'];
 };
 
+
+export type QueryWallArgs = {
+  accountName: Scalars['String']['input'];
+  after?: InputMaybe<Scalars['String']['input']>;
+  focus?: InputMaybe<Scalars['ID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  sort?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryWallCommentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryWallCommentHistoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryWallCommentLikersArgs = {
+  id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryWallRepliesArgs = {
+  commentId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryWallReportGroupsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryWallReportsArgs = {
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryXpLevelCurveArgs = {
+  maxLevel?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type ReactionSummary = {
   count: Scalars['Int']['output'];
   emoji: Scalars['String']['output'];
+};
+
+/** A reported wall comment, with the comment it answers for moderators. */
+export type ReportCommentTarget = {
+  comment: WallReportComment;
+  /** The comment it answers, for context (moderators only); null for a top-level comment. */
+  parent?: Maybe<WallReportComment>;
+  wallAccountName: Scalars['String']['output'];
+};
+
+/** One person's report, as moderators see it. */
+export type ReportEntry = {
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Messages in this report's conversation. */
+  messageCount: Scalars['Int']['output'];
+  note: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  reporter?: Maybe<ReportUser>;
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+};
+
+/** Every report on one target, for moderators. The preview field matching targetType is set; all are null once the target is gone. */
+export type ReportGroup = {
+  comment?: Maybe<ReportCommentTarget>;
+  latestAt: Scalars['String']['output'];
+  /** Open reports on this target, whatever status was listed. */
+  openCount: Scalars['Int']['output'];
+  playlist?: Maybe<ReportPlaylistTarget>;
+  project?: Maybe<ReportProjectTarget>;
+  reports: Array<ReportEntry>;
+  /** Who is accountable: the comment's author, the account itself, or the owner. */
+  subject?: Maybe<ReportUser>;
+  /** The subject's targets actioned after reports in the last 30 days. */
+  subjectActionedCount: Scalars['Int']['output'];
+  /** The subject's wall-commenting restriction: an ISO date, 'forever', or null. */
+  subjectRestrictedUntil?: Maybe<Scalars['String']['output']>;
+  targetId: Scalars['ID']['output'];
+  /** wall_comment, user, project or playlist. */
+  targetType: Scalars['String']['output'];
+  user?: Maybe<ReportUserTarget>;
+  /** For a wall comment: the wall's account name, kept once the comment is gone. */
+  wallAccountName?: Maybe<Scalars['String']['output']>;
+};
+
+/** A message in a report's conversation between its reporter and the moderators. */
+export type ReportMessage = {
+  /** Null when the viewer may not see who wrote it (a moderator, seen by the reporter). */
+  author?: Maybe<ReportUser>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  fromReporter: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** The viewer wrote it. */
+  mine: Scalars['Boolean']['output'];
+  /** Replies to it, oldest first; replies don't nest further. */
+  replies: Array<ReportMessage>;
+};
+
+/** A reported playlist. */
+export type ReportPlaylistTarget = {
+  coverImage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  ownerAccountName: Scalars['String']['output'];
+  projectCount: Scalars['Int']['output'];
+  public: Scalars['Boolean']['output'];
+};
+
+/** A reported project. */
+export type ReportProjectTarget = {
+  artist?: Maybe<Scalars['String']['output']>;
+  coverImage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  ownerAccountName: Scalars['String']['output'];
+  public: Scalars['Boolean']['output'];
+  publicId: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+/** A person as reports show them. */
+export type ReportUser = {
+  accountName: Scalars['String']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
+};
+
+/** A reported account. */
+export type ReportUserTarget = {
+  accountName: Scalars['String']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  banned: Scalars['Boolean']['output'];
+  /** The first 200 characters. */
+  bio: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type RequestCapabilities = {
+  reviewable: Array<Scalars['String']['output']>;
+  submittable: Array<Scalars['String']['output']>;
+};
+
+export type RequestCounts = {
+  myPending: Scalars['Int']['output'];
+  pendingReview: Scalars['Int']['output'];
 };
 
 export type RetroactiveResult = {
@@ -1156,10 +1968,10 @@ export type SaveMediaInput = {
   duration?: InputMaybe<Scalars['Float']['input']>;
   fileName?: InputMaybe<Scalars['String']['input']>;
   publicId?: InputMaybe<Scalars['String']['input']>;
+  sizeBytes?: InputMaybe<Scalars['Float']['input']>;
   source: Scalars['String']['input'];
   title?: InputMaybe<Scalars['String']['input']>;
   uploadUrl?: InputMaybe<Scalars['String']['input']>;
-  sizeBytes?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ScrollSettings = {
@@ -1181,8 +1993,6 @@ export type SearchSort =
   | 'NEWEST'
   | 'RELEVANCE'
   | 'STARS';
-
-
 
 export type Section = {
   depth?: Maybe<Scalars['Int']['output']>;
@@ -1276,8 +2086,9 @@ export type ShowcasedBadge = {
   holderCount: Scalars['Int']['output'];
   icon: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  label: Scalars['String']['output'];
+  label: LocalizedString;
   rarity: Scalars['String']['output'];
+  /** @deprecated Rarity is preset per badge; always 0. Remove once no client selects it. */
   rarityPct: Scalars['Float']['output'];
 };
 
@@ -1301,6 +2112,21 @@ export type SrtSettingsInput = {
   defaultSubtitleDuration?: InputMaybe<Scalars['Float']['input']>;
   minSubtitleGap?: InputMaybe<Scalars['Float']['input']>;
   snapToNextLine?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type StaffRequest = {
+  createdAt?: Maybe<Scalars['String']['output']>;
+  decisionNote?: Maybe<Scalars['String']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  payload?: Maybe<Scalars['String']['output']>;
+  requesterId: Scalars['ID']['output'];
+  requesterName: Scalars['String']['output'];
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  reviewerName?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  summary: Scalars['String']['output'];
+  type: Scalars['String']['output'];
 };
 
 export type Translation = {
@@ -1328,53 +2154,35 @@ export type UpdatePlaylistInput = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
-export type UpdateProfileInput = {
-  accountName?: InputMaybe<Scalars['String']['input']>;
-  avatarUrl?: InputMaybe<Scalars['String']['input']>;
-  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
-  bio?: InputMaybe<Scalars['String']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  email?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UserPreferences = {
-  showFollowers: Scalars['Boolean']['output'];
-  onlineVisibility: Scalars['String']['output'];
-  lastOnlineVisibility: Scalars['String']['output'];
-  country?: Maybe<Scalars['String']['output']>;
-  countryVisibility: Scalars['String']['output'];
-  miniProfileBadgesEnabled: Scalars['Boolean']['output'];
-  miniProfileBadgeIds: Array<Scalars['String']['output']>;
-  showActivityHeatmap: Scalars['Boolean']['output'];
-  showXpProgress: Scalars['Boolean']['output'];
-  showAddictionTitle: Scalars['Boolean']['output'];
-  wallEnabled: Scalars['Boolean']['output'];
-  allowTags: Scalars['Boolean']['output'];
-  notifications: NotificationPreferences;
-  defaultProjectPrivacy: Scalars['String']['output'];
-  wallHoldFrom: Scalars['String']['output'];
-  wallMutedWords: Array<Scalars['String']['output']>;
-  wallWhoCanComment: Scalars['String']['output'];
-};
-
 export type UpdatePreferencesInput = {
-  showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
-  onlineVisibility?: InputMaybe<Scalars['String']['input']>;
-  lastOnlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  allowTags?: InputMaybe<Scalars['Boolean']['input']>;
+  /** ISO 3166-1 alpha-2, or null to clear. */
   country?: InputMaybe<Scalars['String']['input']>;
   countryVisibility?: InputMaybe<Scalars['String']['input']>;
-  miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
-  miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
-  showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
-  showAddictionTitle?: InputMaybe<Scalars['Boolean']['input']>;
-  wallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
-  allowTags?: InputMaybe<Scalars['Boolean']['input']>;
-  notifications?: InputMaybe<NotificationPreferencesInput>;
+  /** @deprecated Ignored; every new project is private. */
   defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
+  lastOnlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  notifications?: InputMaybe<NotificationPreferencesInput>;
+  onlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
+  showAddictionTitle?: InputMaybe<Scalars['Boolean']['input']>;
+  showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
+  showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
+  wallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   wallHoldFrom?: InputMaybe<Scalars['String']['input']>;
   wallMutedWords?: InputMaybe<Array<Scalars['String']['input']>>;
   wallWhoCanComment?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateProfileInput = {
+  accountName?: InputMaybe<Scalars['String']['input']>;
+  avatarUrl?: InputMaybe<Scalars['String']['input']>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateProjectInput = {
@@ -1442,6 +2250,14 @@ export type User = {
   id: Scalars['ID']['output'];
   isVerified: Scalars['Boolean']['output'];
   lastAccountNameChangedAt?: Maybe<Scalars['String']['output']>;
+  lastDevice?: Maybe<Scalars['String']['output']>;
+  lastIp?: Maybe<Scalars['String']['output']>;
+  lastLoginAt?: Maybe<Scalars['String']['output']>;
+  lastOnlineAt?: Maybe<Scalars['String']['output']>;
+  lastOnlineVisibility: Scalars['String']['output'];
+  miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  miniProfileBadgesEnabled: Scalars['Boolean']['output'];
+  onlineVisibility: Scalars['String']['output'];
   passwordChangedAt?: Maybe<Scalars['String']['output']>;
   pendingEmail?: Maybe<Scalars['String']['output']>;
   permissions: Array<Scalars['String']['output']>;
@@ -1451,22 +2267,14 @@ export type User = {
   role: Scalars['String']['output'];
   settings?: Maybe<Settings>;
   showFollowers: Scalars['Boolean']['output'];
-  onlineVisibility: Scalars['String']['output'];
-  lastOnlineVisibility: Scalars['String']['output'];
-  lastOnlineAt?: Maybe<Scalars['String']['output']>;
-  miniProfileBadgesEnabled: Scalars['Boolean']['output'];
-  miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showcasePublic: Scalars['Boolean']['output'];
   showcaseSlots: Scalars['Int']['output'];
   showcasedBadges: Array<Scalars['String']['output']>;
+  staffRole?: Maybe<Scalars['String']['output']>;
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   uploads: Array<Upload>;
   wasJustUnbanned?: Maybe<Scalars['Boolean']['output']>;
-  lastIp?: Maybe<Scalars['String']['output']>;
-  lastDevice?: Maybe<Scalars['String']['output']>;
-  lastLoginAt?: Maybe<Scalars['String']['output']>;
-  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type UserAppeal = {
@@ -1486,6 +2294,30 @@ export type UserBan = {
   active: Scalars['Boolean']['output'];
   reason?: Maybe<Scalars['String']['output']>;
   until?: Maybe<Scalars['String']['output']>;
+};
+
+export type UserPreferences = {
+  allowTags: Scalars['Boolean']['output'];
+  /** ISO 3166-1 alpha-2, chosen by the user; null when unset. */
+  country?: Maybe<Scalars['String']['output']>;
+  countryVisibility: Scalars['String']['output'];
+  /** @deprecated Every new project is private; always the string private. */
+  defaultProjectPrivacy: Scalars['String']['output'];
+  lastOnlineVisibility: Scalars['String']['output'];
+  miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  miniProfileBadgesEnabled: Scalars['Boolean']['output'];
+  notifications: NotificationPreferences;
+  onlineVisibility: Scalars['String']['output'];
+  showActivityHeatmap: Scalars['Boolean']['output'];
+  showAddictionTitle: Scalars['Boolean']['output'];
+  showFollowers: Scalars['Boolean']['output'];
+  showXpProgress: Scalars['Boolean']['output'];
+  wallEnabled: Scalars['Boolean']['output'];
+  /** nobody, new_accounts, not_followed or everyone: whose comments wait for approval. */
+  wallHoldFrom: Scalars['String']['output'];
+  wallMutedWords: Array<Scalars['String']['output']>;
+  /** everyone, following (people the owner follows) or nobody. */
+  wallWhoCanComment: Scalars['String']['output'];
 };
 
 export type UserProgression = {
@@ -1509,6 +2341,163 @@ export type UserStreak = {
   longest?: Maybe<Scalars['Int']['output']>;
 };
 
+export type Wall = {
+  /** The viewer may post: signed in, allowed by the owner's setting, not restricted. */
+  canComment: Scalars['Boolean']['output'];
+  /** The owner's setting: everyone, following or nobody. */
+  commentPolicy: Scalars['String']['output'];
+  comments: Array<WallComment>;
+  /** False when the owner turned their wall off. */
+  enabled: Scalars['Boolean']['output'];
+  hasMore: Scalars['Boolean']['output'];
+  page: Scalars['Int']['output'];
+  /** For the owner and moderators: comments waiting for approval. */
+  pendingCount: Scalars['Int']['output'];
+  /** The viewer's own commenting restriction: an ISO date, 'forever', or null. */
+  restrictedUntil?: Maybe<Scalars['String']['output']>;
+  /** newest, oldest or top. */
+  sort: Scalars['String']['output'];
+  /** Whether the viewer is told about new comments on this wall. */
+  subscribed: Scalars['Boolean']['output'];
+  /** Top-level comments, not counting replies. */
+  total: Scalars['Int']['output'];
+  /** Every comment, replies included. */
+  totalAll: Scalars['Int']['output'];
+};
+
+export type WallAuthor = {
+  accountName: Scalars['String']['output'];
+  /** Title of their addiction level (the app calls it Melomaniac Level). Only loaded on wall comments. */
+  addictionTitle?: Maybe<LocalizedString>;
+  /** False when this author switched tagging off. */
+  allowsTags: Scalars['Boolean']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
+};
+
+export type WallComment = {
+  author: WallAuthor;
+  /** May contain tag tokens; resolve them through mentions and projectRefs. */
+  body: Scalars['String']['output'];
+  canDelete: Scalars['Boolean']['output'];
+  canEdit: Scalars['Boolean']['output'];
+  /** The viewer may approve, hide and unhide it: the wall's owner, or a moderator. */
+  canModerate: Scalars['Boolean']['output'];
+  createdAt: Scalars['String']['output'];
+  /** Its author deleted it; kept, without text or author, so its replies keep their place. */
+  deleted: Scalars['Boolean']['output'];
+  /** 0 for a comment, 1 for a reply, 2 for a reply to a reply. */
+  depth: Scalars['Int']['output'];
+  descendantCount: Scalars['Int']['output'];
+  editedAt?: Maybe<Scalars['String']['output']>;
+  /** For a pending comment: approval (the owner's setting) or muted_word. */
+  heldReason?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  likeCount: Scalars['Int']['output'];
+  likedByMe: Scalars['Boolean']['output'];
+  mentions: Array<WallMention>;
+  /** For a top-level comment: the viewer muted replies in its thread. */
+  mutedByMe: Scalars['Boolean']['output'];
+  pinned: Scalars['Boolean']['output'];
+  projectRefs: Array<WallProjectRef>;
+  reactions: Array<WallReaction>;
+  replies: Array<WallComment>;
+  /** Direct replies in total, and everything beneath; replies may hold only the first few. */
+  replyCount: Scalars['Int']['output'];
+  /** For a reply at the deepest level: the sibling it answers (it is listed right after it). */
+  replyToId?: Maybe<Scalars['ID']['output']>;
+  /** It answered a sibling that is no longer shown. */
+  replyToMissing: Scalars['Boolean']['output'];
+  /** How many times it was edited; see wallCommentHistory. */
+  revisionCount: Scalars['Int']['output'];
+  /** visible, pending (waiting for the owner's approval) or hidden (by the owner or a moderator). */
+  status: Scalars['String']['output'];
+};
+
+export type WallCommentRevision = {
+  body: Scalars['String']['output'];
+  current: Scalars['Boolean']['output'];
+  /** When this version was written. */
+  editedAt: Scalars['String']['output'];
+};
+
+export type WallLikeResult = {
+  likeCount: Scalars['Int']['output'];
+  liked: Scalars['Boolean']['output'];
+};
+
+export type WallLikers = {
+  total: Scalars['Int']['output'];
+  users: Array<WallAuthor>;
+};
+
+/** A person tagged in a comment, as @[u:<id>] in its body. */
+export type WallMention = {
+  accountName: Scalars['String']['output'];
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+/** A project tagged in a comment, as @[p:<publicId>] in its body. Only listed when the viewer may see it. */
+export type WallProjectRef = {
+  coverImage?: Maybe<Scalars['String']['output']>;
+  ownerAccountName: Scalars['String']['output'];
+  publicId: Scalars['ID']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type WallReaction = {
+  count: Scalars['Int']['output'];
+  /** A quick-reaction code or one emoji. */
+  emoji: Scalars['String']['output'];
+  mine: Scalars['Boolean']['output'];
+};
+
+export type WallReport = {
+  /** Null once the comment is gone. */
+  comment?: Maybe<WallReportComment>;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+  openCount: Scalars['Int']['output'];
+  reason: Scalars['String']['output'];
+  reporter?: Maybe<WallAuthor>;
+  /** When a moderator settled it. */
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  wallAccountName: Scalars['String']['output'];
+};
+
+export type WallReportComment = {
+  author?: Maybe<WallAuthor>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  mentions: Array<WallMention>;
+  projectRefs: Array<WallProjectRef>;
+  status: Scalars['String']['output'];
+};
+
+/** Every report on one comment, for moderators. */
+export type WallReportGroup = {
+  /** The author's comments removed after reports in the last 30 days. */
+  authorActionedCount: Scalars['Int']['output'];
+  /** ISO date, 'forever', or null when the author may comment. */
+  authorRestrictedUntil?: Maybe<Scalars['String']['output']>;
+  /** Null once the comment is gone. */
+  comment?: Maybe<WallReportComment>;
+  commentId: Scalars['ID']['output'];
+  latestAt: Scalars['String']['output'];
+  openCount: Scalars['Int']['output'];
+  /** The comment it answers, for context. */
+  parent?: Maybe<WallReportComment>;
+  reports: Array<WallReport>;
+  wallAccountName: Scalars['String']['output'];
+};
+
 export type Word = {
   reading?: Maybe<Scalars['String']['output']>;
   singerIndex?: Maybe<Scalars['Int']['output']>;
@@ -1524,841 +2513,9 @@ export type WordInput = {
   word: Scalars['String']['input'];
 };
 
-export type AdminBadgeDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type AdminBadgeDefinitionsQuery = { badgeDefinitions: Array<{ id: string, label: string, description: string, icon: string, color: string, conditionType: string, conditionValue: number | null, autoGrant: boolean, isBuiltin: boolean, holderCount: number, xpReward: number }> };
-
-export type CreateBadgeMutationVariables = Exact<{
-  input: BadgeDefInput;
-}>;
-
-
-export type CreateBadgeMutation = { adminCreateBadge: { id: string, label: string, description: string, icon: string, color: string, conditionType: string, conditionValue: number | null, autoGrant: boolean, isBuiltin: boolean, holderCount: number } };
-
-export type UpdateBadgeMutationVariables = Exact<{
-  id: string;
-  input: BadgeDefInput;
-}>;
-
-
-export type UpdateBadgeMutation = { adminUpdateBadge: { id: string, label: string, description: string, icon: string, color: string, conditionType: string, conditionValue: number | null, autoGrant: boolean, isBuiltin: boolean, holderCount: number, xpReward: number } };
-
-export type DeleteBadgeMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type DeleteBadgeMutation = { adminDeleteBadge: boolean };
-
-export type RetroMutationVariables = Exact<{
-  badgeId: string;
-}>;
-
-
-export type RetroMutation = { adminRetroactiveScan: { granted: number, scanned: number, error: string | null } };
-
-export type GrantMutationVariables = Exact<{
-  userIdentifier: string;
-  badgeId: string;
-}>;
-
-
-export type GrantMutation = { adminGrantBadge: boolean };
-
-export type MeQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MeQuery = { me: { id: string, accountName: string | null, displayName: string | null, email: string | null, pendingEmail: string | null, avatarUrl: string | null, bio: string | null, isVerified: boolean, lastAccountNameChangedAt: string | null, accountNameChangeCount: number, wasJustUnbanned: boolean | null, role: string, createdAt: string | null, passwordChangedAt: string | null, hasPassword: boolean, showFollowers: boolean, showcasedBadges: Array<string>, showcaseSlots: number, previousAccountNames: Array<{ from: string, to: string, changedAt: string }>, emailHistory: Array<{ from: string, to: string, changedAt: string }>, ban: { active: boolean, reason: string | null, until: string | null } | null, appeal: { text: string | null, status: string | null, submittedAt: string | null, resolvedAt: string | null } | null, google: { connected: boolean, googleId: string | null, email: string | null, name: string | null, pictureUrl: string | null } | null, badges: Array<{ id: string, grantedAt: string, grantedBy: string }>, stats: { minutesSynced: number | null, wordsSynced: number | null, karaokeLines: number | null } | null, streak: { current: number | null, longest: number | null, lastActiveDate: string | null } | null, progression: { xp: number | null, level: number | null } | null } | null };
-
-export type UpdateProfileMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
-
-
-export type UpdateProfileMutation = { updateProfile: { id: string, accountName: string | null, displayName: string | null, email: string | null, pendingEmail: string | null, avatarUrl: string | null, bio: string | null, showFollowers: boolean, lastAccountNameChangedAt: string | null } };
-
-export type SendVerificationEmailMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type SendVerificationEmailMutation = { sendVerificationEmail: boolean };
-
-export type UpdateShowcaseMutationVariables = Exact<{
-  badgeIds: Array<string> | string;
-  showcasePublic?: boolean | null | undefined;
-}>;
-
-
-export type UpdateShowcaseMutation = { updateShowcase: { success: boolean, error: string | null, showcaseSlots: number, level: number, showcasePublic: boolean } };
-
-export type MyMusicLibraryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MyMusicLibraryQuery = { myMusicLibrary: Array<{ artist: string | null, album: string | null, genre: string | null, language: string | null, trackCount: number | null }> };
-
-export type TrendingProjectsQueryVariables = Exact<{
-  offset?: number | null | undefined;
-  limit?: number | null | undefined;
-}>;
-
-
-export type TrendingProjectsQuery = { trendingProjects: { total: number, hasMore: boolean, projects: Array<{ id: string, publicId: string, title: string | null, coverImage: string | null, trendingScore: number | null, starCount: number | null, forkCount: number | null, user: { id: string, accountName: string | null, displayName: string | null, avatarUrl: string | null } | null }> } };
-
-export type PopularPlaylistsQueryVariables = Exact<{
-  offset?: number | null | undefined;
-  limit?: number | null | undefined;
-}>;
-
-
-export type PopularPlaylistsQuery = { popularPlaylists: { total: number, hasMore: boolean, playlists: Array<{ id: string, name: string, description: string | null, coverImage: string | null, trendingScore: number | null, savedCount: number, projectCount: number, isPublic: boolean, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null } }> } };
-
-export type SuggestedUsersQueryVariables = Exact<{
-  limit?: number | null | undefined;
-}>;
-
-
-export type SuggestedUsersQuery = { suggestedUsers: Array<{ id: string, accountName: string, displayName: string | null, avatarUrl: string | null }> };
-
-export type FeedQueryVariables = Exact<{
-  offset?: number | null | undefined;
-  limit?: number | null | undefined;
-}>;
-
-
-export type FeedQuery = { feed: { hasMore: boolean, activities: Array<{ id: string, type: ActivityType, publicId: string, projectTitle: string, coverImage: string | null, targetPath: string | null, createdAt: string, actor: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null } }> } };
-
-export type LeaderboardQueryVariables = Exact<{
-  limit?: number | null | undefined;
-  offset?: number | null | undefined;
-}>;
-
-
-export type LeaderboardQuery = { leaderboard: { total: number, hasMore: boolean, users: Array<{ id: string, accountName: string, displayName: string | null, avatarUrl: string | null, projectCount: number, totalStarsReceived: number, totalForksReceived: number, badges: Array<{ id: string, grantedAt: string }>, stats: { minutesSynced: number | null, wordsSynced: number | null, karaokeLines: number | null } | null, progression: { xp: number | null, level: number | null } | null, streak: { current: number | null } | null }> } };
-
-export type GetMyProjectsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetMyProjectsQuery = { projects: Array<{ id: string, publicId: string, title: string | null, metadata: { songName: string | null, songArtist: string | null } | null }> };
-
-export type PlaylistFieldsFragment = { id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> };
-
-export type GetPlaylistsQueryVariables = Exact<{
-  accountName: string;
-}>;
-
-
-export type GetPlaylistsQuery = { playlists: Array<{ id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> }> };
-
-export type GetPlaylistQueryVariables = Exact<{
-  id: string;
-}>;
-
-
-export type GetPlaylistQuery = { playlist: { id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> } | null };
-
-export type CreatePlaylistMutationVariables = Exact<{
-  input: CreatePlaylistInput;
-}>;
-
-
-export type CreatePlaylistMutation = { createPlaylist: { id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> } };
-
-export type UpdatePlaylistMutationVariables = Exact<{
-  id: string;
-  input: UpdatePlaylistInput;
-}>;
-
-
-export type UpdatePlaylistMutation = { updatePlaylist: { id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> } };
-
-export type AddProjectToPlaylistMutationVariables = Exact<{
-  playlistId: string;
-  publicId: string;
-}>;
-
-
-export type AddProjectToPlaylistMutation = { addProjectToPlaylist: { id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> } };
-
-export type RemoveProjectFromPlaylistMutationVariables = Exact<{
-  playlistId: string;
-  publicId: string;
-}>;
-
-
-export type RemoveProjectFromPlaylistMutation = { removeProjectFromPlaylist: { id: string, name: string, description: string | null, coverImage: string | null, tags: Array<string>, isPublic: boolean, sortMode: PlaylistSortMode, projectCount: number, savedCount: number, isSavedByMe: boolean, createdAt: string, updatedAt: string, owner: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null }, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null } | null, upload: { source: string, uploadUrl: string | null, coverImage: string | null } | null }> } };
-
-export type DeletePlaylistMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type DeletePlaylistMutation = { deletePlaylist: boolean };
-
-export type SavePlaylistMutationVariables = Exact<{
-  playlistId: string;
-}>;
-
-
-export type SavePlaylistMutation = { savePlaylist: boolean };
-
-export type UnsavePlaylistMutationVariables = Exact<{
-  playlistId: string;
-}>;
-
-
-export type UnsavePlaylistMutation = { unsavePlaylist: boolean };
-
-export type GetPublicProfileQueryVariables = Exact<{
-  accountName: string;
-}>;
-
-
-export type GetPublicProfileQuery = { publicProfile: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null, bio: string | null, isVerified: boolean, isAdmin: boolean, createdAt: string | null, projectCount: number, totalStarsReceived: number, totalForksReceived: number, followerCount: number, followingCount: number, isFollowedByMe: boolean, isFollowingMe: boolean, isBlockedByMe: boolean, country: string | null, showFollowers: boolean, showcasePublic: boolean, badges: Array<{ id: string, grantedAt: string }>, progression: { xp: number | null, level: number | null } | null, stats: { minutesSynced: number | null } | null, streak: { current: number | null } | null, showcasedBadges: Array<{ id: string, label: string, icon: string, color: string, rarity: string, holderCount: number, grantedAt: string }>, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, metadata: { songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, genre: string | null, description: string | null, tags: Array<string> | null } | null, upload: { source: string, uploadUrl: string | null } | null }> } | null };
-
-export type FollowUserMutationVariables = Exact<{
-  accountName: string;
-}>;
-
-
-export type FollowUserMutation = { follow: boolean };
-
-export type UnfollowUserMutationVariables = Exact<{
-  accountName: string;
-}>;
-
-
-export type UnfollowUserMutation = { unfollow: boolean };
-
-export type GetFollowListQueryVariables = Exact<{
-  accountName: string;
-  type: FollowListType;
-  offset?: number | null | undefined;
-}>;
-
-
-export type GetFollowListQuery = { followList: { total: number, users: Array<{ id: string, accountName: string, displayName: string | null, avatarUrl: string | null, isFollowedByMe: boolean }> } };
-
-export type GetPublicProjectQueryVariables = Exact<{
-  publicId: string;
-}>;
-
-
-export type GetPublicProjectQuery = { publicProject: { id: string, publicId: string, title: string | null, coverImage: string | null, starCount: number | null, forkCount: number | null, isStarredByMe: boolean | null, isForkedByMe: boolean | null, forksEnabled: boolean | null, createdAt: string | null, metadata: { description: string | null, genre: string | null, tags: Array<string> | null, songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, songLanguage: string | null, trackNumber: number | null, trackCount: number | null } | null, upload: { id: string, source: string, uploadUrl: string | null, duration: number | null, coverImage: string | null } | null, user: { id: string, accountName: string | null, displayName: string | null, avatarUrl: string | null } | null, lyrics: { editorMode: string, sections: Array<{ label: string | null, depth: number | null, id: string | null, singers: Array<string> | null, timestamp: number | null, lines: Array<{ id: string | null, text: string | null, timestamp: number | null, endTime: number | null, secondary: string | null, translation: string | null, singers: Array<string> | null, words: Array<{ word: string, time: number | null, reading: string | null, singerIndex: number | null }> | null, secondaryWords: Array<{ word: string, time: number | null }> | null }> }> } | null, forkedFrom: { publicId: string | null, accountName: string | null } | null } | null };
-
-export type GetProjectsQueryVariables = Exact<{
-  limit?: number | null | undefined;
-  offset?: number | null | undefined;
-}>;
-
-
-export type GetProjectsQuery = { projects: Array<{ id: string, publicId: string, title: string | null, type: string | null, readOnly: boolean | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, forkCount: number | null, starCount: number | null, lineCount: number | null, syncedLineCount: number | null, coverImage: string | null, forkedFrom: { publicId: string | null, userId: string | null, accountName: string | null } | null, metadata: { description: string | null, genre: string | null, tags: Array<string> | null, songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, songLanguage: string | null, trackNumber: number | null, trackCount: number | null } | null, upload: { id: string, fileName: string, title: string, source: string, duration: number | null, uploadUrl: string | null } | null }> };
-
-export type GetProjectQueryVariables = Exact<{
-  id: string;
-}>;
-
-
-export type GetProjectQuery = { project: { id: string, publicId: string, title: string | null, type: string | null, readOnly: boolean | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, coverImage: string | null, forkedFrom: { publicId: string | null, userId: string | null, accountName: string | null } | null, state: { syncMode: boolean | null, activeLineIndex: number | null, playbackPosition: number | null, playbackSpeed: number | null, saveTime: string | null } | null, metadata: { description: string | null, genre: string | null, tags: Array<string> | null, songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, songLanguage: string | null, trackNumber: number | null, trackCount: number | null } | null, upload: { id: string, fileName: string, title: string, source: string, duration: number | null, uploadUrl: string | null } | null, lyrics: { id: string, publicId: string, editorMode: string, version: number | null, sections: Array<{ id: string | null, label: string | null, depth: number | null, singers: Array<string> | null, timestamp: number | null, lines: Array<{ id: string | null, text: string | null, timestamp: number | null, endTime: number | null, secondary: string | null, singers: Array<string> | null, translation: string | null, translations: Array<{ language: string, text: string }> | null, words: Array<{ word: string, time: number | null, reading: string | null }> | null, secondaryWords: Array<{ word: string, time: number | null }> | null }> }> } | null, user: { id: string, accountName: string | null, avatarUrl: string | null } | null } | null };
-
-export type CreateProjectMutationVariables = Exact<{
-  input: CreateProjectInput;
-}>;
-
-
-export type CreateProjectMutation = { createProject: { id: string, publicId: string, title: string | null } };
-
-export type UpdateProjectMutationVariables = Exact<{
-  id: string;
-  input: UpdateProjectInput;
-}>;
-
-
-export type UpdateProjectMutation = { updateProject: { id: string, publicId: string, title: string | null, public: boolean | null, readOnly: boolean | null } };
-
-export type DeleteProjectMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type DeleteProjectMutation = { deleteProject: boolean };
-
-export type GetShareQueryVariables = Exact<{
-  id: string;
-}>;
-
-
-export type GetShareQuery = { getShare: { id: string, publicId: string, title: string | null, public: boolean | null, readOnly: boolean | null, createdAt: string | null, forkCount: number | null, starCount: number | null, isStarredByMe: boolean | null, uploadId: string | null, forkedFrom: { publicId: string | null, userId: string | null, accountName: string | null } | null, metadata: { description: string | null, genre: string | null, tags: Array<string> | null, songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, songLanguage: string | null, trackNumber: number | null, trackCount: number | null } | null, user: { id: string, accountName: string | null, displayName: string | null, avatarUrl: string | null } | null, upload: { id: string, source: string, fileName: string, title: string, uploadUrl: string | null, publicId: string | null, duration: number | null } | null, lyrics: { id: string, publicId: string, editorMode: string, sections: Array<{ id: string | null, label: string | null, depth: number | null, singers: Array<string> | null, timestamp: number | null, lines: Array<{ id: string | null, text: string | null, timestamp: number | null, endTime: number | null, secondary: string | null, singers: Array<string> | null, translation: string | null, translations: Array<{ language: string, text: string }> | null, words: Array<{ word: string, time: number | null, reading: string | null }> | null, secondaryWords: Array<{ word: string, time: number | null }> | null }> }> } | null } | null };
-
-export type CloneProjectMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type CloneProjectMutation = { cloneProject: { id: string, publicId: string } };
-
-export type StarProjectMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type StarProjectMutation = { starProject: { publicId: string, starCount: number | null, isStarredByMe: boolean | null } };
-
-export type UnstarProjectMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type UnstarProjectMutation = { unstarProject: { publicId: string, starCount: number | null, isStarredByMe: boolean | null } };
-
-export type SetForksEnabledMutationVariables = Exact<{
-  publicId: string;
-  enabled: boolean;
-}>;
-
-
-export type SetForksEnabledMutation = { setForksEnabled: { id: string, publicId: string, forksEnabled: boolean | null } };
-
-export type ListMediaQueryVariables = Exact<{
-  limit?: number | null | undefined;
-  offset?: number | null | undefined;
-}>;
-
-
-export type ListMediaQuery = { uploads: Array<{ id: string, source: string, fileName: string, title: string, duration: number | null, uploadUrl: string | null, publicId: string | null, createdAt: string | null, updatedAt: string | null }> };
-
-export type GetMediaQueryVariables = Exact<{
-  id: string;
-}>;
-
-
-export type GetMediaQuery = { upload: { id: string, source: string, fileName: string, title: string, duration: number | null, uploadUrl: string | null, publicId: string | null, createdAt: string | null, updatedAt: string | null, projects: Array<{ id: string, publicId: string, title: string | null, updatedAt: string | null }> } | null };
-
-export type SaveMediaMutationVariables = Exact<{
-  input: SaveMediaInput;
-}>;
-
-
-export type SaveMediaMutation = { saveMedia: { id: string, source: string, fileName: string, title: string } };
-
-export type DeleteMediaMutationVariables = Exact<{
-  id: string;
-}>;
-
-
-export type DeleteMediaMutation = { deleteMedia: boolean };
-
-export type ProjectReactionsQueryVariables = Exact<{
-  publicId: string;
-}>;
-
-
-export type ProjectReactionsQuery = { projectReactions: { myReaction: string | null, reactions: Array<{ emoji: string, count: number }> } };
-
-export type ReactToProjectMutationVariables = Exact<{
-  publicId: string;
-  emoji: string;
-}>;
-
-
-export type ReactToProjectMutation = { reactToProject: { myReaction: string | null, reactions: Array<{ emoji: string, count: number }> } };
-
-export type HeaderSearchQueryVariables = Exact<{
-  query: string;
-  pLimit?: number | null | undefined;
-  uLimit?: number | null | undefined;
-}>;
-
-
-export type HeaderSearchQuery = { searchProjects: { total: number, projects: Array<{ id: string, publicId: string, title: string | null, coverImage: string | null, starCount: number | null, forkCount: number | null, forkedFrom: { publicId: string | null, accountName: string | null } | null, metadata: { songName: string | null, songArtist: string | null } | null }> }, searchUsers: Array<{ id: string, accountName: string, displayName: string | null, avatarUrl: string | null }> };
-
-export type SearchProjectsQueryVariables = Exact<{
-  query: string;
-  sortBy?: SearchSort | null | undefined;
-  offset?: number | null | undefined;
-  limit?: number | null | undefined;
-}>;
-
-
-export type SearchProjectsQuery = { searchProjects: { total: number, projects: Array<{ id: string, publicId: string, title: string | null, coverImage: string | null, starCount: number | null, forkCount: number | null, createdAt: string | null, forkedFrom: { publicId: string | null, accountName: string | null } | null, metadata: { songName: string | null, songArtist: string | null, genre: string | null, tags: Array<string> | null } | null }> } };
-
-export type SearchUsersQueryVariables = Exact<{
-  query: string;
-  limit?: number | null | undefined;
-}>;
-
-
-export type SearchUsersQuery = { searchUsers: Array<{ id: string, accountName: string, displayName: string | null, avatarUrl: string | null }> };
-
-export type ProfileBadgeDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ProfileBadgeDefinitionsQuery = { badgeDefinitions: Array<{ id: string, holderCount: number }> };
-
-export type UserActivityQueryVariables = Exact<{
-  offset?: number | null | undefined;
-  limit?: number | null | undefined;
-}>;
-
-
-export type UserActivityQuery = { userActivity: { hasMore: boolean, activities: Array<{ id: string, type: ActivityType, publicId: string, projectTitle: string, coverImage: string | null, targetPath: string | null, createdAt: string, actor: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null } }> } };
-
-export type UserActivityHeatmapQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type UserActivityHeatmapQuery = { userActivityHeatmap: Array<{ date: string, count: number }> };
-
-export type UserContentStatsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type UserContentStatsQuery = { userContentStats: { totalProjects: number, totalLines: number, syncedLines: number, completionPercentage: number, averageProjectCompletion: number, averageLinesPerProject: number, fullySyncedProjects: number, musicSyncedMinutes: number, wordsTimestamped: number, karaokeLines: number, publicProjects: number, starsReceived: number, forksReceived: number, syncTrendPercentage: number, mostSyncedProject: { title: string, count: number } | null, largestProject: { title: string, count: number } | null } };
-
-export type GetSettingsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetSettingsQuery = { settings: { playback: { volume: number | null, muted: boolean | null, showWaveform: boolean | null, waveformSnap: boolean | null, loopCurrentLine: boolean | null, speedPresets: Array<number> | null, seekTime: number | null, seekPlays: boolean | null, autoRewindOnPause: { enabled: boolean | null, seconds: number | null } | null, speedBounds: { min: number | null, max: number | null } | null } | null, editor: { autoPauseOnMark: boolean | null, showShiftAll: boolean | null, shiftAllAmount: number | null, showLineNumbers: boolean | null, timestampPrecision: string | null, nudge: { fine: number | null, coarse: number | null, default: number | null } | null, autoAdvance: { enabled: boolean | null, skipBlank: boolean | null, mode: string | null } | null, srt: { defaultSubtitleDuration: number | null, minSubtitleGap: number | null, snapToNextLine: boolean | null } | null, history: { limit: number | null, groupingThresholdMs: number | null } | null, display: { activeHighlight: string | null, showNextLine: boolean | null, dualLine: boolean | null, languageLayout: string | null, translationLayout: string | null, readingFormat: string | null, karaokeFillTrack: string | null, karaokeFillEasing: string | null } | null, scroll: { mode: string | null, alignment: string | null } | null } | null, export: { lineEndings: string | null, copyFormat: string | null, downloadFormat: string | null, timestampPrecision: string | null, defaultFilenamePattern: string | null, includeMetadata: boolean | null, stripEmptyLines: boolean | null, normalizeTimestamps: boolean | null, wordTimestampPrecision: string | null } | null, interface: { theme: string | null, defaultLanguage: string | null, fontSize: string | null, spacing: string | null, previewAlignment: string | null, focusMode: string | null, layoutSwap: boolean | null, playerTop: boolean | null, editorWidth: number | null, lockLayout: boolean | null, mobileTab: string | null, toastPosition: string | null } | null, shortcuts: { mark: Array<string> | null, nudgeLeft: Array<string> | null, nudgeRight: Array<string> | null, nudgeLeftFine: Array<string> | null, nudgeRightFine: Array<string> | null, addLine: Array<string> | null, deleteLine: Array<string> | null, clearTimestamp: Array<string> | null, switchMode: Array<string> | null, deselect: Array<string> | null, showHelp: Array<string> | null, rangeSelect: Array<string> | null, toggleSelect: Array<string> | null, playPause: Array<string> | null, seekForward: Array<string> | null, seekBackward: Array<string> | null, mute: Array<string> | null, speedUp: Array<string> | null, speedDown: Array<string> | null, addSecondary: Array<string> | null, addTranslation: Array<string> | null, toggleTranslation: Array<string> | null, focusSync: Array<string> | null, focusPreview: Array<string> | null, focusPlayback: Array<string> | null } | null, advanced: { confirmDestructive: boolean | null, timezone: string | null, autoSave: { enabled: boolean | null, timeInterval: number | null } | null } | null } | null };
-
-export type UpdateSettingsMutationVariables = Exact<{
-  input: UpdateSettingsInput;
-}>;
-
-
-export type UpdateSettingsMutation = { updateSettings: { interface: { theme: string | null, fontSize: string | null, spacing: string | null } | null } };
-
-export type ResetSettingsMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ResetSettingsMutation = { resetSettings: boolean };
-
-export type GetShareProjectIdQueryVariables = Exact<{
-  id: string;
-}>;
-
-
-export type GetShareProjectIdQuery = { getShare: { publicId: string } | null };
-
-export type BlockedUser = {
-  accountName: Scalars['String']['output'];
-  avatarUrl?: Maybe<Scalars['String']['output']>;
-  blockedAt?: Maybe<Scalars['String']['output']>;
-  displayName?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-};
-
-export type ProjectViewResult = {
-  counted: Scalars['Boolean']['output'];
-  viewCount: Scalars['Int']['output'];
-};
-
-export type AutoStampSettings = {
-  applyMode?: Maybe<Scalars['String']['output']>;
-  confidenceThreshold?: Maybe<Scalars['Float']['output']>;
-  fuzzyTolerance?: Maybe<Scalars['Float']['output']>;
-};
-
-export type AutoStampSettingsInput = {
-  applyMode?: InputMaybe<Scalars['String']['input']>;
-  confidenceThreshold?: InputMaybe<Scalars['Float']['input']>;
-  fuzzyTolerance?: InputMaybe<Scalars['Float']['input']>;
-};
-
-export type NotificationPreferences = {
-  appeal_result: Scalars['Boolean']['output'];
-  badge_awarded: Scalars['Boolean']['output'];
-  comment_like: Scalars['Boolean']['output'];
-  follow: Scalars['Boolean']['output'];
-  followed_project: Scalars['Boolean']['output'];
-  fork: Scalars['Boolean']['output'];
-  level_up: Scalars['Boolean']['output'];
-  mention: Scalars['Boolean']['output'];
-  new_device: Scalars['Boolean']['output'];
-  playlist_saved: Scalars['Boolean']['output'];
-  project_mention: Scalars['Boolean']['output'];
-  reaction: Scalars['Boolean']['output'];
-  report: Scalars['Boolean']['output'];
-  report_message: Scalars['Boolean']['output'];
-  report_reviewed: Scalars['Boolean']['output'];
-  star: Scalars['Boolean']['output'];
-  star_milestone: Scalars['Boolean']['output'];
-  streak_warning: Scalars['Boolean']['output'];
-  wall_comment: Scalars['Boolean']['output'];
-  wall_report: Scalars['Boolean']['output'];
-  wall_report_reviewed: Scalars['Boolean']['output'];
-  xp_changed: Scalars['Boolean']['output'];
-};
-
-export type NotificationPreferencesInput = {
-  appeal_result?: InputMaybe<Scalars['Boolean']['input']>;
-  badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
-  comment_like?: InputMaybe<Scalars['Boolean']['input']>;
-  follow?: InputMaybe<Scalars['Boolean']['input']>;
-  followed_project?: InputMaybe<Scalars['Boolean']['input']>;
-  fork?: InputMaybe<Scalars['Boolean']['input']>;
-  level_up?: InputMaybe<Scalars['Boolean']['input']>;
-  mention?: InputMaybe<Scalars['Boolean']['input']>;
-  new_device?: InputMaybe<Scalars['Boolean']['input']>;
-  playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
-  project_mention?: InputMaybe<Scalars['Boolean']['input']>;
-  reaction?: InputMaybe<Scalars['Boolean']['input']>;
-  report?: InputMaybe<Scalars['Boolean']['input']>;
-  report_message?: InputMaybe<Scalars['Boolean']['input']>;
-  report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
-  star?: InputMaybe<Scalars['Boolean']['input']>;
-  star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
-  streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
-  wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
-  wall_report?: InputMaybe<Scalars['Boolean']['input']>;
-  wall_report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
-  xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-export type LocalizedString = {
-  en: Scalars['String']['output'];
-  es: Scalars['String']['output'];
-};
-
-export type LocalizedStringInput = {
-  en: Scalars['String']['input'];
-  es?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type PublicBadgeDef = {
-  color: Scalars['String']['output'];
-  description: LocalizedString;
-  holderCount: Scalars['Int']['output'];
-  holderPct: Scalars['Float']['output'];
-  icon: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  label: LocalizedString;
-  rarity: Scalars['String']['output'];
-};
-
-export type AddictionLevelRequirements = {
-  karaokeLines?: Maybe<Scalars['Int']['output']>;
-  musicSyncedMinutes?: Maybe<Scalars['Int']['output']>;
-  publicProjects?: Maybe<Scalars['Int']['output']>;
-  starsReceived?: Maybe<Scalars['Int']['output']>;
-  syncedLines?: Maybe<Scalars['Int']['output']>;
-  totalProjects?: Maybe<Scalars['Int']['output']>;
-  wordsTimestamped?: Maybe<Scalars['Int']['output']>;
-};
-
-export type AddictionLevel = {
-  description: LocalizedString;
-  id: Scalars['String']['output'];
-  order: Scalars['Int']['output'];
-  requirements: AddictionLevelRequirements;
-  title: LocalizedString;
-};
-
-export type AddictionLevelRequirementsInput = {
-  karaokeLines?: InputMaybe<Scalars['Int']['input']>;
-  musicSyncedMinutes?: InputMaybe<Scalars['Int']['input']>;
-  publicProjects?: InputMaybe<Scalars['Int']['input']>;
-  starsReceived?: InputMaybe<Scalars['Int']['input']>;
-  syncedLines?: InputMaybe<Scalars['Int']['input']>;
-  totalProjects?: InputMaybe<Scalars['Int']['input']>;
-  wordsTimestamped?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type AddictionLevelInput = {
-  description?: InputMaybe<LocalizedStringInput>;
-  id: Scalars['String']['input'];
-  order?: InputMaybe<Scalars['Int']['input']>;
-  requirements?: InputMaybe<AddictionLevelRequirementsInput>;
-  title: LocalizedStringInput;
-};
-
 export type XpLevelThreshold = {
   level: Scalars['Int']['output'];
   showcaseSlots: Scalars['Int']['output'];
   xpRequired: Scalars['Int']['output'];
   xpToNext: Scalars['Int']['output'];
-};
-
-export type AddictionLevelUpdateInput = {
-  description?: InputMaybe<LocalizedStringInput>;
-  order?: InputMaybe<Scalars['Int']['input']>;
-  requirements?: InputMaybe<AddictionLevelRequirementsInput>;
-  title?: InputMaybe<LocalizedStringInput>;
-};
-
-export type StaffRequest = {
-  createdAt?: Maybe<Scalars['String']['output']>;
-  decisionNote?: Maybe<Scalars['String']['output']>;
-  error?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  payload?: Maybe<Scalars['String']['output']>;
-  requesterId: Scalars['ID']['output'];
-  requesterName: Scalars['String']['output'];
-  resolvedAt?: Maybe<Scalars['String']['output']>;
-  reviewerName?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
-  summary: Scalars['String']['output'];
-  type: Scalars['String']['output'];
-};
-
-export type RequestCapabilities = {
-  reviewable: Array<Scalars['String']['output']>;
-  submittable: Array<Scalars['String']['output']>;
-};
-
-export type RequestCounts = {
-  myPending: Scalars['Int']['output'];
-  pendingReview: Scalars['Int']['output'];
-};
-
-export type ArtistParseFlagCode =
-  | 'ambiguous_separator'
-  | 'weak_marker'
-  | 'empty_feat_segment'
-  | 'unbalanced_bracket'
-  | 'duplicate_removed';
-
-export type ArtistParseFlag = {
-  code: ArtistParseFlagCode;
-  source: Scalars['String']['output'];
-  text: Scalars['String']['output'];
-};
-
-export type ParsedArtists = {
-  artists: Array<ParsedArtistCredit>;
-  display: Scalars['String']['output'];
-  flags: Array<ArtistParseFlag>;
-  title?: Maybe<Scalars['String']['output']>;
-};
-
-export type ParsedArtistCredit = {
-  name: Scalars['String']['output'];
-  order: Scalars['Int']['output'];
-  role: ArtistRole;
-};
-
-export type WallAuthor = {
-  accountName: Scalars['String']['output'];
-  allowsTags: Scalars['Boolean']['output'];
-  avatarUrl?: Maybe<Scalars['String']['output']>;
-  displayName?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  staffRole?: Maybe<Scalars['String']['output']>;
-};
-
-export type WallMention = {
-  accountName: Scalars['String']['output'];
-  displayName?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-};
-
-export type WallProjectRef = {
-  coverImage?: Maybe<Scalars['String']['output']>;
-  ownerAccountName: Scalars['String']['output'];
-  publicId: Scalars['ID']['output'];
-  slug: Scalars['String']['output'];
-  title: Scalars['String']['output'];
-};
-
-export type WallComment = {
-  author: WallAuthor;
-  body: Scalars['String']['output'];
-  canDelete: Scalars['Boolean']['output'];
-  canEdit: Scalars['Boolean']['output'];
-  canModerate: Scalars['Boolean']['output'];
-  createdAt: Scalars['String']['output'];
-  deleted: Scalars['Boolean']['output'];
-  depth: Scalars['Int']['output'];
-  descendantCount: Scalars['Int']['output'];
-  editedAt?: Maybe<Scalars['String']['output']>;
-  heldReason?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  likeCount: Scalars['Int']['output'];
-  likedByMe: Scalars['Boolean']['output'];
-  mentions: Array<WallMention>;
-  mutedByMe: Scalars['Boolean']['output'];
-  pinned: Scalars['Boolean']['output'];
-  projectRefs: Array<WallProjectRef>;
-  reactions: Array<WallReaction>;
-  replies: Array<WallComment>;
-  replyCount: Scalars['Int']['output'];
-  replyToId?: Maybe<Scalars['ID']['output']>;
-  replyToMissing: Scalars['Boolean']['output'];
-  revisionCount: Scalars['Int']['output'];
-  status: Scalars['String']['output'];
-};
-
-export type WallReaction = {
-  count: Scalars['Int']['output'];
-  emoji: Scalars['String']['output'];
-  mine: Scalars['Boolean']['output'];
-};
-
-export type WallCommentRevision = {
-  body: Scalars['String']['output'];
-  current: Scalars['Boolean']['output'];
-  editedAt: Scalars['String']['output'];
-};
-
-export type WallLikers = {
-  total: Scalars['Int']['output'];
-  users: Array<WallAuthor>;
-};
-
-export type WallReportComment = {
-  author?: Maybe<WallAuthor>;
-  body: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  mentions: Array<WallMention>;
-  projectRefs: Array<WallProjectRef>;
-  status: Scalars['String']['output'];
-};
-
-export type WallReport = {
-  comment?: Maybe<WallReportComment>;
-  createdAt: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  note: Scalars['String']['output'];
-  openCount: Scalars['Int']['output'];
-  reason: Scalars['String']['output'];
-  reporter?: Maybe<WallAuthor>;
-  resolvedAt?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
-  wallAccountName: Scalars['String']['output'];
-};
-
-export type WallReportGroup = {
-  authorActionedCount: Scalars['Int']['output'];
-  authorRestrictedUntil?: Maybe<Scalars['String']['output']>;
-  comment?: Maybe<WallReportComment>;
-  commentId: Scalars['ID']['output'];
-  latestAt: Scalars['String']['output'];
-  openCount: Scalars['Int']['output'];
-  parent?: Maybe<WallReportComment>;
-  reports: Array<WallReport>;
-  wallAccountName: Scalars['String']['output'];
-};
-
-export type MyWallReports = {
-  reports: Array<WallReport>;
-  total: Scalars['Int']['output'];
-};
-
-export type WallLikeResult = {
-  likeCount: Scalars['Int']['output'];
-  liked: Scalars['Boolean']['output'];
-};
-
-export type Wall = {
-  canComment: Scalars['Boolean']['output'];
-  commentPolicy: Scalars['String']['output'];
-  comments: Array<WallComment>;
-  enabled: Scalars['Boolean']['output'];
-  hasMore: Scalars['Boolean']['output'];
-  page: Scalars['Int']['output'];
-  pendingCount: Scalars['Int']['output'];
-  restrictedUntil?: Maybe<Scalars['String']['output']>;
-  sort: Scalars['String']['output'];
-  subscribed: Scalars['Boolean']['output'];
-  total: Scalars['Int']['output'];
-  totalAll: Scalars['Int']['output'];
-};
-
-export type ReportUser = {
-  accountName: Scalars['String']['output'];
-  avatarUrl?: Maybe<Scalars['String']['output']>;
-  displayName?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  staffRole?: Maybe<Scalars['String']['output']>;
-};
-
-export type ReportCommentTarget = {
-  comment: WallReportComment;
-  parent?: Maybe<WallReportComment>;
-  wallAccountName: Scalars['String']['output'];
-};
-
-export type ReportUserTarget = {
-  accountName: Scalars['String']['output'];
-  avatarUrl?: Maybe<Scalars['String']['output']>;
-  banned: Scalars['Boolean']['output'];
-  bio: Scalars['String']['output'];
-  createdAt?: Maybe<Scalars['String']['output']>;
-  displayName?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-};
-
-export type ReportProjectTarget = {
-  artist?: Maybe<Scalars['String']['output']>;
-  coverImage?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  ownerAccountName: Scalars['String']['output'];
-  public: Scalars['Boolean']['output'];
-  publicId: Scalars['String']['output'];
-  slug: Scalars['String']['output'];
-  title: Scalars['String']['output'];
-};
-
-export type ReportPlaylistTarget = {
-  coverImage?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  ownerAccountName: Scalars['String']['output'];
-  projectCount: Scalars['Int']['output'];
-  public: Scalars['Boolean']['output'];
-};
-
-export type ReportEntry = {
-  createdAt: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  messageCount: Scalars['Int']['output'];
-  note: Scalars['String']['output'];
-  reason: Scalars['String']['output'];
-  reporter?: Maybe<ReportUser>;
-  resolvedAt?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
-};
-
-export type ReportMessage = {
-  author?: Maybe<ReportUser>;
-  body: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
-  fromReporter: Scalars['Boolean']['output'];
-  id: Scalars['ID']['output'];
-  mine: Scalars['Boolean']['output'];
-  replies: Array<ReportMessage>;
-};
-
-export type ReportGroup = {
-  comment?: Maybe<ReportCommentTarget>;
-  latestAt: Scalars['String']['output'];
-  openCount: Scalars['Int']['output'];
-  playlist?: Maybe<ReportPlaylistTarget>;
-  project?: Maybe<ReportProjectTarget>;
-  reports: Array<ReportEntry>;
-  subject?: Maybe<ReportUser>;
-  subjectActionedCount: Scalars['Int']['output'];
-  subjectRestrictedUntil?: Maybe<Scalars['String']['output']>;
-  targetId: Scalars['ID']['output'];
-  targetType: Scalars['String']['output'];
-  user?: Maybe<ReportUserTarget>;
-  wallAccountName?: Maybe<Scalars['String']['output']>;
-};
-
-export type MyReport = {
-  comment?: Maybe<ReportCommentTarget>;
-  createdAt: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  messageCount: Scalars['Int']['output'];
-  note: Scalars['String']['output'];
-  playlist?: Maybe<ReportPlaylistTarget>;
-  project?: Maybe<ReportProjectTarget>;
-  reason: Scalars['String']['output'];
-  resolvedAt?: Maybe<Scalars['String']['output']>;
-  status: Scalars['String']['output'];
-  targetId: Scalars['ID']['output'];
-  targetType: Scalars['String']['output'];
-  user?: Maybe<ReportUserTarget>;
-};
-
-export type MyReports = {
-  reports: Array<MyReport>;
-  total: Scalars['Int']['output'];
 };

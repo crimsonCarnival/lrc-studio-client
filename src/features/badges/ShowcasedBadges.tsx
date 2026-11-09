@@ -12,7 +12,8 @@ const DATE_LOCALES: Record<string, Locale> = { en: enUS, es };
 
 interface ShowcaseBadge {
   id: string;
-  label?: string;
+  /** The API sends a localized object; the static registry has a plain string. */
+  label?: string | { en: string; es: string };
   icon?: unknown;
   color?: string;
   rarity?: string;
