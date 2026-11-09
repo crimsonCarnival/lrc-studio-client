@@ -178,6 +178,9 @@ export function createFerrofluidPreset(
     ) => {
       keyLight.color.copy(pal.secondary);
       rimLight.color.copy(pal.tertiary);
+      // A metal's colour multiplies what it reflects. On a dark page the chrome must be bright to
+      // show at all; on a light page a near-black body with bright highlights has the contrast.
+      material.color.setScalar(pal.light ? 0.06 : 0.75);
 
       const key = pal.primary.getHexString() + pal.secondary.getHexString() + pal.tertiary.getHexString();
       if (key !== envKey && envCtx) {

@@ -90,7 +90,12 @@ export function createSilkPreset(
     ) => {
       light1.color.copy(pal.primary);
       light2.color.copy(pal.secondary);
-      material.color.copy(pal.primary).multiplyScalar(0.25);
+      // A dark tinted cloth under bright lights on dark themes; on a light page the cloth is the
+      // theme's own colour, held strong enough to read against the page.
+      material.color.copy(pal.primary).multiplyScalar(pal.light ? 1.0 : 0.55);
+      material.opacity = pal.light ? 0.5 : 0.8;
+      // Metal without an environment map renders near black; on light themes keep it matte so the colour shows.
+      material.metalness = pal.light ? 0.05 : 0.55;
 
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const beatEnergy = features ? features.beatEnergy : bass * 0.5;

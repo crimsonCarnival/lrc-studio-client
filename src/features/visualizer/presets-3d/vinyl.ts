@@ -114,6 +114,13 @@ export function createVinylPreset(
       const density = features?.tempoDensity ?? 0.3;
       const beatEnergy = features?.beatEnergy ?? 0;
 
+      // Thin lines and a pale label need more weight on a light page.
+      const k = pal.light ? 1.5 : 1;
+      grooveMatA.opacity = Math.min(1, 0.55 * k);
+      grooveMatB.opacity = Math.min(1, 0.45 * k);
+      rimMat.opacity = Math.min(1, 0.35 * k);
+      armMat.opacity = Math.min(1, 0.6 * k);
+
       const dt = Math.min(0.1, Math.max(0, clock - lastClock));
       lastClock = clock;
       spin -= dt * (0.45 + density * 0.9) * motion;
@@ -121,7 +128,7 @@ export function createVinylPreset(
 
       const labelScale = 1 + beatEnergy * 0.12 * motion;
       label.scale.set(labelScale, labelScale, 1);
-      labelMat.opacity = 0.25 + beatEnergy * 0.25;
+      labelMat.opacity = Math.min(1, (0.25 + beatEnergy * 0.25) * k);
 
       const waveLen = wave.length;
       for (let j = 0; j < GROOVES; j++) {

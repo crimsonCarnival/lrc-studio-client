@@ -7,7 +7,7 @@ import { BAND_COUNT, WAVE_SAMPLES } from './visualizer-signal';
 import type { Sampler } from './visualizer-presets';
 import { startPointerTracker3D } from './presets-3d/pointer-projector';
 import { AudioFeatureExtractor } from './presets-3d/audio-features';
-import type { PointerTarget, AudioFeatures } from './presets-3d/types';
+import type { Palette3D, PointerTarget, AudioFeatures } from './presets-3d/types';
 import { createFerrofluidPreset } from './presets-3d/ferrofluid';
 import { createSilkPreset } from './presets-3d/silk';
 import { createPlasmaGlobePreset } from './presets-3d/plasma-globe';
@@ -42,12 +42,6 @@ export function isVisualizer3dPreset(value: unknown): value is Visualizer3dPrese
   return (VISUALIZER_3D_PRESETS as readonly unknown[]).includes(value);
 }
 
-interface Palette3D {
-  primary: THREE.Color;
-  secondary: THREE.Color;
-  tertiary: THREE.Color;
-}
-
 function parseCssColor(style: CSSStyleDeclaration, prop: string, fallback: string): THREE.Color {
   const val = style.getPropertyValue(prop).trim() || fallback;
   try {
@@ -57,12 +51,28 @@ function parseCssColor(style: CSSStyleDeclaration, prop: string, fallback: strin
   }
 }
 
-function readPalette3D(el: Element): Palette3D {
+// Relative luminance above which black text beats white on the page: themes.ts' light/dark split.
+const LIGHT_LUMINANCE = 0.179;
+
+function relativeLuminance(c: THREE.Color): number {
+  // THREE.Color holds linear values, which is what the WCAG formula wants.
+  return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+}
+
+// The theme's tokens are already held to contrast against its own background (themeTokens in
+// shared/theme), so the colours stay as they are; what differs between themes is how they
+// should be drawn.
+export function readPalette3D(el: Element): Palette3D {
   const style = getComputedStyle(el);
+  const background = parseCssColor(style, '--background', '#232136');
+  const light = relativeLuminance(background) > LIGHT_LUMINANCE;
   return {
     primary: parseCssColor(style, '--color-primary', '#c4a7e7'),
     secondary: parseCssColor(style, '--color-accent-blue', '#9ccfd8'),
     tertiary: parseCssColor(style, '--color-love', '#eb6f92'),
+    background,
+    light,
+    blending: light ? THREE.NormalBlending : THREE.AdditiveBlending,
   };
 }
 
@@ -346,6 +356,11 @@ function createGalaxyPreset(scene: THREE.Scene, camera: THREE.PerspectiveCamera,
       const pos = geometry.attributes.position.array as Float32Array;
       const col = geometry.attributes.color.array as Float32Array;
       const bassBurst = bass * 5.5;
+      material.blending = pal.blending;
+      // Loud bands brighten a star on a dark page and deepen it on a light one.
+      const shimmerDir = pal.light ? -0.35 : 0.6;
+      material.size = pal.light ? 1.15 : 0.9;
+      material.opacity = pal.light ? 0.9 : 0.85;
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
@@ -381,7 +396,7 @@ function createGalaxyPreset(scene: THREE.Scene, camera: THREE.PerspectiveCamera,
         // Color based on band reactivity
         const ratio = Math.min(1, radii[i] / 22);
         const chosen = ratio < 0.4 ? pal.tertiary : ratio < 0.75 ? pal.primary : pal.secondary;
-        const shimmer = 1 + bandVal * 0.6;
+        const shimmer = 1 + bandVal * shimmerDir;
         col[i3] = Math.min(1, chosen.r * shimmer);
         col[i3 + 1] = Math.min(1, chosen.g * shimmer);
         col[i3 + 2] = Math.min(1, chosen.b * shimmer);
@@ -786,7 +801,9 @@ export function start3dVisualizer(
 
     instance.update(bands, wave, level, bass, accumulatedClock, pointer, palette, features);
 
-    if (composer) {
+    // Bloom is a dark-stage effect: on a light page there is nothing to glow against, and the
+    // pass would only wash the stage. Light themes draw straight to the canvas.
+    if (composer && !palette.light) {
       composer.render();
     } else {
       renderer.render(scene, camera);

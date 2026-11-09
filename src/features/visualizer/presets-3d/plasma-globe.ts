@@ -121,6 +121,8 @@ export function createPlasmaGlobePreset(
     ) => {
       glassMat.color.copy(pal.secondary);
       coreMat.color.copy(pal.tertiary);
+      // The shell is a faint wireframe; on a light page it needs more weight to show at all.
+      glassMat.opacity = pal.light ? 0.3 : 0.12;
 
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const treble = features ? features.treble : 0.3;
@@ -149,6 +151,7 @@ export function createPlasmaGlobePreset(
         // Dynamic color alternating
         filament.material.color.copy(f % 2 === 0 ? pal.secondary : pal.primary);
         filament.material.opacity = 0.5 + treble * 0.45;
+        filament.material.blending = pal.blending;
 
         // Determine destination point on sphere:
         // First 65% of filaments gravitate toward cursor; remaining stay distributed

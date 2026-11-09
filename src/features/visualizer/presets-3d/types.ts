@@ -4,12 +4,25 @@ export interface Palette3D {
   primary: THREE.Color;
   secondary: THREE.Color;
   tertiary: THREE.Color;
+  /** The theme's page background; mix toward it to fade a colour into the stage. */
+  background: THREE.Color;
+  /** True on light and mid-tone themes (the same luminance rule themes.ts uses). */
+  light: boolean;
+  /**
+   * Additive on dark themes, where light stacks into a glow. On a light page adding light
+   * does nothing, so glowing materials draw normally there. Read it every frame: a theme
+   * switch changes it under a running preset.
+   */
+  blending: THREE.Blending;
 }
 
 export interface Visualizer3dOptions {
   bloom?: boolean;
   preview?: boolean;
 }
+
+/** The three theme accent colours, for presets that pick one by name. */
+export type PaletteColorKey = 'primary' | 'secondary' | 'tertiary';
 
 export interface PointerTarget {
   /** Smoothed NDC coordinates [-1, 1] relative to center */

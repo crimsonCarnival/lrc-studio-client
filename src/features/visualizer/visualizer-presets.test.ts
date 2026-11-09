@@ -1,4 +1,6 @@
+import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
+import { readPalette3D } from './visualizer-3d';
 import {
   VISUALIZER_2D_PRESETS,
   VISUALIZER_3D_PRESETS,
@@ -60,6 +62,35 @@ describe('visualizer presets registry', () => {
     expect(isVisualizer3dPreset('radial')).toBe(false);
     expect(isVisualizer3dPreset('contour')).toBe(false);
     expect(isVisualizer3dPreset('off')).toBe(false);
+  });
+});
+
+describe('readPalette3D', () => {
+  const paletteOn = (background: string) => {
+    const el = document.createElement('div');
+    el.style.setProperty('--background', background);
+    document.body.appendChild(el);
+    const pal = readPalette3D(el);
+    el.remove();
+    return pal;
+  };
+
+  // Additive blending on a light page adds nothing, so light themes must not get it.
+  it('uses additive blending on dark themes and normal on light ones', () => {
+    const dark = paletteOn('#232136');
+    expect(dark.light).toBe(false);
+    expect(dark.blending).toBe(THREE.AdditiveBlending);
+
+    const light = paletteOn('#faf4ed');
+    expect(light.light).toBe(true);
+    expect(light.blending).toBe(THREE.NormalBlending);
+  });
+
+  // The split is themes.ts' luminance rule, so mid-tone palettes (honey, botanical) count as light.
+  it('treats mid-tone backgrounds like themes.ts does', () => {
+    expect(paletteOn('#f2aa00').light).toBe(true);
+    expect(paletteOn('#7b9c98').light).toBe(true);
+    expect(paletteOn('#2d394d').light).toBe(false);
   });
 });
 

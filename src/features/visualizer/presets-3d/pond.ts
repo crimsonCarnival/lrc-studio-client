@@ -104,6 +104,10 @@ export function createPondPreset(
     ) => {
       light1.color.copy(pal.secondary);
       light2.color.copy(pal.primary);
+      // Deep water tinted by the theme; on a light page it is the theme's colour itself.
+      material.color.copy(pal.primary).multiplyScalar(pal.light ? 1.0 : 0.12);
+      material.opacity = pal.light ? 0.5 : 0.65;
+      material.metalness = pal.light ? 0.05 : 0.75;
 
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const beat = features?.beat ?? false;

@@ -57,7 +57,7 @@ export function AudioVisualizerCanvas({ lines }: { lines: BeatLines }) {
       ref={canvasRef}
       aria-hidden="true"
       style={MASK_STYLE}
-      className="pointer-events-none absolute inset-0 size-full opacity-55 animate-in fade-in duration-700"
+      className="pointer-events-none absolute inset-0 size-full opacity-75 dark:opacity-55 animate-in fade-in duration-700"
     />
   );
 }

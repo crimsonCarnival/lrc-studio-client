@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Palette3D, PointerTarget, PresetInstance, Visualizer3dOptions, AudioFeatures } from './types';
+import type { Palette3D, PaletteColorKey, PointerTarget, PresetInstance, Visualizer3dOptions, AudioFeatures } from './types';
 
 /**
  * Aurora 3D Audio Visualizer
@@ -28,8 +28,8 @@ interface CurtainSpec {
   phase: number;
   bandOffset: number;
   /** Palette keys for the lower (bright) and upper (fading) edge. */
-  low: keyof Palette3D;
-  high: keyof Palette3D;
+  low: PaletteColorKey;
+  high: PaletteColorKey;
   opacity: number;
 }
 
@@ -127,7 +127,8 @@ export function createAuroraPreset(
         (u.uHigh.value as THREE.Color).copy(pal[spec.high]);
         u.uTime.value = clock;
         u.uShimmer.value = 0.6 + treble * 4.0 * motion;
-        u.uOpacity.value = spec.opacity * (0.75 + bass * 0.35 + beatEnergy * 0.15);
+        // Light on a light page is faint, so the curtains are drawn denser there.
+        u.uOpacity.value = spec.opacity * (0.75 + bass * 0.35 + beatEnergy * 0.15) * (pal.light ? 1.6 : 1);
 
         const pos = geometry.attributes.position.array as Float32Array;
         const row = COLUMNS + 1;

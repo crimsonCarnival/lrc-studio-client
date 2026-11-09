@@ -96,6 +96,9 @@ export function createCymaticsPreset(
     ) => {
       material.color.copy(pal.primary);
       plateMat.color.copy(pal.secondary);
+      material.size = pal.light ? 0.34 : 0.17;
+      material.opacity = pal.light ? 1 : 0.9;
+      plateMat.opacity = pal.light ? 0.55 : 0.3;
 
       const motion = features?.reducedMotion ? 0.35 : 1.0;
       const energy = features?.rms ?? level;

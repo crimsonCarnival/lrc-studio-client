@@ -136,7 +136,12 @@ export function createSkylinePreset(
       lastClock = clock;
       scroll += dt * (0.6 + density * 1.4) * motion;
 
-      edgeMat.opacity = LAYERS[1].edgeOpacity + beatEnergy * 0.3;
+      // Faint outlines vanish on a light page, so every layer is drawn stronger there.
+      const boost = pal.light ? 2.4 : 1;
+      fillMat.opacity = LAYERS[1].fillOpacity * boost;
+      backFillMat.opacity = LAYERS[0].fillOpacity * boost;
+      edgeMat.opacity = Math.min(1, (LAYERS[1].edgeOpacity + beatEnergy * 0.3) * boost);
+      backEdgeMat.opacity = Math.min(1, LAYERS[0].edgeOpacity * boost);
       roofMat.opacity = 0.35 + treble * 0.6;
       roofMat.size = 0.35 + treble * 0.35;
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Palette3D, PointerTarget, PresetInstance, Visualizer3dOptions, AudioFeatures } from './types';
+import type { Palette3D, PaletteColorKey, PointerTarget, PresetInstance, Visualizer3dOptions, AudioFeatures } from './types';
 
 /**
  * Ink 3D Audio Visualizer
@@ -25,7 +25,7 @@ import type { Palette3D, PointerTarget, PresetInstance, Visualizer3dOptions, Aud
 const POOL = 64;
 const HALF_FOV = THREE.MathUtils.degToRad(27.5);
 const CAMERA_Z = 30;
-const COLOR_KEYS: ReadonlyArray<keyof Palette3D> = ['primary', 'secondary', 'tertiary'];
+const COLOR_KEYS: ReadonlyArray<PaletteColorKey> = ['primary', 'secondary', 'tertiary'];
 
 interface Puff {
   sprite: THREE.Sprite;
@@ -39,7 +39,7 @@ interface Puff {
   endScale: number;
   peak: number;
   spin: number;
-  colorKey: keyof Palette3D;
+  colorKey: PaletteColorKey;
   seed: number;
 }
 
@@ -127,7 +127,7 @@ export function createInkPreset(
       p.vy = vy * speed + (Math.random() - 0.5) * 0.8;
       p.startScale = 3 + Math.random() * 3;
       p.endScale = 11 + bass * 9 + Math.random() * 4;
-      p.peak = 0.16 + bass * 0.22;
+      p.peak = 0.3 + bass * 0.3;
       p.spin = (Math.random() - 0.5) * 0.4;
       p.colorKey = colorKey;
       p.sprite.position.set(x, y, -2 - Math.random() * 6);
@@ -151,7 +151,6 @@ export function createInkPreset(
       const mid = features?.mid ?? 0.3;
       const dt = Math.min(0.1, Math.max(0, clock - lastClock));
       lastClock = clock;
-
       if (features?.beat && clock - lastBurst > 0.3) {
         lastBurst = clock;
         spawn(2 + Math.floor(bass * 3), bass);
@@ -180,7 +179,8 @@ export function createInkPreset(
         const s = p.startScale + (p.endScale - p.startScale) * Math.sqrt(t);
         p.sprite.scale.set(s, s, 1);
         p.material.rotation += p.spin * dt * motion;
-        p.material.opacity = p.peak * Math.min(1, t * 6) * Math.pow(1 - t, 1.5);
+        // Pale smoke disappears on a light page; it is drawn denser there.
+        p.material.opacity = p.peak * Math.min(1, t * 6) * Math.pow(1 - t, 1.5) * (pal.light ? 1.5 : 1);
         p.material.color.copy(pal[p.colorKey]);
       }
     },
