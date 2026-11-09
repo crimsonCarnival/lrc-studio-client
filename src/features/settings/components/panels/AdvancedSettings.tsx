@@ -23,6 +23,9 @@ interface AdvancedSettingsProps {
       autoSaveIndicator?: string;
       confirmDestructive?: boolean;
       timezone?: string;
+      hourCycle?: string;
+      dateStyle?: string;
+      showUtcOffset?: boolean;
     };
   };
   updateSetting: (path: string, value: unknown) => void;
@@ -124,6 +127,33 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               <SettingOption key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SettingOption>
             ))}
           </SettingSelect>
+        </SettingRow>
+
+        <SettingRow label={t('settings.advanced.hourCycle')} description={t('settings.advanced.hourCycleDesc')}>
+          <SettingSelect
+            label={t('settings.advanced.hourCycle')}
+            value={settings.advanced?.hourCycle ?? 'auto'}
+            onValueChange={(val) => updateSetting('advanced.hourCycle', val)}
+          >
+            <SettingOption value="auto">{t('settings.advanced.hourCycleAuto')}</SettingOption>
+            <SettingOption value="12">{t('settings.advanced.hourCycle12')}</SettingOption>
+            <SettingOption value="24">{t('settings.advanced.hourCycle24')}</SettingOption>
+          </SettingSelect>
+        </SettingRow>
+
+        <SettingRow label={t('settings.advanced.dateStyle')} description={t('settings.advanced.dateStyleDesc')}>
+          <SettingSelect
+            label={t('settings.advanced.dateStyle')}
+            value={settings.advanced?.dateStyle ?? 'long'}
+            onValueChange={(val) => updateSetting('advanced.dateStyle', val)}
+          >
+            <SettingOption value="long">{t('settings.advanced.dateStyleLong')}</SettingOption>
+            <SettingOption value="short">{t('settings.advanced.dateStyleShort')}</SettingOption>
+          </SettingSelect>
+        </SettingRow>
+
+        <SettingRow label={t('settings.advanced.showUtcOffset')} description={t('settings.advanced.showUtcOffsetDesc')}>
+          <Toggle id="toggle-show-utc-offset" label={t('settings.advanced.showUtcOffset')} checked={settings.advanced?.showUtcOffset ?? true} onChange={(v: boolean) => updateSetting('advanced.showUtcOffset', v)} />
         </SettingRow>
       </Section>
 

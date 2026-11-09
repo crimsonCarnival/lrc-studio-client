@@ -33,7 +33,53 @@ export function formatCompactAgo(when: string | number | Date, t: TFunction): st
   return t('notifications.compactYears', { n: Math.floor(seconds / YEAR) });
 }
 
-/** The full date and time, in the user's timezone and language. */
-export function formatFullDateTime(when: string | number | Date, timezone?: string, locale?: string): string {
-  return formatInTimezone(new Date(when), timezone, { dateStyle: 'long', timeStyle: 'medium' }, locale);
+const ENGLISH_ORDINALS = new Intl.PluralRules('en', { type: 'ordinal' });
+const ORDINAL_SUFFIX: Record<string, string> = { one: 'st', two: 'nd', few: 'rd', other: 'th' };
+
+/** The user's date display choices (`settings.advanced`); every field is optional and falls back to its default. */
+export type DateDisplayPrefs = {
+  timezone?: string;
+  hourCycle?: string;
+  dateStyle?: string;
+  showUtcOffset?: boolean;
+};
+
+/**
+ * The full date and time in the user's timezone and language.
+ * Long: "October 26th at 6:45:31 PM GMT-5" / "el 26 de octubre a las 18:45:31 GMT-5"; the year is
+ * left out when it is the current one (in that timezone). Short: "10/26/2026, 6:45:31 PM GMT-5".
+ * `hourCycle` forces a 12 or 24-hour clock and `showUtcOffset` drops the GMT offset.
+ */
+export function formatFullDateTime(when: string | number | Date, prefs: DateDisplayPrefs = {}, locale?: string): string {
+  const { timezone, hourCycle = 'auto', dateStyle = 'long', showUtcOffset = true } = prefs;
+  const date = new Date(when);
+  const zoned = (options: Intl.DateTimeFormatOptions) => formatInTimezone(date, timezone, options, locale);
+
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    ...(hourCycle === '12' && { hourCycle: 'h12' as const }),
+    ...(hourCycle === '24' && { hourCycle: 'h23' as const }),
+    ...(showUtcOffset && { timeZoneName: 'shortOffset' as const }),
+  };
+  // Spanish wraps the offset in parentheses, "(GMT-5)"; drop them so both languages read the same.
+  const clean = (text: string) => text.replace(/\((GMT[^)]*)\)/, '$1');
+
+  if (dateStyle === 'short') {
+    return clean(zoned({ day: 'numeric', month: 'numeric', year: 'numeric', ...timeOptions }));
+  }
+
+  const year = zoned({ year: 'numeric' });
+  const showYear = year !== formatInTimezone(new Date(), timezone, { year: 'numeric' }, locale);
+  const month = zoned({ month: 'long' });
+  const day = zoned({ day: 'numeric' });
+  const time = clean(zoned(timeOptions));
+
+  if (locale?.startsWith('es')) {
+    const at = /^0?1:/.test(time) ? 'a la' : 'a las'; // "a la 1:05", but "a las 11:05"
+    return `el ${day} de ${month}${showYear ? ` de ${year}` : ''} ${at} ${time}`;
+  }
+  const ordinal = ORDINAL_SUFFIX[ENGLISH_ORDINALS.select(parseInt(day, 10))];
+  return `${month} ${day}${ordinal}${showYear ? `, ${year}` : ''} at ${time}`;
 }

@@ -154,7 +154,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
         className={cn(
           // -mx-3 px-3 keeps the avatar where the thread lines expect it while the row's
           // own background and ring get room around the content; pr-20 clears the corner actions.
-          'group/row relative -mx-3 flex cursor-pointer gap-3 rounded-xl py-2 pl-3 pr-20 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/50',
+          'group/row relative -mx-3 flex gap-3 rounded-xl py-2 pl-3 pr-20 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/50',
           // No hover background: the thread lines already react to the pointer, and a tinted row fought them.
           highlighted && 'bg-primary/[0.08] ring-1 ring-inset ring-primary/35 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_6%,transparent)]',
           // Opened from a link: tinted, then a slow fade back (the long duration only while fading).
@@ -217,11 +217,11 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
           <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
             <Link to={profilePath(author.accountName)} className="font-semibold text-zinc-100 hover:text-primary transition-colors">{name}</Link>
             <span className="text-xs text-zinc-500">
-              <Tip content={formatFullDateTime(comment.createdAt, settings.advanced?.timezone, language)}>
+              <Tip content={formatFullDateTime(comment.createdAt, settings.advanced, language)}>
                 <span className="cursor-default">{formatCompactAgo(comment.createdAt, t)}</span>
               </Tip>
               {comment.editedAt && (
-                <Tip content={t('profile.wall.editedAt', { when: formatFullDateTime(comment.editedAt, settings.advanced?.timezone, language) })}>
+                <Tip content={t('profile.wall.editedAt', { when: formatFullDateTime(comment.editedAt, settings.advanced, language) })}>
                   <span className="ml-1 cursor-help">· {t('profile.wall.edited')}</span>
                 </Tip>
               )}

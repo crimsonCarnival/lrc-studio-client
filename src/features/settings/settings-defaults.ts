@@ -114,7 +114,10 @@ export const DEFAULT_SETTINGS = {
     autoSave: { enabled: true, timeInterval: 60 },
     autoSaveIndicator: 'normal',
     confirmDestructive: true,
-    timezone: 'auto'
+    timezone: 'auto',
+    hourCycle: 'auto', // 'auto' (the language's own clock) | '12' | '24'
+    dateStyle: 'long', // 'long' (October 26th) | 'short' (10/26/2026)
+    showUtcOffset: true,
   },
   autoStamp: {
     confidenceThreshold: 0.8,

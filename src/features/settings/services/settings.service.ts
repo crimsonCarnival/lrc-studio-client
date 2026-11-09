@@ -85,6 +85,9 @@ const GET_SETTINGS = /* GraphQL */ `
         autoSaveIndicator
         confirmDestructive
         timezone
+        hourCycle
+        dateStyle
+        showUtcOffset
       }
       autoStamp { confidenceThreshold fuzzyTolerance applyMode }
     }
