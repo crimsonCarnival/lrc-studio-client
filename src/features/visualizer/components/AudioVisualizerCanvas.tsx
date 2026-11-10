@@ -53,7 +53,9 @@ export function AudioVisualizerCanvas({ lines }: { lines: BeatLines }) {
   if (kind === 'off') return null;
   return (
     <canvas
-      key={kind}
+      // Bloom is part of the key: the 3D runner's cleanup force-loses the WebGL context, and a
+      // canvas that has lost its context cannot get a new one, so a bloom toggle needs a new canvas.
+      key={`${kind}:${bloom}`}
       ref={canvasRef}
       aria-hidden="true"
       style={MASK_STYLE}

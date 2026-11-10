@@ -683,12 +683,20 @@ export function start3dVisualizer(
   let width = Math.max(1, Math.round(canvas.clientWidth * dpr));
   let height = Math.max(1, Math.round(canvas.clientHeight * dpr));
 
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: true,
-    powerPreference: 'high-performance',
-  });
+  // Browsers cap live WebGL contexts (about 16) and a context that was lost cannot be reused, so
+  // creation can throw (three reads a null shader-precision format off a dead context). That is a
+  // stage that cannot draw, not a reason to take the page down: leave the canvas blank.
+  let renderer: THREE.WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+    });
+  } catch {
+    return () => {};
+  }
   renderer.setPixelRatio(dpr);
   renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
