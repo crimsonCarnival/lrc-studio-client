@@ -20,6 +20,8 @@ export type PublishProject = {
   /** Absent until the project has been saved to the server. */
   publicId?: string | null;
   isPublic: boolean;
+  /** Only meaningful while public: false = unlisted. When omitted the dialog reads it from the server. */
+  listed?: boolean;
   title?: string;
   artists?: string[];
   coverImage?: string;
@@ -32,7 +34,7 @@ type PublishDialogProps = {
   onOpenChange: (open: boolean) => void;
   project: PublishProject;
   /** Called with the new visibility once the server has accepted it. */
-  onPublished?: (isPublic: boolean) => void;
+  onPublished?: (isPublic: boolean, listed: boolean) => void;
   /**
    * Flushes unsaved edits through the editor's own manual save, resolving false on failure.
    * Publishing sends only the visibility, so without this the project could go live with
@@ -67,6 +69,10 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
   const [published, setPublished] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [fetched, setFetched] = useState<FetchedLines>({ status: 'loading' });
+  // What the owner picks for a project about to go public. Public is the default; unlisted is the opt-in.
+  const [chosenListed, setChosenListed] = useState(true);
+  const [fetchedListed, setFetchedListed] = useState<boolean | null>(null);
+  const [listedBusy, setListedBusy] = useState(false);
 
   const needsFetch = open && signedIn && !!publicId && !isPublic && project.lines === undefined;
   useEffect(() => {
@@ -84,6 +90,17 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
     return () => { cancelled = true; };
   }, [needsFetch, publicId]);
 
+  const needsListed = open && signedIn && !!publicId && isPublic && project.listed === undefined;
+  useEffect(() => {
+    if (!needsListed || !publicId) return;
+    let cancelled = false;
+    projectsService.get(publicId)
+      .then(({ project: p }) => { if (!cancelled) setFetchedListed(p?.listed !== false); })
+      .catch(() => { if (!cancelled) setFetchedListed(true); });
+    return () => { cancelled = true; };
+  }, [needsListed, publicId]);
+  const isListed = project.listed ?? fetchedListed ?? true;
+
   // Each open is a session. A request that outlives its session may still tell the parent what
   // the server accepted, but must not touch this dialog's state: the next open starts clean.
   const sessionRef = useRef(0);
@@ -93,7 +110,7 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
     busyRef.current = false;
     if (open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPublished(false); setError(null); setBusy(false); setShareOpen(false);
+    setPublished(false); setError(null); setBusy(false); setShareOpen(false); setChosenListed(true); setFetchedListed(null);
   }, [open]);
 
   const lines = project.lines ?? (fetched.status === 'ready' ? fetched.lines : undefined);
@@ -106,7 +123,7 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
   const displayTitle = title?.trim() || t('project.publishUntitled');
   const artistLine = artists?.filter((a) => a.trim()).join(', ');
 
-  const change = async (next: boolean) => {
+  const change = async (next: boolean, listed = true) => {
     if (!publicId || busyRef.current) return;
     busyRef.current = true;
     const session = sessionRef.current;
@@ -124,13 +141,14 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
       if (!saved) { fail('project.publishSaveFailed'); return; }
     }
     try {
-      await projectsService.update(publicId, { public: next });
+      // `listed` is sent only when it is not the default, so a plain publish is the same request as ever.
+      await projectsService.update(publicId, next && !listed ? { public: true, listed: false } : { public: next });
     } catch {
       fail(next ? 'project.publishFailed' : 'project.unpublishFailed');
       return;
     }
     // The server accepted it: the parent learns that even if the dialog was closed meanwhile.
-    onPublished?.(next);
+    onPublished?.(next, listed);
     if (!live()) return;
     busyRef.current = false;
     setBusy(false);
@@ -168,10 +186,10 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
     heading = t('project.publishTitle');
     body = <p className="text-sm text-subtle">{t('project.publishNeedsSave')}</p>;
   } else if (published) {
-    heading = t('project.publishedTitle');
+    heading = t(chosenListed ? 'project.publishedTitle' : 'project.publishedUnlistedTitle');
     body = (
       <>
-        <p className="text-sm text-subtle">{t('project.publishedLead')}</p>
+        <p className="text-sm text-subtle">{t(chosenListed ? 'project.publishedLead' : 'project.publishedUnlistedLead')}</p>
         <div className="flex items-center gap-2 rounded-[calc(var(--radius)*1.2)] bg-raised px-3 py-2 inset-ring inset-ring-hl">
           <Icon name="link" size={16} className="shrink-0 text-subtle" />
           <input
@@ -203,9 +221,32 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
       </>
     );
   } else if (isPublic) {
-    heading = t('project.unpublishTitle');
+    heading = t('project.visibilityManageTitle');
     body = (
       <>
+        <p className="text-sm text-subtle">{t(isListed ? 'project.listedLead' : 'project.unlistedLead')}</p>
+        <Button
+          variant="outline"
+          loading={listedBusy}
+          onClick={async () => {
+            if (!publicId || listedBusy) return;
+            setListedBusy(true);
+            setError(null);
+            try {
+              await projectsService.update(publicId, { public: true, listed: !isListed });
+              setFetchedListed(!isListed);
+              onPublished?.(true, !isListed);
+              toast.success(t(isListed ? 'project.madeUnlisted' : 'project.madeListed'));
+            } catch {
+              setError(t('project.publishFailed'));
+            } finally {
+              setListedBusy(false);
+            }
+          }}
+          className="h-11 lg:h-11"
+        >
+          {t(isListed ? 'project.makeUnlistedAction' : 'project.makeListedAction')}
+        </Button>
         <p className="text-sm text-subtle">{t('project.unpublishLead')}</p>
         {error && <p role="alert" className="text-sm text-love-ink">{error}</p>}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -241,10 +282,25 @@ export function PublishDialog({ open, onOpenChange, project, onPublished, onSave
             ))}
           </ul>
         )}
+        <fieldset className="flex flex-col gap-2">
+          <legend className="sr-only">{t('project.visibilityChoice')}</legend>
+          {([true, false] as const).map((listed) => (
+            <label
+              key={String(listed)}
+              className={`flex cursor-pointer items-start gap-3 rounded-[calc(var(--radius)*1.2)] p-3 inset-ring ${chosenListed === listed ? 'bg-primary-soft inset-ring-primary' : 'bg-raised inset-ring-hl'}`}
+            >
+              <input type="radio" name="publish-visibility" checked={chosenListed === listed} onChange={() => setChosenListed(listed)} className="mt-1" />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-foreground">{t(listed ? 'project.choicePublic' : 'project.choiceUnlisted')}</span>
+                <span className="block text-[13px] text-subtle">{t(listed ? 'project.choicePublicLead' : 'project.choiceUnlistedLead')}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
         {error && <p role="alert" className="text-sm text-love-ink">{error}</p>}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="h-11 lg:h-11">{t('common.cancel')}</Button>
-          <Button loading={busy} disabled={blocked} onClick={() => change(true)} className="h-11 lg:h-11">
+          <Button loading={busy} disabled={blocked} onClick={() => change(true, chosenListed)} className="h-11 lg:h-11">
             {busy ? t('project.publishing') : t('project.publishAction')}
           </Button>
         </div>

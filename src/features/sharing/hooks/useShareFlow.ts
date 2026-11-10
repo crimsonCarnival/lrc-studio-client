@@ -9,7 +9,7 @@ type ShareFlowInput = {
   /** The editor's manual save. Used to give an unsaved project a (private) server id. */
   save?: () => Promise<boolean>;
   /** Reports a visibility the server accepted. */
-  onVisibilityChange?: (isPublic: boolean) => void;
+  onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
 };
 
 /**
@@ -47,8 +47,8 @@ export function useShareFlow({ publicId, isPublic, showLink, save, onVisibilityC
     decide();
   }, [waitingForId, hasId, decide]);
 
-  const onPublished = useCallback((next: boolean) => {
-    onVisibilityChange?.(next);
+  const onPublished = useCallback((next: boolean, listed?: boolean) => {
+    onVisibilityChange?.(next, listed);
     if (next && shareAfterPublish.current) {
       shareAfterPublish.current = false;
       showLink();

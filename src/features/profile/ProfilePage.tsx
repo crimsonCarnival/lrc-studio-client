@@ -89,6 +89,7 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
   const { title, publicId, upload, public: isPublic, coverImage } = project;
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
+  const isUnlisted = isOwner && isPublic === true && (project as { listed?: boolean | null }).listed === false;
   const hasCover = !!coverImage;
   const meta = (project.metadata || {}) as ProjectMetaLoose;
   const synced = project.syncedLineCount || 0;
@@ -153,6 +154,9 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
           <div className="absolute right-3 top-3 flex items-center gap-1.5 z-10">
             {isPrivate && (
               <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
+            )}
+            {isUnlisted && (
+              <Icon name="link" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.unlistedProject')} />
             )}
             <span className={`px-2.5 py-1 rounded-pill text-[11px] font-bold ${complete ? 'bg-teal-900/60 text-teal-300' : 'bg-zinc-950/80 text-zinc-100'}`}>
               {complete ? t('profile.projectComplete') : `${percent}%`}

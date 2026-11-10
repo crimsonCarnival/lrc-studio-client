@@ -69,7 +69,7 @@ interface PreviewProps {
   onViewPublic?: () => void;
   /** Server-confirmed visibility of the open project. */
   isPublic?: boolean;
-  onVisibilityChange?: (isPublic: boolean) => void;
+  onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
   coverImage?: string;
   mediaTitle?: string;
   /** Moves the editor cursor, used to send the user to the first untimed line. */

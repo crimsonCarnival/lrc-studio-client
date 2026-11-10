@@ -353,6 +353,7 @@ export function AppRouter({
     projectMetadata,
     projectCoverImage,
     projectIsPublic,
+    projectIsListed,
     setProjectVisibility,
     loadError,
     handleSetupComplete,
@@ -517,7 +518,8 @@ export function AppRouter({
     mediaTitle,
     coverImage: projectCoverImage,
     isPublic: projectIsPublic,
-    onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean) => setProjectVisibility(activepublicId, next) : undefined,
+    isListed: projectIsListed,
+    onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean, listed?: boolean) => setProjectVisibility(activepublicId, next, listed) : undefined,
     canChangeVisibility,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
@@ -539,7 +541,7 @@ export function AppRouter({
     showPreviewView,
     handleExitEditor,
     uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner, sessionPublicId,
-    mediaTitle, projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, activepublicId,
+    mediaTitle, projectCoverImage, projectIsPublic, projectIsListed, setProjectVisibility, canChangeVisibility, activepublicId,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -560,7 +562,7 @@ export function AppRouter({
     playerSlot,
     coverImage: projectCoverImage,
     isPublic: projectIsPublic,
-    onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean) => setProjectVisibility(activepublicId, next) : undefined,
+    onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean, listed?: boolean) => setProjectVisibility(activepublicId, next, listed) : undefined,
     handleManualSave,
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,

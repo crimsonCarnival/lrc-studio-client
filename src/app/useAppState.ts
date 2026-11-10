@@ -231,9 +231,11 @@ export function useAppState(user?: AuthUserType | null) {
   const [projectUserId, setProjectUserId] = useState<string | null>(null);
   // Remembered against the project it was read for, so a project created or opened later
   // never inherits the previous one's visibility: anything unknown is private.
-  const [visibility, setVisibility] = useState<{ publicId: string; isPublic: boolean } | null>(null);
+  const [visibility, setVisibility] = useState<{ publicId: string; isPublic: boolean; listed: boolean } | null>(null);
   const projectIsPublic = visibility !== null && visibility.publicId === activepublicId && visibility.isPublic;
-  const setProjectVisibility = useCallback((publicId: string, isPublic: boolean) => setVisibility({ publicId, isPublic }), []);
+  // Only meaningful while public: an unlisted project is open by link but not discoverable.
+  const projectIsListed = !(visibility !== null && visibility.publicId === activepublicId && visibility.isPublic && !visibility.listed);
+  const setProjectVisibility = useCallback((publicId: string, isPublic: boolean, listed = true) => setVisibility({ publicId, isPublic, listed }), []);
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastServerSnapshotRef = useRef<any>(null);
@@ -385,7 +387,7 @@ export function useAppState(user?: AuthUserType | null) {
           if (project.title) setMediaTitle(project.title);
           // Always assign: a project without a cover must clear the previous project's.
           setProjectCoverImage(project.coverImage || '');
-          setProjectVisibility(activepublicId, project.public === true);
+          setProjectVisibility(activepublicId, project.public === true, project.listed !== false);
           setForkedFrom((project.forkedFrom as ForkedFrom) || null);
           if (project.metadata) {
             const m = project.metadata as ProjectMetadata;
@@ -1151,6 +1153,7 @@ export function useAppState(user?: AuthUserType | null) {
     projectCoverImage,
     setProjectCoverImage,
     projectIsPublic,
+    projectIsListed,
     setProjectVisibility,
     isProjectLoading,
     loadError,

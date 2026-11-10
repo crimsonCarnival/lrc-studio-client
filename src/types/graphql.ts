@@ -1390,6 +1390,8 @@ export type Project = {
   myProfileShare?: Maybe<ProfileShareNote>;
   profileShareCount?: Maybe<Scalars['Int']['output']>;
   public?: Maybe<Scalars['Boolean']['output']>;
+  /** False on a public project = unlisted: open by link, absent from discovery. Absent means listed. */
+  listed?: Maybe<Scalars['Boolean']['output']>;
   publicId: Scalars['String']['output'];
   readOnly?: Maybe<Scalars['Boolean']['output']>;
   shareCount?: Maybe<Scalars['Int']['output']>;
@@ -2242,6 +2244,8 @@ export type UpdateProjectInput = {
   uploadId?: InputMaybe<Scalars['ID']['input']>;
   version?: InputMaybe<Scalars['Int']['input']>;
 };
+  /** With public: true, false makes the project unlisted: anyone with the link can open it, but it is not discoverable. Defaults to listed whenever public changes. */
+  listed?: InputMaybe<Scalars['Boolean']['input']>;
 
 export type UpdateSettingsInput = {
   advanced?: InputMaybe<AdvancedSettingsInput>;

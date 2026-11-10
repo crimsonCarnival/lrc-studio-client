@@ -93,7 +93,7 @@ export function useProjectActions({
       if (project.title) setMediaTitle(project.title);
       setProjectMetadata?.(project.metadata || {});
       setProjectCoverImage?.(project.coverImage || '');
-      setProjectVisibility?.(publicId, project.public === true);
+      setProjectVisibility?.(publicId, project.public === true, project.listed !== false);
       setForkedFrom(project.forkedFrom || null);
       setActivepublicId(publicId);
       activepublicIdRef.current = publicId;

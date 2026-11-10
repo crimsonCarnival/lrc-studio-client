@@ -24,7 +24,7 @@ describe('useShareFlow', () => {
     const { result, showLink, onVisibilityChange } = setup();
     act(() => result.current.requestShare());
     act(() => result.current.onPublished(true));
-    expect(onVisibilityChange).toHaveBeenCalledWith(true);
+    expect(onVisibilityChange).toHaveBeenCalledWith(true, undefined);
     expect(showLink).toHaveBeenCalledTimes(1);
   });
 

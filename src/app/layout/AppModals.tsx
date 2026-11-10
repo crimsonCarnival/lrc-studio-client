@@ -37,7 +37,7 @@ interface AppModalsProps {
   isPublic?: boolean;
   /** Server id; absent for an unsaved, local or shared project, which hides the change button. */
   publicId?: string | null;
-  onVisibilityChange?: (isPublic: boolean) => void;
+  onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
 }
 
 /**

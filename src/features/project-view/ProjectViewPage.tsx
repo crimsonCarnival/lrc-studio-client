@@ -104,6 +104,16 @@ function ProjectViewPageInner() {
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(publicId) as { project: PublicProject | null; loading: boolean; notFound: boolean };
+  // An unlisted project is for people who have the link: tell search engines that render this page to skip it.
+  const unlisted = (project as { listed?: boolean | null } | null)?.listed === false;
+  useEffect(() => {
+    if (!unlisted) return;
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex,nofollow';
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, [unlisted]);
 
   // The publicId is the real key; account name and slug in the URL are cosmetic. Whenever
   // they are stale (renamed song/account), absent (legacy /project/:id) or differently

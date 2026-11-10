@@ -366,7 +366,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             songSingers={songSingers}
             isPublic={projectIsPublic}
             publicId={settingsProjectId}
-            onVisibilityChange={settingsProjectId ? (next: boolean) => setProjectVisibility(settingsProjectId, next) : undefined}
+            onVisibilityChange={settingsProjectId ? (next: boolean, listed?: boolean) => setProjectVisibility(settingsProjectId, next, listed) : undefined}
           />
         </div>
         </CollabPresenceProvider>

@@ -169,8 +169,10 @@ interface EditorProps {
   mediaTitle?: string;
   coverImage?: string;
   isPublic?: boolean;
+  /** Only meaningful while public: false = unlisted (open by link, not discoverable). */
+  isListed?: boolean;
   /** Reports a visibility change the server accepted. */
-  onVisibilityChange?: (isPublic: boolean) => void;
+  onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
   /** False on someone else's project: no visibility chip. */
   canChangeVisibility?: boolean;
   /** Below `lg` (EditorPage decides): render the phone layout instead of the desktop one. */
@@ -224,6 +226,7 @@ export default function Editor({
   mediaTitle,
   coverImage,
   isPublic = false,
+  isListed = true,
   onVisibilityChange,
   canChangeVisibility = true,
   phone = false,
@@ -1038,7 +1041,7 @@ export default function Editor({
         <PublishDialog
           open={publishOpen}
           onOpenChange={setPublishOpen}
-          project={{ publicId: serverProjectId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines }}
+          project={{ publicId: serverProjectId, isPublic, listed: isListed, title: mediaTitle, artists: songArtists, coverImage, lines }}
           onPublished={onVisibilityChange}
           onSave={handleManualSave ?? undefined}
         />
@@ -1217,7 +1220,7 @@ export default function Editor({
           title={mediaTitle ?? ''}
           saveState={inSession ? null : saveState}
           sessionBar={inSession && sessionPublicId ? <ParticipantsBar me={collab?.me ?? null} publicId={sessionPublicId} provider={collab?.provider} maxVisible={2} /> : null}
-          visibility={canPublish ? <VisibilityChip isPublic={isPublic} onOpen={openPublish} /> : null}
+          visibility={canPublish ? <VisibilityChip isPublic={isPublic} isListed={isListed} onOpen={openPublish} /> : null}
           onBack={onExit}
           list={lineList}
           banner={<>{publishPromptNode}{hint}</>}
@@ -1463,7 +1466,7 @@ export default function Editor({
       {actionsSlot && createPortal(
         <>
           {canChangeVisibility && !inSession && (
-            <VisibilityChip isPublic={isPublic} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
+            <VisibilityChip isPublic={isPublic} isListed={isListed} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
           )}
           {syncMode && lines.length > 0 && (
             <div data-tour="editor-undo-redo" className="flex items-center gap-2">

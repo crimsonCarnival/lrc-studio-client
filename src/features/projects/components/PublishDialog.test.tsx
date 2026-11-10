@@ -45,7 +45,7 @@ describe('PublishDialog', () => {
     fireEvent.click(screen.getByText('project.publishAction'));
     await waitFor(() => expect(screen.getByText('project.publishedTitle')).toBeInTheDocument());
     expect(api.update).toHaveBeenCalledWith('abc1234567', { public: true });
-    expect(onPublished).toHaveBeenCalledWith(true);
+    expect(onPublished).toHaveBeenCalledWith(true, true);
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toContain('/og/project/abc1234567');
     fireEvent.click(screen.getByText('project.publishShare'));
     expect(screen.getByTestId('share-sheet')).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('PublishDialog', () => {
     const { onPublished, onOpenChange } = setup({ ...base, isPublic: true });
     expect(api.update).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText('project.unpublishAction'));
-    await waitFor(() => expect(onPublished).toHaveBeenCalledWith(false));
+    await waitFor(() => expect(onPublished).toHaveBeenCalledWith(false, true));
     expect(api.update).toHaveBeenCalledWith('abc1234567', { public: false });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
@@ -132,7 +132,7 @@ describe('PublishDialog', () => {
     fireEvent.click(screen.getByText('project.publishAction'));
     rerender(false);
     resolve();
-    await waitFor(() => expect(onPublished).toHaveBeenCalledWith(true));
+    await waitFor(() => expect(onPublished).toHaveBeenCalledWith(true, true));
     rerender(true, { ...base, isPublic: true });
     expect(screen.queryByText('project.publishedTitle')).not.toBeInTheDocument();
     expect(screen.getByText('project.unpublishAction')).toBeInTheDocument();
@@ -162,5 +162,29 @@ describe('PublishDialog', () => {
     setup({ ...base, lines: undefined });
     expect(await screen.findByText('project.publishMissingLines')).toBeInTheDocument();
     expect(screen.getByText('project.publishAction').closest('button')).toBeDisabled();
+  });
+
+  it('publishes unlisted when that option is chosen', async () => {
+    api.update.mockResolvedValue({ project: {} });
+    const { onPublished } = setup();
+    fireEvent.click(screen.getByLabelText(/project\.choiceUnlisted/));
+    fireEvent.click(screen.getByText('project.publishAction'));
+    await waitFor(() => expect(onPublished).toHaveBeenCalledWith(true, false));
+    expect(api.update).toHaveBeenCalledWith('abc1234567', { public: true, listed: false });
+  });
+
+  it('switches a public project to unlisted without unpublishing it', async () => {
+    api.update.mockResolvedValue({ project: {} });
+    const { onPublished, onOpenChange } = setup({ ...base, isPublic: true, listed: true });
+    fireEvent.click(screen.getByText('project.makeUnlistedAction'));
+    await waitFor(() => expect(onPublished).toHaveBeenCalledWith(true, false));
+    expect(api.update).toHaveBeenCalledWith('abc1234567', { public: true, listed: false });
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('reads the listed state from the server when the caller does not know it', async () => {
+    api.get.mockResolvedValue({ project: { listed: false } });
+    setup({ ...base, isPublic: true });
+    expect(await screen.findByText('project.makeListedAction')).toBeInTheDocument();
   });
 });

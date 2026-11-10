@@ -43,7 +43,7 @@ describe('ProjectSetupModal visibility', () => {
     expect(screen.getByText('project.visibilityPrivate')).toBeInTheDocument();
     fireEvent.click(screen.getByText('project.visibilityManage'));
     fireEvent.click(screen.getByText('publish-dialog:abc1234567'));
-    expect(onVisibilityChange).toHaveBeenCalledWith(true);
+    expect(onVisibilityChange).toHaveBeenCalledWith(true, undefined);
     expect(screen.getByText('project.visibilityPublic')).toBeInTheDocument();
   });
 });

@@ -454,3 +454,4 @@ export default {
   peopleYouMightKnow: "Personas que quizás conozcas",
   lastSeen: "Visto por última vez {{time}}"
 };
+  unlistedProject: "Proyecto no listado",

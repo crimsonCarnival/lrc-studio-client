@@ -13,6 +13,7 @@ const GET_PROJECTS = /* GraphQL */ `
       type
       readOnly
       public
+      listed
       createdAt
       updatedAt
       contentUpdatedAt
@@ -76,6 +77,7 @@ const GET_PROJECT = /* GraphQL */ `
       type
       readOnly
       public
+      listed
       createdAt
       updatedAt
       contentUpdatedAt
@@ -172,6 +174,7 @@ const UPDATE_PROJECT = /* GraphQL */ `
       publicId
       title
       public
+      listed
       readOnly
     }
   }
@@ -193,6 +196,7 @@ const GET_SHARE = /* GraphQL */ `
       slug
       title
       public
+      listed
       readOnly
       createdAt
       forkedFrom {

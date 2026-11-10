@@ -138,7 +138,7 @@ interface ProjectSetupModalProps {
   /** The saved project being edited. Enables the visibility row, which opens the publish flow. */
   publicId?: string;
   /** Reports a visibility change the server accepted, so the caller can update its own copy. */
-  onVisibilityChange?: (isPublic: boolean) => void;
+  onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
   sourceInfo?: SourceInfo | null;
   songSingers?: string[];
 }
@@ -689,7 +689,7 @@ export default function ProjectSetupModal({
             artists: form.artists.map((c) => c.name),
             coverImage: form.coverImage,
           }}
-          onPublished={(next) => { setConfirmedPublic(next); onVisibilityChange?.(next); }}
+          onPublished={(next, listed) => { setConfirmedPublic(next); onVisibilityChange?.(next, listed); }}
         />
       )}
     </>
