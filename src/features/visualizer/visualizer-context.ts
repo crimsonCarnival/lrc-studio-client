@@ -19,6 +19,8 @@ export type TabAudioError = 'denied' | 'noAudio' | 'failed';
 export interface VisualizerContextValue {
   kind: VisualizerKind;
   setKind: (kind: VisualizerKind) => void;
+  /** Off, or back on with the last preset picked this session (the first preset before any). */
+  toggleKind: () => void;
   feed: AudioFeed;
   /** Real samples for this frame, or null while the stand-in is drawing. Read per frame. */
   getAnalyser: () => AnalyserNode | null;

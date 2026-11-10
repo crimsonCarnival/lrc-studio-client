@@ -6,8 +6,8 @@ import { captureTabAudio, NoTabAudioError, tabAudioSupported, tapMediaElement } 
 import type { TabAudioCapture } from './audio-source';
 import { VisualizerContext } from './visualizer-context';
 import type { AudioFeed, TabAudioError, VisualizerContextValue } from './visualizer-context';
-import { isVisualizerKind } from './visualizer-presets';
-import type { VisualizerKind } from './visualizer-presets';
+import { isVisualizerKind, VISUALIZER_PRESETS } from './visualizer-presets';
+import type { VisualizerKind, VisualizerPresetId } from './visualizer-presets';
 
 // A viewer preference, like the lyric alignment: remembered on this device only.
 const KIND_KEY = 'lrc_visualizer_kind';
@@ -37,6 +37,9 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
   const localUrl = (local?.localUrl as string | null | undefined) ?? null;
 
   const [kind, setKindState] = useState<VisualizerKind>(readStoredKind);
+  // What the toggle shortcut turns back on. Session-only: the stored kind is 'off' once off,
+  // and before any choice it falls back to the first preset.
+  const lastOnRef = useRef<VisualizerPresetId>(kind === 'off' ? VISUALIZER_PRESETS[0] : kind);
   const [tab, setTab] = useState<TabAudioCapture | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [tabError, setTabError] = useState<TabAudioError | null>(null);
@@ -66,10 +69,15 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
 
   const setKind = useCallback((next: VisualizerKind) => {
     setKindState(next);
+    if (next !== 'off') lastOnRef.current = next;
     // Nothing left to draw; release the capture so the browser's sharing bar goes away.
     if (next === 'off') stopTabAudio();
     try { localStorage.setItem(KIND_KEY, next); } catch { /* still applies for this session */ }
   }, [stopTabAudio]);
+
+  const toggleKind = useCallback(() => {
+    setKind(kind === 'off' ? lastOnRef.current : 'off');
+  }, [kind, setKind]);
 
   const shareTabAudio = useCallback(() => {
     setTabError(null);
@@ -132,8 +140,8 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
   }, [audioRef]);
 
   const value = useMemo<VisualizerContextValue>(() => ({
-  kind, setKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom,
-  }), [kind, setKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom]);
+  kind, setKind, toggleKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom,
+  }), [kind, setKind, toggleKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom]);
 
 return <VisualizerContext.Provider value={value}>{children}</VisualizerContext.Provider>;
 }

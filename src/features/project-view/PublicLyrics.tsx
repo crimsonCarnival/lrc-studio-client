@@ -12,6 +12,8 @@ import { usePlayer } from '@features/player/PlayerContext';
 import { hasKanji, toHiragana, toKatakana, splitOkurigana, needsSpaceAfter } from '@/shared/utils/furigana';
 import { readStoredZoom, storeZoom, zoomFromWheel } from './lyrics-zoom';
 import { LyricsZoomControl } from './LyricsZoomControl';
+import type { LyricsAlignment } from './lyrics-alignment';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 
 // Theme-token colors: the stage sits on the app background, so text derives
 // from --foreground and stays legible in both the dark and light themes.
@@ -110,6 +112,12 @@ const ALIGN_LABEL_KEYS = {
   right: 'settings.interface.alignRight',
 } as const;
 
+const ALIGN_SHORTCUTS = {
+  left: { id: 'alignLeft', fallback: 'Shift+L' },
+  center: { id: 'alignCenter', fallback: 'Shift+C' },
+  right: { id: 'alignRight', fallback: 'Shift+R' },
+} as const;
+
 // Base (dist-0) rem size per settings.interface.fontSize — scaled down to keep
 // public view lyrics balanced and readable without dominating the viewport.
 const BASE_FONT_REM: Record<string, number> = {
@@ -132,7 +140,7 @@ interface ImmersiveLineProps {
   editorMode?: string;
   songSingers?: string[];
   singerColors?: string[];
-  alignment?: 'left' | 'center' | 'right';
+  alignment?: LyricsAlignment;
   /** Settings.editor.display.activeHighlight — the same preference PreviewLine reads. */
   activeHighlight?: string;
   /** Settings.editor.display.readingFormat — script used for furigana. */
@@ -470,7 +478,7 @@ interface SectionDividerProps {
   singers?: string[];
   songSingers?: string[];
   singerColors?: string[];
-  alignment?: 'left' | 'center' | 'right';
+  alignment?: LyricsAlignment;
 }
 
 function SectionDivider({
@@ -559,7 +567,9 @@ interface PublicLyricsProps {
   showTranslations?: boolean;
   songSingers?: string[];
   singerColors?: string[];
-  initialAlignment?: 'left' | 'center' | 'right';
+  /** The viewer's alignment; the page owns it so its keyboard shortcuts can set it too. */
+  alignment?: LyricsAlignment;
+  onAlignmentChange?: (alignment: LyricsAlignment) => void;
 }
 
 // ── Main component ───────────────────────────────────────────
@@ -571,7 +581,8 @@ export default function PublicLyrics({
   showTranslations = true,
   songSingers = [],
   singerColors = [],
-  initialAlignment,
+  alignment = 'left',
+  onAlignmentChange,
 }: PublicLyricsProps) {
   const { t } = useTranslation();
   // The playback clock is read here, not passed down from the page, so a tick
@@ -614,23 +625,6 @@ export default function PublicLyrics({
   const containerRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
   const lastScrolledIndex = useRef(-2);
-
-  // Text orientation selection — defaults to 'left'
-  const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>(() => {
-    if (initialAlignment) return initialAlignment;
-    const saved = localStorage.getItem('lrc_preview_alignment');
-    if (saved === 'left' || saved === 'center' || saved === 'right') return saved;
-    return 'left';
-  });
-
-  const handleAlignmentChange = (newAlign: 'left' | 'center' | 'right') => {
-    setAlignment(newAlign);
-    try {
-      localStorage.setItem('lrc_preview_alignment', newAlign);
-    } catch {
-      // localStorage unavailable (private mode, quota, etc.) — alignment still applies for this session
-    }
-  };
 
   const currentIndex = useMemo(
     () => computeCurrentIndex(lines, playbackPosition, editorMode),
@@ -724,10 +718,10 @@ export default function PublicLyrics({
       {(['left', 'center', 'right'] as const).map((align) => {
         const label = t(ALIGN_LABEL_KEYS[align]);
         return (
-          <Tip key={align} content={label}>
+          <Tip key={align} content={<ShortcutHint label={label} shortcut={ALIGN_SHORTCUTS[align].id} fallback={ALIGN_SHORTCUTS[align].fallback} />}>
             <button
               type="button"
-              onClick={() => handleAlignmentChange(align)}
+              onClick={() => onAlignmentChange?.(align)}
               aria-pressed={alignment === align}
               aria-label={label}
               className={`grid place-items-center size-7 coarse:size-11 rounded-xs transition-all ${alignment === align ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}

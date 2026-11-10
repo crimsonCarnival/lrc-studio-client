@@ -11,6 +11,7 @@ import { startVisualizer, VISUALIZER_PRESETS, isVisualizer3dPreset } from '../vi
 import type { VisualizerKind, VisualizerPresetId } from '../visualizer-presets';
 import { fillSimulated } from '../visualizer-signal';
 import { Tip } from '@ui/tip';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 
 const OPTIONS: readonly VisualizerKind[] = ['off', ...VISUALIZER_PRESETS];
 
@@ -141,6 +142,7 @@ export function VisualizerButton() {
 
   return (
     <>
+      <Tip content={<ShortcutHint label={t('shortcuts.toggleVisualizer')} shortcut="toggleVisualizer" fallback="v" />}>
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -151,6 +153,7 @@ export function VisualizerButton() {
         <Icon name="graphic_eq" size={18} />
         <span className="max-xl:sr-only">{t('projectView.visualizer.button')}</span>
       </button>
+      </Tip>
 
       <ResponsiveModal
         open={open}

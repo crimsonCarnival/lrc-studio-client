@@ -16,6 +16,12 @@ export default {
   toggleTranslation: "Toggle translations",
   addSecondary: "Add secondary lyrics",
   addTranslation: "Add translations",
+  alignLeft: "Align lyrics left",
+  alignCenter: "Center lyrics",
+  alignRight: "Align lyrics right",
+  toggleVisualizer: "Turn visualizer on / off",
+  toggleFullLyrics: "Full lyrics on / off",
+  togglePlayer: "Hide / show player",
   selection: {
     title: "Selection",
     click: "Click",
@@ -29,10 +35,12 @@ export default {
   tabs: {
     player: "Player",
     editor: "Editor",
-    preview: "Preview"
+    preview: "Preview",
+    view: "Project view"
   },
   sections: {
     playback: "Playback",
-    preview: "Preview"
+    preview: "Preview",
+    lyrics: "Lyrics"
   }
 };

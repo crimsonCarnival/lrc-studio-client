@@ -2059,6 +2059,9 @@ export type ShortcutsSettings = {
   addLine?: Maybe<Array<Scalars['String']['output']>>;
   addSecondary?: Maybe<Array<Scalars['String']['output']>>;
   addTranslation?: Maybe<Array<Scalars['String']['output']>>;
+  alignCenter?: Maybe<Array<Scalars['String']['output']>>;
+  alignLeft?: Maybe<Array<Scalars['String']['output']>>;
+  alignRight?: Maybe<Array<Scalars['String']['output']>>;
   captureAdLib?: Maybe<Array<Scalars['String']['output']>>;
   clearTimestamp?: Maybe<Array<Scalars['String']['output']>>;
   deleteLine?: Maybe<Array<Scalars['String']['output']>>;
@@ -2080,14 +2083,20 @@ export type ShortcutsSettings = {
   speedDown?: Maybe<Array<Scalars['String']['output']>>;
   speedUp?: Maybe<Array<Scalars['String']['output']>>;
   switchMode?: Maybe<Array<Scalars['String']['output']>>;
+  toggleFullLyrics?: Maybe<Array<Scalars['String']['output']>>;
+  togglePlayer?: Maybe<Array<Scalars['String']['output']>>;
   toggleSelect?: Maybe<Array<Scalars['String']['output']>>;
   toggleTranslation?: Maybe<Array<Scalars['String']['output']>>;
+  toggleVisualizer?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type ShortcutsSettingsInput = {
   addLine?: InputMaybe<Array<Scalars['String']['input']>>;
   addSecondary?: InputMaybe<Array<Scalars['String']['input']>>;
   addTranslation?: InputMaybe<Array<Scalars['String']['input']>>;
+  alignCenter?: InputMaybe<Array<Scalars['String']['input']>>;
+  alignLeft?: InputMaybe<Array<Scalars['String']['input']>>;
+  alignRight?: InputMaybe<Array<Scalars['String']['input']>>;
   captureAdLib?: InputMaybe<Array<Scalars['String']['input']>>;
   clearTimestamp?: InputMaybe<Array<Scalars['String']['input']>>;
   deleteLine?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2109,8 +2118,11 @@ export type ShortcutsSettingsInput = {
   speedDown?: InputMaybe<Array<Scalars['String']['input']>>;
   speedUp?: InputMaybe<Array<Scalars['String']['input']>>;
   switchMode?: InputMaybe<Array<Scalars['String']['input']>>;
+  toggleFullLyrics?: InputMaybe<Array<Scalars['String']['input']>>;
+  togglePlayer?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleSelect?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleTranslation?: InputMaybe<Array<Scalars['String']['input']>>;
+  toggleVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type ShowcasedBadge = {

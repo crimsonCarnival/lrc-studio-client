@@ -4,6 +4,7 @@ import { usePlayer } from '@features/player/PlayerContext';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 
 function clock(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds || 0));
@@ -37,7 +38,7 @@ export function PublicHeaderPlayer({
 
   if (!playerHidden) {
     return (
-      <Tip content={t('projectView.hidePlayer')}>
+      <Tip content={<ShortcutHint label={t('projectView.hidePlayer')} shortcut="togglePlayer" fallback="p" />}>
         <Button
           variant="ghost"
           size="icon"
@@ -57,6 +58,7 @@ export function PublicHeaderPlayer({
       role="region"
       aria-label={t('player.title')}
     >
+      <Tip content={<ShortcutHint label={isPlaying ? t('projectView.pause') : t('projectView.play')} shortcut="playPause" fallback="Space" />}>
       <button
         type="button"
         onClick={togglePlay}
@@ -76,6 +78,7 @@ export function PublicHeaderPlayer({
           <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={15} filled />
         )}
       </button>
+      </Tip>
 
       {/* Mini scrubber on md+ screens */}
       {duration > 0 && (
@@ -104,7 +107,7 @@ export function PublicHeaderPlayer({
         <span className="text-zinc-600 hidden sm:inline"> / {clock(duration)}</span>
       </span>
 
-      <Tip content={t('projectView.showPlayer')}>
+      <Tip content={<ShortcutHint label={t('projectView.showPlayer')} shortcut="togglePlayer" fallback="p" />}>
         <button
           type="button"
           onClick={onTogglePlayer}

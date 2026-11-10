@@ -25,6 +25,9 @@ import PublicLyrics, { type DisplayLine } from './PublicLyrics';
 import ProjectInfoPanel from './ProjectInfoPanel';
 import PublicPlaybackBar from './PublicPlaybackBar';
 import PublicShortcuts from './PublicShortcuts';
+import { readStoredAlignment, storeAlignment } from './lyrics-alignment';
+import type { LyricsAlignment } from './lyrics-alignment';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import { PublicHeaderPlayer } from './PublicHeaderPlayer';
 import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
@@ -203,6 +206,12 @@ function ProjectViewPageInner() {
   // re-renders this page or the info aside.
   const [fullLyrics, setFullLyrics] = useState(false);
   const toggleFullLyrics = useCallback(() => setFullLyrics((v) => !v), []);
+  // Owned here rather than in PublicLyrics so the view's keyboard shortcuts can set it.
+  const [alignment, setAlignment] = useState<LyricsAlignment>(readStoredAlignment);
+  const changeAlignment = useCallback((next: LyricsAlignment) => {
+    setAlignment(next);
+    storeAlignment(next);
+  }, []);
 
   // ── Up-next playlist ─────────────────────────────────────────
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
@@ -483,7 +492,11 @@ function ProjectViewPageInner() {
       viewerMode
     >
     <VisualizerProvider>
-    <PublicShortcuts />
+    <PublicShortcuts
+      onAlign={changeAlignment}
+      onToggleFullLyrics={toggleFullLyrics}
+      onTogglePlayer={initialMedia ? togglePlayerHidden : undefined}
+    />
     {inList && (
       <ListAutoplay
         key={publicId}
@@ -550,6 +563,8 @@ function ProjectViewPageInner() {
               lines={lines as unknown as DisplayLine[]}
               editorMode={editorMode}
               fullLyrics={fullLyrics}
+              alignment={alignment}
+              onAlignmentChange={changeAlignment}
               reserveCorner={infoCollapsed}
               showTranslations
               songSingers={songSingers}
@@ -557,7 +572,7 @@ function ProjectViewPageInner() {
             />
             {playerHidden && !!initialMedia && (
               <div className="absolute bottom-4 right-4 z-20">
-                <Tip content={t('projectView.showPlayer')}>
+                <Tip content={<ShortcutHint label={t('projectView.showPlayer')} shortcut="togglePlayer" fallback="p" />}>
                   <Button
                     size="sm"
                     variant="outline"

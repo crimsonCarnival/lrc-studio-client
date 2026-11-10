@@ -5,6 +5,7 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Tip } from '@ui/tip';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 
 /** Icon tier by volume: muted/0 → off, <33% → mute (speaker, no waves), <66% → down (one wave), else → up. */
 function volumeIconName(muted: boolean, volume: number): 'volume_off' | 'volume_mute' | 'volume_down' | 'volume_up' {
@@ -21,7 +22,7 @@ const VolumeControl = memo(function VolumeControl() {
 
   return (
     <div className="group/volume flex items-center gap-1.5 lg:gap-2" role="group" aria-label={t('player.volume')}>
-      <Tip content={settings.playback.muted ? t('player.unmute') : t('player.mute')}>
+      <Tip content={<ShortcutHint label={settings.playback.muted ? t('player.unmute') : t('player.mute')} shortcut="mute" fallback="m" />}>
         <Button
           variant="ghost"
           size="icon"

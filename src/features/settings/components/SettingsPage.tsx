@@ -107,6 +107,7 @@ const SHORTCUT_KEYS = [
   'switchMode', 'nudgeLeftFine', 'nudgeRightFine', 'deselect', 'showHelp',
   'playPause', 'seekForward', 'seekBackward', 'mute', 'speedUp', 'speedDown',
   'addSecondary', 'addTranslation', 'toggleTranslation', 'captureAdLib',
+  'alignLeft', 'alignCenter', 'alignRight', 'toggleVisualizer', 'toggleFullLyrics', 'togglePlayer',
 ];
 
 export default function SettingsPage() {

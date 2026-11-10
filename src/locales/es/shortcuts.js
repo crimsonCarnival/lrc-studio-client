@@ -16,6 +16,12 @@ export default {
   toggleTranslation: "Alternar traducciones",
   addSecondary: "Agregar letra secundaria",
   addTranslation: "Agregar traducciones",
+  alignLeft: "Alinear letra a la izquierda",
+  alignCenter: "Centrar letra",
+  alignRight: "Alinear letra a la derecha",
+  toggleVisualizer: "Activar / desactivar visualizador",
+  toggleFullLyrics: "Activar / desactivar letra completa",
+  togglePlayer: "Ocultar / mostrar reproductor",
   selection: {
     title: "Selección",
     click: "Clic",
@@ -29,10 +35,12 @@ export default {
   tabs: {
     player: "Reproductor",
     editor: "Editor",
-    preview: "Vista previa"
+    preview: "Vista previa",
+    view: "Vista del proyecto"
   },
   sections: {
     playback: "Reproducción",
-    preview: "Vista previa"
+    preview: "Vista previa",
+    lyrics: "Letra"
   }
 };

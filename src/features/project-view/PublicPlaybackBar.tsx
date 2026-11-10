@@ -9,6 +9,7 @@ import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { buildSectionSegments } from './section-segments';
 import { SectionString } from './SectionString';
@@ -334,18 +335,33 @@ export default function PublicPlaybackBar({
           </span>
           {!minimal && (
             <div role="group" aria-label={t('player.jump')} className="flex items-center gap-2">
-              {nudges.map((delta) => (
-                <button
-                  key={delta}
-                  type="button"
-                  onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
-                  disabled={!ready}
-                  aria-label={t(delta < 0 ? 'shortcuts.seekBackward' : 'shortcuts.seekForward', { val: Math.abs(delta) })}
-                  className={`${NUDGE_BTN} ${Math.abs(delta) < 1 ? 'max-xl:hidden' : ''}`}
-                >
-                  {delta < 0 ? '−' : '+'}{Math.abs(delta)}s
-                </button>
-              ))}
+              {nudges.map((delta) => {
+                const label = t(delta < 0 ? 'shortcuts.seekBackward' : 'shortcuts.seekForward', { val: Math.abs(delta) });
+                const button = (
+                  <button
+                    key={delta}
+                    type="button"
+                    onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
+                    disabled={!ready}
+                    aria-label={label}
+                    className={`${NUDGE_BTN} ${Math.abs(delta) < 1 ? 'max-xl:hidden' : ''}`}
+                  >
+                    {delta < 0 ? '−' : '+'}{Math.abs(delta)}s
+                  </button>
+                );
+                // Only the full seek steps have a key; the fine ±0.1s ones do not.
+                if (Math.abs(delta) !== seekTime) return button;
+                return (
+                  <Tip
+                    key={delta}
+                    content={delta < 0
+                      ? <ShortcutHint label={label} shortcut="seekBackward" fallback="ArrowLeft" />
+                      : <ShortcutHint label={label} shortcut="seekForward" fallback="ArrowRight" />}
+                  >
+                    {button}
+                  </Tip>
+                );
+              })}
             </div>
           )}
         </div>
@@ -376,6 +392,7 @@ export default function PublicPlaybackBar({
               <Icon name={listNav ? 'chevron_left' : 'skip_previous'} size={listNav ? 20 : 22} />
             </button>
           </Tip>
+          <Tip content={<ShortcutHint label={isPlaying ? t('projectView.pause') : t('projectView.play')} shortcut="playPause" fallback="Space" />}>
           <button
             type="button"
             onClick={togglePlay}
@@ -395,6 +412,7 @@ export default function PublicPlaybackBar({
               <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
             )}
           </button>
+          </Tip>
           <Tip content={t('projectView.nextLine')}>
             <button
               type="button"
@@ -427,6 +445,7 @@ export default function PublicPlaybackBar({
           {/* Phones keep the two big jumps here; from lg up the full group sits beside the clock. */}
           {!minimal && (
             <>
+              <Tip content={<ShortcutHint label={t('shortcuts.seekBackward', { val: seekTime })} shortcut="seekBackward" fallback="ArrowLeft" />}>
               <button
                 type="button"
                 onClick={() => seek(Math.max(0, currentTime - seekTime))}
@@ -436,6 +455,8 @@ export default function PublicPlaybackBar({
               >
                 −{seekTime}s
               </button>
+              </Tip>
+              <Tip content={<ShortcutHint label={t('shortcuts.seekForward', { val: seekTime })} shortcut="seekForward" fallback="ArrowRight" />}>
               <button
                 type="button"
                 onClick={() => seek(Math.min(duration, currentTime + seekTime))}
@@ -445,6 +466,7 @@ export default function PublicPlaybackBar({
               >
                 +{seekTime}s
               </button>
+              </Tip>
             </>
           )}
           <SpeedControl
@@ -457,6 +479,7 @@ export default function PublicPlaybackBar({
           {!minimal && <VolumeControl />}
           {controlsSlot}
           {onToggleFullLyrics && (
+          <Tip content={<ShortcutHint label={t('projectView.fullLyrics')} shortcut="toggleFullLyrics" fallback="l" />}>
           <button
             type="button"
             onClick={onToggleFullLyrics}
@@ -466,9 +489,10 @@ export default function PublicPlaybackBar({
             <Icon name="format_list_bulleted" size={18} />
             <span className="max-xl:sr-only">{t('projectView.fullLyrics')}</span>
           </button>
+          </Tip>
           )}
           {onHidePlayer && (
-            <Tip content={t('projectView.hidePlayer')}>
+            <Tip content={<ShortcutHint label={t('projectView.hidePlayer')} shortcut="togglePlayer" fallback="p" />}>
               <button
                 type="button"
                 onClick={onHidePlayer}
