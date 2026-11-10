@@ -7,6 +7,7 @@ export default {
   remove: "Remove",
   private: "Private",
   public: "Public",
+  unlisted: "Unlisted",
   sortMode: {
     MANUAL: "Manual order",
     DATE_ADDED: "Date added",
@@ -37,6 +38,7 @@ export default {
     tagsPlaceholder: "Add a tag",
     visibilityLegend: "Who can see it",
     publicHint: "On your profile and in Explore",
+    unlistedHint: "Only people with the link can open it. Not listed anywhere",
     privateHint: "Only you can open it",
     defaultOrder: "Default order",
     sortHint: {
@@ -92,6 +94,7 @@ export default {
     playAll: "Play all",
     share: "Share",
     publicList: "Public list",
+    unlistedList: "Unlisted list",
     privateList: "Private list",
     auto: "Auto-generated",
     updated: "Updated {{when}}",
@@ -184,6 +187,7 @@ export default {
     visibility: {
       ALL: "All",
       PUBLIC: "Public",
+      UNLISTED: "Unlisted",
       PRIVATE: "Private",
     },
     layoutLabel: "Layout",

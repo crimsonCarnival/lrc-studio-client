@@ -20,7 +20,7 @@ import type {
 // document — `${...}` interpolation would defeat the build-time validation.
 const PLAYLIST_FIELDS = /* GraphQL */ `
   fragment PlaylistFields on Playlist {
-    id name description coverImage tags isPublic sortMode
+    id name description coverImage tags isPublic listed sortMode
     projectCount savedCount viewCount shareCount isSavedByMe createdAt updatedAt
     owner { id accountName displayName avatarUrl }
     projects {

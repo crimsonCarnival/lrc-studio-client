@@ -57,6 +57,7 @@ export type PlaylistModalInput = {
   coverImage?: string | null;
   tags?: readonly string[] | null;
   isPublic?: boolean | null;
+  listed?: boolean | null;
   sortMode?: PlaylistSortMode | null;
   projects?: ReadonlyArray<{ publicId?: string | null }> | null;
 };
@@ -67,8 +68,14 @@ type FormShape = {
   coverImage: string;
   tags: string[];
   isPublic: boolean;
+  /** Only meaningful while public: false = unlisted. */
+  listed: boolean;
   sortMode: PlaylistSortMode;
 };
+
+type Visibility = 'public' | 'unlisted' | 'private';
+const VISIBILITIES: readonly Visibility[] = ['public', 'unlisted', 'private'];
+const visibilityOf = (f: Pick<FormShape, 'isPublic' | 'listed'>): Visibility => (!f.isPublic ? 'private' : f.listed ? 'public' : 'unlisted');
 
 type PlaylistModalProps = {
   playlist?: PlaylistModalInput | null;
@@ -125,6 +132,7 @@ export function PlaylistModal({ playlist, onClose, onSave, onProjectsChange }: P
     coverImage: playlist?.coverImage ?? '',
     tags: [...(playlist?.tags ?? [])],
     isPublic: playlist?.isPublic ?? true,
+    listed: playlist?.listed ?? true,
     sortMode: playlist?.sortMode ?? 'DATE_ADDED',
   });
 
@@ -223,6 +231,8 @@ export function PlaylistModal({ playlist, onClose, onSave, onProjectsChange }: P
         coverImage: form.coverImage.trim() || undefined,
         tags: form.tags,
         isPublic: form.isPublic,
+        // Sent only when unlisted, so a plain public or private list is the same request as ever.
+        ...(form.isPublic && !form.listed ? { listed: false } : {}),
         sortMode: form.sortMode,
       };
       const result = isEdit && playlist?.id
@@ -427,11 +437,11 @@ export function PlaylistModal({ playlist, onClose, onSave, onProjectsChange }: P
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-xs font-semibold text-muted-foreground">{t('playlists.modal.visibilityLegend')}</legend>
         <div className="flex flex-col sm:flex-row gap-2.5">
-          {([true, false] as const).map((isPublic) => {
-            const on = form.isPublic === isPublic;
+          {VISIBILITIES.map((visibility) => {
+            const on = visibilityOf(form) === visibility;
             return (
               <label
-                key={String(isPublic)}
+                key={visibility}
                 className={cn(
                   'flex-1 flex items-start gap-3 px-3.5 py-3 rounded-xl border cursor-pointer transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/50',
                   on ? 'border-primary bg-primary/10' : 'border-border hover:bg-accent/40',
@@ -441,15 +451,15 @@ export function PlaylistModal({ playlist, onClose, onSave, onProjectsChange }: P
                   type="radio"
                   name={`${uid}-visibility`}
                   checked={on}
-                  onChange={() => handleField('isPublic', isPublic)}
+                  onChange={() => setForm((f) => ({ ...f, isPublic: visibility !== 'private', listed: visibility !== 'unlisted' }))}
                   className="sr-only"
                 />
                 <span aria-hidden className={cn('mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full border-2', on ? 'border-primary' : 'border-border')}>
                   {on && <span className="size-2 rounded-full bg-primary" />}
                 </span>
                 <span className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold text-foreground">{isPublic ? t('playlists.public') : t('playlists.private')}</span>
-                  <span className="text-xs text-muted-foreground">{isPublic ? t('playlists.modal.publicHint') : t('playlists.modal.privateHint')}</span>
+                  <span className="text-sm font-semibold text-foreground">{t(`playlists.${visibility}`)}</span>
+                  <span className="text-xs text-muted-foreground">{t(`playlists.modal.${visibility}Hint`)}</span>
                 </span>
               </label>
             );

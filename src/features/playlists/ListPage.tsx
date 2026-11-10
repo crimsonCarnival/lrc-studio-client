@@ -35,6 +35,7 @@ import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popove
 import { ReportDialog } from '@/features/reports/ReportDialog';
 import { Tip } from '@ui/tip';
 import type { PlaylistSortMode } from '@/types';
+import { genreLabel } from '@/features/editor/constants/genre-tags';
 
 type PlaylistProject = {
   id: string;
@@ -57,6 +58,7 @@ type Playlist = {
   description?: string | null;
   coverImage?: string | null;
   isPublic?: boolean;
+  listed?: boolean;
   isSavedByMe?: boolean;
   savedCount?: number;
   viewCount?: number;
@@ -93,12 +95,12 @@ function sortTracks(rows: IndexedProject[], sort: ViewSort): IndexedProject[] {
   return copy;
 }
 
-function matchesQuery(project: PlaylistProject, query: string): boolean {
+function matchesQuery(project: PlaylistProject, query: string, genreName: (genre: string | null | undefined) => string): boolean {
   const haystack = [
     project.title,
     project.metadata?.songName,
     project.metadata?.songArtist,
-    project.metadata?.genre,
+    genreName(project.metadata?.genre),
     project.user?.accountName,
   ].filter(Boolean).join(' ').toLowerCase();
   return haystack.includes(query);
@@ -108,6 +110,7 @@ export default function ListPage() {
   const { accountName, listId } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const genreName = useCallback((genre: string | null | undefined) => genreLabel(genre, t as (key: string) => string), [t]);
   const { user } = useAuthContext();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone || 'auto';
@@ -151,9 +154,9 @@ export default function ListPage() {
   const rows = useMemo(() => {
     const query = find.trim().toLowerCase();
     const indexed = projects.map((project, position) => ({ project, position }));
-    const filtered = query ? indexed.filter(r => matchesQuery(r.project, query)) : indexed;
+    const filtered = query ? indexed.filter(r => matchesQuery(r.project, query, genreName)) : indexed;
     return sortTracks(filtered, viewSort);
-  }, [projects, find, viewSort]);
+  }, [projects, find, viewSort, genreName]);
 
   // `?list=` keeps the up-next panel on the project page; the canonical path
   // carries the project's OWN owner, which is not the playlist's owner.
@@ -254,8 +257,9 @@ export default function ListPage() {
           <div className="flex-1 min-w-0 flex flex-col gap-3">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {!playlist.isPublic && <Icon name="lock" size={14} />}
+              {playlist.isPublic && playlist.listed === false && <Icon name="link" size={14} />}
               <span>
-                {playlist.isPublic ? t('playlists.detail.publicList') : t('playlists.detail.privateList')}
+                {!playlist.isPublic ? t('playlists.detail.privateList') : playlist.listed === false ? t('playlists.detail.unlistedList') : t('playlists.detail.publicList')}
                 {isAuto && ` · ${t('playlists.detail.auto')}`}
               </span>
             </div>
@@ -487,7 +491,7 @@ export default function ListPage() {
                           </span>
                         </span>
 
-                        <span className="hidden md:block text-sm text-muted-foreground truncate">{project.metadata?.genre || '—'}</span>
+                        <span className="hidden md:block text-sm text-muted-foreground truncate">{genreName(project.metadata?.genre) || '—'}</span>
                         <span className="hidden md:block">
                           <span className={cn(
                             'inline-block px-2 py-0.5 rounded-pill border text-xs font-medium',
@@ -531,7 +535,7 @@ export default function ListPage() {
               <dt className="text-muted-foreground">{t('playlists.about.wordSynced')}</dt>
               <dd className="text-foreground">{t('playlists.about.wordSyncedValue', { count: stats.wordSynced, total: projects.length })}</dd>
               <dt className="text-muted-foreground">{t('playlists.about.topGenre')}</dt>
-              <dd className="text-foreground">{stats.genre ?? '—'}</dd>
+              <dd className="text-foreground">{genreName(stats.genre) || '—'}</dd>
               <dt className="text-muted-foreground">{t('playlists.about.artists')}</dt>
               <dd className="text-foreground">{stats.artists}</dd>
             </dl>
@@ -559,7 +563,7 @@ export default function ListPage() {
                     <span className="text-xs text-muted-foreground truncate">
                       {t('playlists.detail.projects', { count: other.projectCount })}
                       {' · '}
-                      {other.isPublic ? t('playlists.public') : t('playlists.private')}
+                      {!other.isPublic ? t('playlists.private') : other.listed === false ? t('playlists.unlisted') : t('playlists.public')}
                     </span>
                   </span>
                 </Link>

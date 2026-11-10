@@ -7,6 +7,7 @@ export default {
   remove: "Quitar",
   private: "Privado",
   public: "Público",
+  unlisted: "No listado",
   sortMode: {
     MANUAL: "Orden manual",
     DATE_ADDED: "Fecha de adición",
@@ -37,6 +38,7 @@ export default {
     tagsPlaceholder: "Añadir etiqueta",
     visibilityLegend: "Quién puede verla",
     publicHint: "En tu perfil y en Explorar",
+    unlistedHint: "Solo quien tenga el enlace puede abrirla. No aparece en ningún listado",
     privateHint: "Solo tú puedes abrirla",
     defaultOrder: "Orden predeterminado",
     sortHint: {
@@ -92,6 +94,7 @@ export default {
     playAll: "Reproducir todo",
     share: "Compartir",
     publicList: "Lista pública",
+    unlistedList: "Lista no listada",
     privateList: "Lista privada",
     auto: "Generada automáticamente",
     updated: "Actualizada {{when}}",
@@ -184,6 +187,7 @@ export default {
     visibility: {
       ALL: "Todas",
       PUBLIC: "Públicas",
+      UNLISTED: "No listadas",
       PRIVATE: "Privadas",
     },
     layoutLabel: "Vista",

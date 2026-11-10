@@ -32,7 +32,7 @@ type Tab = 'created' | 'saved';
 type Layout = 'grid' | 'table';
 const TABS: readonly Tab[] = ['created', 'saved'];
 const SORTS: readonly PlaylistListSort[] = ['UPDATED', 'NEWEST', 'SAVES', 'NAME'];
-const VISIBILITIES: readonly PlaylistVisibilityFilter[] = ['ALL', 'PUBLIC', 'PRIVATE'];
+const VISIBILITIES: readonly PlaylistVisibilityFilter[] = ['ALL', 'PUBLIC', 'UNLISTED', 'PRIVATE'];
 const LAYOUTS: readonly Layout[] = ['grid', 'table'];
 
 /** URL params that reset the page when they change, so a filter never lands on an empty page 5. */
@@ -283,6 +283,9 @@ export default function AllListsPage() {
                     <span className="truncate text-[15px] font-medium text-foreground group-hover:text-primary transition-colors">{playlist.name}</span>
                     {!playlist.isPublic && (
                       <Icon name="lock" size={13} className="shrink-0 text-muted-foreground" />
+                    )}
+                    {playlist.isPublic && playlist.listed === false && (
+                      <Icon name="link" size={13} className="shrink-0 text-muted-foreground" aria-label={t('playlists.unlisted')} />
                     )}
                   </span>
                   <span className={cn('truncate text-sm text-muted-foreground', !playlist.description && 'italic opacity-60')}>

@@ -90,6 +90,12 @@ export function PlaylistTile({ playlist, accountName, isOwner }: PlaylistTilePro
                 {t('playlists.private')}
               </span>
             )}
+            {playlist.isPublic && playlist.listed === false && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-pill bg-background/85 text-foreground text-[10px] font-semibold uppercase tracking-wider">
+                <Icon name="link" size={10} />
+                {t('playlists.unlisted')}
+              </span>
+            )}
           </span>
 
           <span className="absolute right-2 bottom-2 px-2 py-0.5 rounded-pill bg-background/85 text-foreground text-[11px] font-mono">

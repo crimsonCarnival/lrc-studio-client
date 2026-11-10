@@ -297,6 +297,8 @@ export type CreatePlaylistInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  /** With isPublic: true, false makes the list unlisted. Defaults to listed whenever isPublic changes. */
+  listed?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
   publicIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   sortMode?: InputMaybe<PlaylistSortMode>;
@@ -1300,6 +1302,8 @@ export type Playlist = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   isPublic: Scalars['Boolean']['output'];
+  /** False on a public list = unlisted: open by link, absent from discovery. */
+  listed: Scalars['Boolean']['output'];
   isSavedByMe: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   owner: FollowUser;
@@ -1337,7 +1341,8 @@ export type PlaylistSortMode =
 export type PlaylistVisibilityFilter =
   | 'ALL'
   | 'PRIVATE'
-  | 'PUBLIC';
+  | 'PUBLIC'
+  | 'UNLISTED';
 
 /** description: up to 500 chars. tags: up to 10, each one word of up to 30 chars; a leading # is dropped. */
 export type ProfileShareInput = {
@@ -1385,6 +1390,8 @@ export type Project = {
   isSharedToProfileByMe?: Maybe<Scalars['Boolean']['output']>;
   isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
   lineCount?: Maybe<Scalars['Int']['output']>;
+  /** False on a public project = unlisted: open by link, absent from discovery. Absent means listed. */
+  listed?: Maybe<Scalars['Boolean']['output']>;
   lyrics?: Maybe<Lyrics>;
   lyricsId?: Maybe<Scalars['ID']['output']>;
   metadata?: Maybe<ProjectMetadata>;
@@ -1392,8 +1399,6 @@ export type Project = {
   myProfileShare?: Maybe<ProfileShareNote>;
   profileShareCount?: Maybe<Scalars['Int']['output']>;
   public?: Maybe<Scalars['Boolean']['output']>;
-  /** False on a public project = unlisted: open by link, absent from discovery. Absent means listed. */
-  listed?: Maybe<Scalars['Boolean']['output']>;
   publicId: Scalars['String']['output'];
   readOnly?: Maybe<Scalars['Boolean']['output']>;
   shareCount?: Maybe<Scalars['Int']['output']>;
@@ -2198,6 +2203,8 @@ export type UpdatePlaylistInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  /** With isPublic: true, false makes the list unlisted. Defaults to listed whenever isPublic changes. */
+  listed?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   sortMode?: InputMaybe<PlaylistSortMode>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2237,6 +2244,8 @@ export type UpdateProfileInput = {
 export type UpdateProjectInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
   lyrics?: InputMaybe<ProjectLyricsInput>;
+  /** With public: true, false makes the project unlisted: anyone with the link can open it, but it is not discoverable. Defaults to listed whenever public changes. */
+  listed?: InputMaybe<Scalars['Boolean']['input']>;
   metadata?: InputMaybe<ProjectMetadataInput>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
   readOnly?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2246,8 +2255,6 @@ export type UpdateProjectInput = {
   uploadId?: InputMaybe<Scalars['ID']['input']>;
   version?: InputMaybe<Scalars['Int']['input']>;
 };
-  /** With public: true, false makes the project unlisted: anyone with the link can open it, but it is not discoverable. Defaults to listed whenever public changes. */
-  listed?: InputMaybe<Scalars['Boolean']['input']>;
 
 export type UpdateSettingsInput = {
   advanced?: InputMaybe<AdvancedSettingsInput>;
