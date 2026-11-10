@@ -219,8 +219,8 @@ function readPalette(el: Element): Palette {
 }
 
 /**
- * Fills `bands` and `wave` for this frame. Returns whether something is playing: once it
- * returns false and the bands have decayed to nothing, the loop stops painting.
+ * Fills `bands` and `wave` for this frame. Returns whether something is playing: while it
+ * returns false the loop holds the last frame on the canvas instead of fading it out.
  */
 export type Sampler = (bands: Float32Array, wave: Float32Array, clock: number) => boolean;
 
@@ -259,34 +259,15 @@ export function startVisualizer(
   const observer = new ResizeObserver(fit);
   observer.observe(canvas);
 
-  let raf = requestAnimationFrame(function tick(now) {
-    raf = requestAnimationFrame(tick);
-    const clock = now / 1000;
-    const active = sample(targetBands, targetWave, clock);
-
-    let peak = 0;
+  // The clock of the last frame painted while playing, so a held frame repaints identically.
+  let heldClock = 0;
+  const paint = (clock: number) => {
     let sum = 0;
     let bassSum = 0;
     for (let i = 0; i < BAND_COUNT; i++) {
-      const v = targetBands[i];
-      // Rise fast, fall slowly: reads as rhythm rather than flicker.
-      bands[i] += (v - bands[i]) * (v > bands[i] ? 0.6 : 0.12);
-      peak = Math.max(peak, bands[i]);
       sum += bands[i];
       if (i < BASS_BANDS) bassSum += bands[i];
     }
-    for (let j = 0; j < WAVE_SAMPLES; j++) wave[j] += (targetWave[j] - wave[j]) * 0.5;
-
-    if (!active && peak < 0.004) {
-      if (!resting) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        resting = true;
-      }
-      return;
-    }
-    resting = false;
-    // Re-read the tokens now and then, so a theme switch reaches a running visualizer.
-    if (++frames % 60 === 0) palette = readPalette(canvas);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     draw(ctx, {
       bands,
@@ -298,6 +279,36 @@ export function startVisualizer(
       height: canvas.height,
       dpr,
     }, palette, state);
+  };
+
+  let raf = requestAnimationFrame(function tick(now) {
+    raf = requestAnimationFrame(tick);
+    const clock = now / 1000;
+    const active = sample(targetBands, targetWave, clock);
+
+    if (!active) {
+      // Paused: hold the last frame rather than fading out. The silent samples are dropped, so
+      // the bands keep their values and playback resumes from them. A resize wipes the bitmap,
+      // so the held frame is painted again once; a never-played stage paints its rest frame.
+      if (!resting) {
+        paint(heldClock || clock);
+        resting = true;
+      }
+      return;
+    }
+    resting = false;
+    heldClock = clock;
+
+    for (let i = 0; i < BAND_COUNT; i++) {
+      const v = targetBands[i];
+      // Rise fast, fall slowly: reads as rhythm rather than flicker.
+      bands[i] += (v - bands[i]) * (v > bands[i] ? 0.6 : 0.12);
+    }
+    for (let j = 0; j < WAVE_SAMPLES; j++) wave[j] += (targetWave[j] - wave[j]) * 0.5;
+
+    // Re-read the tokens now and then, so a theme switch reaches a running visualizer.
+    if (++frames % 60 === 0) palette = readPalette(canvas);
+    paint(clock);
   });
 
   return () => {

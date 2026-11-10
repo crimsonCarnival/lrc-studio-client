@@ -749,7 +749,17 @@ export function start3dVisualizer(
     if (!isTabVisible && !resting) {
       renderer.clear();
       resting = true;
+    } else if (isTabVisible) {
+      // The clear above wiped a paused stage's held frame: draw it again on return.
+      resting = false;
     }
+  };
+
+  const render = () => {
+    // Bloom is a dark-stage effect: on a light page there is nothing to glow against, and the
+    // pass would only wash the stage. Light themes draw straight to the canvas.
+    if (composer && !palette.light) composer.render();
+    else renderer.render(scene, camera);
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
 
@@ -763,28 +773,29 @@ export function start3dVisualizer(
 
     const active = sample(targetBands, targetWave, clock);
 
-    let peak = 0;
+    if (!active) {
+      // Paused: hold the last frame rather than fading out. The silent samples are dropped and the
+      // scene is not updated, so playback resumes from where it stopped. A resize or a return to
+      // the tab wipes the canvas, so the held scene is drawn again once.
+      if (!resting) {
+        render();
+        resting = true;
+      }
+      return;
+    }
+    resting = false;
+
     let sum = 0;
     let bassSum = 0;
     for (let i = 0; i < BAND_COUNT; i++) {
       const v = targetBands[i];
       bands[i] += (v - bands[i]) * (v > bands[i] ? 0.6 : 0.12);
-      peak = Math.max(peak, bands[i]);
       sum += bands[i];
       if (i < 6) bassSum += bands[i];
     }
     for (let j = 0; j < WAVE_SAMPLES; j++) {
       wave[j] += (targetWave[j] - wave[j]) * 0.5;
     }
-
-    if (!active && peak < 0.004) {
-      if (!resting) {
-        renderer.clear();
-        resting = true;
-      }
-      return;
-    }
-    resting = false;
 
     if (++frames % 60 === 0) {
       palette = readPalette3D(canvas);
@@ -800,14 +811,7 @@ export function start3dVisualizer(
     accumulatedClock += dt * pace;
 
     instance.update(bands, wave, level, bass, accumulatedClock, pointer, palette, features);
-
-    // Bloom is a dark-stage effect: on a light page there is nothing to glow against, and the
-    // pass would only wash the stage. Light themes draw straight to the canvas.
-    if (composer && !palette.light) {
-      composer.render();
-    } else {
-      renderer.render(scene, camera);
-    }
+    render();
   });
 
   return () => {
