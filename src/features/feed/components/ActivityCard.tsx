@@ -34,9 +34,13 @@ const TYPE_I18N_KEY: Record<string, string> = {
 // Project-type activities that support reactions
 const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJECT_FORKED', 'PROJECT_SHARED']);
 
+type ActivityUser = { accountName: string; avatarUrl?: string | null; staffRole?: string | null; displayName?: string | null };
+
 interface Activity {
   id: string;
-  actor: { accountName: string; avatarUrl?: string | null; staffRole?: string | null; displayName?: string | null };
+  actor: ActivityUser;
+  /** Who it was done to: the followed user, or the project's owner for a star, fork or share. */
+  target?: ActivityUser | null;
   type: string;
   publicId?: string | null;
   projectTitle?: string | null;
@@ -99,13 +103,28 @@ function ActivityReactions({ publicId }: { publicId: string }) {
   );
 }
 
+const sameUser = (a?: string | null, b?: string | null) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
+
 export function ActivityCard({ activity }: { activity: Activity }) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const tk = t as (key: string, options?: object) => unknown;
-  const { id, actor, type, publicId, projectTitle, coverImage, targetPath, description, tags, createdAt } = activity;
+  const { id, actor, target, type, publicId, projectTitle, coverImage, targetPath, description, tags, createdAt } = activity;
   const iconName = TYPE_ICON_NAMES[type] ?? 'star';
   const i18nKey = TYPE_I18N_KEY[type] ?? 'project_starred';
-  const actionText = pick(tk(`feed.action.${i18nKey}`, { returnObjects: true }), id);
+
+  // Who is who: the reader may be the one who did it ("You starred ...") or the one it was done
+  // to ("... starred your project", "... followed you"). Anyone else gets the names.
+  const actorIsViewer = sameUser(actor.accountName, user?.accountName);
+  const targetIsViewer = sameUser(target?.accountName, user?.accountName);
+  const targetIsActor = sameUser(target?.accountName, actor.accountName);
+  const isUserFollow = type === 'USER_FOLLOWED';
+  const isProjectTarget = type === 'PROJECT_STARRED' || type === 'PROJECT_FORKED' || type === 'PROJECT_SHARED';
+  const followsViewer = isUserFollow && targetIsViewer;
+
+  const group = actorIsViewer ? 'selfAction' : followsViewer ? 'toYouAction' : 'action';
+  const actionText = pick(tk(`feed.${group}.${i18nKey}`, { returnObjects: true }), id);
+  const targetName = target ? (target.displayName || target.accountName) : null;
 
   // The server builds `targetPath`; prefer it. The helper can only stand in for
   // PROJECT_PUBLISHED, where the actor IS the project owner — for a star, fork
@@ -113,7 +132,6 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   // account name, so those stay unlinked rather than pointing at a 404.
   const targetLink = targetPath
     || (type === 'PROJECT_PUBLISHED' && publicId ? projectPath({ publicId }, actor.accountName) : null);
-  const isUserFollow = type === 'USER_FOLLOWED';
   const canReact = REACTABLE_TYPES.has(type) && !!publicId;
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -135,22 +153,42 @@ export function ActivityCard({ activity }: { activity: Activity }) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm text-foreground leading-snug">
-          <UserHoverCard accountName={actor.accountName}>
-            <Link to={profilePath(actor.accountName)} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
-              {actor.displayName || actor.accountName}
-            </Link>
-          </UserHoverCard>
+          {actorIsViewer ? (
+            <span className="font-semibold text-foreground">{t('feed.you')}</span>
+          ) : (
+            <UserHoverCard accountName={actor.accountName}>
+              <Link to={profilePath(actor.accountName)} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
+                {actor.displayName || actor.accountName}
+              </Link>
+            </UserHoverCard>
+          )}
           {' '}
           <span className="text-subtle">{actionText}</span>
-          {isUserFollow && projectTitle && (
+          {isUserFollow && !followsViewer && (projectTitle || targetName) && (
             <>
               {' '}
               {targetLink ? (
                 <Link to={targetLink} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
-                  {projectTitle}
+                  {targetName || projectTitle}
                 </Link>
               ) : (
-                <span className="font-semibold text-foreground">{projectTitle}</span>
+                <span className="font-semibold text-foreground">{targetName || projectTitle}</span>
+              )}
+            </>
+          )}
+          {isProjectTarget && target && (
+            <>
+              {' '}
+              {targetIsViewer ? (
+                <span className="text-subtle">{t(actorIsViewer ? 'feed.target.ownMine' : 'feed.target.mine')}</span>
+              ) : targetIsActor ? (
+                <span className="text-subtle">{t('feed.target.own')}</span>
+              ) : (
+                <span className="text-subtle">
+                  {t('feed.target.ofPrefix')}
+                  <Link to={profilePath(target.accountName)} className="font-semibold text-foreground hover:text-primary-ink transition-colors">{targetName}</Link>
+                  {t('feed.target.ofSuffix')}
+                </span>
               )}
             </>
           )}
@@ -179,7 +217,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
           </ul>
         )}
 
-        {isUserFollow && coverImage && targetLink && (
+        {isUserFollow && !followsViewer && coverImage && targetLink && (
           <Link to={targetLink} className="mt-1.5 flex items-center gap-2 group">
             <img src={coverImage} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
           </Link>

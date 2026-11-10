@@ -290,8 +290,15 @@ export default {
   shared: {
     empty: "Aún no ha compartido nada.",
     ownerEmpty: "Los proyectos que compartas en tu perfil aparecen aquí y en el inicio de tus seguidores.",
-    sharedOn: "Compartido el {{date}}",
     by: "de {{name}}",
+    relation: {
+      selfOwn: "Compartiste tu propio proyecto",
+      selfOther: "Compartiste un proyecto de <owner>{{owner}}</owner>",
+      mine: "<sharer>{{sharer}}</sharer> compartió tu proyecto",
+      own: "<sharer>{{sharer}}</sharer> compartió su propio proyecto",
+      other: "<sharer>{{sharer}}</sharer> compartió un proyecto de <owner>{{owner}}</owner>",
+      unknown: "<sharer>{{sharer}}</sharer> compartió un proyecto",
+    },
   },
   projectsRange: "{{from}}–{{to}} de {{total}}",
   goToLibrary: "Ir a tu biblioteca",
@@ -450,8 +457,8 @@ export default {
   deleteProject: "Eliminar proyecto",
   openInNewTab: "Abrir en nueva pestaña",
   privateProject: "Proyecto privado",
+  unlistedProject: "Proyecto no listado",
   avatarAlt: "Avatar",
   peopleYouMightKnow: "Personas que quizás conozcas",
   lastSeen: "Visto por última vez {{time}}"
 };
-  unlistedProject: "Proyecto no listado",

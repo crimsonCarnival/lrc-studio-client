@@ -697,7 +697,11 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'shared' && (
-              <SharedProjectsTab accountName={profile.accountName} isOwner={isOwner} />
+              <SharedProjectsTab
+                sharer={{ accountName: profile.accountName, displayName: profile.displayName, avatarUrl: profile.avatarUrl }}
+                isOwner={isOwner}
+                viewerAccountName={viewAsOthers ? null : user?.accountName ?? null}
+              />
             )}
 
             {activeTab === 'activity' && profile.activityHeatmap && (

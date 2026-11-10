@@ -140,6 +140,10 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
   const firstName = first?.accountName ?? 'Someone';
   const wall = notification.meta?.wall ?? '';
   const ownWall = !!wall && !!viewerAccountName && wall.toLowerCase() === viewerAccountName.toLowerCase();
+  // The wall belongs to the one person who did it: "on their own wall", not "on X's wall" next to X.
+  const selfWall = !ownWall && !!wall && (actorCount ?? 1) <= 1 && first?.accountName?.toLowerCase() === wall.toLowerCase();
+  const wallKey = <B extends 'wallComment' | 'wallReply' | 'commentLike' | 'mention' | 'projectMention' | 'wallReport'>(base: B) =>
+    `notifications.${base}${ownWall ? 'Own' : selfWall ? 'Self' : ''}` as `notifications.${B}${'' | 'Own' | 'Self'}`;
 
   let actorStr;
   if (!actorCount || actorCount <= 1) {
@@ -230,9 +234,7 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     return (
       <span>
         <Trans
-          i18nKey={notification.meta?.reply
-            ? (ownWall ? 'notifications.wallReplyOwn' : 'notifications.wallReply')
-            : (ownWall ? 'notifications.wallCommentOwn' : 'notifications.wallComment')}
+          i18nKey={wallKey(notification.meta?.reply ? 'wallReply' : 'wallComment')}
           values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
@@ -243,7 +245,7 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     return (
       <span>
         <Trans
-          i18nKey={ownWall ? 'notifications.commentLikeOwn' : 'notifications.commentLike'}
+          i18nKey={wallKey('commentLike')}
           values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
@@ -254,7 +256,7 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     return (
       <span>
         <Trans
-          i18nKey={ownWall ? 'notifications.mentionOwn' : 'notifications.mention'}
+          i18nKey={wallKey('mention')}
           values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
@@ -265,7 +267,7 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     return (
       <span>
         <Trans
-          i18nKey={ownWall ? 'notifications.projectMentionOwn' : 'notifications.projectMention'}
+          i18nKey={wallKey('projectMention')}
           values={{ actors: actorStr, title: projectTitle ?? '', wall }}
           components={[<strong key="0" />, <strong key="1" />, <strong key="2" />]}
         />
@@ -276,7 +278,7 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     return (
       <span>
         <Trans
-          i18nKey={ownWall ? 'notifications.wallReportOwn' : 'notifications.wallReport'}
+          i18nKey={wallKey('wallReport')}
           values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />

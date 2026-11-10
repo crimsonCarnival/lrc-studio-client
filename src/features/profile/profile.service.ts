@@ -37,10 +37,10 @@ const GET_PROFILE_SHARES = /* GraphQL */ `
       items {
         sharedAt description tags
         project {
-          id publicId slug title coverImage
+          id publicId slug title coverImage lineCount syncedLineCount
           metadata { songName songArtist artists { name role order } }
-          upload { source uploadUrl }
-          user { id accountName displayName }
+          upload { source uploadUrl duration }
+          user { id accountName displayName avatarUrl }
         }
       }
     }

@@ -24,6 +24,7 @@ const FEED_QUERY = /* GraphQL */ `
           displayName
           avatarUrl staffRole
         }
+        target { accountName displayName }
       }
       hasMore
     }

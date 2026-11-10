@@ -9,6 +9,7 @@ import { Button } from '@ui/button';
 interface ActivityItem {
   id: string;
   actor: { accountName: string; avatarUrl?: string; displayName?: string };
+  target?: { accountName: string; displayName?: string } | null;
   type: string;
   publicId?: string;
   projectTitle?: string;
@@ -43,6 +44,7 @@ const GET_USER_ACTIVITY = /* GraphQL */ `
       activities {
         id
         actor { id accountName displayName avatarUrl }
+        target { accountName displayName }
         type
         publicId
         projectTitle

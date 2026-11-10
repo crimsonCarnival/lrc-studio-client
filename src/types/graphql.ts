@@ -19,6 +19,8 @@ export type Activity = {
   projectTitle: Scalars['String']['output'];
   publicId: Scalars['String']['output'];
   tags?: Maybe<Array<Scalars['String']['output']>>;
+  /** Who it was done to: the followed user, or the project's owner for a star, fork or share. Null for the rest, or when they are gone. Only id, accountName, displayName and avatarUrl are populated. */
+  target?: Maybe<FollowUser>;
   targetPath?: Maybe<Scalars['String']['output']>;
   type: ActivityType;
 };
