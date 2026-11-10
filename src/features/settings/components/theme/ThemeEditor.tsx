@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { applyTheme } from '@/shared/theme/apply-theme';
@@ -72,6 +72,11 @@ export default function ThemeEditor({ initial, restore, onSave, onCancel }: Prop
     if (!saved.current) applyTheme(restoreRef.current.theme, restoreRef.current.custom);
   }, []);
 
+  // The editor replaces the swatch grid inside the same scroll container, which keeps the grid's
+  // scroll offset (the "Create" button sits at the bottom of it). Start the editor at its top.
+  const rootRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => { rootRef.current?.scrollIntoView({ block: 'start' }); }, []);
+
   const set = <K extends keyof CustomTheme>(key: K, value: CustomTheme[K]) => setDraft((d) => ({ ...d, [key]: value }));
 
   const track = (k: ThemeFocus) => ({
@@ -83,7 +88,7 @@ export default function ThemeEditor({ initial, restore, onSave, onCancel }: Prop
   const applies = (k: ThemeFocus) => tk(`settings.themeEditor.applies.${k}`);
 
   return (
-    <div className="grid gap-5 py-2 md:grid-cols-[minmax(0,1fr)_minmax(0,17rem)]">
+    <div ref={rootRef} className="grid gap-5 py-2 md:grid-cols-[minmax(0,1fr)_minmax(0,17rem)]">
       <div className="order-first self-start md:sticky md:top-0 md:order-last">
         <ThemePreview focus={focus} />
       </div>

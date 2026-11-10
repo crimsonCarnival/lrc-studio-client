@@ -19,7 +19,7 @@ export default function ThemeModal({ open, onOpenChange, settings, updateSetting
       title={t('settings.interface.theme')}
       description={t('settings.themeEditor.description')}
       // Flex column capped to the viewport: the title stays put and only the body scrolls.
-      dialogProps={{ className: 'max-w-3xl w-[94vw] max-h-[85dvh] flex flex-col gap-0 overflow-hidden' }}
+      dialogProps={{ className: 'max-w-5xl w-[94vw] max-h-[85dvh] flex flex-col gap-0 overflow-hidden' }}
     >
       {/* Mounted per open so the editor never carries a stale draft into the next visit. */}
       {open && (
