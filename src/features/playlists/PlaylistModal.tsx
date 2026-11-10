@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
@@ -75,6 +77,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
   const [projectSearch, setProjectSearch] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  useScrollLock(true);
 
   const [form, setForm] = useState<FormShape>({
     name: playlist?.name ?? '',
@@ -191,7 +194,10 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
     );
   });
 
-  return (
+  // Portalled: the profile column animates `transform` with fill-mode `forwards`,
+  // which makes it the containing block for `position: fixed` descendants, so an
+  // inline overlay covered that column instead of the viewport.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="glass rounded-2xl w-full max-w-md flex flex-col max-h-[90vh]">
         {/* Header */}
@@ -333,12 +339,14 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
               />
               <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
                 {filteredProjects.map(p => {
-                  const selected = selectedIds.includes(p.id);
+                  // The playlist mutations look projects up by publicId, not the Mongo id.
+                  const pid = p.publicId ?? p.id;
+                  const selected = selectedIds.includes(pid);
                   return (
                     <button
                       key={p.id}
-                      onClick={() => toggleProject(p.id)}
-                      disabled={togglingIds.has(p.id)}
+                      onClick={() => toggleProject(pid)}
+                      disabled={togglingIds.has(pid)}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selected ? 'bg-primary/10' : 'hover:bg-white/5'}`}
                     >
                       <span className={`size-4 rounded-xs border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
@@ -376,6 +384,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
