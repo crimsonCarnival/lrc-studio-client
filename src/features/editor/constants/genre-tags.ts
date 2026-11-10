@@ -140,3 +140,18 @@ export function matchGenreFromTags(genres: string[]): PrimaryGenre | '' {
   }
   return '';
 }
+
+// Older projects may carry these; setup.genre has labels for them too.
+const LEGACY_GENRES = new Set(['indie', 'k_pop', 'anime', 'funk']);
+
+/**
+ * The display name of a stored genre. Genres are saved as codes (`hip_hop`), so showing the stored
+ * value prints the code. A genre typed freely (older or imported projects) has no label and is
+ * shown as it was written.
+ */
+export function genreLabel(genre: string | null | undefined, t: (key: string) => string): string {
+  const value = genre?.trim();
+  if (!value) return '';
+  const code = value.toLowerCase();
+  return PRIMARY_GENRES.includes(code as PrimaryGenre) || LEGACY_GENRES.has(code) ? t(`setup.genre.${code}`) : value;
+}
