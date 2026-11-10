@@ -75,8 +75,12 @@ interface WaveformDisplayProps {
   onLoopChange?: (a: number, b: number) => void;
 }
 
+// The last decoded file's peaks. One entry is enough: only one file plays at a time, and a
+// blob URL is never reused for another file.
+let peaksCache: { url: string; peaks: Array<Float32Array | number[]>; duration: number } | null = null;
+
 /**
- * Enhanced Waveform display with:
+ *Enhanced Waveform display with:
  * - Click/drag to seek
  * - Draggable playback line
  * - A-B loop region overlay with draggable handles
@@ -220,7 +224,13 @@ const WaveformDisplay = ({
     regionsRef.current = regions;
     wavesurferRef.current = ws;
 
+    // Crossing the layout breakpoint moves the player to another slot, which remounts this
+    // component. The peaks of the file already decoded are reused so it draws at once instead of
+    // fetching and decoding the whole file again behind the loader.
+    const cached = peaksCache?.url === localUrl ? peaksCache : null;
+
     const offReady = ws.on('ready', () => {
+      if (!cached) peaksCache = { url: localUrl, peaks: ws.exportPeaks(), duration: ws.getDuration() };
       setIsReady(true);
       if (audioRef.current) ws.setTime(audioRef.current.currentTime);
     });
@@ -228,7 +238,7 @@ const WaveformDisplay = ({
     // load() rejects with AbortError if the instance is destroyed mid-fetch
     // (source change / unmount) — swallow it so it doesn't surface as an
     // unhandled promise rejection.
-    ws.load(localUrl).catch(() => { });
+    ws.load(localUrl, cached?.peaks, cached?.duration).catch(() => { });
 
     return () => {
       try {
