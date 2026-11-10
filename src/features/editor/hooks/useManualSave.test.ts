@@ -131,6 +131,28 @@ describe('buildProjectPatch — lyrics diffing', () => {
   });
 });
 
+describe('buildProjectPatch — a project that was only opened', () => {
+  // The server returns a line without an unset `endTime`, and possibly with finer timestamps; the
+  // payload the editor builds always carries `endTime: null` and millisecond timestamps. Opening
+  // a project must not look like editing it (it fired autosave and the unsaved-changes guard).
+  it('lines read from the server equal the same lines as the payload builds them', () => {
+    const loaded = [{ type: 'section', label: '' }, { text: 'one', timestamp: 1.23456, secondary: '' }, { text: 'two', timestamp: null, secondary: '' }] as EditorLine[];
+    const live = [
+      { type: 'section', label: '', timestamp: null, endTime: null },
+      { text: 'one', timestamp: 1.235, endTime: null, secondary: '' },
+      { text: 'two', timestamp: null, endTime: null, secondary: '' },
+    ] as EditorLine[];
+    expect(patchFor(loaded, live)).toBeUndefined();
+    expect(buildProjectPatch({ prevSnapshot: snapshotFor(loaded), title: 't', metadata: {}, state: STATE, uploadId: null, editorMode: 'lrc', lines: live })).toEqual({});
+  });
+
+  it('still sees a real timestamp change and a cleared timestamp', () => {
+    const loaded = [line('one', 1), line('two', 2)];
+    expect(patchFor(loaded, [{ ...line('one', 1.5), endTime: null } as EditorLine, line('two', 2)])).toMatchObject({ lineIdx: 0 });
+    expect(patchFor(loaded, [line('one', 1), { ...line('two', null), endTime: null } as EditorLine])).toMatchObject({ lineIdx: 1 });
+  });
+});
+
 describe('saves never change visibility', () => {
   // Visibility goes public only through PublishDialog. A save patch is built from the diff and
   // has no way to carry `public`, so neither autosave nor manual save can publish.

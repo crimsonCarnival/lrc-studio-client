@@ -94,6 +94,22 @@ export type ProjectPatch = {
   coverImage?: string | null;
 };
 
+/**
+ * A line as the server would hold it, for comparing a loaded line with the live one. The payload
+ * builder (`buildProjectPayload`) writes `endTime: null` on every non-SRT line and rounds
+ * timestamps to milliseconds, while a line read back from the server omits an unset `endTime`
+ * and may carry finer timestamps. Compared raw, a project that was only opened looks edited:
+ * every line differs, so autosave and the unsaved-changes guard both fire.
+ */
+function comparableLine(line: EditorLine): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(line)) {
+    if (value === undefined || value === null) continue;
+    out[key] = (key === 'timestamp' || key === 'endTime') && typeof value === 'number' ? Math.round(value * 1000) / 1000 : value;
+  }
+  return out;
+}
+
 function buildLyricsPatch(
   prev: ProjectSnapshot | null | undefined,
   nextMode: string | undefined,
@@ -113,7 +129,7 @@ function buildLyricsPatch(
   // line only, same as the single-line patch always did.
   const changedIdxs: number[] = [];
   for (let i = 0; i < nextLines.length; i++) {
-    if (!deepEqual(prevLines[i], nextLines[i])) changedIdxs.push(i);
+    if (!deepEqual(comparableLine(prevLines[i]), comparableLine(nextLines[i]))) changedIdxs.push(i);
   }
   if (changedIdxs.length === 0) return modeChanged ? { editorMode: nextMode } : null;
 
