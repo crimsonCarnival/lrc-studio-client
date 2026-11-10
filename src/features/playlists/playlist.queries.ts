@@ -1,6 +1,12 @@
 import { useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getPlaylist } from './playlist.service';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  getPlaylist,
+  getPlaylistsPage,
+  getSavedPlaylistsPage,
+  type PlaylistsPageParams,
+  type SavedPlaylistsPageParams,
+} from './playlist.service';
 
 type GraphqlFailure = { graphqlErrors?: Array<{ message?: string }> } | null;
 
@@ -39,4 +45,27 @@ export function usePlaylistDetail<T extends object>(playlistId: string | undefin
     notFound: !playlistId || (query.isError && !forbidden) || query.data === null,
     setPlaylist,
   };
+}
+
+/**
+ * One page of a user's lists. Keyed under 'playlists' so cache-sync refetches it
+ * after any playlist write; the previous page stays on screen while the next loads.
+ */
+export function usePlaylistsPage(accountName: string | undefined, params: PlaylistsPageParams = {}) {
+  return useQuery({
+    queryKey: ['playlists', 'page', accountName ?? '', params],
+    queryFn: () => getPlaylistsPage(accountName!, params),
+    enabled: !!accountName,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** One page of the viewer's saved lists. Pass `enabled: false` when the viewer can't have any (signed out, not the owner). */
+export function useSavedPlaylistsPage(params: SavedPlaylistsPageParams = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['playlists', 'saved', params],
+    queryFn: () => getSavedPlaylistsPage(params),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
 }

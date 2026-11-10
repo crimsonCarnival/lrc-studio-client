@@ -79,6 +79,7 @@ const GET_SETTINGS = /* GraphQL */ `
         rangeSelect toggleSelect playPause seekForward seekBackward mute
         speedUp speedDown addSecondary addTranslation toggleTranslation
         focusSync focusPreview focusPlayback captureAdLib
+        alignLeft alignCenter alignRight toggleVisualizer toggleFullLyrics togglePlayer
       }
       advanced {
         autoSave { enabled timeInterval }

@@ -109,6 +109,13 @@ export const DEFAULT_SETTINGS = {
     focusSync: ['Ctrl+1'],
     focusPreview: ['Ctrl+2'],
     focusPlayback: ['Ctrl+3'],
+    // Public project view
+    alignLeft: ['Shift+L'],
+    alignCenter: ['Shift+C'],
+    alignRight: ['Shift+R'],
+    toggleVisualizer: ['v'],
+    toggleFullLyrics: ['l'],
+    togglePlayer: ['p'],
   },
   advanced: {
     autoSave: { enabled: true, timeInterval: 60 },

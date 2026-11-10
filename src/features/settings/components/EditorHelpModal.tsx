@@ -7,27 +7,17 @@ import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@ui/dialog';
 import { Icon } from '@/shared/ui/Icon';
-import { KEY_SYMBOLS } from '@features/settings/key-symbols';
+import { KEY_SYMBOLS, shortcutParts as resolveShortcut } from '@features/settings/key-symbols';
 import { matchKey } from '@/shared/utils/keyboard';
 import { Tip } from '@ui/tip';
 
 const SYMBOLS = KEY_SYMBOLS as Record<string, string>;
 
-// Split a shortcut string like 'Ctrl+M' into display parts ['Ctrl', 'M']
-const resolveShortcut = (shortcut: string): string[] => {
-  if (shortcut === '+') return [SYMBOLS['+'] ?? '+'];
-  if (shortcut.endsWith('++')) {
-    const parts = shortcut.slice(0, -2).split('+');
-    parts.push('+');
-    return parts.map((k) => SYMBOLS[k] ?? k);
-  }
-  return shortcut.split('+').map((k) => SYMBOLS[k] ?? k);
-};
-
 const HELP_TABS = [
   { id: 'player',   iconName: 'headphones',    labelKey: 'shortcuts.tabs.player' },
   { id: 'editor',   iconName: 'description',   labelKey: 'shortcuts.tabs.editor' },
   { id: 'preview',  iconName: 'visibility',    labelKey: 'shortcuts.tabs.preview' },
+  { id: 'view',     iconName: 'public',        labelKey: 'shortcuts.tabs.view' },
   { id: 'sections', iconName: 'checklist',     labelKey: 'editor.help.sectionsTab' },
   { id: 'singers',  iconName: 'account_circle', labelKey: 'editor.help.singersTab' },
 ];
@@ -107,6 +97,23 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         { keys: resolveShortcut(settings.shortcuts?.toggleTranslation?.[0] || 't'),  desc: t('shortcuts.toggleTranslation') },
         { keys: resolveShortcut(settings.shortcuts?.addSecondary?.[0] || 'Shift+H'), desc: t('shortcuts.addSecondary') },
         { keys: resolveShortcut(settings.shortcuts?.addTranslation?.[0] || 'Shift+T'), desc: t('shortcuts.addTranslation') },
+      ]},
+    ],
+    view: [
+      { section: t('shortcuts.sections.playback'), items: [
+        { keys: resolveShortcut(settings.shortcuts?.playPause?.[0] || 'Space'),        desc: t('shortcuts.playPause') },
+        { keys: resolveShortcut(settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft'), desc: t('shortcuts.seekBackward', { val: seekTime }) },
+        { keys: resolveShortcut(settings.shortcuts?.seekForward?.[0] || 'ArrowRight'), desc: t('shortcuts.seekForward', { val: seekTime }) },
+        { keys: resolveShortcut(settings.shortcuts?.mute?.[0] || 'm'),                 desc: t('shortcuts.mute') },
+        { keys: resolveShortcut(settings.shortcuts?.togglePlayer?.[0] || 'p'),         desc: t('shortcuts.togglePlayer') },
+      ]},
+      { section: t('shortcuts.sections.lyrics'), items: [
+        { keys: resolveShortcut(settings.shortcuts?.alignLeft?.[0] || 'Shift+L'),      desc: t('shortcuts.alignLeft') },
+        { keys: resolveShortcut(settings.shortcuts?.alignCenter?.[0] || 'Shift+C'),    desc: t('shortcuts.alignCenter') },
+        { keys: resolveShortcut(settings.shortcuts?.alignRight?.[0] || 'Shift+R'),     desc: t('shortcuts.alignRight') },
+        { keys: resolveShortcut(settings.shortcuts?.toggleFullLyrics?.[0] || 'l'),     desc: t('shortcuts.toggleFullLyrics') },
+        { keys: resolveShortcut(settings.shortcuts?.toggleVisualizer?.[0] || 'v'),     desc: t('shortcuts.toggleVisualizer') },
+        { keys: resolveShortcut(settings.shortcuts?.showHelp?.[0] || '?'),             desc: t('shortcuts.help') },
       ]},
     ],
   };

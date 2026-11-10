@@ -56,6 +56,7 @@ const ExploreProjectsPage = lazy(() => import('@features/explore/ExploreProjects
 const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylistsPage'));
 const ProjectViewPage = lazy(() => import('@features/project-view/ProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
+const AllListsPage = lazy(() => import('@features/playlists/AllListsPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
@@ -677,8 +678,13 @@ export function AppRouter({
           <ProjectViewPage />
         </Suspense>
       } />
-      {/* Profiles and playlists live at the site root: /:accountName and /:accountName/lists/:listId.
+      {/* Profiles and playlists live at the site root: /:accountName, /:accountName/lists and /:accountName/lists/:listId.
           Static routes above outrank :accountName, so every top-level route must be a reserved account name. */}
+      <Route path=":accountName/lists" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <AllListsPage />
+        </Suspense>
+      } />
       <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ListPage />

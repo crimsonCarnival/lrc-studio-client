@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/utils';
 import { Kbd } from '@ui/kbd';
 import { useShortcutsSettings } from '../../hooks/useShortcutsSettings';
 
-type GroupId = 'editor' | 'player' | 'preview';
+type GroupId = 'editor' | 'player' | 'preview' | 'view';
 type TabId = 'all' | GroupId;
 
 interface ShortcutDef {
@@ -40,6 +40,12 @@ const SHORTCUTS: ShortcutDef[] = [
   { id: 'toggleTranslation', group: 'preview', fallback: 't' },
   { id: 'addSecondary', group: 'preview', fallback: 'Shift+H' },
   { id: 'addTranslation', group: 'preview', fallback: 'Shift+T' },
+  { id: 'alignLeft', group: 'view', fallback: 'Shift+L' },
+  { id: 'alignCenter', group: 'view', fallback: 'Shift+C' },
+  { id: 'alignRight', group: 'view', fallback: 'Shift+R' },
+  { id: 'toggleFullLyrics', group: 'view', fallback: 'l' },
+  { id: 'toggleVisualizer', group: 'view', fallback: 'v' },
+  { id: 'togglePlayer', group: 'view', fallback: 'p' },
 ];
 
 // Shortcuts that share a keystroke are flagged against each other (modifiers are a separate space).
@@ -144,13 +150,15 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
     { id: 'editor', label: tk('settings.editor.label') },
     { id: 'player', label: tk('settings.shortcuts.playerSection') },
     { id: 'preview', label: tk('settings.shortcuts.previewSection') },
+    { id: 'view', label: tk('settings.shortcuts.viewSection') },
   ];
   const groupTitle: Record<GroupId, string> = {
     editor: tk('settings.editor.label'),
     player: tk('settings.shortcuts.playerSection'),
     preview: tk('settings.shortcuts.previewSection'),
+    view: tk('settings.shortcuts.viewSection'),
   };
-  const groups = (['editor', 'player', 'preview'] as GroupId[])
+  const groups = (['editor', 'player', 'preview', 'view'] as GroupId[])
     .map((g) => ({ id: g, items: rows.filter((r) => r.def.group === g) }))
     .filter((g) => g.items.length > 0);
 

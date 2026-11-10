@@ -3,7 +3,14 @@ import { playlistsChanged } from '@/app/cache-sync';
 
 /** Pass-through for a successful playlist write: tells the cache, returns the result. */
 const changed = <T>(value: T): T => { playlistsChanged(); return value; };
-import type { Playlist, CreatePlaylistInput, UpdatePlaylistInput } from '@/types';
+import type {
+  Playlist,
+  PlaylistPage,
+  CreatePlaylistInput,
+  UpdatePlaylistInput,
+  QueryPlaylistsPageArgs,
+  QuerySavedPlaylistsPageArgs,
+} from '@/types';
 
 // Shared selection as a real GraphQL fragment. Defining it as a fragment (not a
 // raw interpolated string) lets codegen validate it against the schema and
@@ -17,10 +24,10 @@ const PLAYLIST_FIELDS = /* GraphQL */ `
     projectCount savedCount viewCount shareCount isSavedByMe createdAt updatedAt
     owner { id accountName displayName avatarUrl }
     projects {
-      id publicId slug title starCount forkCount coverImage
+      id publicId slug title starCount forkCount coverImage lineCount hasWordSync
       user { accountName }
       metadata { songName songArtist genre }
-      upload { source uploadUrl coverImage }
+      upload { source uploadUrl coverImage duration }
     }
   }
 `;
@@ -28,6 +35,30 @@ const PLAYLIST_FIELDS = /* GraphQL */ `
 const GET_PLAYLISTS = /* GraphQL */ `
   query GetPlaylists($accountName: String!) {
     playlists(accountName: $accountName) { ...PlaylistFields }
+  }
+`;
+
+const GET_PLAYLISTS_PAGE = /* GraphQL */ `
+  query GetPlaylistsPage(
+    $accountName: String!, $offset: Int, $limit: Int,
+    $sort: PlaylistListSort, $visibility: PlaylistVisibilityFilter, $search: String
+  ) {
+    playlistsPage(
+      accountName: $accountName, offset: $offset, limit: $limit,
+      sort: $sort, visibility: $visibility, search: $search
+    ) {
+      playlists { ...PlaylistFields }
+      total hasMore
+    }
+  }
+`;
+
+const GET_SAVED_PLAYLISTS_PAGE = /* GraphQL */ `
+  query GetSavedPlaylistsPage($offset: Int, $limit: Int) {
+    savedPlaylistsPage(offset: $offset, limit: $limit) {
+      playlists { ...PlaylistFields }
+      total hasMore
+    }
   }
 `;
 
@@ -94,6 +125,19 @@ const INCREMENT_PLAYLIST_SHARE = /* GraphQL */ `
 export const getPlaylists = (accountName: string): Promise<Playlist[]> =>
   gqlRequest<{ playlists: Playlist[] | null }>(GET_PLAYLISTS + PLAYLIST_FIELDS, { accountName }).then((d) => d?.playlists ?? []);
 
+const EMPTY_PAGE: PlaylistPage = { playlists: [], total: 0, hasMore: false };
+
+export type PlaylistsPageParams = Omit<QueryPlaylistsPageArgs, 'accountName'>;
+export type SavedPlaylistsPageParams = QuerySavedPlaylistsPageArgs;
+
+export const getPlaylistsPage = (accountName: string, params: PlaylistsPageParams = {}): Promise<PlaylistPage> =>
+  gqlRequest<{ playlistsPage: PlaylistPage | null }>(GET_PLAYLISTS_PAGE + PLAYLIST_FIELDS, { accountName, ...params })
+    .then((d) => d?.playlistsPage ?? EMPTY_PAGE);
+
+export const getSavedPlaylistsPage = (params: SavedPlaylistsPageParams = {}): Promise<PlaylistPage> =>
+  gqlRequest<{ savedPlaylistsPage: PlaylistPage | null }>(GET_SAVED_PLAYLISTS_PAGE + PLAYLIST_FIELDS, params)
+    .then((d) => d?.savedPlaylistsPage ?? EMPTY_PAGE);
+
 export const getPlaylist = (id: string): Promise<Playlist | null> =>
   gqlRequest<{ playlist: Playlist | null }>(GET_PLAYLIST + PLAYLIST_FIELDS, { id }).then((d) => d?.playlist ?? null);
 
@@ -113,10 +157,10 @@ export const removeProjectFromPlaylist = (playlistId: string, publicId: string):
   gqlRequest<{ removeProjectFromPlaylist: Playlist }>(REMOVE_PROJECT_FROM_PLAYLIST + PLAYLIST_FIELDS, { playlistId, publicId }).then((d) => d?.removeProjectFromPlaylist).then(changed);
 
 export const savePlaylist = (playlistId: string): Promise<boolean | undefined> =>
-  gqlRequest<{ savePlaylist: boolean }>(SAVE_PLAYLIST, { playlistId }).then((d) => d?.savePlaylist);
+  gqlRequest<{ savePlaylist: boolean }>(SAVE_PLAYLIST, { playlistId }).then((d) => d?.savePlaylist).then(changed);
 
 export const unsavePlaylist = (playlistId: string): Promise<boolean | undefined> =>
-  gqlRequest<{ unsavePlaylist: boolean }>(UNSAVE_PLAYLIST, { playlistId }).then((d) => d?.unsavePlaylist);
+  gqlRequest<{ unsavePlaylist: boolean }>(UNSAVE_PLAYLIST, { playlistId }).then((d) => d?.unsavePlaylist).then(changed);
 
 export async function incrementPlaylistView(id: string): Promise<boolean> {
   try {
