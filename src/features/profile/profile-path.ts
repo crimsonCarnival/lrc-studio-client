@@ -16,3 +16,8 @@ export function profilePath(accountName: Name): string {
 export function listPath(accountName: Name, listId: string | number | null | undefined): string {
   return accountName && listId != null ? `${profilePath(accountName)}/lists/${encodeURIComponent(String(listId ?? ''))}` : '/';
 }
+
+/** A user's all-lists page; falls back to the home page like `profilePath`. */
+export function listsPath(accountName: Name): string {
+  return accountName ? `${profilePath(accountName)}/lists` : '/';
+}

@@ -20,7 +20,11 @@ export function usePageTitle(projectName: string | null = null) {
 
     // Remove leading/trailing slashes for easier matching
     const cleanPath = path.replace(/^\/|\/$/g, '');
-    const rootAccount = (matchPath('/:accountName', path) ?? matchPath('/:accountName/lists/:listId', path))?.params.accountName;
+    const rootAccount = (
+      matchPath('/:accountName', path)
+      ?? matchPath('/:accountName/lists', path)
+      ?? matchPath('/:accountName/lists/:listId', path)
+    )?.params.accountName;
 
     // The admin host serves its dashboard at "/" and "/home", so it has to be told apart first.
     if ((cleanPath === 'home' || cleanPath === '') && !isAdminPathname(path)) {
@@ -73,7 +77,7 @@ export function usePageTitle(projectName: string | null = null) {
       // /:accountName/projects/:slug-:id[/edit|/fork]
       pageTitle = projectName || t('app.titles.library');
     } else if (rootAccount) {
-      // /:accountName and /:accountName/lists/:listId. The hook runs above <Routes>, so useParams is empty here
+      // /:accountName, /:accountName/lists and /:accountName/lists/:listId. The hook runs above <Routes>, so useParams is empty here
       // and the account has to come from the pathname. An unknown account still gets its own not-found view from ProfilePage.
       pageTitle = rootAccount;
     } else {

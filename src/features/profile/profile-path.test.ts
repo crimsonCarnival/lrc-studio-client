@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listPath, profilePath } from './profile-path';
+import { listPath, listsPath, profilePath } from './profile-path';
 
 describe('profilePath / listPath', () => {
   it('builds root-level URLs', () => {
@@ -14,5 +14,16 @@ describe('profilePath / listPath', () => {
     expect(profilePath('')).toBe('/');
     expect(listPath(null, 'abc')).toBe('/');
     expect(listPath('x', undefined)).toBe('/');
+  });
+});
+
+describe('listsPath', () => {
+  it('builds the all-lists URL', () => {
+    expect(listsPath('32blunts')).toBe('/32blunts/lists');
+    expect(listsPath('a b')).toBe('/a%20b/lists');
+  });
+  it('falls back to home when the name is missing', () => {
+    expect(listsPath(null)).toBe('/');
+    expect(listsPath('')).toBe('/');
   });
 });

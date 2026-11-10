@@ -15,6 +15,10 @@ import { PlayerEngineProvider } from '@features/player/PlayerEngine';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { UpNextPanel } from './UpNextPanel';
+import { ListTrackStrip } from './ListTrackStrip';
+import ListAutoplay from './ListAutoplay';
+import { listTrackHref, type ListNav } from './list-nav';
+import type { Playlist, Project } from '@/types';
 import { usePublicProject } from '@/features/projects/hooks/usePublicProject';
 import { useStarredPlaylist } from '@/features/projects/hooks/useStarredPlaylist';
 import PublicLyrics, { type DisplayLine } from './PublicLyrics';
@@ -70,22 +74,6 @@ interface PublicProject {
 
 const INFO_COLLAPSED_KEY = 'lrc_project_info_collapsed';
 const PLAYER_HIDDEN_KEY = 'lrc_project_player_hidden';
-
-interface UpNextTrack {
-  publicId: string;
-  slug?: string | null;
-  title?: string | null;
-  metadata?: { songName?: string; songArtist?: string } | null;
-  // Each track carries its own owner: a playlist can collect other people's
-  // projects, and every project URL is owner-scoped.
-  user?: { accountName?: string | null } | null;
-}
-
-interface UpNextPlaylist {
-  projects?: UpNextTrack[];
-  owner?: { accountName?: string };
-  [key: string]: unknown;
-}
 
 function ProjectViewPageInner() {
   const { t } = useTranslation();
@@ -217,12 +205,12 @@ function ProjectViewPageInner() {
   const toggleFullLyrics = useCallback(() => setFullLyrics((v) => !v), []);
 
   // ── Up-next playlist ─────────────────────────────────────────
-  const [playlist, setPlaylist] = useState<UpNextPlaylist | null>(null);
+  const [playlist, setPlaylist] = useState<Playlist | null>(null);
   useEffect(() => {
     if (!listId) return;
     let cancelled = false;
     getPlaylist(listId)
-      .then((pl) => { if (!cancelled) setPlaylist(pl as UpNextPlaylist); })
+      .then((pl) => { if (!cancelled) setPlaylist(pl); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [listId]);
@@ -372,22 +360,36 @@ function ProjectViewPageInner() {
   );
 
   // ── Prev / next within list ──────────────────────────────────
-  const { prevTrack, nextTrack } = useMemo(() => {
-    const items = playlist?.projects || [];
+  // List mode (the bar's track buttons, the strip, autoplay) only applies when
+  // this project is actually in the list named by `?list=`.
+  const { trackIndex, prevTrack, nextTrack } = useMemo(() => {
+    const items = listId && playlist ? playlist.projects : [];
     const idx = items.findIndex((p) => p.publicId === publicId);
-    if (idx === -1) return { prevTrack: null, nextTrack: null };
+    if (idx === -1) return { trackIndex: -1, prevTrack: null, nextTrack: null };
     return {
+      trackIndex: idx,
       prevTrack: idx > 0 ? items[idx - 1] : null,
       nextTrack: idx < items.length - 1 ? items[idx + 1] : null,
     };
-  }, [playlist, publicId]);
+  }, [listId, playlist, publicId]);
+  const inList = trackIndex !== -1;
 
-  const goToTrack = useCallback((track: UpNextTrack | null) => {
-    if (!track) return;
-    const dest = projectPath(track);
-    if (!dest) return;
-    navigate(`${dest}?list=${listId}`);
+  const goToTrack = useCallback((track: Project | null, autoplay = false) => {
+    if (!track || !listId) return;
+    const dest = listTrackHref(track, listId);
+    if (dest) navigate(dest, autoplay ? { state: { listAutoplay: true } } : undefined);
   }, [navigate, listId]);
+  const goToPrevTrack = useCallback(() => goToTrack(prevTrack), [goToTrack, prevTrack]);
+  const goToNextTrack = useCallback(() => goToTrack(nextTrack), [goToTrack, nextTrack]);
+  const autoplayNextTrack = useCallback(() => goToTrack(nextTrack, true), [goToTrack, nextTrack]);
+  const listNav = useMemo<ListNav | undefined>(
+    () => (inList
+      ? { onPrev: goToPrevTrack, onNext: goToNextTrack, canPrev: !!prevTrack, canNext: !!nextTrack }
+      : undefined),
+    [inList, goToPrevTrack, goToNextTrack, prevTrack, nextTrack],
+  );
+  // Set by goToTrack when the previous track ran out, so this one starts by itself.
+  const arrivedByAutoplay = (location.state as { listAutoplay?: boolean } | null)?.listAutoplay === true;
 
   // ── Handlers ─────────────────────────────────────────────────
   const handleStar = async () => {
@@ -482,6 +484,13 @@ function ProjectViewPageInner() {
     >
     <VisualizerProvider>
     <PublicShortcuts />
+    {inList && (
+      <ListAutoplay
+        key={publicId}
+        onEnded={nextTrack ? autoplayNextTrack : undefined}
+        startOnReady={arrivedByAutoplay}
+      />
+    )}
     {actionsSlot && createPortal(
       <PublicHeaderPlayer
         playerHidden={playerHidden}
@@ -610,7 +619,7 @@ function ProjectViewPageInner() {
               {/* Up-next panel (list context) */}
               {listId && playlist && (
                 <UpNextPanel
-                  playlist={playlist as Parameters<typeof UpNextPanel>[0]['playlist']}
+                  playlist={playlist}
                   currentpublicId={publicId}
                   listId={listId}
                   accountName={playlist.owner?.accountName || project?.user?.accountName}
@@ -655,31 +664,20 @@ function ProjectViewPageInner() {
             </Tip>
           ) : undefined}
           endSlot={project.publicId ? <ShareOgButton publicId={project.publicId} title={projectTitle} projectName={project.title} subtitle={project.metadata?.songArtist as string | undefined} coverImage={cover} genre={project.metadata?.genre as string | undefined} /> : undefined}
+          listNav={listNav}
         >
-          {/* Prev / next in playlist context */}
-          {listId && (prevTrack || nextTrack) && (
-            <div className="flex items-center justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={!prevTrack}
-                onClick={() => goToTrack(prevTrack)}
-                className="h-9 lg:h-9 coarse:h-11"
-              >
-                {t('projectView.prevTrack')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={!nextTrack}
-                onClick={() => goToTrack(nextTrack)}
-                className="h-9 lg:h-9 coarse:h-11"
-              >
-                {t('projectView.nextTrack')}
-              </Button>
-            </div>
+          {inList && listId && playlist && (
+            <ListTrackStrip
+              playlist={playlist}
+              listId={listId}
+              accountName={playlist.owner?.accountName || project?.user?.accountName}
+              pos={trackIndex + 1}
+              prevTrack={prevTrack}
+              nextTrack={nextTrack}
+              onPrev={goToPrevTrack}
+              onNext={goToNextTrack}
+              autoplays
+            />
           )}
         </PublicPlaybackBar>
         )}

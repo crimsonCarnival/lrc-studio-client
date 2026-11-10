@@ -27,7 +27,7 @@ import { SharedProjectsTab } from './SharedProjectsTab';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
-import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
+import { ProfileLists } from '@/features/playlists/ProfileLists';
 import { BadgeEmblem } from '@/features/badges/BadgeEmblem';
 import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
 import ActivityHeatmap from '@/features/settings/components/panels/profile/ActivityHeatmap';
@@ -689,7 +689,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'playlists' && (
-              <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
+              <ProfileLists accountName={profile.accountName} isOwner={isOwner} />
             )}
 
             {activeTab === 'shared' && (

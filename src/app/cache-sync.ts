@@ -76,7 +76,7 @@ export function blockChanged(): void {
   invalidate('explore');
 }
 
-/** A playlist was created, edited, deleted, or had projects added or removed. */
+/** A playlist was created, edited, deleted, saved or unsaved, or had projects added or removed. */
 export function playlistsChanged(): void {
   invalidate('playlists');
   invalidate('profile');

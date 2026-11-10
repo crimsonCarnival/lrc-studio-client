@@ -12,6 +12,7 @@ import { Tip } from '@ui/tip';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { buildSectionSegments } from './section-segments';
 import { SectionString } from './SectionString';
+import type { ListNav } from './list-nav';
 
 const WaveformDisplay = lazy(() => import('@features/player/components/WaveformDisplay'));
 
@@ -62,6 +63,9 @@ function clock(seconds: number): string {
 }
 
 const TRANSPORT_BTN = 'inline-grid place-items-center size-12 lg:size-11 rounded-full text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
+// List mode: track skips take the outer slots (a touch smaller on phones so five buttons fit), line steps shrink to chevrons.
+const TRACK_BTN = 'inline-grid place-items-center size-11 rounded-full text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
+const LINE_BTN = 'inline-grid place-items-center size-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
 const NUDGE_BTN = 'h-9 min-w-9 coarse:h-11 coarse:min-w-11 px-2 rounded-lg border border-border font-mono text-xs tabular-nums text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
 
 interface PublicPlaybackBarProps {
@@ -83,6 +87,8 @@ interface PublicPlaybackBarProps {
   onHidePlayer?: () => void;
   /** Height of the bar in px (0 when it is not rendered), for layouts that sit above it. */
   onHeightChange?: (height: number) => void;
+  /** List context: the outer transport buttons skip tracks and line stepping moves to chevrons beside Play. */
+  listNav?: ListNav;
   children?: ReactNode;
 }
 
@@ -98,6 +104,7 @@ export default function PublicPlaybackBar({
   controlsSlot,
   onHidePlayer,
   onHeightChange,
+  listNav,
   children,
 }: PublicPlaybackBarProps) {
   const { t } = useTranslation();
@@ -344,16 +351,29 @@ export default function PublicPlaybackBar({
         </div>
         <div className="lg:hidden">{startSlot}</div>
 
-        <div className="flex items-center justify-center gap-1.5 lg:gap-2">
+        <div className={`flex items-center justify-center ${listNav ? 'gap-1' : 'gap-1.5'} lg:gap-2`}>
+          {listNav && (
+            <Tip content={t('projectView.list.previousTrack')}>
+              <button
+                type="button"
+                onClick={listNav.onPrev}
+                disabled={!listNav.canPrev}
+                aria-label={t('projectView.list.previousTrack')}
+                className={TRANSPORT_BTN}
+              >
+                <Icon name="skip_previous" size={22} />
+              </button>
+            </Tip>
+          )}
           <Tip content={t('projectView.previousLine')}>
             <button
               type="button"
               onClick={goToPreviousLine}
               disabled={!canStepLines}
               aria-label={t('projectView.previousLine')}
-              className={TRANSPORT_BTN}
+              className={listNav ? LINE_BTN : TRANSPORT_BTN}
             >
-              <Icon name="skip_previous" size={22} />
+              <Icon name={listNav ? 'chevron_left' : 'skip_previous'} size={listNav ? 20 : 22} />
             </button>
           </Tip>
           <button
@@ -361,7 +381,7 @@ export default function PublicPlaybackBar({
             onClick={togglePlay}
             disabled={!ready}
             aria-label={isSeeking ? t('player.loading') : isPlaying ? t('projectView.pause') : t('projectView.play')}
-            className="inline-grid place-items-center size-16 lg:size-14 rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className={`inline-grid place-items-center ${listNav ? 'size-14' : 'size-16 lg:size-14'} rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
           >
             {isSeeking ? (
               <span
@@ -381,11 +401,24 @@ export default function PublicPlaybackBar({
               onClick={goToNextLine}
               disabled={!canStepLines}
               aria-label={t('projectView.nextLine')}
-              className={TRANSPORT_BTN}
+              className={listNav ? LINE_BTN : TRANSPORT_BTN}
             >
-              <Icon name="skip_next" size={22} />
+              <Icon name={listNav ? 'chevron_right' : 'skip_next'} size={listNav ? 20 : 22} />
             </button>
           </Tip>
+          {listNav && (
+            <Tip content={t('projectView.list.nextTrack')}>
+              <button
+                type="button"
+                onClick={listNav.onNext}
+                disabled={!listNav.canNext}
+                aria-label={t('projectView.list.nextTrack')}
+                className={TRANSPORT_BTN}
+              >
+                <Icon name="skip_next" size={22} />
+              </button>
+            </Tip>
+          )}
         </div>
 
         <div className="lg:hidden justify-self-end">{endSlot}</div>
