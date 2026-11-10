@@ -19,17 +19,13 @@ type PlaylistCoverProps = {
   iconSize?: number;
 };
 
-// Theme tints for tiles without an image, cycled by position so a mosaic reads as four cells.
-const TINTS = [
-  'bg-iris/20 text-iris',
-  'bg-foam/20 text-foam',
-  'bg-love/20 text-love',
-  'bg-gold/20 text-gold',
-] as const;
+const IMG = 'size-full object-cover';
 
 /**
- * A playlist's cover: its own image if set, else a 2×2 mosaic of its first four
- * project covers (missing cells become tinted tiles), else one tinted tile.
+ * A playlist's cover: its own image if set, else the layout follows how many of its projects
+ * actually have a cover: one fills the whole cover, two split it in halves, three give the
+ * first a tall left half over two stacked, four or more make a 2×2 mosaic. With none, one
+ * tinted tile. Projects without a cover are skipped, never drawn as empty cells.
  */
 export function PlaylistCover({ playlist, className, iconSize = 28 }: PlaylistCoverProps) {
   const box = cn('relative shrink-0 overflow-hidden bg-muted', className);
@@ -37,33 +33,45 @@ export function PlaylistCover({ playlist, className, iconSize = 28 }: PlaylistCo
   if (playlist.coverImage) {
     return (
       <div className={box}>
-        <img src={playlist.coverImage} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
+        <img src={playlist.coverImage} alt="" className={IMG} loading="lazy" decoding="async" />
       </div>
     );
   }
 
-  const covers = (playlist.projects ?? []).slice(0, 4).map((p) => resolveCoverImage(p) as string | null);
+  const covers = (playlist.projects ?? [])
+    .map((p) => resolveCoverImage(p) as string | null)
+    .filter((src): src is string => Boolean(src))
+    .slice(0, 4);
 
-  if (!covers.some(Boolean)) {
+  if (covers.length === 0) {
     return (
-      <div className={cn(box, 'flex items-center justify-center', TINTS[0])}>
+      <div className={cn(box, 'flex items-center justify-center bg-iris/20 text-iris')}>
         <Icon name="music_note" size={iconSize} />
       </div>
     );
   }
 
-  const cells = Array.from({ length: 4 }, (_, i) => covers[i] ?? null);
+  if (covers.length === 1) {
+    return (
+      <div className={box}>
+        <img src={covers[0]} alt="" className={IMG} loading="lazy" decoding="async" />
+      </div>
+    );
+  }
+
   return (
-    <div className={cn(box, 'grid grid-cols-2 grid-rows-2 gap-0.5')}>
-      {cells.map((src, i) =>
-        src ? (
-          <img key={i} src={src} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
-        ) : (
-          <div key={i} className={cn('flex items-center justify-center', TINTS[i])}>
-            <Icon name="music_note" size={Math.round(iconSize / 2)} />
-          </div>
-        ),
-      )}
+    <div className={cn(box, 'grid grid-cols-2 gap-0.5', covers.length > 2 ? 'grid-rows-2' : 'grid-rows-1')}>
+      {covers.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt=""
+          // Three covers: the first spans both rows of the left column.
+          className={cn(IMG, covers.length === 3 && i === 0 && 'row-span-2')}
+          loading="lazy"
+          decoding="async"
+        />
+      ))}
     </div>
   );
 }
