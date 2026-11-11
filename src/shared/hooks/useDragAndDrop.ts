@@ -72,7 +72,7 @@ export function useDragAndDrop({
       const file = e.dataTransfer?.files?.[0];
       if (!file) return;
 
-      if (file.type.startsWith('audio/')) {
+      if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
         if (playerRef.current?.loadLocalAudio) {
           playerRef.current.loadLocalAudio(file);
         }

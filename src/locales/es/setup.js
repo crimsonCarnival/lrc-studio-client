@@ -55,7 +55,7 @@ export default {
   viewAll: "Ver todo",
   local: "Archivo local",
   cloud: "Nube",
-  invalidAudioType: "Por favor, selecciona un archivo de audio válido.",
+  invalidAudioType: "Por favor, selecciona un archivo de audio o video válido.",
   subtitle: "Configura los recursos de tu proyecto para empezar",
   searchYoutube: "Buscar en YouTube",
   searchYoutubeDesc: "Encuentra cualquier video o canción en YouTube para usar como audio",

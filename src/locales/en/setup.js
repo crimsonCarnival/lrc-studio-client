@@ -65,7 +65,7 @@ export default {
   urlPlaceholder: "YouTube or Audio URL",
   youtubeVideo: "YouTube Video",
   youtubeSearch: "YouTube Search",
-  invalidAudioType: "Please select a valid audio file.",
+  invalidAudioType: "Please select a valid audio or video file.",
   deleteFailed: "Failed to delete",
   audioSource: "Audio Source",
   cloudUpload: "Cloud Upload",

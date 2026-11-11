@@ -730,7 +730,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                               className="size-11 lg:size-11"
                             >
                               <Icon name="folder_open" size={20} />
-                              <input ref={audioInputRef} id="setup-audio-input" type="file" accept="audio/*" onChange={handleAudioFile} className="hidden" />
+                              <input ref={audioInputRef} id="setup-audio-input" type="file" accept="audio/*,video/*" onChange={handleAudioFile} className="hidden" />
                             </Button>
                           </Tip>
                           <div className="relative flex-1 flex items-center">

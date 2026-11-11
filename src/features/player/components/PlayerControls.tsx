@@ -64,7 +64,7 @@ export const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent
       >
         <Icon name="folder_open" size={16} className="shrink-0 text-zinc-500" />
         {t('player.dropAudio')}
-        <input id={fileInputId} type="file" accept="audio/*" onChange={onFileChange} className="hidden" />
+        <input id={fileInputId} type="file" accept="audio/*,video/*" onChange={onFileChange} className="hidden" />
       </label>
       <div className="flex gap-1.5 px-1 py-1">
         <div className="relative flex-1">
@@ -147,7 +147,7 @@ function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: Audi
             className="inline-flex items-center h-11 px-[18px] rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 text-sm font-bold cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-primary/50"
           >
             {t('player.reupload')}
-            <input id={fileInputId} type="file" accept="audio/*" onChange={onFileChange} className="sr-only" />
+            <input id={fileInputId} type="file" accept="audio/*,video/*" onChange={onFileChange} className="sr-only" />
           </label>
         )}
         <Button
@@ -331,7 +331,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                 >
                   <Icon name="folder_open" size={16} className="text-zinc-400 group-hover:text-primary transition-colors" />
                   <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{t('player.dropAudio')}</span>
-                  <input id="audio-file-input" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
+                  <input id="audio-file-input" type="file" accept="audio/*,video/*" onChange={local.handleFileChange} className="hidden" />
                 </label>
                 </FileDropZone>
 
@@ -782,7 +782,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                     >
                       <Icon name="folder_open" size={16} />
                       {t('player.dropAudio')}
-                      <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
+                      <input id="audio-file-compact" type="file" accept="audio/*,video/*" onChange={local.handleFileChange} className="hidden" />
                     </label>
                     </FileDropZone>
                     <div className="flex-1 flex gap-2 min-w-0 basis-56">

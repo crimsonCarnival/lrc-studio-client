@@ -146,7 +146,7 @@ export function useSetupMedia({ playerRef, userId, onPreselectUpload }: UseSetup
 
   // Shared by the file picker and the drop zone.
   const loadAudioFile = (file: File) => {
-    if (!file.type.startsWith('audio/')) {
+    if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
       toast.error(t('setup.invalidAudioType'));
       if (audioInputRef.current) audioInputRef.current.value = '';
       return;
