@@ -28,8 +28,6 @@ import PublicShortcuts from './PublicShortcuts';
 import { readStoredAlignment, storeAlignment } from './lyrics-alignment';
 import type { LyricsAlignment } from './lyrics-alignment';
 import { ShortcutHint } from '@features/settings/components/ShortcutHint';
-import { useSettings } from '@/features/settings/useSettings';
-import { useAutoHideHeader } from './useAutoHideHeader';
 import { PublicHeaderPlayer } from './PublicHeaderPlayer';
 import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
@@ -359,10 +357,6 @@ function ProjectViewPageInner() {
   const [playerHidden, setPlayerHidden] = useState(() => {
     try { return localStorage.getItem(PLAYER_HIDDEN_KEY) === '1'; } catch { return false; }
   });
-  // With the player hidden the page is meant to be all lyrics, so the header can step aside too.
-  const { settings } = useSettings();
-  useAutoHideHeader(!!settings.interface?.autoHideHeader && playerHidden);
-
   const togglePlayerHidden = useCallback(() => {
     setPlayerHidden((prev) => {
       try { localStorage.setItem(PLAYER_HIDDEN_KEY, prev ? '0' : '1'); } catch { /* still applies for this session */ }
@@ -591,14 +585,13 @@ function ProjectViewPageInner() {
               <div className="absolute bottom-4 right-4 z-20">
                 <Tip content={<ShortcutHint label={t('projectView.showPlayer')} shortcut="togglePlayer" fallback="p" />}>
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="outline"
                     onClick={togglePlayerHidden}
                     aria-label={t('projectView.showPlayer')}
-                    className="rounded-pill bg-card/80 backdrop-blur-md border border-border shadow-md gap-1.5 px-3 py-1 text-xs"
+                    className="size-10 rounded-full bg-card/80 backdrop-blur-md border border-border shadow-md"
                   >
-                    <Icon name="expand_less" size={16} />
-                    <span>{t('projectView.showPlayer')}</span>
+                    <Icon name="expand_less" size={18} />
                   </Button>
                 </Tip>
               </div>

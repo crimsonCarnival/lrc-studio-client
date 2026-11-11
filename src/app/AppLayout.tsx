@@ -8,6 +8,7 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 import { AppBackground } from './layout/AppBackground';
 import { AppHeader } from './layout/header/AppHeader';
+import { useAutoHideHeader } from './layout/header/useAutoHideHeader';
 import { AdminHeader } from './layout/header/AdminHeader';
 import { isAdminPathname } from '@/features/admin/admin-nav';
 import { AppPlayer } from './layout/AppPlayer';
@@ -142,6 +143,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   }, [setMediaTitle, t]);
 
   const isPublicProjectView = isProjectViewPath(location.pathname);
+  // The editor's workspace header carries its status and actions, and the admin header is a different one.
+  useAutoHideHeader(!!settings.interface?.autoHideHeader && !isEditorPage && !isAdminPage);
   // The editor workspace is a full-bleed app screen: its panels run edge to edge
   // under the header, with no page gutters or bottom padding of their own.
   const isWorkspacePage = isEditorPath(location.pathname);
@@ -279,11 +282,11 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={closeTour} />
 
           <div
-            className={`relative z-base flex-1 min-h-0 flex flex-col transition-[padding] duration-500 ease-in-out
+            className={`relative z-base flex-1 min-h-0 flex flex-col transition-[padding-bottom] duration-500 ease-in-out
             ${location.pathname === '/' ? 'pt-14'
                 : phoneEditorMounted ? 'pt-0'
                 : isPublicProjectView ? 'pt-14 lg:pt-0'
-                  : 'pt-14 lg:pt-16'
+                  : 'pt-14 lg:pt-(--header-offset)'
               }
             ${isFullWidthPage
                 ? 'pb-0'

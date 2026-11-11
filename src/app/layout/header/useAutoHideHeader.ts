@@ -2,14 +2,15 @@ import { useEffect } from 'react';
 
 // Within this many pixels of the top edge the header comes back.
 const REVEAL_EDGE_PX = 12;
-const HIDE_DELAY_MS = 500;
+// Short: a pointer that has left the header should not leave it hanging over the page.
+const HIDE_DELAY_MS = 120;
 // Needs a pointer that can reach the top edge, and the desktop header that overlays the page.
 const POINTER_DESKTOP = '(min-width: 1024px) and (hover: hover)';
 // While one of these is open the pointer is allowed to wander off the header.
 const OPEN_OVERLAY = '[role="menu"], [role="listbox"], [role="dialog"]';
 
 /**
- * Slides the app header out of view while `active`, and brings it back when the pointer
+ * Slides the app header out of view while `active` (the page is not the editor), and brings it back when the pointer
  * reaches the top of the page or focus moves into it. The flag lives on <html> because the
  * header and the page's own offsets (the `--header-offset` variable in index.css) both
  * follow it, so everything resizes together.
@@ -24,15 +25,20 @@ export function useAutoHideHeader(active: boolean) {
     const hide = () => root.setAttribute('data-header-hidden', '');
     const reveal = () => {
       window.clearTimeout(timer);
+      timer = undefined;
       root.removeAttribute('data-header-hidden');
     };
     const held = () => {
       const el = header();
       return !!el && (el.contains(document.activeElement) || !!document.querySelector(OPEN_OVERLAY));
     };
+    // Armed once, not restarted by every pointer move, so the delay counts from leaving the header.
     const scheduleHide = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => { if (!held()) hide(); }, HIDE_DELAY_MS);
+      if (timer !== undefined) return;
+      timer = window.setTimeout(() => {
+        timer = undefined;
+        if (!held()) hide();
+      }, HIDE_DELAY_MS);
     };
 
     const onMove = (e: PointerEvent) => {

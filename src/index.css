@@ -1754,6 +1754,8 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
 
 :root[data-header-hidden] {
   --header-offset: 0px;
+  /* Leaving is quicker than arriving: the header should not linger once the pointer is gone. */
+  transition-duration: 160ms;
 }
 
 /* `translate`, not `transform`: the header's fade-in animation holds the transform. */
@@ -1763,6 +1765,7 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
 
 :root[data-header-hidden] [data-app-header] {
   translate: 0 -100%;
+  transition-duration: 160ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

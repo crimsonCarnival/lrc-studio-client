@@ -232,7 +232,7 @@ export default {
     lockLayout: "Bloquear diseño",
     lockLayoutDesc: "Fija los paneles y el reproductor para evitar reordenamientos o cambios de tamaño accidentales",
     autoHideHeader: "Ocultar el encabezado automáticamente",
-    autoHideHeaderDesc: "En un proyecto público, oculta el encabezado mientras el reproductor está oculto. Mueve el puntero a la parte superior de la página para mostrarlo",
+    autoHideHeaderDesc: "Oculta el encabezado en todas las páginas excepto el editor. Mueve el puntero a la parte superior de la página para mostrarlo",
     toastPosition: "Posición de notificaciones",
     toastPositionDesc: "Controla dónde aparecen las notificaciones en pantalla",
     focusContrast: "Contraste de enfoque",

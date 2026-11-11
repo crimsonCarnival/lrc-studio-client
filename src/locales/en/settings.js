@@ -234,7 +234,7 @@ export default {
     lockLayout: "Lock Workspace Layout",
     lockLayoutDesc: "Freeze panels and the player bar in place to prevent accidental reordering or resizing",
     autoHideHeader: "Auto-hide the header",
-    autoHideHeaderDesc: "On a public project, hide the header while the player is hidden. Move the pointer to the top of the page to bring it back",
+    autoHideHeaderDesc: "Hide the header on every page except the editor. Move the pointer to the top of the page to bring it back",
     toastPosition: "Notification Position",
     toastPositionDesc: "Controls where on-screen notifications appear",
     themeSection: "Theme",
