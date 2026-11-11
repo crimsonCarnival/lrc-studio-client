@@ -10,6 +10,8 @@ type Props = {
   onChange: (id: string) => void;
   /** The user's saved theme; its tile only shows once there is one. */
   custom: CustomTheme | null;
+  /** Show only this many tiles (the theme in use is always among them). Omit for all. */
+  limit?: number;
 };
 
 // The two Rosé Pine themes come from index.css, so their swatches are fixed here.
@@ -46,20 +48,30 @@ function Tile({ id, name, bg, main, text, radius, selected, onChange }: {
   );
 }
 
-/** Every theme as a swatch tile: the user's own, the two built-ins, then the palette themes. */
-export default function ThemeGrid({ value, onChange, custom }: Props) {
+/**
+ * Every theme as a swatch tile: the user's own, the two built-ins, then the palette themes. With
+ * `limit` only the first tiles show, but the theme in use always does (it takes the last slot).
+ */
+export default function ThemeGrid({ value, onChange, custom, limit }: Props) {
   const { t } = useTranslation();
   const tk = t as (key: string) => string;
+
+  const tiles = [
+    ...(custom ? [{ id: CUSTOM_THEME_ID, name: t('settings.themeEditor.customName'), bg: custom.bg, main: custom.main, text: custom.text, radius: custom.radius }] : []),
+    ...BUILT_INS.map((b) => ({ id: b.id as string, name: tk(b.labelKey), bg: b.bg as string, main: b.main as string, text: b.text as string, radius: SHAPE_RADIUS.soft })),
+    ...THEME_PALETTES.map((p) => ({ id: p.id, name: p.name, bg: p.bg, main: p.main, text: p.text, radius: SHAPE_RADIUS[shapeOf(p.id)] })),
+  ];
+  let shown = tiles;
+  if (limit != null && tiles.length > limit) {
+    shown = tiles.slice(0, limit);
+    const active = tiles.find((x) => x.id === value);
+    if (active && !shown.includes(active)) shown = [...shown.slice(0, limit - 1), active];
+  }
+
   return (
     <div role="group" aria-label={t('settings.interface.theme')} className="grid grid-cols-2 gap-2 py-2 sm:grid-cols-3 lg:grid-cols-4">
-      {custom && (
-        <Tile id={CUSTOM_THEME_ID} name={t('settings.themeEditor.customName')} bg={custom.bg} main={custom.main} text={custom.text} radius={custom.radius} selected={value === CUSTOM_THEME_ID} onChange={onChange} />
-      )}
-      {BUILT_INS.map((b) => (
-        <Tile key={b.id} id={b.id} name={tk(b.labelKey)} bg={b.bg} main={b.main} text={b.text} radius={SHAPE_RADIUS.soft} selected={value === b.id} onChange={onChange} />
-      ))}
-      {THEME_PALETTES.map((p) => (
-        <Tile key={p.id} id={p.id} name={p.name} bg={p.bg} main={p.main} text={p.text} radius={SHAPE_RADIUS[shapeOf(p.id)]} selected={value === p.id} onChange={onChange} />
+      {shown.map((x) => (
+        <Tile key={x.id} {...x} selected={value === x.id} onChange={onChange} />
       ))}
     </div>
   );

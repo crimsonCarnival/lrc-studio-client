@@ -4,7 +4,9 @@ import { useInterfaceSettings } from '../../hooks/useInterfaceSettings';
 import { cn } from '@/shared/utils/utils';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
+import { useState } from 'react';
 import ThemeSelector from '../theme/ThemeSelector';
+import ThemeModal from '../theme/ThemeModal';
 import { ColorPicker } from '@ui/color-picker';
 type SelectEvent = { target: { value: string } };
 
@@ -35,6 +37,7 @@ const PREVIEW_DIM: Record<string, number> = { off: 1, low: 0.65, medium: 0.4, hi
 export default function InterfaceSettings({ settings, updateSetting, searchTerm }: InterfaceSettingsProps) {
   const { t } = useTranslation();
   const tk = t as (key: string, opts?: Record<string, unknown>) => string;
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
   const {
     handleLanguageChange,
     handleActiveHighlightChange,
@@ -67,7 +70,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
   return (
     <>
       <Section title={t('settings.interface.themeSection')} searchTerm={searchTerm}>
-        <ThemeSelector settings={settings} updateSetting={updateSetting} />
+        <ThemeSelector settings={settings} updateSetting={updateSetting} onBrowseAll={() => setThemeModalOpen(true)} />
+        <ThemeModal open={themeModalOpen} onOpenChange={setThemeModalOpen} settings={settings} updateSetting={updateSetting} />
         <SettingRow label={t('settings.interface.keepThemeOnSignOut')} description={t('settings.interface.keepThemeOnSignOutDesc')}>
           <Toggle id="toggle-keep-theme" label={t('settings.interface.keepThemeOnSignOut')} checked={ui.keepThemeOnSignOut ?? true} onChange={(v: boolean) => updateSetting('interface.keepThemeOnSignOut', v)} />
         </SettingRow>
