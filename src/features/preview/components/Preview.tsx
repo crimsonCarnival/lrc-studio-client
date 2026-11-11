@@ -156,6 +156,9 @@ export default function Preview(props: PreviewProps) {
     hasFurigana,
     exportFormat,
     setExportFormat,
+    subtitleFormat,
+    setSubtitleFormat,
+    cueIssues,
     exportOffset,
     setExportOffset,
     exportFileName,
@@ -573,6 +576,9 @@ export default function Preview(props: PreviewProps) {
         hasFeaturedArtists={hasFeaturedArtists}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
+        subtitleFormat={subtitleFormat}
+        setSubtitleFormat={setSubtitleFormat}
+        cueIssues={cueIssues}
         exportOffset={exportOffset}
         setExportOffset={setExportOffset}
         exportFileName={exportFileName}

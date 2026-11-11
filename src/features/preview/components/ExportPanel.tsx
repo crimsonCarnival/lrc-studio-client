@@ -9,6 +9,14 @@ import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
 import type { ExportFormat, LineStats } from '../hooks/usePreview';
 import { Tip } from '@ui/tip';
+import { ISSUE_LIMITS } from '@/features/subtitles/subtitle-cues';
+import type { CueIssue, CueIssueCode, SubtitleFormat } from '@/features/subtitles/subtitles.types';
+
+const CONTAINERS: { value: SubtitleFormat; labelKey: string }[] = [
+  { value: 'srt', labelKey: 'export.containerSrt' },
+  { value: 'vtt', labelKey: 'export.containerVtt' },
+  { value: 'sbv', labelKey: 'export.containerSbv' },
+];
 
 interface ExportPanelProps {
   showExportPanel: boolean;
@@ -29,6 +37,9 @@ interface ExportPanelProps {
   hasFeaturedArtists: boolean;
   exportFormat: ExportFormat;
   setExportFormat: (format: ExportFormat) => void;
+  subtitleFormat: SubtitleFormat;
+  setSubtitleFormat: (format: SubtitleFormat) => void;
+  cueIssues: CueIssue[];
   /** Milliseconds, as typed. */
   exportOffset: string;
   setExportOffset: (v: string) => void;
@@ -79,6 +90,9 @@ export default function ExportPanel({
   hasFeaturedArtists,
   exportFormat,
   setExportFormat,
+  subtitleFormat,
+  setSubtitleFormat,
+  cueIssues,
   exportOffset,
   setExportOffset,
   exportFileName,
@@ -118,6 +132,19 @@ export default function ExportPanel({
     },
     { value: 'srt', name: t('export.formatSrt'), desc: t('export.formatSrtDesc') },
   ];
+
+  // One line per kind of problem with a count, errors first, rather than one per cue.
+  const issueGroups = [...cueIssues
+    .reduce((acc, i) => {
+      const g = acc.get(i.code);
+      if (g) g.count++;
+      else acc.set(i.code, { code: i.code, severity: i.severity, count: 1 });
+      return acc;
+    }, new Map<CueIssueCode, { code: CueIssueCode; severity: CueIssue['severity']; count: number }>())
+    .values()]
+    .sort((a, b) => Number(b.severity === 'error') - Number(a.severity === 'error'));
+  const hasCueError = issueGroups.some((g) => g.severity === 'error');
+  const tx = t as (key: string, options?: Record<string, unknown>) => string;
 
   const untimed = lineStats.total - lineStats.timed;
   const subtitle = [songInfo.title, songInfo.artist, t('export.lineCount', { count: lineStats.total })]
@@ -181,6 +208,32 @@ export default function ExportPanel({
                 );
               })}
             </div>
+
+            {exportFormat === 'srt' && (
+              <div className="flex flex-col gap-2">
+                <span id={`${id}-container`} className={SECTION_LABEL}>{t('export.subtitleFile')}</span>
+                <div role="radiogroup" aria-labelledby={`${id}-container`} className="grid grid-cols-3 gap-2">
+                  {CONTAINERS.map((c) => {
+                    const selected = subtitleFormat === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setSubtitleFormat(c.value)}
+                        className={`h-10 coarse:h-11 rounded-xl border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                          selected ? 'border-primary bg-primary/10 text-foreground' : 'border-zinc-800 text-foreground/65 hover:border-zinc-700'
+                        }`}
+                      >
+                        {tx(c.labelKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-xs text-foreground/65">{t('export.subtitleHint')}</span>
+              </div>
+            )}
 
             <div className="flex flex-col gap-3">
               <span className={SECTION_LABEL}>{t('export.options')}</span>
@@ -250,6 +303,25 @@ export default function ExportPanel({
               </div>
             </div>
 
+            {exportFormat === 'srt' && issueGroups.length > 0 && (
+              <div
+                role="status"
+                className={`flex gap-2.5 px-3.5 py-3 rounded-xl border text-[13px] leading-snug text-foreground ${
+                  hasCueError ? 'border-destructive/35 bg-destructive/10' : 'border-warning/35 bg-warning/10'
+                }`}
+              >
+                <Icon name="warning" size={18} className={`shrink-0 mt-px ${hasCueError ? 'text-destructive' : 'text-warning-dim dark:text-warning'}`} />
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold">{t('export.cuesTitle')}</span>
+                  <ul className="m-0 pl-4 list-disc">
+                    {issueGroups.map((g) => (
+                      <li key={g.code}>{tx(`export.cueIssue.${g.code}`, { count: g.count, limit: ISSUE_LIMITS[g.code] })}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {untimed > 0 && (
               <div role="status" className="flex gap-2.5 px-3.5 py-3 rounded-xl border border-warning/35 bg-warning/10 text-[13px] leading-snug text-foreground">
                 <Icon name="warning" size={18} className="shrink-0 mt-px text-warning-dim dark:text-warning" />
@@ -311,7 +383,7 @@ export default function ExportPanel({
             className="h-11 lg:h-11 px-[18px] lg:px-[18px] text-sm lg:text-sm gap-2 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 font-bold"
           >
             <Icon name="download" size={18} />
-            {t('export.downloadAs', { ext: exportFormat })}
+            {t('export.downloadAs', { ext: exportFileName.split('.').pop() })}
           </Button>
         </div>
       </DialogContent>

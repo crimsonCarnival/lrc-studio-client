@@ -11,6 +11,9 @@ import { useIncludeFeaturedInTitle } from '@/features/artists/include-featured-s
 import { lyrics } from '@/app/api';
 import { applyGlobalOffset } from '@/features/editor/services/editor.service';
 import { matchKey } from '@/shared/utils/keyboard';
+import { buildCues, validateCues, YOUTUBE_RULES } from '@/features/subtitles/subtitle-cues';
+import { serializeCues } from '@/features/subtitles/subtitle-formats';
+import type { CueIssue, SubtitleFormat } from '@/features/subtitles/subtitles.types';
 import { computeCurrentIndex } from '../lyrics-position';
 import {
   REVIEW_ACTIVE_FONT_SIZES, REVIEW_INACTIVE_FONT_SIZES,
@@ -93,6 +96,11 @@ export interface UsePreviewResult {
   wasCopied: boolean;
   exportFormat: ExportFormat;
   setExportFormat: (format: ExportFormat) => void;
+  /** Container used when `exportFormat` is `srt`: SRT, WebVTT or SBV. */
+  subtitleFormat: SubtitleFormat;
+  setSubtitleFormat: (format: SubtitleFormat) => void;
+  /** Readability and validity problems in the cues the subtitle formats would write. */
+  cueIssues: CueIssue[];
   /** Raw field value in milliseconds; parsed when the file is built. */
   exportOffset: string;
   setExportOffset: Dispatch<SetStateAction<string>>;
@@ -358,45 +366,58 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     updateSetting('export.downloadFormat', format);
   }, [updateSetting]);
 
-  const exportFileName = `${exportFilename.trim() || 'lyrics'}.${exportFormat}`;
+  // Which subtitle file the SRT card writes. Session-only: the persisted export settings
+  // only know lrc/srt/txt, and VTT and SBV are the same cues in another container.
+  const [subtitleFormat, setSubtitleFormat] = useState<SubtitleFormat>('srt');
+  const fileExtension = exportFormat === 'srt' ? subtitleFormat : 'lrc';
+  const exportFileName = `${exportFilename.trim() || 'lyrics'}.${fileExtension}`;
 
   const lineEndings = settings.export?.lineEndings;
   const wordPrecision = settings.export?.wordTimestampPrecision;
   const precision = settings.editor?.timestampPrecision;
   const srtConfig = settings.editor?.srt;
 
+  // The cues the subtitle formats are written from, and what is wrong with them. One list
+  // feeds both the file and the warnings so the two cannot disagree.
+  const exportCues = useMemo(() => {
+    const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
+    const exportLines = shiftExportLines(applyIncludeFlags(prepareExportLines(lines)), offsetSeconds);
+    return buildCues(exportLines, {
+      duration,
+      includeSecondary,
+      includeTranslations,
+      translationIndex: activeTranslationIndex,
+      minGap: srtConfig?.minSubtitleGap,
+      defaultDuration: srtConfig?.defaultSubtitleDuration,
+    });
+  }, [lines, exportOffset, duration, includeSecondary, includeTranslations, activeTranslationIndex, srtConfig, applyIncludeFlags, prepareExportLines]);
+  const cueIssues = useMemo(() => validateCues(exportCues, YOUTUBE_RULES, duration), [exportCues, duration]);
+
   // Single source of the exported text: the dialog preview, download and copy
   // all go through here.
   const buildExportText = useCallback(async () => {
+    if (exportFormat === 'srt') {
+      return serializeCues(exportCues, subtitleFormat, { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf' });
+    }
     const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
     const exportLines = shiftExportLines(applyIncludeFlags(prepareExportLines(lines)), offsetSeconds);
-    const result = (exportFormat === 'srt'
-      ? await lyrics.compileSrt({
-        lines: exportLines,
-        duration,
-        includeTranslations,
-        lineEndings,
-        srtConfig,
-        includeSecondary,
-        exportTranslationIndex: activeTranslationIndex,
-      })
-      : await lyrics.compileLrc({
-        lines: exportLines,
-        includeTranslations,
-        precision,
-        metadata: includeMetadata ? metadata : {},
-        artists: includeMetadata ? credits : undefined,
-        includeFeaturedInTitle,
-        lineEndings,
-        exportTranslationIndex: activeTranslationIndex,
-        includeSecondary,
-        wordPrecision,
-      })) as { output: string };
+    const result = (await lyrics.compileLrc({
+      lines: exportLines,
+      includeTranslations,
+      precision,
+      metadata: includeMetadata ? metadata : {},
+      artists: includeMetadata ? credits : undefined,
+      includeFeaturedInTitle,
+      lineEndings,
+      exportTranslationIndex: activeTranslationIndex,
+      includeSecondary,
+      wordPrecision,
+    })) as { output: string };
     return result.output;
   }, [
-    lines, exportFormat, exportOffset, duration, includeTranslations,
+    lines, exportFormat, subtitleFormat, exportCues, exportOffset, includeTranslations,
     includeSecondary, includeMetadata, metadata, credits, includeFeaturedInTitle, lineEndings, wordPrecision,
-    precision, srtConfig, applyIncludeFlags, prepareExportLines, activeTranslationIndex,
+    precision, applyIncludeFlags, prepareExportLines, activeTranslationIndex,
   ]);
 
   // Live preview. A result is only current while it was produced by the present
@@ -494,6 +515,9 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     wasCopied,
     exportFormat,
     setExportFormat,
+    subtitleFormat,
+    setSubtitleFormat,
+    cueIssues,
     exportOffset,
     setExportOffset,
     exportFileName,
