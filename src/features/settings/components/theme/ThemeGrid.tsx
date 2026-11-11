@@ -14,7 +14,7 @@ type Props = {
   limit?: number;
 };
 
-// The two Rosé Pine themes come from index.css, so their swatches are fixed here.
+// The two Rosé Pine themes' swatches live in shared/theme/themes.ts (BUILT_IN_THEME_SWATCHES).
 const BUILT_INS = [
   { id: 'dark', labelKey: 'settings.options.themes.dark', ...BUILT_IN_THEME_SWATCHES.dark },
   { id: 'light', labelKey: 'settings.options.themes.light', ...BUILT_IN_THEME_SWATCHES.light },
