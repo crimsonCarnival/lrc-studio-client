@@ -99,7 +99,7 @@ const RESET_PATHS: Record<string, string[]> = {
   export: ['export'],
   shortcuts: ['shortcuts'],
   advanced: ['advanced'],
-  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'editor.display', 'editor.scroll'],
+  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.autoHideHeader', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'editor.display', 'editor.scroll'],
 };
 
 const SHORTCUT_KEYS = [
@@ -107,7 +107,7 @@ const SHORTCUT_KEYS = [
   'switchMode', 'nudgeLeftFine', 'nudgeRightFine', 'deselect', 'showHelp',
   'playPause', 'seekForward', 'seekBackward', 'mute', 'speedUp', 'speedDown',
   'addSecondary', 'addTranslation', 'toggleTranslation', 'captureAdLib',
-  'alignLeft', 'alignCenter', 'alignRight', 'toggleVisualizer', 'toggleFullLyrics', 'togglePlayer',
+  'alignLeft', 'alignCenter', 'alignRight', 'toggleVisualizer', 'openVisualizer', 'toggleFullLyrics', 'togglePlayer',
 ];
 
 export default function SettingsPage() {

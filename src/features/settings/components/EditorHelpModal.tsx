@@ -114,6 +114,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         { keys: resolveShortcut(settings.shortcuts?.alignRight?.[0] || 'Shift+R'),     desc: t('shortcuts.alignRight') },
         { keys: resolveShortcut(settings.shortcuts?.toggleFullLyrics?.[0] || 'l'),     desc: t('shortcuts.toggleFullLyrics') },
         { keys: resolveShortcut(settings.shortcuts?.toggleVisualizer?.[0] || 'v'),     desc: t('shortcuts.toggleVisualizer') },
+        { keys: resolveShortcut(settings.shortcuts?.openVisualizer?.[0] || 'Shift+V'), desc: t('shortcuts.openVisualizer') },
         { keys: resolveShortcut(settings.shortcuts?.showHelp?.[0] || '?'),             desc: t('shortcuts.help') },
       ]},
     ],

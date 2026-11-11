@@ -69,6 +69,7 @@ const GET_SETTINGS = /* GraphQL */ `
         playerTop
         editorWidth
         lockLayout
+        autoHideHeader
         mobileTab
         toastPosition
         keepThemeOnSignOut
@@ -79,7 +80,7 @@ const GET_SETTINGS = /* GraphQL */ `
         rangeSelect toggleSelect loopClick playPause seekForward seekBackward mute
         speedUp speedDown addSecondary addTranslation toggleTranslation
         focusSync focusPreview focusPlayback captureAdLib
-        alignLeft alignCenter alignRight toggleVisualizer toggleFullLyrics togglePlayer
+        alignLeft alignCenter alignRight toggleVisualizer openVisualizer toggleFullLyrics togglePlayer
       }
       advanced {
         autoSave { enabled timeInterval }

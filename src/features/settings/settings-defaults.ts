@@ -74,6 +74,8 @@ export const DEFAULT_SETTINGS = {
     playerTop: false,
     editorWidth: 50,
     lockLayout: false,
+    // Public project view only, and only while its player is hidden: the header slides away and returns when the pointer reaches the top edge.
+    autoHideHeader: false,
     mobileTab: 'editor',
     toastPosition: 'bottom-right',
     keepThemeOnSignOut: true
@@ -116,6 +118,7 @@ export const DEFAULT_SETTINGS = {
     alignCenter: ['Shift+C'],
     alignRight: ['Shift+R'],
     toggleVisualizer: ['v'],
+    openVisualizer: ['Shift+V'],
     toggleFullLyrics: ['l'],
     togglePlayer: ['p'],
   },

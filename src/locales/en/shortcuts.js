@@ -21,6 +21,7 @@ export default {
   alignCenter: "Center lyrics",
   alignRight: "Align lyrics right",
   toggleVisualizer: "Turn visualizer on / off",
+  openVisualizer: "Choose a visualizer",
   toggleFullLyrics: "Full lyrics on / off",
   togglePlayer: "Hide / show player",
   selection: {

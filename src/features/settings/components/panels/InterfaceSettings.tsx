@@ -101,6 +101,9 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         <SettingRow label={t('settings.interface.lockLayout')} description={t('settings.interface.lockLayoutDesc')}>
           <Toggle id="toggle-lock-layout" label={t('settings.interface.lockLayout')} checked={ui.lockLayout ?? false} onChange={(v: boolean) => updateSetting('interface.lockLayout', v)} />
         </SettingRow>
+        <SettingRow label={t('settings.interface.autoHideHeader')} description={t('settings.interface.autoHideHeaderDesc')}>
+          <Toggle id="toggle-auto-hide-header" label={t('settings.interface.autoHideHeader')} checked={ui.autoHideHeader ?? false} onChange={(v: boolean) => updateSetting('interface.autoHideHeader', v)} />
+        </SettingRow>
         <SettingRow label={t('settings.interface.toastPosition')} description={toastLabel}>
           <div
             role="radiogroup"

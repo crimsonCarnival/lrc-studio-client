@@ -492,6 +492,7 @@ export type InterfaceSettings = {
   /** Keep the chosen theme on this browser after signing out. Default true. */
   keepThemeOnSignOut?: Maybe<Scalars['Boolean']['output']>;
   layoutSwap?: Maybe<Scalars['Boolean']['output']>;
+  autoHideHeader?: Maybe<Scalars['Boolean']['output']>;
   lockLayout?: Maybe<Scalars['Boolean']['output']>;
   mobileTab?: Maybe<Scalars['String']['output']>;
   playerTop?: Maybe<Scalars['Boolean']['output']>;
@@ -513,6 +514,7 @@ export type InterfaceSettingsInput = {
   /** Keep the chosen theme on this browser after signing out. Default true. */
   keepThemeOnSignOut?: InputMaybe<Scalars['Boolean']['input']>;
   layoutSwap?: InputMaybe<Scalars['Boolean']['input']>;
+  autoHideHeader?: InputMaybe<Scalars['Boolean']['input']>;
   lockLayout?: InputMaybe<Scalars['Boolean']['input']>;
   mobileTab?: InputMaybe<Scalars['String']['input']>;
   playerTop?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2097,6 +2099,7 @@ export type ShortcutsSettings = {
   togglePlayer?: Maybe<Array<Scalars['String']['output']>>;
   toggleSelect?: Maybe<Array<Scalars['String']['output']>>;
   toggleTranslation?: Maybe<Array<Scalars['String']['output']>>;
+  openVisualizer?: Maybe<Array<Scalars['String']['output']>>;
   toggleVisualizer?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -2133,6 +2136,7 @@ export type ShortcutsSettingsInput = {
   togglePlayer?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleSelect?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleTranslation?: InputMaybe<Array<Scalars['String']['input']>>;
+  openVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 

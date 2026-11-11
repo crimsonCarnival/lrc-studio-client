@@ -21,6 +21,7 @@ export default {
   alignCenter: "Centrar letra",
   alignRight: "Alinear letra a la derecha",
   toggleVisualizer: "Activar / desactivar visualizador",
+  openVisualizer: "Elegir un visualizador",
   toggleFullLyrics: "Activar / desactivar letra completa",
   togglePlayer: "Ocultar / mostrar reproductor",
   selection: {

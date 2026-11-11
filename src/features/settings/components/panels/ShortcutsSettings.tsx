@@ -46,6 +46,7 @@ const SHORTCUTS: ShortcutDef[] = [
   { id: 'alignRight', group: 'view', fallback: 'Shift+R' },
   { id: 'toggleFullLyrics', group: 'view', fallback: 'l' },
   { id: 'toggleVisualizer', group: 'view', fallback: 'v' },
+  { id: 'openVisualizer', group: 'view', fallback: 'Shift+V' },
   { id: 'togglePlayer', group: 'view', fallback: 'p' },
 ];
 
