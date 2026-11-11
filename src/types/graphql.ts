@@ -486,6 +486,10 @@ export type InterfaceSettings = {
   /** JSON of the user's own theme (client/src/shared/theme/custom-theme.ts), at most 600 characters. */
   customTheme?: Maybe<Scalars['String']['output']>;
   defaultLanguage?: Maybe<Scalars['String']['output']>;
+  /** Show the editor tour on new projects. Default true. */
+  editorTourEnabled?: Maybe<Scalars['Boolean']['output']>;
+  /** How many times the editor tour has been shown. Non-negative integer. */
+  editorTourShown?: Maybe<Scalars['Int']['output']>;
   editorWidth?: Maybe<Scalars['Float']['output']>;
   focusContrast?: Maybe<Scalars['String']['output']>;
   focusMode?: Maybe<Scalars['String']['output']>;
@@ -508,6 +512,10 @@ export type InterfaceSettingsInput = {
   /** JSON of the user's own theme (client/src/shared/theme/custom-theme.ts), at most 600 characters. */
   customTheme?: InputMaybe<Scalars['String']['input']>;
   defaultLanguage?: InputMaybe<Scalars['String']['input']>;
+  /** Show the editor tour on new projects. Default true. */
+  editorTourEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How many times the editor tour has been shown. Non-negative integer. */
+  editorTourShown?: InputMaybe<Scalars['Int']['input']>;
   editorWidth?: InputMaybe<Scalars['Float']['input']>;
   focusContrast?: InputMaybe<Scalars['String']['input']>;
   focusMode?: InputMaybe<Scalars['String']['input']>;

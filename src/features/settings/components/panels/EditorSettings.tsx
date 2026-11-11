@@ -17,6 +17,7 @@ interface EditorSettingsProps {
       lyricsSearchSpeed?: string;
       srt?: { defaultSubtitleDuration?: number; minSubtitleGap?: number; snapToNextLine?: boolean };
     };
+    interface?: { editorTourEnabled?: boolean };
   };
   updateSetting: (path: string, value: unknown) => void;
   searchTerm?: string;
@@ -138,6 +139,9 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
             <SettingOption value="normal">{t('settings.options.speeds.normal')}</SettingOption>
             <SettingOption value="slow">{t('settings.options.speeds.slow')}</SettingOption>
           </SettingSelect>
+        </SettingRow>
+        <SettingRow label={t('settings.editor.tourEnabled')} description={t('settings.editor.tourEnabledDesc')}>
+          <Toggle id="toggle-editor-tour" label={t('settings.editor.tourEnabled')} checked={settings.interface?.editorTourEnabled ?? true} onChange={(v: boolean) => updateSetting('interface.editorTourEnabled', v)} />
         </SettingRow>
       </Section>
 

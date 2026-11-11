@@ -135,6 +135,8 @@ export default {
     syncFlashDurationDesc: "Duration of the 'just synced' line flash and nudge indicator",
     lyricsSearchSpeed: "Lyrics search speed",
     lyricsSearchSpeedDesc: "How quickly the lyrics search triggers after typing",
+    tourEnabled: "Show editor tour on new projects",
+    tourEnabledDesc: "A short walkthrough of the editor each time you create a project.",
     editorSection: "Editor"
   },
 

@@ -95,7 +95,7 @@ const TABS: TabMeta[] = [
 const RESET_PATHS: Record<string, string[]> = {
   playback: ['playback.speedBounds', 'playback.speedPresets', 'playback.autoRewindOnPause', 'playback.seekTime', 'playback.seekPlays', 'playback.showWaveform', 'playback.waveformSnap'],
   autoStamp: ['autoStamp'],
-  editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt'],
+  editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt', 'interface.editorTourEnabled'],
   export: ['export'],
   shortcuts: ['shortcuts'],
   advanced: ['advanced'],

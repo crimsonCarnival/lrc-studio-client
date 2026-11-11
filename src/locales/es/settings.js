@@ -135,6 +135,8 @@ export default {
     syncFlashDurationDesc: "Duración del destello al sincronizar una línea",
     lyricsSearchSpeed: "Velocidad de búsqueda de letra",
     lyricsSearchSpeedDesc: "Rapidez con la que se activa la búsqueda al escribir",
+    tourEnabled: "Mostrar el recorrido del editor en proyectos nuevos",
+    tourEnabledDesc: "Un breve recorrido por el editor cada vez que creas un proyecto.",
     editorSection: "Editor"
   },
 

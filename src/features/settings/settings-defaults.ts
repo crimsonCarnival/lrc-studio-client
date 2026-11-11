@@ -78,7 +78,9 @@ export const DEFAULT_SETTINGS = {
     autoHideHeader: false,
     mobileTab: 'editor',
     toastPosition: 'bottom-right',
-    keepThemeOnSignOut: true
+    keepThemeOnSignOut: true,
+    editorTourShown: 0,
+    editorTourEnabled: true
   },
   shortcuts: {
     mark: ['Enter'],

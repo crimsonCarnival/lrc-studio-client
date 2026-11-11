@@ -73,6 +73,8 @@ const GET_SETTINGS = /* GraphQL */ `
         mobileTab
         toastPosition
         keepThemeOnSignOut
+        editorTourShown
+        editorTourEnabled
       }
       shortcuts {
         mark nudgeLeft nudgeRight nudgeLeftFine nudgeRightFine
