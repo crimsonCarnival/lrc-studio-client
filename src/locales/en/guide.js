@@ -30,14 +30,14 @@ export default {
     wordsHintLines: "Press Play, then Mark to stamp the line. Words unlocks. Switch to it, then Mark again on each word. Nothing here is saved.",
     wordsHintWords: "Mark (or Space) as each word starts; the fill follows the playhead. Nothing here is saved.",
     counterpartsLabel: "Counterparts demo",
-    counterpartsHint: "Press Play and use Counterpart here when you hear a background vocal, then name it. A counterpart needs a synced line, and word times to know how long it lasts. Nothing here is saved.",
+    counterpartsHint: "Press Play and use Counterpart here when you hear a background vocal, then name it. In the real editor, stamp the counterpart's own words in Words mode too, or it stops when the next line starts. Nothing here is saved.",
     counterpartSave: "Save",
     srtLabel: "Subtitle timing demo",
     srtStart: "Start",
     srtEnd: "End",
     srtLength: "Length",
     srtSeconds: "{{value}} s",
-    srtHint: "Press Play, Mark once for the start and again for the end. An end before the start is ignored. Nothing here is saved.",
+    srtHint: "Press Play, Mark once for the start and again for the end. An end before the start is ignored, and once both are set, press Reset to start over. Nothing here is saved.",
   },
   mock: {
     setup: {
@@ -124,13 +124,13 @@ export default {
     },
     counterparts: {
       title: "Counterparts",
-      body1: "A counterpart is a background vocal that sings over a line you have already synced. It needs a synced line, and word times so LRC Studio knows how long it lasts.",
-      body2: "Counterparts are captured while the song plays: press the capture key when you hear one, type or pick its text, then fine-tune it in its own lane.",
+      body1: "A counterpart is a background vocal that sings over a line you have already synced. It needs a synced line, and its own words stamped in Words mode: without word times it stops when the next line starts, and exports lose how long it lasts.",
+      body2: "In the editor header, turn on the Counterparts toggle, then press the capture key while the song plays whenever you hear one. Type or pick its text, then fine-tune it in its own lane.",
     },
     srt: {
       title: "Subtitle timing",
       body1: "In SRT mode, a second mark on the same line sets its end time, so each line becomes a subtitle block with a start and an end.",
-      body2: "Each subtitle block is a start and an end. The end must come after the start, so a second mark that lands earlier is ignored.",
+      body2: "Each subtitle block is a start and an end. The end must come after the start, so a second mark that lands earlier is ignored. To get into SRT mode, on desktop open the ⋯ menu in the editor header and tick \"End times (SRT)\"; on a phone, open Tools and pick \"SRT: start and end times\" in the Mode group.",
     },
     sections: {
       title: "Sections & singers",

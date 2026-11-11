@@ -1,6 +1,6 @@
 type Mode = 'lines' | 'words';
 
-export type WordsDemoState = { lineStamped: boolean; mode: Mode; wordStamps: (number | null)[]; activeWord: number };
+export type WordsDemoState = { lineStamped: boolean; lineTime: number | null; mode: Mode; wordStamps: (number | null)[]; activeWord: number };
 
 type WordsDemoAction =
   | { type: 'markLine' | 'markWord'; time: number }
@@ -9,6 +9,7 @@ type WordsDemoAction =
 
 export const initialWordsDemoState = (wordCount: number): WordsDemoState => ({
   lineStamped: false,
+  lineTime: null,
   mode: 'lines',
   wordStamps: Array.from({ length: wordCount }, () => null),
   activeWord: 0,
@@ -19,7 +20,7 @@ export const initialWordsDemoState = (wordCount: number): WordsDemoState => ({
 export function wordsDemoReducer(state: WordsDemoState, action: WordsDemoAction): WordsDemoState {
   switch (action.type) {
     case 'markLine':
-      return { ...state, lineStamped: true };
+      return { ...state, lineStamped: true, lineTime: action.time };
     case 'setMode':
       return action.mode === 'words' && !state.lineStamped ? state : { ...state, mode: action.mode };
     case 'markWord':

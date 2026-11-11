@@ -8,9 +8,10 @@ describe('wordsDemoReducer', () => {
     expect(wordsDemoReducer(start, { type: 'setMode', mode: 'words' }).mode).toBe('lines');
   });
 
-  it('unlocks words after markLine', () => {
+  it('unlocks words after markLine and records its time', () => {
     const stamped = wordsDemoReducer(start, { type: 'markLine', time: 6 });
     expect(stamped.lineStamped).toBe(true);
+    expect(stamped.lineTime).toBe(6);
     expect(wordsDemoReducer(stamped, { type: 'setMode', mode: 'words' }).mode).toBe('words');
   });
 

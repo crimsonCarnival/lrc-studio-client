@@ -74,11 +74,10 @@ export default function WordsDemo() {
           {t('editor.modeWords')}
         </button>
       </div>
-      {lockedShown && !state.lineStamped && (
-        <p role="status" className="rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-zinc-300">
-          {t('editor.modeWordsLocked')}
-        </p>
-      )}
+      {/* Always mounted so screen readers announce the text when it appears. */}
+      <div role="status" className={lockedShown && !state.lineStamped ? 'rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-zinc-300' : undefined}>
+        {lockedShown && !state.lineStamped ? t('editor.modeWordsLocked') : null}
+      </div>
 
       {wordsMode ? (
         <ol aria-label={t('guide.demo.wordsList')} className="flex flex-wrap gap-2 rounded-lg bg-zinc-800/50 p-3">
@@ -112,7 +111,7 @@ export default function WordsDemo() {
                 className={`flex items-center gap-3 min-h-11 px-3 rounded-lg ${i === STAMPED_INDEX ? 'bg-zinc-800 border border-dashed border-zinc-700' : 'bg-zinc-800/50'}`}
               >
                 <span className={`shrink-0 rounded-pill border px-2.5 py-0.5 font-mono text-xs tabular-nums ${stamped ? 'bg-primary/25 border-primary/50 text-primary' : 'border-zinc-700 text-subtle'}`}>
-                  {stamped ? formatTimestamp(time) : '--:--.--'}
+                  {state.lineTime !== null && stamped ? formatTimestamp(state.lineTime) : '--:--.--'}
                 </span>
                 <span className="min-w-0 truncate text-sm text-zinc-300">{t(line.key as never)}</span>
               </li>

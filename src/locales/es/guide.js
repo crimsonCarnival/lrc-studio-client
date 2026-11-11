@@ -30,14 +30,14 @@ export default {
     wordsHintLines: "Pulsa Reproducir y luego Marcar para sellar la línea. Se desbloquea Palabras. Cambia a él y vuelve a marcar en cada palabra. Nada de esto se guarda.",
     wordsHintWords: "Marca (o Espacio) cuando empieza cada palabra; el relleno sigue al cabezal. Nada de esto se guarda.",
     counterpartsLabel: "Demo de contrapartes",
-    counterpartsHint: "Pulsa Reproducir y usa Contracanto aquí cuando oigas una voz de fondo; luego ponle nombre. Una contraparte necesita una línea sincronizada y tiempos por palabra para saber cuánto dura. Nada de esto se guarda.",
+    counterpartsHint: "Pulsa Reproducir y usa Contracanto aquí cuando oigas una voz de fondo; luego ponle nombre. En el editor real, sella también las palabras de la contraparte en modo Palabras, o terminará cuando empiece la siguiente línea. Nada de esto se guarda.",
     counterpartSave: "Guardar",
     srtLabel: "Demo de tiempos de subtítulos",
     srtStart: "Inicio",
     srtEnd: "Fin",
     srtLength: "Duración",
     srtSeconds: "{{value}} s",
-    srtHint: "Pulsa Reproducir, marca una vez para el inicio y otra para el final. Un final anterior al inicio se ignora. Nada de esto se guarda.",
+    srtHint: "Pulsa Reproducir, marca una vez para el inicio y otra para el final. Un final anterior al inicio se ignora y, con ambos fijados, pulsa Reiniciar para empezar de nuevo. Nada de esto se guarda.",
   },
   mock: {
     setup: {
@@ -124,13 +124,13 @@ export default {
     },
     counterparts: {
       title: "Contrapartes",
-      body1: "Una contraparte es una voz de fondo que canta sobre una línea ya sincronizada. Necesita una línea sincronizada y tiempos por palabra para que LRC Studio sepa cuánto dura.",
-      body2: "Las contrapartes se capturan mientras suena la canción: pulsa la tecla de captura cuando oigas una, escribe o elige su texto y afínala en su propio carril.",
+      body1: "Una contraparte es una voz de fondo que canta sobre una línea ya sincronizada. Necesita una línea sincronizada y sus propias palabras selladas en modo Palabras: sin tiempos por palabra termina cuando empieza la siguiente línea, y las exportaciones pierden cuánto dura.",
+      body2: "En el encabezado del editor, activa el interruptor Contracantos y pulsa la tecla de captura mientras suena la canción cuando oigas uno. Escribe o elige su texto y afínalo en su propio carril.",
     },
     srt: {
       title: "Tiempos de subtítulos",
       body1: "En modo SRT, una segunda marca en la misma línea fija su tiempo final, así cada línea se convierte en un bloque de subtítulo con inicio y fin.",
-      body2: "Cada bloque de subtítulo tiene un inicio y un final. El final debe ir después del inicio, así que una segunda marca anterior se ignora.",
+      body2: "Cada bloque de subtítulo tiene un inicio y un final. El final debe ir después del inicio, así que una segunda marca anterior se ignora. Para entrar en modo SRT, en escritorio abre el menú ⋯ del encabezado del editor y marca \"Tiempos de fin (SRT)\"; en el móvil, abre Herramientas y elige \"SRT: tiempos de inicio y fin\" en el grupo Modo.",
     },
     sections: {
       title: "Secciones y cantantes",

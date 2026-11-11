@@ -15,6 +15,12 @@ describe('srtDemoReducer', () => {
     expect(srtDemoReducer({ start: 4, end: null }, { type: 'mark', time: 4 }).end).toBeNull();
   });
 
+  it('ignores further marks once the end is set, until reset', () => {
+    const done = { start: 4, end: 7 };
+    expect(srtDemoReducer(done, { type: 'mark', time: 9 })).toEqual(done);
+    expect(srtDemoReducer(done, { type: 'mark', time: 1 })).toEqual(done);
+  });
+
   it('resets', () => {
     expect(srtDemoReducer({ start: 1, end: 2 }, { type: 'reset' })).toEqual(initialSrtDemoState);
   });
