@@ -62,6 +62,7 @@ describe('GuidePage', () => {
     const gate = new Promise<void>((r) => { release = r; });
     const loadSpy = vi.spyOn(GUIDE_SECTIONS[1], 'load').mockImplementation(() => gate.then(() => ({ default: () => null })));
     window.location.hash = '#sync';
+    await new Promise((r) => setTimeout(r, 0)); // let jsdom's async hashchange fire before the page listens
     renderGuide();
     await new Promise((r) => setTimeout(r, 50));
     expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
@@ -74,8 +75,24 @@ describe('GuidePage', () => {
     window.location.hash = '';
   });
 
+  it('does not scroll if the reader interacts while sections are loading', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => { release = r; });
+    const loadSpy = vi.spyOn(GUIDE_SECTIONS[1], 'load').mockImplementation(() => gate.then(() => ({ default: () => null })));
+    window.location.hash = '#sync';
+    await new Promise((r) => setTimeout(r, 0)); // let jsdom's async hashchange fire before the page listens
+    renderGuide();
+    fireEvent.wheel(screen.getByRole('navigation'));
+    release();
+    await new Promise((r) => setTimeout(r, 100));
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    loadSpy.mockRestore();
+    window.location.hash = '';
+  });
+
   it('resolves the import alias to its own element', async () => {
     window.location.hash = '#import';
+    await new Promise((r) => setTimeout(r, 0)); // let jsdom's async hashchange fire before the page listens
     renderGuide();
     await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1));
     expect((vi.mocked(Element.prototype.scrollIntoView).mock.contexts[0] as Element).id).toBe('import');

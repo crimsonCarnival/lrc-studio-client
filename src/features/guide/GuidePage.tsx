@@ -15,6 +15,7 @@ export default function GuidePage() {
   // Captured once, synchronously, before a global URL-param-sync effect elsewhere
   // in the app replaces the location (dropping the hash) shortly after mount.
   const initialHashRef = useRef(typeof window !== 'undefined' ? window.location.hash : '');
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const editorPath = lastEditorPath();
 
   useEffect(() => {
@@ -26,13 +27,24 @@ export default function GuidePage() {
     const targetId = id === 'import' ? 'start' : id;
     const upTo = GUIDE_SECTIONS.findIndex((s) => s.id === targetId) + 1;
     let cancelled = false;
+    // Any sign the reader took over (scroll, nav pill, key, hash change) cancels the pending scroll.
+    const targets: EventTarget[] = [window];
+    if (scrollerRef.current) targets.push(scrollerRef.current);
+    const events = ['wheel', 'touchstart', 'keydown', 'pointerdown', 'hashchange'];
+    const cancel = () => {
+      cancelled = true;
+      for (const target of targets) for (const type of events) target.removeEventListener(type, cancel);
+    };
+    for (const target of targets) for (const type of events) target.addEventListener(type, cancel, { passive: true });
     Promise.all(GUIDE_SECTIONS.slice(0, upTo).map((s) => s.load()))
       .catch(() => undefined)
       .then(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())))
       .then(() => {
-        if (!cancelled) document.getElementById(id)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+        if (cancelled) return;
+        cancel();
+        document.getElementById(id)?.scrollIntoView({ behavior: 'auto', block: 'start' });
       });
-    return () => { cancelled = true; };
+    return cancel;
   }, []);
 
   const replayTour = () => {
@@ -42,7 +54,7 @@ export default function GuidePage() {
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto">
       <div className="flex flex-col px-4 pt-8 pb-24 max-w-3xl mx-auto w-full animate-fade-in">
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
