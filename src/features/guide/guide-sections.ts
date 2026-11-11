@@ -33,6 +33,7 @@ const BODIES: Partial<Record<GuideSectionId, GuideSectionDef['load']>> = {
   autoStamp: () => import('./sections/AutoStampSection'),
   lyricsSearch: () => import('./sections/LyricsSearchSection'),
   subtitles: () => import('./sections/SubtitlesSection'),
+  sessions: () => import('./sections/SessionsSection'),
   share: () => import('./sections/ShareSection'),
   look: () => import('./sections/LookSection'),
 };
