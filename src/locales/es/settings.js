@@ -287,6 +287,8 @@ export default {
     rangeSelectDesc: "Mantén y haz clic para seleccionar un bloque",
     toggleSelectLabel: "Selección individual",
     toggleSelectDesc: "Mantén y haz clic para añadir o quitar líneas",
+    loopClickLabel: "Bucle en la onda",
+    loopClickDesc: "Mantén y haz clic en la onda para fijar el inicio del bucle; otro clic fija el final",
     playPauseLabel: "Reproducir / pausar",
     playPauseDesc: "",
     seekBackwardLabel: "Retroceder",

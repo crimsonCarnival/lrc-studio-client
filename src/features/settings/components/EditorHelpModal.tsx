@@ -65,6 +65,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
     player: [
       { section: t('shortcuts.sections.playback'), items: [
         { keys: resolveShortcut(settings.shortcuts?.playPause?.[0] || 'Space'),            desc: t('shortcuts.playPause') },
+        { keys: [...resolveModifier(settings.shortcuts?.loopClick?.[0] || 'Shift'), t('shortcuts.selection.click')], desc: t('shortcuts.loopClick') },
         { keys: resolveShortcut(settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft'), desc: t('shortcuts.seekBackward', { val: seekTime }) },
         { keys: resolveShortcut(settings.shortcuts?.seekForward?.[0] || 'ArrowRight'), desc: t('shortcuts.seekForward', { val: seekTime }) },
         { keys: resolveShortcut(settings.shortcuts?.mute?.[0] || 'm'),                    desc: t('shortcuts.mute') },

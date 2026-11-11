@@ -76,7 +76,7 @@ const GET_SETTINGS = /* GraphQL */ `
       shortcuts {
         mark nudgeLeft nudgeRight nudgeLeftFine nudgeRightFine
         addLine deleteLine clearTimestamp switchMode deselect showHelp
-        rangeSelect toggleSelect playPause seekForward seekBackward mute
+        rangeSelect toggleSelect loopClick playPause seekForward seekBackward mute
         speedUp speedDown addSecondary addTranslation toggleTranslation
         focusSync focusPreview focusPlayback captureAdLib
         alignLeft alignCenter alignRight toggleVisualizer toggleFullLyrics togglePlayer

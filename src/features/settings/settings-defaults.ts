@@ -94,6 +94,8 @@ export const DEFAULT_SETTINGS = {
     showHelp: ['?'],
     rangeSelect: ['Shift'],
     toggleSelect: ['Ctrl'],
+    // A modifier held while clicking the waveform: click once for the loop start, again for its end.
+    loopClick: ['Shift'],
     // Player
     playPause: ['Space'],
     seekForward: ['ArrowRight'],

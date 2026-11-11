@@ -32,6 +32,7 @@ const SHORTCUTS: ShortcutDef[] = [
   { id: 'rangeSelect', group: 'editor', modifier: true, fallback: 'Shift' },
   { id: 'toggleSelect', group: 'editor', modifier: true, fallback: 'Ctrl' },
   { id: 'playPause', group: 'player', fallback: 'Space' },
+  { id: 'loopClick', group: 'player', modifier: true, fallback: 'Shift' },
   { id: 'seekBackward', group: 'player', fallback: 'ArrowLeft' },
   { id: 'seekForward', group: 'player', fallback: 'ArrowRight' },
   { id: 'mute', group: 'player', fallback: 'm' },
@@ -126,8 +127,9 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
     if (def.modifier) {
       const mod = e.key === 'Shift' ? 'Shift' : e.key === 'Control' || e.key === 'Meta' ? 'Ctrl' : e.key === 'Alt' ? 'Alt' : null;
       if (!mod) return;
-      const other = SHORTCUTS.find((s) => s.modifier && s.id !== def.id)!;
-      if (mod === valueOf(other)) { setRejected(def.id); setRecording(null); return; }
+      // Modifiers clash only within a group: they act on different surfaces (lines vs waveform).
+      const taken = SHORTCUTS.some((s) => s.modifier && s.group === def.group && s.id !== def.id && mod === valueOf(s));
+      if (taken) { setRejected(def.id); setRecording(null); return; }
       next = mod;
     } else {
       if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;

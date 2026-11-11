@@ -1,6 +1,7 @@
 export default {
   title: "Keyboard Shortcuts",
   playPause: "Play / Pause",
+  loopClick: "Loop on the waveform: click the start, then the end",
   mark: "Mark current line",
   captureAdLib: "Capture a counterpart here",
   nudgeLeft: "Nudge timestamp -{{val}}s",

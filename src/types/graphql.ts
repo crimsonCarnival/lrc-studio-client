@@ -2084,6 +2084,7 @@ export type ShortcutsSettings = {
   nudgeLeftFine?: Maybe<Array<Scalars['String']['output']>>;
   nudgeRight?: Maybe<Array<Scalars['String']['output']>>;
   nudgeRightFine?: Maybe<Array<Scalars['String']['output']>>;
+  loopClick?: Maybe<Array<Scalars['String']['output']>>;
   playPause?: Maybe<Array<Scalars['String']['output']>>;
   rangeSelect?: Maybe<Array<Scalars['String']['output']>>;
   seekBackward?: Maybe<Array<Scalars['String']['output']>>;
@@ -2119,6 +2120,7 @@ export type ShortcutsSettingsInput = {
   nudgeLeftFine?: InputMaybe<Array<Scalars['String']['input']>>;
   nudgeRight?: InputMaybe<Array<Scalars['String']['input']>>;
   nudgeRightFine?: InputMaybe<Array<Scalars['String']['input']>>;
+  loopClick?: InputMaybe<Array<Scalars['String']['input']>>;
   playPause?: InputMaybe<Array<Scalars['String']['input']>>;
   rangeSelect?: InputMaybe<Array<Scalars['String']['input']>>;
   seekBackward?: InputMaybe<Array<Scalars['String']['input']>>;

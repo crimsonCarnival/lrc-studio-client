@@ -287,6 +287,8 @@ export default {
     rangeSelectDesc: "Hold + Click to select a continuous block of lines",
     toggleSelectLabel: "Pick individual lines",
     toggleSelectDesc: "Hold + Click to add/remove single lines",
+    loopClickLabel: "Loop on the waveform",
+    loopClickDesc: "Hold + Click the waveform to set a loop start, then click again for its end",
     playPauseLabel: "Play / Pause",
     playPauseDesc: "Toggle playback",
     seekBackwardLabel: "Seek Backward",
