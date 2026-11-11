@@ -767,7 +767,9 @@ export default function PublicLyrics({
   // read the same and don't drift out of sync with each other. Lives outside each view's
   // scrolling/centering area so its own height never affects line layout.
   const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
-    <div className="relative z-10 shrink-0 px-6 pt-1 sm:pt-4 lg:pt-24 pb-0 sm:px-10 lg:px-14">
+    // Desktop: the alignment control floats in the top-right of the same band (lg:top-23, 32px
+    // tall), so a right-aligned title is moved below it (pt-32) instead of running under it.
+    <div className={`relative z-10 shrink-0 px-6 pt-1 sm:pt-4 ${alignment === 'right' ? 'lg:pt-32' : 'lg:pt-24'} pb-0 sm:px-10 lg:px-14`}>
       {/* The contour lines run behind the title and its rule; hide them where the header sits. Solid and confined to the header: it used to spill a gradient onto the first lyric line, and nothing here depends on playback state. */}
       <div
         aria-hidden
