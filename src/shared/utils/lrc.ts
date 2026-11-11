@@ -45,7 +45,7 @@ function parseSectionText(raw: string): { label: string; singer?: string } {
  * If the line has secondaryWords with timestamps, serialize with <mm:ss.xx> tokens.
  * Otherwise fall back to line.secondary.
  */
-function buildSecondaryText(line: EditorLine, wordPrecision?: string): string | null {
+export function buildSecondaryText(line: EditorLine, wordPrecision?: string): string | null {
   if (line.secondaryWords?.length && line.secondaryWords.some(w => w.time != null)) {
     return formatWordsToLrc(line.secondaryWords, wordPrecision);
   }
