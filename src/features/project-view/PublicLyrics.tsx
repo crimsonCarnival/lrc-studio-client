@@ -713,7 +713,7 @@ export default function PublicLyrics({
       // Phones: in the controls row above the lyrics, so it never covers them. Desktop: floating,
       // in the same row as the info panel's toggle (top-23 = 64px header + 28px), and to its left
       // while that toggle is showing.
-      className={`z-20 flex w-fit items-center rounded-lg border border-border bg-card p-0.5 lg:absolute lg:top-23 ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
+      className={`z-20 flex w-fit items-center rounded-lg border border-border bg-card p-0.5 lg:absolute lg:top-[calc(var(--header-offset)+1.75rem)] ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
     >
       {(['left', 'center', 'right'] as const).map((align) => {
         const label = t(ALIGN_LABEL_KEYS[align]);
@@ -769,7 +769,7 @@ export default function PublicLyrics({
   const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
     // Desktop: the alignment control floats in the top-right of the same band (lg:top-23, 32px
     // tall), so a right-aligned title is moved below it (pt-32) instead of running under it.
-    <div className={`relative z-10 shrink-0 px-6 pt-1 sm:pt-4 ${alignment === 'right' ? 'lg:pt-32' : 'lg:pt-24'} pb-0 sm:px-10 lg:px-14`}>
+    <div className={`relative z-10 shrink-0 px-6 pt-1 sm:pt-4 ${alignment === 'right' ? 'lg:pt-[calc(var(--header-offset)+4rem)]' : 'lg:pt-[calc(var(--header-offset)+2rem)]'} pb-0 sm:px-10 lg:px-14`}>
       {/* The contour lines run behind the title and its rule; hide them where the header sits. Solid and confined to the header: it used to spill a gradient onto the first lyric line, and nothing here depends on playback state. */}
       <div
         aria-hidden

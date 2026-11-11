@@ -111,8 +111,33 @@ function FeedStatus() {
 /** Opens the visualizer picker. Styled to sit beside the playback bar's full-lyrics toggle. */
 export function VisualizerButton() {
   const { t } = useTranslation();
-  const { kind, setKind, bloom, setBloom } = useVisualizer();
-  const [open, setOpen] = useState(false);
+  const { kind, setPickerOpen } = useVisualizer();
+  const on = kind !== 'off';
+
+  return (
+    <Tip content={<ShortcutHint label={t('shortcuts.openVisualizer')} shortcut="openVisualizer" fallback="Shift+V" />}>
+      <button
+        type="button"
+        onClick={() => setPickerOpen(true)}
+        aria-haspopup="dialog"
+        aria-label={t('projectView.visualizer.button')}
+        className={`inline-flex items-center justify-center gap-1.5 h-9 coarse:h-11 max-lg:size-11 max-xl:min-w-9 coarse:max-xl:min-w-11 px-2 xl:px-3 shrink-0 rounded-lg border text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${on ? 'border-primary/40 bg-primary/15 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
+      >
+        <Icon name="graphic_eq" size={18} />
+        <span className="max-xl:sr-only">{t('projectView.visualizer.button')}</span>
+      </button>
+    </Tip>
+  );
+}
+
+/**
+ * The picker dialog, mounted once by the page rather than by the button: the button lives in
+ * the playback bar, which is gone while the player is hidden, and the shortcut still has to
+ * open the dialog then.
+ */
+export function VisualizerPicker() {
+  const { t } = useTranslation();
+  const { kind, setKind, bloom, setBloom, pickerOpen, setPickerOpen } = useVisualizer();
   const [category, setCategory] = useState<VisualizerCategory>('all');
   const [tipDismissed, setTipDismissed] = useState(() => {
     try {
@@ -142,22 +167,9 @@ export function VisualizerButton() {
 
   return (
     <>
-      <Tip content={<ShortcutHint label={t('shortcuts.toggleVisualizer')} shortcut="toggleVisualizer" fallback="v" />}>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-        aria-label={t('projectView.visualizer.button')}
-        className={`inline-flex items-center justify-center gap-1.5 h-9 coarse:h-11 max-lg:size-11 max-xl:min-w-9 coarse:max-xl:min-w-11 px-2 xl:px-3 shrink-0 rounded-lg border text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${on ? 'border-primary/40 bg-primary/15 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
-      >
-        <Icon name="graphic_eq" size={18} />
-        <span className="max-xl:sr-only">{t('projectView.visualizer.button')}</span>
-      </button>
-      </Tip>
-
       <ResponsiveModal
-        open={open}
-        onOpenChange={setOpen}
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
         title={t('projectView.visualizer.title')}
         description={t('projectView.visualizer.description')}
         dialogProps={{

@@ -30,6 +30,9 @@ export interface VisualizerContextValue {
   stopTabAudio: () => void;
   bloom: boolean;
   setBloom: (enabled: boolean) => void;
+  /** The picker dialog. Held here so a shortcut can open it with the playback bar hidden. */
+  pickerOpen: boolean;
+  setPickerOpen: (open: boolean) => void;
 }
 
 export const VisualizerContext = createContext<VisualizerContextValue | null>(null);

@@ -45,6 +45,7 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
   const [tabError, setTabError] = useState<TabAudioError | null>(null);
   const [canShareTab] = useState(tabAudioSupported);
   const [bloom, setBloomState] = useState<boolean>(readStoredBloom);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const setBloom = useCallback((next: boolean) => {
     setBloomState(next);
@@ -140,8 +141,8 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
   }, [audioRef]);
 
   const value = useMemo<VisualizerContextValue>(() => ({
-  kind, setKind, toggleKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom,
-  }), [kind, setKind, toggleKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom]);
+  kind, setKind, toggleKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom, pickerOpen, setPickerOpen,
+  }), [kind, setKind, toggleKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom, pickerOpen]);
 
 return <VisualizerContext.Provider value={value}>{children}</VisualizerContext.Provider>;
 }

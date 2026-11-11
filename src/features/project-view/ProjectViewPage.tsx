@@ -28,6 +28,8 @@ import PublicShortcuts from './PublicShortcuts';
 import { readStoredAlignment, storeAlignment } from './lyrics-alignment';
 import type { LyricsAlignment } from './lyrics-alignment';
 import { ShortcutHint } from '@features/settings/components/ShortcutHint';
+import { useSettings } from '@/features/settings/useSettings';
+import { useAutoHideHeader } from './useAutoHideHeader';
 import { PublicHeaderPlayer } from './PublicHeaderPlayer';
 import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
@@ -47,7 +49,7 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { projectPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
 import { VisualizerProvider } from '@features/visualizer/VisualizerProvider';
 import { AudioVisualizerCanvas } from '@features/visualizer/components/AudioVisualizerCanvas';
-import { VisualizerButton } from '@features/visualizer/components/VisualizerButton';
+import { VisualizerButton, VisualizerPicker } from '@features/visualizer/components/VisualizerButton';
 import { hasCJK } from '@/shared/utils/furigana';
 import { loadCjkFont } from '@/app/cjk-font';
 
@@ -357,6 +359,10 @@ function ProjectViewPageInner() {
   const [playerHidden, setPlayerHidden] = useState(() => {
     try { return localStorage.getItem(PLAYER_HIDDEN_KEY) === '1'; } catch { return false; }
   });
+  // With the player hidden the page is meant to be all lyrics, so the header can step aside too.
+  const { settings } = useSettings();
+  useAutoHideHeader(!!settings.interface?.autoHideHeader && playerHidden);
+
   const togglePlayerHidden = useCallback(() => {
     setPlayerHidden((prev) => {
       try { localStorage.setItem(PLAYER_HIDDEN_KEY, prev ? '0' : '1'); } catch { /* still applies for this session */ }
@@ -502,6 +508,7 @@ function ProjectViewPageInner() {
       viewerMode
     >
     <VisualizerProvider>
+    <VisualizerPicker />
     <PublicShortcuts
       onAlign={changeAlignment}
       onToggleFullLyrics={toggleFullLyrics}
@@ -554,7 +561,7 @@ function ProjectViewPageInner() {
                 top-23 / right-7 = the 64px header + the card's 28px padding, i.e. exactly
                 where that toggle sat, so the button does not jump when the card collapses. */}
             {infoCollapsed && (
-              <div className="hidden lg:block absolute top-23 right-7 z-20">
+              <div className="hidden lg:block absolute top-[calc(var(--header-offset)+1.75rem)] right-7 z-20">
                 <Tip content={t('projectView.expandInfo')}>
                   <Button
                     size="icon"
@@ -612,8 +619,8 @@ function ProjectViewPageInner() {
             className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t ${infoCollapsed ? 'lg:hidden max-lg:fixed max-lg:inset-x-0 max-lg:z-20 max-lg:max-h-[40dvh] bg-card' : `bg-card/40 ${playerHidden ? 'max-lg:pb-12' : 'max-lg:pb-64'}`}`}
             style={infoCollapsed ? { bottom: playerHidden ? 'env(safe-area-inset-bottom)' : playbarHeight } : undefined}
           >
-            <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20 lg:top-16" />
-            <div className={`px-5 lg:px-7 lg:pt-23 flex flex-col gap-4 min-h-full ${infoCollapsed ? 'max-lg:pt-2 max-lg:pb-2 lg:pb-6' : 'pt-6 pb-6'}`}>
+            <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20 lg:top-(--header-offset)" />
+            <div className={`px-5 lg:px-7 lg:pt-[calc(var(--header-offset)+1.75rem)] flex flex-col gap-4 min-h-full ${infoCollapsed ? 'max-lg:pt-2 max-lg:pb-2 lg:pb-6' : 'pt-6 pb-6'}`}>
               <ProjectInfoPanel
                 project={displayProject!}
                 cover={cover}

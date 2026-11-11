@@ -21,7 +21,7 @@ interface PublicShortcutsProps {
 export default function PublicShortcuts({ onAlign, onToggleFullLyrics, onTogglePlayer }: PublicShortcutsProps) {
   const { settings } = useSettings();
   const { togglePlay, seek, currentTime, hasMedia } = usePlayer();
-  const { toggleKind } = useVisualizer();
+  const { toggleKind, setPickerOpen } = useVisualizer();
 
   useEffect(() => {
     const step = settings.playback?.seekTime ?? 5;
@@ -43,12 +43,13 @@ export default function PublicShortcuts({ onAlign, onToggleFullLyrics, onToggleP
       else if (matchKey(e, keys?.alignCenter?.[0] || 'Shift+C')) run(() => onAlign('center'));
       else if (matchKey(e, keys?.alignRight?.[0] || 'Shift+R')) run(() => onAlign('right'));
       else if (matchKey(e, keys?.toggleFullLyrics?.[0] || 'l')) run(onToggleFullLyrics);
+      else if (matchKey(e, keys?.openVisualizer?.[0] || 'Shift+V')) run(() => setPickerOpen(true));
       else if (matchKey(e, keys?.toggleVisualizer?.[0] || 'v')) run(toggleKind);
       else if (onTogglePlayer && matchKey(e, keys?.togglePlayer?.[0] || 'p')) run(onTogglePlayer);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [settings.shortcuts, settings.playback?.seekTime, togglePlay, seek, currentTime, hasMedia, onAlign, onToggleFullLyrics, onTogglePlayer, toggleKind]);
+  }, [settings.shortcuts, settings.playback?.seekTime, togglePlay, seek, currentTime, hasMedia, onAlign, onToggleFullLyrics, onTogglePlayer, toggleKind, setPickerOpen]);
 
   return null;
 }

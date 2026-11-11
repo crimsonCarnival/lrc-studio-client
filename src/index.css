@@ -1737,3 +1737,37 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   visibility: hidden !important;
 }
 
+
+/* ── Auto-hiding app header (public project view, see useAutoHideHeader) ──
+   --header-offset is the height the page reserves for the fixed header. Registered, so it
+   animates and everything sized from it resizes smoothly as the header slides away. */
+@property --header-offset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 4rem;
+}
+
+:root {
+  --header-offset: 4rem;
+  transition: --header-offset 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root[data-header-hidden] {
+  --header-offset: 0px;
+}
+
+/* `translate`, not `transform`: the header's fade-in animation holds the transform. */
+[data-app-header] {
+  transition: translate 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root[data-header-hidden] [data-app-header] {
+  translate: 0 -100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-app-header] {
+    transition: none;
+  }
+}

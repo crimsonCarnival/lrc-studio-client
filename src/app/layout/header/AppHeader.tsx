@@ -213,7 +213,7 @@ export function AppHeader({
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl ${isWorkspace ? 'border-b border-zinc-800' : ''}`}>
+      <header data-app-header className={`fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl ${isWorkspace ? 'border-b border-zinc-800' : ''}`}>
 
         <div className={`relative mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2 ${isWorkspace ? '' : 'max-w-[1600px]'}`}>
 
