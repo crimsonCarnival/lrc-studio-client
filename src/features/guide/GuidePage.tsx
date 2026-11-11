@@ -20,8 +20,19 @@ export default function GuidePage() {
   useEffect(() => {
     const hash = initialHashRef.current;
     if (!hash) return;
-    const el = document.getElementById(hash.slice(1));
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const id = hash.slice(1);
+    // Bodies load lazily and are taller than their fallbacks, so scrolling before
+    // the ones above the target resolve would land short of it. `import` is an alias of `start`.
+    const targetId = id === 'import' ? 'start' : id;
+    const upTo = GUIDE_SECTIONS.findIndex((s) => s.id === targetId) + 1;
+    let cancelled = false;
+    Promise.all(GUIDE_SECTIONS.slice(0, upTo).map((s) => s.load()))
+      .catch(() => undefined)
+      .then(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())))
+      .then(() => {
+        if (!cancelled) document.getElementById(id)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+      });
+    return () => { cancelled = true; };
   }, []);
 
   const replayTour = () => {
@@ -75,7 +86,7 @@ export default function GuidePage() {
               {GUIDE_SECTIONS.filter((s) => s.group === group).map((section) => (
                 <GuideSection key={section.id} section={section}>
                   {/* Legacy anchor: the old "Importing lyrics" section folded into Start. */}
-                  {section.id === 'start' && <span id="import" />}
+                  {section.id === 'start' && <span id="import" className="absolute top-0 scroll-mt-20" />}
                 </GuideSection>
               ))}
             </div>

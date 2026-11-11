@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import i18n from 'i18next';
 import GuidePage from './GuidePage';
-import { GUIDE_SECTION_IDS } from './guide-sections';
+import { GUIDE_SECTIONS, GUIDE_SECTION_IDS } from './guide-sections';
 import { lastEditorPath, requestTourReplay } from '@/features/editor/tour/tour-launch';
 
 const navigate = vi.fn();
@@ -55,5 +55,30 @@ describe('GuidePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Replay editor tour/ }));
     expect(requestTourReplay).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith('/project/abc123');
+  });
+
+  it('scrolls a deep link only after the sections above it have loaded', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => { release = r; });
+    const loadSpy = vi.spyOn(GUIDE_SECTIONS[1], 'load').mockImplementation(() => gate.then(() => ({ default: () => null })));
+    window.location.hash = '#sync';
+    renderGuide();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+    release();
+    await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1));
+    const mock = vi.mocked(Element.prototype.scrollIntoView);
+    expect((mock.mock.contexts[0] as Element).id).toBe('sync');
+    expect(mock).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    loadSpy.mockRestore();
+    window.location.hash = '';
+  });
+
+  it('resolves the import alias to its own element', async () => {
+    window.location.hash = '#import';
+    renderGuide();
+    await waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1));
+    expect((vi.mocked(Element.prototype.scrollIntoView).mock.contexts[0] as Element).id).toBe('import');
+    window.location.hash = '';
   });
 });

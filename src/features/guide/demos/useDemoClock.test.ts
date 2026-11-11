@@ -4,6 +4,7 @@ import { useDemoClock } from './useDemoClock';
 
 let queue: FrameRequestCallback[] = [];
 let now = 0;
+const cancelSpy = vi.fn(() => { queue = []; });
 
 function tick(ms: number) {
   now += ms;
@@ -15,8 +16,9 @@ function tick(ms: number) {
 beforeEach(() => {
   queue = [];
   now = 1000;
+  cancelSpy.mockClear();
   vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => queue.push(cb));
-  vi.stubGlobal('cancelAnimationFrame', () => { queue = []; });
+  vi.stubGlobal('cancelAnimationFrame', cancelSpy);
 });
 
 afterEach(() => {
@@ -84,5 +86,33 @@ describe('useDemoClock', () => {
     const frozen = result.current.time;
     tick(1000);
     expect(result.current.time).toBe(frozen);
+  });
+
+  it('stops the frame loop when unmounted mid-play', () => {
+    const { result, unmount } = renderHook(() => useDemoClock({ duration: 10 }));
+    act(() => result.current.play());
+    tick(16);
+    expect(queue.length).toBe(1);
+    unmount();
+    expect(cancelSpy).toHaveBeenCalled();
+    expect(queue.length).toBe(0);
+  });
+
+  it('pauses off-screen even when the element attaches after the first render', () => {
+    let report: IntersectionObserverCallback = () => {};
+    const disconnect = vi.fn();
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(cb: IntersectionObserverCallback) { report = cb; }
+      observe() {}
+      disconnect = disconnect;
+    });
+    const { result } = renderHook(() => useDemoClock({ duration: 10 }));
+    act(() => result.current.play());
+    tick(16);
+    act(() => result.current.ref(document.createElement('div')));
+    act(() => report([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver));
+    expect(result.current.playing).toBe(false);
+    act(() => result.current.ref(null));
+    expect(disconnect).toHaveBeenCalled();
   });
 });

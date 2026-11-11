@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type DemoClock = {
   time: number;
@@ -7,7 +7,7 @@ type DemoClock = {
   pause: () => void;
   reset: () => void;
   seek: (t: number) => void;
-  ref: RefObject<HTMLElement | null>;
+  ref: (el: HTMLElement | null) => void;
   reducedMotion: boolean;
 };
 
@@ -23,7 +23,7 @@ function prefersReducedMotion(): boolean {
 // itself when the demo scrolls out of view or the tab is hidden, so an idle
 // demo never keeps a frame loop alive.
 export function useDemoClock({ duration = 30 }: { duration?: number } = {}): DemoClock {
-  const ref = useRef<HTMLElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
@@ -65,12 +65,14 @@ export function useDemoClock({ duration = 30 }: { duration?: number } = {}): Dem
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  useEffect(() => {
-    const el = ref.current;
+  // Callback ref: demos live inside lazy bodies, so the element can mount after the hook's first render.
+  const ref = useCallback((el: HTMLElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
     if (!el || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver(([entry]) => { if (entry && !entry.isIntersecting) setPlaying(false); });
     io.observe(el);
-    return () => io.disconnect();
+    observerRef.current = io;
   }, []);
 
   useEffect(() => {

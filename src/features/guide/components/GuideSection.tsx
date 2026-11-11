@@ -11,7 +11,7 @@ export function GuideSection({ section, children }: { section: GuideSectionDef; 
   const Body = BODIES.get(section.id);
   if (!Body) return null;
   return (
-    <section id={section.id} className="scroll-mt-20 flex flex-col gap-3">
+    <section id={section.id} className="relative scroll-mt-20 flex flex-col gap-3">
       {children}
       <h3 className="text-xl font-semibold text-zinc-100">{t(`guide.sections.${section.id}.title`)}</h3>
       <Suspense fallback={<div className="h-16 rounded-lg bg-zinc-900/60 animate-pulse" aria-hidden="true" />}>
