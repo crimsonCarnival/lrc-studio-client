@@ -267,7 +267,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
   // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
-  const hasIdentity = hasProjectIdentity({ title: projectName, metadata: { songName, songArtist: formatArtistDisplay(artists) } });
+  // Subtitles have no song or artist fields to fall back on: the name is the identity.
+  const hasIdentity = hasProjectIdentity({ title: projectName, metadata: isSubtitles ? {} : { songName, songArtist: formatArtistDisplay(artists) } });
   const canContinue = audioReady && hasLyrics && hasIdentity;
 
   // Fetch music library for artist/album autofill
@@ -483,7 +484,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   className={`text-xs ${audioReady && hasLyrics && !hasIdentity ? 'text-love' : 'text-zinc-500'}`}
                   role={audioReady && hasLyrics && !hasIdentity ? 'alert' : undefined}
                 >
-                  {t('setup.identityRequired')}
+                  {t(isSubtitles ? 'setup.identityRequiredSubtitles' : 'setup.identityRequired')}
                 </p>
 
                 {/* Sits inside the cover's own row so the URL path is next to

@@ -36,6 +36,7 @@ export default {
   kindSubtitles: "Subtitles",
   kindSubtitlesHint: "Time captions against a video in the subtitle studio. Export them as SRT, WebVTT or SBV.",
   identityRequired:"Add a project name, song name or artist so the project can be named and linked.",
+  identityRequiredSubtitles: "Add a project name so the project can be named and linked.",
   projectDescription: "Description",
   projectDescriptionPlaceholder: "Optional notes about this project...",
   projectDescriptionDesc: "Add notes about this project",

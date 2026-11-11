@@ -36,6 +36,7 @@ export default {
   kindSubtitles: "Subtítulos",
   kindSubtitlesHint: "Sincroniza subtítulos con un video en el estudio de subtítulos. Expórtalos como SRT, WebVTT o SBV.",
   identityRequired:"Añade un nombre de proyecto, canción o artista para poder nombrar y enlazar el proyecto.",
+  identityRequiredSubtitles: "Añade un nombre de proyecto para poder nombrarlo y enlazarlo.",
   projectDescription: "Descripción",
   projectDescriptionPlaceholder: "Notas opcionales sobre este proyecto...",
   projectDescriptionDesc: "Añade notas sobre este proyecto",

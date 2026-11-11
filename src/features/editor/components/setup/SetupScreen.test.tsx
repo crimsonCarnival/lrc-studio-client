@@ -84,6 +84,9 @@ describe('SetupScreen', () => {
     expect(screen.getByRole('radio', { name: 'setup.kindSubtitles' })).toHaveAttribute('aria-checked', 'true');
     expect(document.getElementById('song-name')).not.toBeInTheDocument();
     expect(document.getElementById('project-name')).toBeInTheDocument();
+    // The hint must not ask for a song or an artist the subtitles form has no fields for.
+    expect(screen.getByText('setup.identityRequiredSubtitles')).toBeInTheDocument();
+    expect(screen.queryByText('setup.identityRequired')).not.toBeInTheDocument();
   });
 
   it('opens on subtitles for ?kind=subtitles', () => {
