@@ -1731,6 +1731,7 @@ export default function Editor({
           onAutoStamp={handleAutoStampStart}
           onOpenFurigana={() => setFuriganaOpen(true)}
           onOpenSecondary={() => setSecondaryOpen(true)}
+          onStartTour={startTour}
           sessionOwner={sessionOwner}
           collab={collab}
           onBeforeStartSession={handleManualSave ?? undefined}

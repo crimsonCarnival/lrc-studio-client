@@ -126,6 +126,17 @@ async function warmChunks() {
 }
 
 describe('editor tour wiring', { timeout: 45000 }, () => {
+  // Deliberately first and without warmChunks(): on a real new project the editor chunks are still
+  // loading when the lines arrive, so the tour must wait for its targets instead of dropping out.
+  it('a cold start waits for the editor, shows the tour and counts exactly one showing', async () => {
+    markNewProject();
+    mount();
+    await settleUntil(tourOpen);
+    expect(tourOpen()).toBe(true);
+    await settle(100);
+    expect(storedInterface().editorTourShown).toBe(1);
+  });
+
   it('breakpoint change closes the tour', async () => {
     await warmChunks();
     requestTourReplay();

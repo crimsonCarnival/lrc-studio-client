@@ -98,7 +98,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // Set by the phone editor while it is mounted (see phone-editor-chrome): it draws its own
   // header and player strip, so the app header and the docked player step aside.
   const [phoneEditorMounted, setPhoneEditorMounted] = useState(false);
-  const { isOpen: isTourOpen, offerOptOut, start: startTour, close: closeTour, maybeStartForNewProject } = useGuidedTour();
+  const { isOpen: isTourOpen, offerOptOut, start: startTour, close: closeTour, onShown: onTourShown, maybeStartForNewProject } = useGuidedTour();
   const phoneEditorChrome = useMemo(() => ({ mounted: phoneEditorMounted, setMounted: setPhoneEditorMounted, startTour }), [phoneEditorMounted, startTour]);
   // The workspace shows one view at a time (see EditorWorkspace in AppRouter);
   // whichever is showing owns the desktop player dock.
@@ -303,6 +303,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           <GuidedTour steps={tourStepsFor(isLg)} isOpen={isTourOpen} offerOptOut={offerOptOut}
             narrow={!isLg}
             onClose={closeTour}
+            onShown={onTourShown}
             onLearnMore={(anchor, optOut) => { closeTour(optOut); navigate('/guide#' + anchor); }}
           />
 

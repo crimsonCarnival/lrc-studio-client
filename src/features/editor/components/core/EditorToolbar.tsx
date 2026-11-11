@@ -18,6 +18,8 @@ interface EditorToolbarProps {
   onAutoStamp?: () => void;
   onOpenFurigana?: () => void;
   onOpenSecondary?: () => void;
+  /** Replays the editor tour. Absent outside the app layout. */
+  onStartTour?: () => void;
   // Collab: only the owner of a saved project gets Start / Manage session.
   sessionOwner?: SessionOwnerControl;
   collab?: CollabLockInput;
@@ -40,6 +42,7 @@ export default function EditorToolbar({
   onAutoStamp,
   onOpenFurigana,
   onOpenSecondary,
+  onStartTour,
   sessionOwner,
   collab,
   onBeforeStartSession,
@@ -144,6 +147,19 @@ export default function EditorToolbar({
       )}
       {sessionOwner && (
         <SessionControl owner={sessionOwner} collab={collab} lines={lines} onBeforeStart={onBeforeStartSession} />
+      )}
+      {onStartTour && (
+        <Tip content={t('editor.tour.take')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('editor.tour.take')}
+            onClick={onStartTour}
+            className="ml-2 h-9 coarse:h-11 w-9 coarse:w-11 shrink-0 text-zinc-400 hover:text-zinc-200"
+          >
+            <Icon name="school" size={18} />
+          </Button>
+        </Tip>
       )}
       {trailing}
     </div>

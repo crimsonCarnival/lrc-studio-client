@@ -8,6 +8,8 @@ import type { TourStep } from '../tour/tour-steps';
 import { Tip } from '@ui/tip';
 
 const PADDING = 8;
+// How long to wait for the editor to mount a step target before giving up on the tour.
+const TARGET_WAIT_MS = 5000;
 
 interface Rect { top: number; left: number; width: number; height: number }
 
@@ -26,9 +28,11 @@ type GuidedTourProps = {
   narrow: boolean;
   onClose: (optOut: boolean) => void;
   onLearnMore: (anchor: string, optOut: boolean) => void;
+  /** Called once per open, when the first step's card has rendered. */
+  onShown?: () => void;
 };
 
-export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLearnMore }: GuidedTourProps) {
+export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLearnMore, onShown }: GuidedTourProps) {
   const { t: tRaw } = useTranslation();
   // Step title/body keys are dynamic; bypass strict key checking.
   const t = tRaw as (key: string, options?: object) => string;
@@ -38,6 +42,8 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
   const [cardHeight, setCardHeight] = useState<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const skippedCountRef = useRef(0);
+  const shownRef = useRef(false);
+  const [ready, setReady] = useState(false);
   const closeTour = useCallback(() => onClose(optOut), [onClose, optOut]);
 
   const step = steps[stepIndex];
@@ -47,18 +53,39 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
     setRect(measure(step.target));
   }, [step]);
 
-  // Reset to the first step whenever the tour (re)opens.
+  // Reset when the tour CLOSES, so the next open commit already sees step 0 (resetting on open
+  // left the measuring effect below reading the previous run's step index).
   useLayoutEffect(() => {
-    if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStepIndex(0);
-      setOptOut(false);
-      skippedCountRef.current = 0;
-    }
+    if (isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStepIndex(0);
+    setOptOut(false);
+    setRect(null);
+    setReady(false);
+    skippedCountRef.current = 0;
+    shownRef.current = false;
   }, [isOpen]);
 
+  // The editor's lazy chunks may still be loading when the tour is asked to start. Wait for any
+  // step's target to mount (up to TARGET_WAIT_MS) rather than skipping every step and closing.
   useLayoutEffect(() => {
-    if (!isOpen || !step) return;
+    if (!isOpen || ready) return;
+    const begin = (): boolean => {
+      const i = steps.findIndex((s) => document.querySelector(`[data-tour="${s.target}"]`) !== null);
+      if (i < 0) return false;
+      setStepIndex(i);
+      setReady(true);
+      return true;
+    };
+    if (begin()) return;
+    const observer = new MutationObserver(() => { if (begin()) { observer.disconnect(); window.clearTimeout(timer); } });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-tour'] });
+    const timer = window.setTimeout(() => { observer.disconnect(); onClose(false); }, TARGET_WAIT_MS);
+    return () => { observer.disconnect(); window.clearTimeout(timer); };
+  }, [isOpen, ready, steps, onClose]);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !ready || !step) return;
     const el = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`);
     if (!el) {
       // Target not mounted (e.g. no sections yet) — skip this step rather than
@@ -76,7 +103,14 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     recalc();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, stepIndex, step]);
+  }, [isOpen, ready, stepIndex, step]);
+
+  // Reported once per open, when the first card actually renders: that is what counts as a showing.
+  useEffect(() => {
+    if (!isOpen || !ready || !rect || shownRef.current) return;
+    shownRef.current = true;
+    onShown?.();
+  }, [isOpen, ready, rect, onShown]);
 
   useEffect(() => {
     if (!isOpen) return;

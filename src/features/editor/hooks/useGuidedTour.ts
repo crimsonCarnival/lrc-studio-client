@@ -18,13 +18,18 @@ export function useGuidedTour() {
     };
   });
 
+  // Set by an automatic showing; the count goes up only once a card actually renders (onShown).
+  const countOnShownRef = useRef(false);
+
   // Manual replay: no opt-out offer, no count change.
   const start = useCallback(() => {
+    countOnShownRef.current = false;
     setOfferOptOut(false);
     setIsOpen(true);
   }, []);
 
   const close = useCallback((optOut: boolean) => {
+    countOnShownRef.current = false;
     setIsOpen(false);
     if (optOut) updateSetting('interface.editorTourEnabled', false);
   }, [updateSetting]);
@@ -37,10 +42,17 @@ export function useGuidedTour() {
     const legacySeen = !!storage.get(STORAGE_KEYS.TUTORIAL_SEEN);
     const decision = decideAutoTour(true, { shown, enabled, legacySeen });
     if (!decision.show) return;
+    countOnShownRef.current = true;
     setOfferOptOut(decision.offerOptOut);
     setIsOpen(true);
-    updateSetting('interface.editorTourShown', shown + 1);
+  }, []);
+
+  // Wired to GuidedTour's onShown: a tour that never found its targets must not use up a showing.
+  const onShown = useCallback(() => {
+    if (!countOnShownRef.current) return;
+    countOnShownRef.current = false;
+    updateSetting('interface.editorTourShown', prefsRef.current.shown + 1);
   }, [updateSetting]);
 
-  return { isOpen, offerOptOut, start, close, maybeStartForNewProject };
+  return { isOpen, offerOptOut, start, close, onShown, maybeStartForNewProject };
 }

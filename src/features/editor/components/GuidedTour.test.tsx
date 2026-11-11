@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
@@ -76,5 +76,57 @@ describe('GuidedTour', () => {
     expect(onTargetClick).not.toHaveBeenCalled();
     // jsdom has no hit testing: assert the overlay is a full-screen layer above the target.
     expect(overlay.className).toContain('inset-0');
+  });
+});
+
+describe('GuidedTour start and reopen', () => {
+  const two: TourStep[] = [
+    { id: 'a', target: 'tour-a', titleKey: 'a.title', bodyKey: 'a.body', guideAnchor: 'anchor-a' },
+    { id: 'b', target: 'tour-b', titleKey: 'b.title', bodyKey: 'b.body', guideAnchor: 'anchor-b' },
+  ];
+  const props = (over: Partial<React.ComponentProps<typeof GuidedTour>> = {}) => ({
+    steps: two, isOpen: true, offerOptOut: false, narrow: false, onClose: vi.fn(), onLearnMore: vi.fn(), ...over,
+  });
+
+  it('waits for a target that mounts late instead of skipping every step, and reports one showing', async () => {
+    const onShown = vi.fn();
+    render(<GuidedTour {...props({ onShown })} />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const el = document.createElement('button');
+    el.setAttribute('data-tour', 'tour-b');
+    await act(async () => { document.body.appendChild(el); await Promise.resolve(); });
+    // Starts at the first AVAILABLE step (b), and the card is its own.
+    expect(await screen.findByRole('dialog', { name: 'b.title' })).toBeInTheDocument();
+    expect(onShown).toHaveBeenCalledTimes(1);
+    el.remove();
+  });
+
+  it('closes without a showing when no target appears within 5 s', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const onShown = vi.fn();
+    render(<GuidedTour {...props({ onClose, onShown })} />);
+    act(() => { vi.advanceTimersByTime(4900); });
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(200); });
+    expect(onClose).toHaveBeenCalledWith(false);
+    expect(onShown).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('reopens at step 1 after finishing on a last step whose target is missing', () => {
+    const a = document.createElement('button');
+    a.setAttribute('data-tour', 'tour-a');
+    document.body.appendChild(a);
+    const onShown = vi.fn();
+    const view = render(<GuidedTour {...props({ onShown, onClose: () => view.rerender(<GuidedTour {...props({ onShown, isOpen: false })} />) })} />);
+    expect(screen.getByText('editor.tour.stepOf')).toBeInTheDocument();
+    // Step b is missing: Next runs off the end and closes.
+    fireEvent.click(screen.getByRole('button', { name: 'editor.tour.next' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    view.rerender(<GuidedTour {...props({ onShown })} />);
+    expect(screen.getByRole('dialog', { name: 'a.title' })).toBeInTheDocument();
+    expect(onShown).toHaveBeenCalledTimes(2);
+    a.remove();
   });
 });

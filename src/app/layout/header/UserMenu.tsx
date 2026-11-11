@@ -29,8 +29,6 @@ interface UserMenuProps {
   // navTo carries the unsaved-changes guard from AppHeader (project pages warn before leaving).
   navTo: (path: string) => void;
   setShowKeyboardHelp?: (v: boolean) => void;
-  /** Present only where the editor tour can run. */
-  onStartTour?: () => void;
   // Theme + language now live in this menu (#14).
   currentTheme: string;
   /** JSON of the user's own theme (`interface.customTheme`), for the theme modal's editor. */
@@ -39,7 +37,7 @@ interface UserMenuProps {
   i18n?: I18nInstance;
 }
 
-export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, onStartTour, currentTheme, customTheme, updateSetting, i18n }: UserMenuProps) {
+export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentTheme, customTheme, updateSetting, i18n }: UserMenuProps) {
   const { t } = useTranslation();
   const currentLang = (i18n?.language || 'en').split('-')[0];
   // Library/upload/request counts are only shown in this menu — own the state here.
@@ -177,11 +175,6 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, onStartTour
             {setShowKeyboardHelp && (
               <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                 <Icon name="menu_book" size={16} className="text-zinc-400" />{t('shortcuts.title')}
-              </PopoverItem>
-            )}
-            {onStartTour && (
-              <PopoverItem onClick={onStartTour} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                <Icon name="school" size={16} className="text-zinc-400" />{t('editor.tour.take')}
               </PopoverItem>
             )}
           </div>

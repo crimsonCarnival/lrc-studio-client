@@ -368,7 +368,6 @@ export function AppHeader({
                 logout={logout}
                 navTo={navTo}
                 setShowKeyboardHelp={setShowKeyboardHelp}
-                onStartTour={isEditorPage && isReady ? onStartTour : undefined}
                 currentTheme={currentTheme}
                 customTheme={customTheme}
                 updateSetting={updateSetting}
