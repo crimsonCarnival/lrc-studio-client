@@ -73,6 +73,8 @@ interface WaveformDisplayProps {
   loopA?: number | null;
   loopB?: number | null;
   onLoopChange?: (a: number, b: number) => void;
+  /** The modifier held while clicking to make a loop: 'Shift' | 'Ctrl' | 'Alt'. */
+  loopModifier?: string;
 }
 
 // The last decoded file's peaks. One entry is enough: only one file plays at a time, and a
@@ -98,6 +100,7 @@ const WaveformDisplay = ({
   loopA,
   loopB,
   onLoopChange,
+  loopModifier = 'Shift',
 }: WaveformDisplayProps) => {
   const { t } = useTranslation();
   const waveContainerRef = useRef<HTMLDivElement>(null);
@@ -109,6 +112,45 @@ const WaveformDisplay = ({
   const [hoverPct, setHoverPct] = useState<number | null>(null);
   // Null outside a collab session.
   const presence = usePresenceActions();
+
+  // ─── Loop creation: modifier + click on the start, again on the end ─────────
+  const [modDown, setModDown] = useState(false);
+  // The loop start waiting for its end.
+  const [loopDraft, setLoopDraft] = useState<number | null>(null);
+  const [hoverTarget, setHoverTarget] = useState<number | null>(null);
+  const loopMode = modDown || loopDraft != null;
+
+  // Timed lyric lines as loop targets: where each starts and how long it lasts (to the next
+  // timed line, or the end of the track).
+  const loopTargets = useMemo(() => {
+    const times: { time: number; text: string }[] = [];
+    for (const line of lines ?? []) {
+      if (line.type === 'section' || line.timestamp == null) continue;
+      times.push({ time: line.timestamp, text: typeof line.text === 'string' ? line.text : '' });
+    }
+    times.sort((a, b) => a.time - b.time);
+    return times.map((x, i) => ({ ...x, length: (times[i + 1]?.time ?? duration) - x.time }));
+  }, [lines, duration]);
+
+  const modifierHeld = useCallback((e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean }) => {
+    if (loopModifier === 'Ctrl') return e.ctrlKey || e.metaKey;
+    if (loopModifier === 'Alt') return e.altKey;
+    return e.shiftKey;
+  }, [loopModifier]);
+
+  useEffect(() => {
+    if (!showWaveform) return;
+    const sync = (e: KeyboardEvent) => setModDown(modifierHeld(e));
+    const release = () => setModDown(false);
+    window.addEventListener('keydown', sync);
+    window.addEventListener('keyup', sync);
+    window.addEventListener('blur', release);
+    return () => {
+      window.removeEventListener('keydown', sync);
+      window.removeEventListener('keyup', sync);
+      window.removeEventListener('blur', release);
+    };
+  }, [showWaveform, modifierHeld]);
 
   // ─── Seek on click/drag ───────────────────────────────────────────────────
   const isDraggingPlayhead = useRef(false);
@@ -140,9 +182,34 @@ const WaveformDisplay = ({
 
   const handleWavePointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isReady || !duration || !waveContainerRef.current) return;
-    isDraggingPlayhead.current = true;
     const rect = waveContainerRef.current.getBoundingClientRect();
     const pct = clientXToPct(e.clientX, rect);
+
+    if (modifierHeld(e)) {
+      // A loop click: snap to a lyric line within a few pixels, else take the raw time.
+      const raw = pctToTime(pct);
+      const tolerance = (10 / rect.width) * duration;
+      let time = raw;
+      let best = tolerance;
+      for (const target of loopTargets) {
+        const dist = Math.abs(target.time - raw);
+        if (dist <= best) { best = dist; time = target.time; }
+      }
+      if (loopDraft == null) {
+        setLoopDraft(time);
+      } else {
+        const a = Math.min(loopDraft, time);
+        const b = Math.max(loopDraft, time);
+        setLoopDraft(null);
+        if (b - a >= 0.1) {
+          onLoopChange?.(a, b);
+          onSeek?.(a);
+        }
+      }
+      return;
+    }
+
+    isDraggingPlayhead.current = true;
     onSeek?.(snapTime(pctToTime(pct)));
 
     const onMove = (me: PointerEvent) => {
@@ -159,7 +226,7 @@ const WaveformDisplay = ({
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
-  }, [isReady, duration, onSeek, pctToTime, clientXToPct, snapTime]);
+  }, [isReady, duration, onSeek, onLoopChange, pctToTime, clientXToPct, snapTime, modifierHeld, loopTargets, loopDraft]);
 
   // ─── Loop handle drag ─────────────────────────────────────────────────────
   const handleLoopHandleDrag = useCallback((which: 'A' | 'B', e: ReactPointerEvent) => {
@@ -336,12 +403,20 @@ const WaveformDisplay = ({
 
   // Section boundaries cut the wave into blocks, as the bands above it do; the first
   // section starting at 0 needs no cut.
-  const sectionCuts = useMemo(
-    () => computeSectionBands(lines ?? [], duration).map((b) => b.start).filter((start) => start > 0),
+  const sectionStarts = useMemo(
+    () => computeSectionBands(lines ?? [], duration).map((b) => b.start),
     [lines, duration],
   );
+  const sectionCuts = useMemo(() => sectionStarts.filter((start) => start > 0), [sectionStarts]);
+
+  // The section whose start the playhead sits on, so its band lights up.
+  const highlightStart = useMemo(() => {
+    for (const start of sectionStarts) if (Math.abs(playbackPosition - start) < 0.25) return start;
+    return null;
+  }, [sectionStarts, playbackPosition]);
 
   const handleSeekKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape' && loopDraft != null) { setLoopDraft(null); return; }
     if (!isReady || !duration) return;
     if (e.key === 'ArrowRight') onSeek?.(Math.min(duration, playbackPosition + 5));
     else if (e.key === 'ArrowLeft') onSeek?.(Math.max(0, playbackPosition - 5));
@@ -355,7 +430,7 @@ const WaveformDisplay = ({
 
   return (
     <div className="w-full flex flex-col gap-0 mt-2">
-      <SectionBands lines={lines ?? []} duration={duration} />
+      <SectionBands lines={lines ?? []} duration={duration} highlightStart={highlightStart} />
       {/* Main waveform + overlays: the wave is the seek bar */}
       <div
         ref={waveContainerRef}
@@ -415,6 +490,50 @@ const WaveformDisplay = ({
               ))}
             </div>
           </div>
+        )}
+
+        {/* Loop creation: every timed line becomes an easy target, and hovering one says what it is. */}
+        {isReady && loopMode && loopTargets.map((target, i) => (
+          <div
+            key={`${target.time}-${i}`}
+            aria-hidden
+            className="absolute inset-y-0 z-20 w-3 -translate-x-1/2 cursor-crosshair"
+            style={{ left: `${(target.time / duration) * 100}%` }}
+            onPointerEnter={() => setHoverTarget(i)}
+            onPointerLeave={() => setHoverTarget((cur) => (cur === i ? null : cur))}
+          >
+            <div className={`mx-auto h-full rounded-pill transition-all ${hoverTarget === i ? 'w-1 bg-primary shadow-[0_0_8px_var(--color-primary)]' : 'w-0.5 bg-primary/80'}`} />
+          </div>
+        ))}
+        {isReady && loopMode && hoverTarget != null && loopTargets[hoverTarget] && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-1 z-30 max-w-[16rem] -translate-x-1/2 truncate rounded-xs border border-border bg-card px-2 py-1 text-xs text-foreground shadow-sm"
+            style={{ left: `clamp(8rem, ${(loopTargets[hoverTarget].time / duration) * 100}%, calc(100% - 8rem))` }}
+          >
+            <span className="font-mono tabular-nums text-muted-foreground">
+              {formatTime(loopTargets[hoverTarget].time)} · {t('player.loopDuration', { value: loopTargets[hoverTarget].length.toFixed(1) })}
+            </span>
+            {loopTargets[hoverTarget].text && <span className="ml-2">{loopTargets[hoverTarget].text}</span>}
+          </div>
+        )}
+
+        {/* The loop start, waiting for its end */}
+        {isReady && loopDraft != null && (
+          <>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 z-30 w-1 -translate-x-1/2 rounded-pill bg-accent-purple"
+              style={{ left: `${(loopDraft / duration) * 100}%` }}
+            />
+            <div
+              role="status"
+              className="pointer-events-none absolute bottom-1 z-30 -translate-x-1/2 whitespace-nowrap rounded-xs bg-accent-purple px-2 py-0.5 text-[11px] font-semibold text-background"
+              style={{ left: `clamp(8rem, ${(loopDraft / duration) * 100}%, calc(100% - 8rem))` }}
+            >
+              {t('player.loopPickEnd')}
+            </div>
+          </>
         )}
 
         {/* Loop region overlay */}

@@ -30,6 +30,8 @@ export default {
   loading: "Cargando tu canción..",
   setLoop: "Repetir línea actual",
   loopActive: "Repetición activa",
+  loopPickEnd: "Haz clic de nuevo para fijar el final del bucle",
+  loopDuration: "{{value}} s",
   clearLoop: "Quitar repetición",
   moreActions: "Más acciones",
   loop: "Bucle",

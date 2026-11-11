@@ -21,9 +21,11 @@ const BAND_TONE: Record<BandTone, string> = {
  * where you are in the song and not only how far in. Renders nothing until a section
  * has a timed line.
  */
-export const SectionBands = memo(function SectionBands({ lines, duration, reserveSpace = false }: {
+export const SectionBands = memo(function SectionBands({ lines, duration, reserveSpace = false, highlightStart = null }: {
   lines: readonly TimelineLine[];
   duration: number;
+  /** The start time of the band to light up: the section the playhead is sitting on the start of. */
+  highlightStart?: number | null;
   /** Keep the row's height even with no bands, for a layout that draws into it (the playhead's time bubble). */
   reserveSpace?: boolean;
 }) {
@@ -36,7 +38,7 @@ export const SectionBands = memo(function SectionBands({ lines, duration, reserv
       {bands.map((band) => (
         <span
           key={`${band.start}-${band.label}`}
-          className={`absolute top-0 h-[22px] overflow-hidden rounded-md px-2 font-mono text-[11px] leading-[22px] font-semibold tracking-[0.1em] whitespace-nowrap text-subtle uppercase ${BAND_TONE[band.tone]}`}
+          className={`absolute top-0 h-[22px] overflow-hidden rounded-md px-2 font-mono text-[11px] leading-[22px] font-semibold tracking-[0.1em] whitespace-nowrap uppercase transition-shadow ${band.start === highlightStart ? 'text-foreground ring-2 ring-primary' : 'text-subtle'} ${BAND_TONE[band.tone]}`}
           style={{
             left: `${(band.start / duration) * 100}%`,
             // 4px narrower than its span so neighbouring bands read as separate blocks.

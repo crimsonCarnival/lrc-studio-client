@@ -448,6 +448,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                     <WaveformDisplay
                       showWaveform={settings.playback?.showWaveform}
                       waveformSnap={settings.playback?.waveformSnap}
+                      loopModifier={settings.shortcuts?.loopClick?.[0]}
                       audioRef={audioRef}
                       localUrl={local.localUrl}
                       lines={lines}

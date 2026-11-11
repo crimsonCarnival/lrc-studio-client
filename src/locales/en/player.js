@@ -30,6 +30,8 @@ export default {
   loading: "Loading track...",
   setLoop: "Loop current line",
   loopActive: "Loop active",
+  loopPickEnd: "Click again to set the loop end",
+  loopDuration: "{{value}} s",
   clearLoop: "Clear loop",
   moreActions: "More actions",
   loop: "Loop",
