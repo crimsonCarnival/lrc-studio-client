@@ -21,7 +21,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
         id label { en es } icon color rarity holderCount grantedAt
       }
       projects {
-        id publicId slug title starCount forkCount coverImage public listed lineCount syncedLineCount
+        id publicId slug title kind starCount forkCount coverImage public listed lineCount syncedLineCount
         metadata { songName songArtist artists { name role order } songAlbum songYear genre description tags singers singerColors }
         upload { source uploadUrl }
         createdAt updatedAt contentUpdatedAt
@@ -37,7 +37,7 @@ const GET_PROFILE_SHARES = /* GraphQL */ `
       items {
         sharedAt description tags
         project {
-          id publicId slug title coverImage lineCount syncedLineCount
+          id publicId slug title kind coverImage lineCount syncedLineCount
           metadata { songName songArtist artists { name role order } }
           upload { source uploadUrl duration }
           user { id accountName displayName avatarUrl }

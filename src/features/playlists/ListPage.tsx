@@ -34,7 +34,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { ReportDialog } from '@/features/reports/ReportDialog';
 import { Tip } from '@ui/tip';
-import type { PlaylistSortMode } from '@/types';
+import type { PlaylistSortMode, ProjectKind } from '@/types';
 import { genreLabel } from '@/features/editor/constants/genre-tags';
 
 type PlaylistProject = {
@@ -43,6 +43,7 @@ type PlaylistProject = {
   slug?: string | null;
   title?: string | null;
   starCount?: number | null;
+  kind?: ProjectKind;
   coverImage?: string | null;
   lineCount?: number | null;
   hasWordSync?: boolean | null;
@@ -497,7 +498,7 @@ export default function ListPage() {
                             'inline-block px-2 py-0.5 rounded-pill border text-xs font-medium',
                             project.hasWordSync ? 'border-foam/40 text-foam' : 'border-border text-muted-foreground',
                           )}>
-                            {project.hasWordSync ? t('playlists.detail.wordSync') : t('playlists.detail.lineSync')}
+                            {project.kind === 'subtitles' ? t('project.kindSubtitles') : project.hasWordSync ? t('playlists.detail.wordSync') : t('playlists.detail.lineSync')}
                           </span>
                         </span>
                         <span className="hidden md:block text-right text-sm font-mono text-muted-foreground">{project.lineCount ?? '—'}</span>

@@ -11,6 +11,7 @@ import { artistDisplay } from '@/features/artists/artist-credits';
 import { projectPath } from '@/features/projects/project-path';
 import { formatCompactAgo, formatFullDateTime } from '@/features/notifications/time-ago';
 import { profilePath } from './profile-path';
+import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
 import { useProfileShares } from './profile.queries';
 
 type ShareUser = {
@@ -150,6 +151,7 @@ export function SharedProjectsTab({ sharer, isOwner, viewerAccountName }: Shared
                       {formatDuration(duration)}
                     </span>
                   )}
+                  <ProjectKindBadge kind={project.kind} />
                   {lineCount > 0 && (
                     <span className="inline-flex items-center gap-1">
                       <Icon name="sync" size={14} />

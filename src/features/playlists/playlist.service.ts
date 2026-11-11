@@ -24,7 +24,7 @@ const PLAYLIST_FIELDS = /* GraphQL */ `
     projectCount savedCount viewCount shareCount isSavedByMe createdAt updatedAt
     owner { id accountName displayName avatarUrl }
     projects {
-      id publicId slug title starCount forkCount coverImage lineCount hasWordSync
+      id publicId slug title kind starCount forkCount coverImage lineCount hasWordSync
       user { accountName }
       metadata { songName songArtist genre }
       upload { source uploadUrl coverImage duration }

@@ -15,6 +15,7 @@ const SEARCH_QUERY = /* GraphQL */ `
         publicId
         slug
         title
+        kind
         coverImage
         starCount
         forkCount

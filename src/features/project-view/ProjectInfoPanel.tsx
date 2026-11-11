@@ -21,6 +21,8 @@ import { UserHoverCard } from '@ui/UserHoverCard';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { ProjectKind } from '@/types';
+import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
 
 interface ProjectMeta {
   description?: string;
@@ -37,6 +39,7 @@ interface ProjectMeta {
 interface ProjectData {
   publicId?: string;
   title?: string;
+  kind?: ProjectKind;
   metadata?: ProjectMeta;
   user?: { accountName?: string; displayName?: string; avatarUrl?: string | null; staffRole?: string | null; progression?: { level?: number | null } | null };
   upload?: { duration?: number | null };
@@ -252,8 +255,9 @@ export default function ProjectInfoPanel({
 
       {!collapsed && (<>
         {/* Chips: sync type first, then counts and the owner's tags */}
-        {(lineCount > 0 || (meta.tags?.length ?? 0) > 0) && (
+        {(lineCount > 0 || (meta.tags?.length ?? 0) > 0 || project.kind === 'subtitles') && (
           <div className="flex flex-wrap gap-1.5">
+            <ProjectKindBadge kind={project.kind} className="h-[26px] text-[13px]" />
             {lineCount > 0 && (
               <>
                 {/* Word sync is the premium state, so only it gets the iris fill. */}

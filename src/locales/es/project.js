@@ -1,5 +1,6 @@
 export default {
-  restored: "Proyecto anterior restaurado",
+  kindSubtitles: "Subtítulos",
+  restored:"Proyecto anterior restaurado",
   restoreTitle: "Proyecto encontrado",
   restoreMessage: "Se encontraron datos de sincronización de un proyecto anterior. Vuelve a cargar tu archivo de audio para continuar editando.",
   restoreLines: "líneas sincronizadas guardadas",

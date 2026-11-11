@@ -15,6 +15,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
+import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
 import { ArtistText } from '@/features/artists/ArtistText';
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -148,9 +149,12 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
           )}
           {/* The waveform is the placeholder art; a real cover replaces it. */}
           {!hasCover && <WaveformBars seed={title || publicId} count={26} minHeight={20} className="relative" />}
-          <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300'}`}>
-            {isYoutube ? t('uploads.youtube') : t('uploads.cloudAudio')}
-          </span>
+          <div className="absolute left-3 top-3 flex items-center gap-1.5">
+            <span className={`px-2.5 py-1 rounded-pill bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300'}`}>
+              {isYoutube ? t('uploads.youtube') : t('uploads.cloudAudio')}
+            </span>
+            <ProjectKindBadge kind={project.kind} />
+          </div>
           <div className="absolute right-3 top-3 flex items-center gap-1.5 z-10">
             {isPrivate && (
               <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />

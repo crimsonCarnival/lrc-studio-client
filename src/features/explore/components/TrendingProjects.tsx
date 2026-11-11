@@ -4,12 +4,15 @@ import { Icon } from '@/shared/ui/Icon';
 import { projectPath } from '@/features/projects/project-path';
 import { useTrendingProjects } from '../hooks/useExplore';
 import { LogoLoader } from '@ui/LogoLoader';
+import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
+import type { ProjectKind } from '@/types';
 
 interface ExploreProject {
   id: string;
   publicId?: string;
   slug?: string | null;
   title?: string;
+  kind?: ProjectKind;
   coverImage?: string | null;
   upload?: { uploadUrl?: string } | null;
   accountName?: string;
@@ -72,10 +75,11 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
-                  <Icon name="music_note" size={32} className="text-primary/50" />
+                  <Icon name={project.kind === 'subtitles' ? 'subtitles' : 'music_note'} size={32} className="text-primary/50" />
                 )}
               </div>
               <div className="p-3 flex flex-col gap-1">
+                <ProjectKindBadge kind={project.kind} className="self-start" />
                 <p className="text-sm font-semibold text-white line-clamp-1 group-hover:text-primary transition-colors">
                   {project.title}
                 </p>

@@ -13,6 +13,8 @@ import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
+import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
+import type { ProjectKind } from '@/types';
 import { projectStatus } from '@/features/projects/project-status';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
@@ -25,6 +27,7 @@ export interface CardProject {
   title?: string;
   coverImage?: string;
   editorMode?: string;
+  kind?: ProjectKind;
   lineCount?: number;
   syncedLineCount?: number;
   starCount?: number;
@@ -236,6 +239,7 @@ function ProjectCard({
             </div>
 
             <div className="flex items-center gap-3 mt-1">
+              <ProjectKindBadge kind={project.kind} />
               <span className="text-xs text-zinc-500 flex items-center gap-1">
                 <Icon name="description" size={12} />
                 {t('library.lines', { count: project.lineCount || 0 })}
@@ -411,7 +415,10 @@ function ProjectCard({
 
           <div className="flex flex-col gap-[7px]">
             <div className="flex items-center justify-between gap-2">
-              <ProjectStatusTag status={projectStatus(project)} />
+              <span className="flex min-w-0 items-center gap-1.5">
+                <ProjectStatusTag status={projectStatus(project)} />
+                <ProjectKindBadge kind={project.kind} />
+              </span>
               <Tip content={t('home.statLinesTip')}>
                 <span className="cursor-default font-mono text-xs font-medium text-subtle">
                   {(project.syncedLineCount || 0)}/{(project.lineCount || 0)} {t('home.lines')}

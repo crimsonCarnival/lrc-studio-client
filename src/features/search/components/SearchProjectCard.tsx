@@ -28,7 +28,7 @@ export function SearchProjectCard({ project, query }: { project: Project; query:
           </p>
           <p className="truncate text-sm text-subtle">
             {artist && <><Highlight text={artist} query={query} />{' · '}</>}
-            {t(project.hasWordSync ? 'search.wordSync' : 'search.lineSync')}
+            {project.kind === 'subtitles' ? t('project.kindSubtitles') : t(project.hasWordSync ? 'search.wordSync' : 'search.lineSync')}
           </p>
           {forkedFrom?.accountName && (
             <p className="truncate text-xs text-faint">

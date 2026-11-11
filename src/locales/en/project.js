@@ -1,5 +1,6 @@
 export default {
-  restored: "Session restored",
+  kindSubtitles: "Subtitles",
+  restored:"Session restored",
   restoreTitle: "Unsaved Progress Found",
   restoreMessage: "We found unsaved sync data from your last session. Reload your audio file to continue.",
   restoreLines: "synced lines recovered",

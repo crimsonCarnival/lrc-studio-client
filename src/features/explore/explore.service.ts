@@ -9,6 +9,7 @@ const TRENDING_PROJECTS = /* GraphQL */ `
         publicId
         slug
         title
+        kind
         coverImage
         trendingScore
         starCount
