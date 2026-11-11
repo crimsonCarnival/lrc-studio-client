@@ -85,4 +85,40 @@ describe('SegmentedControl', () => {
 
     expect(screen.getByRole('button', { name: 'Cuadrícula' })).toBeInTheDocument()
   })
+
+  describe('disabledDetail', () => {
+    const lockedOptions = (detail?: string) => [
+      { value: 'lines', label: 'Líneas' },
+      { value: 'words', label: 'Palabras', disabled: true, disabledDetail: detail },
+    ]
+    const renderLocked = (detail: string | undefined, onChange = vi.fn()) =>
+      render(<SegmentedControl semantics="tabs" label="Modo" options={lockedOptions(detail)} value="lines" onChange={onChange} />)
+
+    it('disabled option with disabledDetail opens it on click and does not call onChange', async () => {
+      const onChange = vi.fn()
+      renderLocked('Why it is locked', onChange)
+
+      await userEvent.click(screen.getByRole('tab', { name: 'Palabras' }))
+
+      expect(await screen.findByText('Why it is locked')).toBeInTheDocument()
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('opens on Enter when focused', async () => {
+      renderLocked('Why it is locked')
+      screen.getByRole('tab', { name: 'Palabras' }).focus()
+
+      await userEvent.keyboard('{Enter}')
+
+      expect(await screen.findByText('Why it is locked')).toBeInTheDocument()
+    })
+
+    it('disabled option without disabledDetail stays inert', async () => {
+      renderLocked(undefined)
+
+      await userEvent.click(screen.getByRole('tab', { name: 'Palabras' }))
+
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+  })
 })

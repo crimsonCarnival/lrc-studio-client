@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { TooltipProvider } from '@ui/tooltip';
 import PhoneToolsSheet, { type PhoneToolsSheetProps } from './PhoneToolsSheet';
 
@@ -37,7 +38,7 @@ function setup(over: Partial<PhoneToolsSheetProps> = {}) {
     open: true, editorMode: 'lrc', hasLines: true, shiftAmount: 0.5, canRedo: true,
     unmarkedOnly: false, wordsLocked: false, ...h, ...over,
   } as PhoneToolsSheetProps;
-  render(<TooltipProvider><PhoneToolsSheet {...props} /></TooltipProvider>);
+  render(<MemoryRouter><TooltipProvider><PhoneToolsSheet {...props} /></TooltipProvider></MemoryRouter>);
   return h;
 }
 
@@ -167,5 +168,18 @@ describe('PhoneToolsSheet', () => {
   it('hides Clear word timestamps outside Words mode', () => {
     setup({ editorMode: 'lrc', onClearAllWordTimestamps: vi.fn() });
     expect(screen.queryByRole('button', { name: /clear all word timestamps/i })).toBeNull();
+  });
+
+  it('links the locked Words row to the Guide and closes the sheet first', () => {
+    const h = setup({ wordsLocked: true });
+    const link = screen.getByRole('link', { name: /how words mode works/i });
+    expect(link).toHaveAttribute('href', '/guide#words');
+    fireEvent.click(link);
+    expect(h.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows no Guide link when Words is unlocked', () => {
+    setup({ wordsLocked: false });
+    expect(screen.queryByRole('link', { name: /how words mode works/i })).toBeNull();
   });
 });

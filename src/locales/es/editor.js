@@ -97,6 +97,9 @@ export default {
   modeWords: "Palabras",
   modeTooltipWords: "Marcas palabra por palabra (avanzado)",
   modeWordsLocked: "Sincroniza al menos una línea para habilitar las marcas por palabra",
+  wordsLock: {
+    howItWorks: "Cómo funciona el modo palabras",
+  },
   modeWordsDesc: "Marcas por palabra para sincronización karaoke",
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} marcas de tiempo de palabras — cambia al modo Palabras para sincronizar",

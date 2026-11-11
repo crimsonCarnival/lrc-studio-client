@@ -1,7 +1,8 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 
 import { cn } from "@/shared/utils/utils"
 import { Button } from "@ui/button"
+import { Popover, PopoverAnchor, PopoverContent } from "@ui/popover"
 import { Tip } from "@ui/tip"
 
 type SegmentedOption<T extends string | number> = {
@@ -15,6 +16,11 @@ type SegmentedOption<T extends string | number> = {
    */
   disabled?: boolean
   tip?: ReactNode
+  /**
+   * Shown in a popover anchored to the option when a disabled option is clicked or
+   * activated by keyboard. Reachable on touch, unlike `tip`. onChange is never called.
+   */
+  disabledDetail?: ReactNode
 }
 
 type SegmentedControlProps<T extends string | number> = {
@@ -51,41 +57,62 @@ function SegmentedControl<T extends string | number>({
       aria-label={label}
       className={cn("inline-flex gap-0.5 rounded-[calc(var(--radius)*1.4)] bg-background p-1 inset-ring inset-ring-hl", className)}
     >
-      {options.map((option) => {
-        const active = option.value === value
-        const segment = (
-          <Button
-            key={option.tip ? undefined : option.value}
-            type="button"
-            variant="ghost"
-            size={null}
-            role={tabs ? "tab" : undefined}
-            aria-selected={tabs ? active : undefined}
-            aria-pressed={tabs ? undefined : active}
-            aria-disabled={option.disabled || undefined}
-            aria-label={option.ariaLabel}
-            onClick={() => {
-              if (!option.disabled) onChange(option.value)
-            }}
-            className={cn(
-              "h-10 rounded-[calc(var(--radius)*1)] px-[18px] text-base text-subtle hover:bg-transparent hover:text-foreground",
-              mono && "px-3.5 font-mono text-[13px] font-medium",
-              active && "bg-raised text-foreground inset-ring-[1.5px] inset-ring-primary hover:bg-raised",
-              option.disabled && "cursor-not-allowed opacity-40 hover:text-subtle"
-            )}
-          >
-            {option.label}
-          </Button>
-        )
-        return option.tip ? (
-          <Tip key={option.value} content={option.tip}>
-            {segment}
-          </Tip>
-        ) : (
-          segment
-        )
-      })}
+      {options.map((option) => (
+        <Segment key={option.value} option={option} value={value} onChange={onChange} tabs={tabs} mono={mono} />
+      ))}
     </div>
+  )
+}
+
+type SegmentProps<T extends string | number> = {
+  option: SegmentedOption<T>
+  value: T
+  onChange: (value: T) => void
+  tabs: boolean
+  mono?: boolean
+}
+
+function Segment<T extends string | number>({ option, value, onChange, tabs, mono }: SegmentProps<T>) {
+  const [detailOpen, setDetailOpen] = useState(false)
+  const hasDetail = Boolean(option.disabled && option.disabledDetail)
+  const active = option.value === value
+  const segment = (
+    <Button
+      type="button"
+      variant="ghost"
+      size={null}
+      role={tabs ? "tab" : undefined}
+      aria-selected={tabs ? active : undefined}
+      aria-pressed={tabs ? undefined : active}
+      aria-disabled={option.disabled || undefined}
+      aria-label={option.ariaLabel}
+      onClick={() => {
+        if (!option.disabled) onChange(option.value)
+        else if (hasDetail) setDetailOpen(true)
+      }}
+      className={cn(
+        "h-10 rounded-[calc(var(--radius)*1)] px-[18px] text-base text-subtle hover:bg-transparent hover:text-foreground",
+        mono && "px-3.5 font-mono text-[13px] font-medium",
+        active && "bg-raised text-foreground inset-ring-[1.5px] inset-ring-primary hover:bg-raised",
+        option.disabled && "cursor-not-allowed opacity-40 hover:text-subtle"
+      )}
+    >
+      {option.label}
+    </Button>
+  )
+  const tipped = option.tip ? <Tip content={option.tip}>{segment}</Tip> : segment
+  if (!hasDetail) return tipped
+  // The tooltip keeps its trigger on the button; the popover is anchored to a wrapper
+  // instead of sharing the trigger, so the two Radix primitives never fight over one node.
+  return (
+    <Popover open={detailOpen} onOpenChange={setDetailOpen}>
+      <PopoverAnchor asChild>
+        <span className="inline-flex">{tipped}</span>
+      </PopoverAnchor>
+      <PopoverContent align="center" className="p-3 text-sm">
+        {option.disabledDetail}
+      </PopoverContent>
+    </Popover>
   )
 }
 

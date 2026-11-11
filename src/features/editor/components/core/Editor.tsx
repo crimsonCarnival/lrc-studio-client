@@ -73,7 +73,7 @@ import { hasCJK, hasKanji } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 // import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_ARTISTS: string[] = [];
@@ -664,6 +664,14 @@ export default function Editor({
           label: t('editor.modeWords'),
           disabled: wordsLocked,
           tip: wordsLocked ? t('editor.modeWordsLocked') : t('editor.modeTooltipWords'),
+          disabledDetail: (
+            <div className="space-y-2">
+              <p>{t('editor.modeWordsLocked')}</p>
+              <Link to="/guide#words" className="font-medium text-primary underline underline-offset-2">
+                {t('editor.wordsLock.howItWorks')}
+              </Link>
+            </div>
+          ),
         },
         ...(onShowPreview ? [{ value: 'review' as const, label: t('editor.tabReview') }] : []),
       ]}

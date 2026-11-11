@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
 
 export type PhoneToolsAutoStampBlock = 'noAudio' | 'running' | 'youtube' | null;
@@ -188,15 +189,25 @@ export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
         ] as const).map(({ value, icon, label }) => {
           const locked = value === 'words' && p.wordsLocked;
           return (
-            <DrawerItem
-              key={value}
-              iconName={icon}
-              label={label}
-              description={locked ? t('editor.modeWordsLocked') : undefined}
-              pressed={p.editorMode === value}
-              disabled={locked}
-              onClick={run(() => p.onSetMode(value))}
-            />
+            <Fragment key={value}>
+              <DrawerItem
+                iconName={icon}
+                label={label}
+                description={locked ? t('editor.modeWordsLocked') : undefined}
+                pressed={p.editorMode === value}
+                disabled={locked}
+                onClick={run(() => p.onSetMode(value))}
+              />
+              {locked && (
+                <Link
+                  to="/guide#words"
+                  onClick={run(() => {})}
+                  className="mx-4 flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-2"
+                >
+                  {t('editor.wordsLock.howItWorks')}
+                </Link>
+              )}
+            </Fragment>
           );
         })}
       </Group>

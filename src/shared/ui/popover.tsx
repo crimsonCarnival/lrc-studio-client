@@ -19,6 +19,12 @@ const PopoverTrigger = React.forwardRef<
 ))
 PopoverTrigger.displayName = PopoverPrimitive.Trigger.displayName
 
+function PopoverAnchor({
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+}
+
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
@@ -74,4 +80,4 @@ const PopoverSeparator = React.forwardRef<
 PopoverSeparator.displayName = "PopoverSeparator"
 
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator }
+export { Popover, PopoverAnchor, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator }

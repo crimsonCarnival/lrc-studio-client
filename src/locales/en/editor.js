@@ -94,6 +94,9 @@ export default {
   modeWords: "Words",
   modeTooltipWords: "Word-by-word timestamps (advanced)",
   modeWordsLocked: "Sync at least one line first to enable word timing",
+  wordsLock: {
+    howItWorks: "How words mode works",
+  },
   modeWordsDesc: "Advanced format with word-by-word sync",
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} word timestamps — switch to Words mode to sync",
