@@ -18,7 +18,37 @@ export default {
     pause: "Pause",
     reset: "Reset",
     mark: "Mark",
+    syncLabel: "Sync demo",
+    syncHint: "Press Play, then Mark (or Space) as each line starts. Nothing here is saved.",
+    playerLabel: "Timing tools demo",
+    playerHint: "Nudge the stamp earlier or later, then turn on the loop and press Play: the playhead wraps back to the start of the loop.",
+    nudgeEarlier: "Nudge {{amount}} seconds earlier",
+    nudgeLater: "Nudge {{amount}} seconds later",
+    loop: "A-B loop",
   },
+  mock: {
+    setup: {
+      mediaTitle: "Media",
+      mediaHint: "A local file or a YouTube link",
+      lyricsTitle: "Lyrics",
+      lyricsHint: "Paste, import or search",
+      startTitle: "Start syncing",
+      startHint: "Opens the editor",
+    },
+    search: {
+      artist: "The Night Owls",
+      plain: "plain text",
+    },
+    save: {
+      saving: "Your latest change is on its way to the server.",
+      saved: "Everything is stored. This is the state you want before closing the tab.",
+      offline: "No connection: the chip stays on Unsaved and the editor keeps retrying until you are back.",
+    },
+    preview: {
+      tabs: "Export format",
+    },
+  },
+
   sample: {
     lines: {
       1: "The stars align above the city lights",
@@ -51,6 +81,8 @@ export default {
     start: {
       title: "Start a project",
       body1: "Pick your audio (a local file or a YouTube link), then add lyrics: paste raw text, search for them by title and artist, or drop in an existing .lrc, .srt or .txt file. Timestamps and section tags already present in the file are preserved.",
+      body2: "Not sure what to type? Search by title and artist. Results marked \"Synced\" already carry timestamps, so you can import them as they are and only adjust what is off.",
+      body3: "Choose whether the project is a song or subtitles. A song gives you lyric lines to time against audio; subtitles give you caption blocks with a start and an end for video.",
     },
     sync: {
       title: "Syncing your lyrics",

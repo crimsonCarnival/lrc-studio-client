@@ -18,7 +18,37 @@ export default {
     pause: "Pausar",
     reset: "Reiniciar",
     mark: "Marcar",
+    syncLabel: "Demo de sincronización",
+    syncHint: "Pulsa Reproducir y luego Marcar (o Espacio) cuando empiece cada línea. Nada de esto se guarda.",
+    playerLabel: "Demo de herramientas de tiempo",
+    playerHint: "Adelanta o retrasa la marca, activa el bucle y pulsa Reproducir: el cursor vuelve al inicio del bucle.",
+    nudgeEarlier: "Adelantar {{amount}} segundos",
+    nudgeLater: "Retrasar {{amount}} segundos",
+    loop: "Bucle A-B",
   },
+  mock: {
+    setup: {
+      mediaTitle: "Medios",
+      mediaHint: "Un archivo local o un enlace de YouTube",
+      lyricsTitle: "Letra",
+      lyricsHint: "Pega, importa o busca",
+      startTitle: "Empezar a sincronizar",
+      startHint: "Abre el editor",
+    },
+    search: {
+      artist: "The Night Owls",
+      plain: "texto sin formato",
+    },
+    save: {
+      saving: "Tu último cambio va de camino al servidor.",
+      saved: "Todo está guardado. Este es el estado que buscas antes de cerrar la pestaña.",
+      offline: "Sin conexión: el indicador se queda en Sin guardar y el editor sigue reintentando hasta que vuelvas.",
+    },
+    preview: {
+      tabs: "Formato de exportación",
+    },
+  },
+
   sample: {
     lines: {
       1: "Las estrellas se alinean sobre las luces de la ciudad",
@@ -51,6 +81,8 @@ export default {
     start: {
       title: "Empieza un proyecto",
       body1: "Elige tu audio (un archivo local o un enlace de YouTube) y añade la letra: pega texto sin formato, búscala por título y artista, o suelta un archivo .lrc, .srt o .txt existente. Las marcas de tiempo y etiquetas de sección que ya tenga el archivo se conservan.",
+      body2: "¿No sabes qué escribir? Busca por título y artista. Los resultados marcados como \"Sincronizada\" ya traen marcas de tiempo, así que puedes importarlos tal cual y ajustar solo lo que falle.",
+      body3: "Elige si el proyecto es una canción o subtítulos. Una canción te da líneas de letra para sincronizar con el audio; los subtítulos te dan bloques con inicio y fin para vídeo.",
     },
     sync: {
       title: "Sincroniza tu letra",

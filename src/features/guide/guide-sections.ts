@@ -18,10 +18,19 @@ export type GuideSectionDef = {
 const stub = (id: GuideSectionId): GuideSectionDef['load'] => () =>
   import('./components/StubBody').then((m) => ({ default: () => createElement(m.default, { id }) }));
 
+// Sections that have their own body; the rest still load the text stub.
+const BODIES: Partial<Record<GuideSectionId, GuideSectionDef['load']>> = {
+  start: () => import('./sections/StartSection'),
+  sync: () => import('./sections/SyncSection'),
+  player: () => import('./sections/PlayerSection'),
+  saveUndo: () => import('./sections/SaveUndoSection'),
+  preview: () => import('./sections/PreviewSection'),
+};
+
 const BASICS: ReadonlySet<GuideSectionId> = new Set(['start', 'sync', 'player', 'saveUndo', 'preview']);
 
 export const GUIDE_SECTIONS: GuideSectionDef[] = GUIDE_SECTION_IDS.map((id) => ({
   id,
   group: BASICS.has(id) ? 'basics' : 'features',
-  load: stub(id),
+  load: BODIES[id] ?? stub(id),
 }));
