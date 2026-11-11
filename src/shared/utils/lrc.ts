@@ -252,7 +252,10 @@ function parseWordTimestamps(text: string): ParsedWord[] {
  * Triggers a browser download of the given text content as a file.
  */
 export function downloadLRC(content: string, filename = 'lyrics.lrc') {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  downloadBlob(new Blob([content], { type: 'text/plain;charset=utf-8' }), filename);
+}
+
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

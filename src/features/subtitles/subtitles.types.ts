@@ -10,12 +10,28 @@ export type Cue = {
   counterpart?: boolean;
 };
 
+/**
+ * One row of the studio's list, in the order of the lyrics. A line with a time is a `cue` (its
+ * index into the time-ordered cues), one still waiting for a time is `untimed`, and a section
+ * marker is a heading. Nothing that is a line is left out, so the list shows what is left to sync.
+ */
+export type StudioRow =
+  | { kind: 'cue'; lineIndex: number; cueIndex: number }
+  | { kind: 'untimed'; lineIndex: number }
+  | { kind: 'section'; lineIndex: number; label: string };
+
 export type BuildCuesOptions = {
   /** Media length in seconds, used to cap the last cue's inferred end. */
   duration?: number;
   includeSecondary?: boolean;
   includeTranslations?: boolean;
   translationIndex?: number;
+  /**
+   * Write one translation on its own: the cue text is that translation slot and nothing else
+   * (no original text, no secondary), while timing still comes from the lines. A line with no
+   * text in the slot has no cue. Overrides the two options above.
+   */
+  onlyTranslationIndex?: number;
   /** Gap left before the next cue when an end time has to be inferred. */
   minGap?: number;
   /** Length of an inferred end when there is no next cue. */

@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { activeCues, buildCues, constrainCueEdit, MIN_EDIT_LENGTH, validateCues, YOUTUBE_RULES } from './subtitle-cues';
+import { activeCues, buildCues, buildRows, constrainCueEdit, MIN_EDIT_LENGTH, validateCues, YOUTUBE_RULES } from './subtitle-cues';
 import { formatClock, parseClock } from './subtitle-clock';
-import { clearCueEnd, clearCueTimes, firstUntimedLine, markEnd, markStart, mergeCueWithNext, removeCueLine, splitCueLine, splitText } from './subtitle-edits';
+import { addTranslationLanguage, removeTranslationLanguage, setLineTranslation, studioLanguages, clearCueEnd, clearCueTimes, firstUntimedLine, markEnd, markStart, mergeCueWithNext, removeCueLine, splitCueLine, splitText } from './subtitle-edits';
 import { serializeCues } from './subtitle-formats';
+import { buildSubtitleFiles, languageSlug, translationSlots } from './subtitle-bundle';
+import { zipSubtitleFiles } from './subtitle-zip';
+import { strFromU8, unzipSync } from 'fflate';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { Cue } from './subtitles.types';
 
@@ -60,6 +63,35 @@ describe('buildCues', () => {
     const l = line('hola', 1, { endTime: 2, secondary: 'roma', translations: [{ text: 'hi' }, { text: 'hello' }] });
     expect(buildCues([l])[0].text).toBe('hola');
     expect(buildCues([l], { includeSecondary: true, includeTranslations: true, translationIndex: 1 })[0].text).toBe('hola\nroma\nhello');
+  });
+});
+
+describe('buildRows', () => {
+  const lines: EditorLine[] = [
+    { type: 'section', label: 'Intro' },
+    line('timed', 5, { endTime: 7 }),
+    line('waiting', null),
+    line('   ', null),
+    line('   ', 9, { endTime: 10 }),
+    line('earlier', 1, { endTime: 2 }),
+  ];
+
+  it('lists every line in lyrics order, timed or not, with section headings', () => {
+    const rows = buildRows(lines, buildCues(lines));
+    expect(rows.map((r) => r.kind)).toEqual(['section', 'cue', 'untimed', 'untimed', 'cue']);
+    expect(rows.map((r) => r.lineIndex)).toEqual([0, 1, 2, 3, 5]);
+  });
+
+  it('points a row at its place in the time-ordered cues, not in the lyrics', () => {
+    const rows = buildRows(lines, buildCues(lines));
+    const byLine = Object.fromEntries(rows.flatMap((r) => (r.kind === 'cue' ? [[r.lineIndex, r.cueIndex]] : [])));
+    // 'earlier' is last in the lyrics but first in time.
+    expect(byLine).toEqual({ 1: 1, 5: 0 });
+  });
+
+  it('leaves out a timed line with no text, which has nothing to show', () => {
+    const rows = buildRows(lines, buildCues(lines));
+    expect(rows.some((r) => r.lineIndex === 4)).toBe(false);
   });
 });
 
@@ -342,5 +374,117 @@ describe('serializeCues', () => {
       expect(b.slice(2).join('\n').length).toBeGreaterThan(0);
     }
     expect(blocks[1].slice(2)).toEqual(['two', 'lines']);
+  });
+});
+
+describe('one translation on its own', () => {
+  const lines: EditorLine[] = [
+    { text: 'Hola', timestamp: 1, endTime: 2, translations: [{ text: 'Hello', language: 'English' }, { text: 'Bonjour', language: 'French' }] },
+    { text: 'Adios', timestamp: 3, endTime: 4, translations: [{ text: 'Goodbye', language: 'English' }] },
+    { text: 'Nada', timestamp: 5, endTime: 6 },
+  ];
+
+  it('writes only that slot, keeps the timing, and skips lines with nothing in it', () => {
+    const french = buildCues(lines, { onlyTranslationIndex: 1 });
+    expect(french.map((c) => [c.text, c.start, c.end])).toEqual([['Bonjour', 1, 2]]);
+    const english = buildCues(lines, { onlyTranslationIndex: 0 });
+    expect(english.map((c) => c.text)).toEqual(['Hello', 'Goodbye']);
+  });
+
+  it('does not mix in the original, the secondary text or other options', () => {
+    const [c] = buildCues([{ ...lines[0], secondary: 'roma' }], { onlyTranslationIndex: 0, includeSecondary: true, includeTranslations: true });
+    expect(c.text).toBe('Hello');
+  });
+
+  it('still ends a line at the next line, whether or not that one has the translation', () => {
+    const open: EditorLine[] = [
+      { text: 'a', timestamp: 1, translations: [{ text: 'A', language: 'X' }] },
+      { text: 'b', timestamp: 4 },
+    ];
+    expect(buildCues(open, { onlyTranslationIndex: 0 })[0].end).toBeCloseTo(3.95);
+  });
+});
+
+describe('subtitle files per language', () => {
+  const lines: EditorLine[] = [
+    { text: 'Hola', timestamp: 1, endTime: 2, translations: [{ text: 'Hello', language: 'English' }, { text: '', language: 'French' }, { text: 'Hallo', language: 'Deutsch (Germany)' }] },
+    { text: 'Adios', timestamp: 3, endTime: 4, translations: [{ text: 'Goodbye', language: 'English' }] },
+  ];
+
+  it('lists the slots that have text, named by their language', () => {
+    expect(translationSlots(lines)).toEqual([{ index: 0, label: 'English' }, { index: 2, label: 'Deutsch (Germany)' }]);
+    expect(translationSlots([{ text: 'x', timestamp: 1, translations: [{ text: 'y' }] }])).toEqual([{ index: 0, label: 'Translation 1' }]);
+    expect(translationSlots([{ text: 'x', timestamp: 1 }])).toEqual([]);
+  });
+
+  it('writes the original and each translation as its own file with the same timing', () => {
+    const files = buildSubtitleFiles(lines, { base: 'song', format: 'srt' });
+    expect(files.map((f) => f.name)).toEqual(['song.original.srt', 'song.english.srt', 'song.deutsch-germany.srt']);
+    expect(files[0].content).toContain('Hola');
+    expect(files[1].content).toContain('00:00:01,000 --> 00:00:02,000\nHello');
+    expect(files[1].content).not.toContain('Hola');
+    // The German file has the first line only; the second line has no German.
+    expect(files[2].content.match(/-->/g)).toHaveLength(1);
+  });
+
+  it('makes colliding names unique and writes nothing when there is no translation', () => {
+    const twins: EditorLine[] = [{ text: 'a', timestamp: 1, endTime: 2, translations: [{ text: 'A', language: 'Spanish' }, { text: 'B', language: 'Spanish' }] }];
+    expect(buildSubtitleFiles(twins, { base: 'x', format: 'vtt' }).map((f) => f.name)).toEqual(['x.original.vtt', 'x.spanish.vtt', 'x.spanish-2.vtt']);
+    expect(buildSubtitleFiles([{ text: 'a', timestamp: 1, endTime: 2 }], { base: 'x', format: 'srt' })).toEqual([]);
+  });
+
+  it('slugs a language of any script', () => {
+    expect(languageSlug('Español (México)')).toBe('español-méxico');
+    expect(languageSlug('日本語')).toBe('日本語');
+    expect(languageSlug('!!!')).toBe('');
+  });
+
+  it('zips the files so they unzip to the same text', () => {
+    const files = buildSubtitleFiles(lines, { base: 'song', format: 'srt' });
+    const unzipped = unzipSync(zipSubtitleFiles(files));
+    expect(Object.keys(unzipped)).toEqual(files.map((f) => f.name));
+    files.forEach((f) => expect(strFromU8(unzipped[f.name])).toBe(f.content));
+  });
+});
+
+describe('translation slots in the studio', () => {
+  const base: EditorLine[] = [
+    { type: 'section', label: 'A' },
+    { text: 'one', timestamp: 1, endTime: 2 },
+    { text: 'two', timestamp: 3, endTime: 4, translations: [{ text: 'dos', language: 'Spanish' }] },
+  ];
+
+  it('lists slots even when empty, by the language the lines give them', () => {
+    expect(studioLanguages(base)).toEqual([{ index: 0, label: 'Spanish' }]);
+    expect(studioLanguages([{ text: 'x', timestamp: 1, translations: [{ text: '' }] }])).toEqual([{ index: 0, label: 'Translation 1' }]);
+    expect(studioLanguages([{ text: 'x', timestamp: 1 }])).toEqual([]);
+  });
+
+  it('adds a language as the next slot on every line, keeping the lines aligned', () => {
+    const out = addTranslationLanguage(base, 'French');
+    expect(out[0]).toBe(base[0]);
+    expect(out[1].translations).toEqual([{ text: '', language: '' }, { text: '', language: 'French' }]);
+    expect(out[2].translations).toEqual([{ text: 'dos', language: 'Spanish' }, { text: '', language: 'French' }]);
+    expect(studioLanguages(out).map((s) => s.label)).toEqual(['Spanish', 'French']);
+  });
+
+  it('ignores a language the lines already have, and a blank one', () => {
+    expect(addTranslationLanguage(base, ' spanish ')).toBe(base);
+    expect(addTranslationLanguage(base, '  ')).toBe(base);
+  });
+
+  it('removes a language from every line and shifts the later ones up', () => {
+    const three = addTranslationLanguage(addTranslationLanguage(base, 'French'), 'German');
+    const out = removeTranslationLanguage(three, 0);
+    expect(studioLanguages(out).map((s) => s.label)).toEqual(['French', 'German']);
+    expect(out[2].translations).toEqual([{ text: '', language: 'French' }, { text: '', language: 'German' }]);
+    expect(removeTranslationLanguage(base, 5)).toEqual(base);
+  });
+
+  it('sets one line in one language and pads a line that has fewer slots', () => {
+    const out = setLineTranslation(base, 1, 0, 'uno');
+    expect(out[1].translations).toEqual([{ text: 'uno', language: '' }]);
+    expect(out[2]).toBe(base[2]);
+    expect(setLineTranslation(base, 2, 0, 'DOS')[2].translations).toEqual([{ text: 'DOS', language: 'Spanish' }]);
   });
 });

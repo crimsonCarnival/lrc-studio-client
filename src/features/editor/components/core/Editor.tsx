@@ -150,8 +150,6 @@ interface EditorProps {
   duration?: number;
   /** Switches the workspace to the preview ("Revisar"). */
   onShowPreview?: () => void;
-  /** Opens the subtitle studio (video, cue list and timeline). Offered in SRT mode on wide screens. */
-  onOpenStudio?: () => void;
   // Auto Stamp (#9): the persisted Cloudinary upload (if any) and a media-availability
   // flag used as the render-time button-enable signal. The raw local File itself is
   // read imperatively off playerRef.getAudioBlob() at job start (see getLocalFile below).
@@ -216,7 +214,6 @@ export default function Editor({
   playerSlot,
   duration,
   onShowPreview,
-  onOpenStudio,
   uploadedAudio,
   hasMedia,
   activepublicId,
@@ -1508,17 +1505,6 @@ export default function Editor({
             >
               <Icon name="visibility" size={16} />
               <span className="max-xl:hidden">{t('editor.previewAction')}</span>
-            </Button>
-          )}
-          {onOpenStudio && (
-            <Button
-              variant="outline"
-              onClick={onOpenStudio}
-              aria-label={t('editor.studio.open')}
-              className="max-lg:hidden h-10 lg:h-10 px-3.5 lg:px-3.5 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
-            >
-              <Icon name="subtitles" size={16} />
-              <span className="max-xl:hidden">{t('editor.studio.open')}</span>
             </Button>
           )}
           <Button

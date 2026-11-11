@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { ToastBody } from '@ui/app-toast';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
-import { downloadLRC } from '@/shared/utils/lrc';
+import { downloadBlob, downloadLRC } from '@/shared/utils/lrc';
 import { artistDisplay, creditsOf } from '@/features/artists/artist-credits';
 import { useIncludeFeaturedInTitle } from '@/features/artists/include-featured-setting';
 import { lyrics } from '@/app/api';
@@ -13,6 +13,7 @@ import { applyGlobalOffset } from '@/features/editor/services/editor.service';
 import { matchKey } from '@/shared/utils/keyboard';
 import { buildCues, validateCues, YOUTUBE_RULES } from '@/features/subtitles/subtitle-cues';
 import { serializeCues } from '@/features/subtitles/subtitle-formats';
+import { buildSubtitleFiles, translationSlots } from '@/features/subtitles/subtitle-bundle';
 import type { CueIssue, SubtitleFormat } from '@/features/subtitles/subtitles.types';
 import { computeCurrentIndex } from '../lyrics-position';
 import {
@@ -34,6 +35,8 @@ interface UsePreviewParams {
   mediaTitle?: string;
   editorMode: string;
   projectMetadata?: ProjectMetadata;
+  /** A subtitle project exports subtitle files only: there is no LRC of it. */
+  projectKind?: string;
 }
 
 export type ExportFormat = 'lrc' | 'srt';
@@ -99,6 +102,10 @@ export interface UsePreviewResult {
   /** Container used when `exportFormat` is `srt`: SRT, WebVTT or SBV. */
   subtitleFormat: SubtitleFormat;
   setSubtitleFormat: (format: SubtitleFormat) => void;
+  /** A subtitle project: only subtitle files are offered. */
+  subtitleOnly: boolean;
+  /** The files that go in the .zip (one per language), empty when the export is a single file. */
+  bundleFileNames: string[];
   /** Readability and validity problems in the cues the subtitle formats would write. */
   cueIssues: CueIssue[];
   /** Raw field value in milliseconds; parsed when the file is built. */
@@ -147,7 +154,8 @@ export interface UsePreviewResult {
 // The hook is called with the host component's full props bag; we accept it as
 // unknown and narrow to the fields we use.
 export function usePreview(rawProps: unknown): UsePreviewResult {
-  const { lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode, projectMetadata } = rawProps as UsePreviewParams;
+  const { lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode, projectMetadata, projectKind } = rawProps as UsePreviewParams;
+  const subtitleOnly = projectKind === 'subtitles';
   const { t } = useTranslation();
   const { settings, updateSetting } = useSettings();
 
@@ -358,7 +366,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     });
   }, [includeWordTimestamps]);
 
-  const exportFormat: ExportFormat = settings.export?.downloadFormat === 'srt' ? 'srt' : 'lrc';
+  const exportFormat: ExportFormat = subtitleOnly || settings.export?.downloadFormat === 'srt' ? 'srt' : 'lrc';
   // Copy and download both produce the file shown in the dialog, so the two
   // format settings move together (as they do when the editor mode changes).
   const setExportFormat = useCallback((format: ExportFormat) => {
@@ -370,33 +378,52 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
   // only know lrc/srt/txt, and VTT and SBV are the same cues in another container.
   const [subtitleFormat, setSubtitleFormat] = useState<SubtitleFormat>('srt');
   const fileExtension = exportFormat === 'srt' ? subtitleFormat : 'lrc';
-  const exportFileName = `${exportFilename.trim() || 'lyrics'}.${fileExtension}`;
+  const exportBaseName = exportFilename.trim() || 'lyrics';
 
   const lineEndings = settings.export?.lineEndings;
   const wordPrecision = settings.export?.wordTimestampPrecision;
   const precision = settings.editor?.timestampPrecision;
   const srtConfig = settings.editor?.srt;
 
+  const subtitleLines = useMemo(() => {
+    const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
+    return shiftExportLines(applyIncludeFlags(prepareExportLines(lines)), offsetSeconds);
+  }, [lines, exportOffset, applyIncludeFlags, prepareExportLines]);
+
   // The cues the subtitle formats are written from, and what is wrong with them. One list
   // feeds both the file and the warnings so the two cannot disagree.
-  const exportCues = useMemo(() => {
-    const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
-    const exportLines = shiftExportLines(applyIncludeFlags(prepareExportLines(lines)), offsetSeconds);
-    return buildCues(exportLines, {
-      duration,
-      includeSecondary,
-      includeTranslations,
-      translationIndex: activeTranslationIndex,
-      minGap: srtConfig?.minSubtitleGap,
-      defaultDuration: srtConfig?.defaultSubtitleDuration,
-    });
-  }, [lines, exportOffset, duration, includeSecondary, includeTranslations, activeTranslationIndex, srtConfig, applyIncludeFlags, prepareExportLines]);
+  const exportCues = useMemo(() => buildCues(subtitleLines, {
+    duration,
+    includeSecondary,
+    includeTranslations,
+    translationIndex: activeTranslationIndex,
+    minGap: srtConfig?.minSubtitleGap,
+    defaultDuration: srtConfig?.defaultSubtitleDuration,
+  }), [subtitleLines, duration, includeSecondary, includeTranslations, activeTranslationIndex, srtConfig]);
   const cueIssues = useMemo(() => validateCues(exportCues, YOUTUBE_RULES, duration), [exportCues, duration]);
+
+  // With translations, a subtitle export is one file per language in a .zip (the original and
+  // each translation), because that is how each is uploaded to a video.
+  const hasTranslatedSubtitles = exportFormat === 'srt' && translationSlots(lines).length > 0;
+  const subtitleFiles = useMemo(() => (
+    hasTranslatedSubtitles
+      ? buildSubtitleFiles(subtitleLines, {
+        base: exportBaseName,
+        format: subtitleFormat,
+        cues: { duration, minGap: srtConfig?.minSubtitleGap, defaultDuration: srtConfig?.defaultSubtitleDuration },
+        serialize: { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf' },
+      })
+      : []
+  ), [hasTranslatedSubtitles, subtitleLines, exportBaseName, subtitleFormat, duration, srtConfig, lineEndings]);
+  const bundled = subtitleFiles.length > 0;
+  const exportFileName = bundled ? `${exportBaseName}.zip` : `${exportBaseName}.${fileExtension}`;
 
   // Single source of the exported text: the dialog preview, download and copy
   // all go through here.
   const buildExportText = useCallback(async () => {
     if (exportFormat === 'srt') {
+      // A bundle previews its first file (the original); the others are listed beside it.
+      if (bundled) return subtitleFiles[0].content;
       return serializeCues(exportCues, subtitleFormat, { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf' });
     }
     const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
@@ -415,7 +442,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     })) as { output: string };
     return result.output;
   }, [
-    lines, exportFormat, subtitleFormat, exportCues, exportOffset, includeTranslations,
+    lines, exportFormat, subtitleFormat, exportCues, bundled, subtitleFiles, exportOffset, includeTranslations,
     includeSecondary, includeMetadata, metadata, credits, includeFeaturedInTitle, lineEndings, wordPrecision,
     precision, applyIncludeFlags, prepareExportLines, activeTranslationIndex,
   ]);
@@ -449,9 +476,15 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
 
   const handleExport = useCallback(async () => {
     try {
-      // Prefer the text already on screen so the file is exactly what was previewed.
-      const content = exportText ?? await buildExportText();
-      downloadLRC(content, exportFileName);
+      if (bundled) {
+        // Loaded here: the zip writer is only needed once a bundle is actually downloaded.
+        const { zipSubtitleFiles } = await import('@/features/subtitles/subtitle-zip');
+        downloadBlob(new Blob([zipSubtitleFiles(subtitleFiles) as BlobPart], { type: 'application/zip' }), exportFileName);
+      } else {
+        // Prefer the text already on screen so the file is exactly what was previewed.
+        const content = exportText ?? await buildExportText();
+        downloadLRC(content, exportFileName);
+      }
 
       setShowExportPanel(false);
       toast.success(createElement(ToastBody, { title: t('export.success'), description: exportFileName }));
@@ -463,7 +496,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
         toastId: item.id,
       }));
     }
-  }, [exportText, buildExportText, exportFileName, t]);
+  }, [exportText, buildExportText, exportFileName, bundled, subtitleFiles, t]);
 
   useEffect(() => { retryExportRef.current = handleExport; }, [handleExport]);
 
@@ -517,6 +550,8 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     setExportFormat,
     subtitleFormat,
     setSubtitleFormat,
+    subtitleOnly,
+    bundleFileNames: subtitleFiles.map((f) => f.name),
     cueIssues,
     exportOffset,
     setExportOffset,

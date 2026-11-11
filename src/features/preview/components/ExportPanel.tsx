@@ -39,6 +39,10 @@ interface ExportPanelProps {
   setExportFormat: (format: ExportFormat) => void;
   subtitleFormat: SubtitleFormat;
   setSubtitleFormat: (format: SubtitleFormat) => void;
+  /** A subtitle project: only subtitle files are offered, so the LRC cards are not shown. */
+  subtitleOnly?: boolean;
+  /** The files a .zip export holds (one per language), empty when the export is a single file. */
+  bundleFileNames?: string[];
   cueIssues: CueIssue[];
   /** Milliseconds, as typed. */
   exportOffset: string;
@@ -92,6 +96,8 @@ export default function ExportPanel({
   setExportFormat,
   subtitleFormat,
   setSubtitleFormat,
+  subtitleOnly = false,
+  bundleFileNames = [],
   cueIssues,
   exportOffset,
   setExportOffset,
@@ -178,6 +184,7 @@ export default function ExportPanel({
         <div className="lrc-scroll flex flex-wrap flex-1 min-h-0 overflow-y-auto">
           {/* Options */}
           <div className="flex-[1_1_360px] min-w-0 p-5 sm:p-6 flex flex-col gap-5 md:border-r border-zinc-800">
+            {!subtitleOnly && (
             <div role="radiogroup" aria-labelledby={`${id}-format`} className="flex flex-col gap-2">
               <span id={`${id}-format`} className={`${SECTION_LABEL} mb-1`}>{t('export.format')}</span>
               {formats.map((f) => {
@@ -208,6 +215,7 @@ export default function ExportPanel({
                 );
               })}
             </div>
+            )}
 
             {exportFormat === 'srt' && (
               <div className="flex flex-col gap-2">
@@ -279,7 +287,12 @@ export default function ExportPanel({
                   </Label>
                 </div>
               )}
-              {hasTranslations && (
+              {bundleFileNames.length > 0 && (
+                <ul className="m-0 list-disc pl-5 font-mono text-xs text-foreground/65">
+                  {bundleFileNames.map((name) => <li key={name}>{name}</li>)}
+                </ul>
+              )}
+              {hasTranslations && bundleFileNames.length === 0 && (
                 <div className="flex items-center gap-2.5 min-h-6 coarse:min-h-11">
                   <Checkbox id={`${id}-translations`} checked={includeTranslations} onCheckedChange={(c) => setIncludeTranslations(c === true)} className={CHECKBOX} />
                   <Label htmlFor={`${id}-translations`} className="text-sm font-normal text-foreground cursor-pointer">{t('export.includeTranslationsLrc')}</Label>

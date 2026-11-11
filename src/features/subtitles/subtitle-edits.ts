@@ -1,6 +1,7 @@
 import type { EditorLine } from '@/features/editor/editor.types';
 import { MIN_EDIT_LENGTH } from './subtitle-cues';
 import type { Cue } from './subtitles.types';
+import type { TranslationSlot } from './subtitle-bundle';
 
 /**
  * Splits text at the whitespace nearest the point `ratio` (0 to 1) of the way through it.
@@ -121,4 +122,56 @@ export function clearCueTimes(lines: EditorLine[], cue: Cue): EditorLine[] {
 /** Removes a cue's line from the lyrics. */
 export function removeCueLine(lines: EditorLine[], cue: Cue): EditorLine[] {
   return lines.filter((_, i) => i !== cue.lineIndex);
+}
+
+/**
+ * Every translation slot the lines carry, even one nobody has typed in yet, named by the
+ * language its lines give it (the first non-empty one), else "Translation N". Lines keep their
+ * translations by position, so slot `index` is the same language on every line.
+ */
+export function studioLanguages(lines: EditorLine[]): TranslationSlot[] {
+  const labels: string[] = [];
+  let count = 0;
+  for (const line of lines) {
+    if (line.type === 'section') continue;
+    line.translations?.forEach((tr, i) => {
+      count = Math.max(count, i + 1);
+      if (!labels[i] && tr.language?.trim()) labels[i] = tr.language.trim();
+    });
+  }
+  return Array.from({ length: count }, (_, index) => ({ index, label: labels[index] || `Translation ${index + 1}` }));
+}
+
+/**
+ * Adds a language as the next slot on every line, empty, so all lines stay aligned. A language
+ * the lines already have (ignoring case) is left alone.
+ */
+export function addTranslationLanguage(lines: EditorLine[], label: string): EditorLine[] {
+  const name = label.trim();
+  const slots = studioLanguages(lines);
+  if (!name || slots.some((s) => s.label.toLowerCase() === name.toLowerCase())) return lines;
+  const index = slots.length;
+  return lines.map((l) => {
+    if (l.type === 'section') return l;
+    const translations = [...(l.translations ?? [])];
+    while (translations.length < index) translations.push({ text: '', language: '' });
+    translations[index] = { text: '', language: name };
+    return { ...l, translations };
+  });
+}
+
+/** Drops a language from every line. The slots after it move up by one, on every line alike. */
+export function removeTranslationLanguage(lines: EditorLine[], index: number): EditorLine[] {
+  return lines.map((l) => (l.translations && index < l.translations.length ? { ...l, translations: l.translations.filter((_, i) => i !== index) } : l));
+}
+
+/** Sets one line's text in one language, padding the line's slots up to it if it has fewer. */
+export function setLineTranslation(lines: EditorLine[], lineIndex: number, slot: number, text: string): EditorLine[] {
+  return lines.map((l, i) => {
+    if (i !== lineIndex) return l;
+    const translations = [...(l.translations ?? [])];
+    while (translations.length <= slot) translations.push({ text: '', language: '' });
+    translations[slot] = { ...translations[slot], text };
+    return { ...l, translations };
+  });
 }

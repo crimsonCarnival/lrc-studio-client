@@ -1,6 +1,6 @@
 import { buildSecondaryText } from '@/shared/utils/lrc';
 import type { EditorLine } from '@/features/editor/editor.types';
-import type { BuildCuesOptions, Cue, CueIssue, CueRules } from './subtitles.types';
+import type { BuildCuesOptions, Cue, CueIssue, CueRules, StudioRow } from './subtitles.types';
 
 /** Defaults for caption readability. Not limits YouTube enforces; see `CueRules`. */
 export const YOUTUBE_RULES: CueRules = {
@@ -68,12 +68,12 @@ export function buildCues(lines: EditorLine[], opts: BuildCuesOptions = {}): Cue
     // One that starts after the media ends cannot be capped; the validator reports it.
     if (opts.duration && start < opts.duration) end = Math.min(end, opts.duration);
 
-    const parts = [line.text ?? ''];
-    if (opts.includeSecondary) {
+    const parts = opts.onlyTranslationIndex != null ? [line.translations?.[opts.onlyTranslationIndex]?.text ?? ''] : [line.text ?? ''];
+    if (opts.onlyTranslationIndex == null && opts.includeSecondary) {
       const secondary = buildSecondaryText(line);
       if (secondary) parts.push(secondary);
     }
-    if (opts.includeTranslations) {
+    if (opts.onlyTranslationIndex == null && opts.includeTranslations) {
       const translation = line.translations?.[translationIndex]?.text;
       if (translation) parts.push(translation);
     }
@@ -84,6 +84,26 @@ export function buildCues(lines: EditorLine[], opts: BuildCuesOptions = {}): Cue
 
   // Array.prototype.sort is stable, so cues starting together keep their line order.
   return cues.sort((a, b) => a.start - b.start);
+}
+
+/**
+ * The studio's list rows in lyrics order: every cue, every line still without a time (text or
+ * not, so a new empty line can be typed into), and the section markers. A timed line whose
+ * text is empty has no cue and no row: there is nothing to show or edit.
+ */
+export function buildRows(lines: EditorLine[], cues: Cue[]): StudioRow[] {
+  const cueIndexByLine = new Map(cues.map((c, i) => [c.lineIndex, i]));
+  const rows: StudioRow[] = [];
+  lines.forEach((line, lineIndex) => {
+    if (line.type === 'section') {
+      rows.push({ kind: 'section', lineIndex, label: line.label ?? '' });
+      return;
+    }
+    const cueIndex = cueIndexByLine.get(lineIndex);
+    if (cueIndex != null) rows.push({ kind: 'cue', lineIndex, cueIndex });
+    else if (line.timestamp == null) rows.push({ kind: 'untimed', lineIndex });
+  });
+  return rows;
 }
 
 /** Every cue showing at `time`. Overlapping cues (a counterpart over its main line) are all shown. */

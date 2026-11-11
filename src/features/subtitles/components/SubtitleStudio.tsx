@@ -6,13 +6,15 @@ import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import type { PlayerHandle } from '@/features/player/player.types';
 import type { EditorLine } from '@/features/editor/editor.types';
-import { buildCues, constrainCueEdit, validateCues, YOUTUBE_RULES } from '../subtitle-cues';
-import { clearCueEnd, clearCueTimes, firstUntimedLine, markEnd, markStart, mergeCueWithNext, removeCueLine, splitCueLine } from '../subtitle-edits';
+import { ChangeMediaDialog } from '@/features/player/components/ChangeMediaDialog';
+import { buildCues, buildRows, constrainCueEdit, validateCues, YOUTUBE_RULES } from '../subtitle-cues';
+import { addTranslationLanguage, clearCueEnd, clearCueTimes, firstUntimedLine, markEnd, markStart, mergeCueWithNext, removeCueLine, removeTranslationLanguage, setLineTranslation, splitCueLine, studioLanguages } from '../subtitle-edits';
 import type { Cue, CueIssue } from '../subtitles.types';
 import { VideoStage } from './VideoStage';
 import { PlayerBar } from './PlayerBar';
 import { CueTimeline } from './CueTimeline';
 import { CueList } from './CueList';
+import { TranslationBar } from './TranslationBar';
 import type { CueActions } from './CueMenu';
 
 export type SubtitleStudioProps = {
@@ -20,16 +22,19 @@ export type SubtitleStudioProps = {
   setLines: Dispatch<SetStateAction<EditorLine[]>>;
   duration?: number;
   playerRef: RefObject<PlayerHandle | null>;
-  onClose: () => void;
+  /** Saves the project now, as the editor's Save button does. */
+  onSave: () => unknown;
+  isSaving?: boolean;
 };
 
 const roundMs = (seconds: number) => Math.round(seconds * 1000) / 1000;
 /**
- * The subtitle studio: the video with the cues drawn over it, the cues as editable rows,
- * and a timeline to drag them on. It edits the same `lines` as the editor, so undo,
- * autosave and export all see its changes.
+ * The subtitle studio: the video with the cues drawn over it, every line as an editable row,
+ * and a timeline to drag the timed ones on. It is the only editor a subtitle project has (a
+ * song never opens here), and it edits the project's `lines`, so undo, autosave and export
+ * all see its changes.
  */
-export default function SubtitleStudio({ lines, setLines, duration = 0, playerRef, onClose }: SubtitleStudioProps) {
+export default function SubtitleStudio({ lines, setLines, duration = 0, playerRef, onSave, isSaving = false }: SubtitleStudioProps) {
   const { t } = useTranslation();
   const tx = t as (key: string, options?: Record<string, unknown>) => string;
   const { settings } = useSettings();
@@ -68,7 +73,32 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
     () => buildCues(lines, { duration, minGap: srt?.minSubtitleGap, defaultDuration: srt?.defaultSubtitleDuration }),
     [lines, duration, srt?.minSubtitleGap, srt?.defaultSubtitleDuration],
   );
-  const texts = useMemo(() => cues.map((c) => lines[c.lineIndex]?.text ?? ''), [cues, lines]);
+  const rows = useMemo(() => buildRows(lines, cues), [lines, cues]);
+  const lineTexts = useMemo(() => lines.map((l) => l.text ?? ''), [lines]);
+  const languages = useMemo(() => studioLanguages(lines), [lines]);
+  const translationTexts = useMemo(
+    () => lines.map((l) => languages.map((lang) => l.translations?.[lang.index]?.text ?? '')),
+    [lines, languages],
+  );
+  const addLanguage = useCallback((label: string) => setLines((prev) => addTranslationLanguage(prev, label)), [setLines]);
+  const removeLanguage = useCallback((index: number) => setLines((prev) => removeTranslationLanguage(prev, index)), [setLines]);
+  const commitTranslation = useCallback(
+    (lineIndex: number, slot: number, text: string) => setLines((prev) => setLineTranslation(prev, lineIndex, slot, text)),
+    [setLines],
+  );
+
+  // Ctrl or Cmd + S saves, as in the editor; the browser's own "save page" must not open.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        void onSave();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onSave]);
+  const [mediaOpen, setMediaOpen] = useState(false);
 
   const { issuesByCue, issueLines, errorCount, warningCount } = useMemo(() => {
     const byCue = new Map<number, CueIssue[]>();
@@ -108,11 +138,20 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
     )));
   }, [cues, duration, setLines]);
 
+  const commitLineText = useCallback((lineIndex: number, text: string) => {
+    setLines((prev) => prev.map((l, i) => (i === lineIndex ? { ...l, text } : l)));
+  }, [setLines]);
+
   const commitText = useCallback((cueIndex: number, text: string) => {
     const cue = cues[cueIndex];
-    if (!cue) return;
-    setLines((prev) => prev.map((l, i) => (i === cue.lineIndex ? { ...l, text } : l)));
-  }, [cues, setLines]);
+    if (cue) commitLineText(cue.lineIndex, text);
+  }, [cues, commitLineText]);
+
+  // A new line goes last and is selected, ready to be typed into and then marked.
+  const addLine = useCallback(() => {
+    setSelectedLine(lines.length);
+    setLines((prev) => [...prev, { id: crypto.randomUUID(), text: '', timestamp: null }]);
+  }, [lines.length, setLines]);
 
   const splitCue = useCallback((cueIndex: number) => {
     const cue = cues[cueIndex];
@@ -137,24 +176,30 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
     [lines],
   );
   const nextUntimed = useMemo(() => firstUntimedLine(lines), [lines]);
+  const selectLine = useCallback((lineIndex: number) => setSelectedLine(lineIndex), []);
 
   // The mark button works in two presses: the first sets a line's start, the second its end.
   // The line waiting for its end is derived from the lines (it has a start and no end), so
   // setting the end by hand, clearing the times or deleting the line all end the wait too.
   const [markedLine, setMarkedLine] = useState<number | null>(null);
   const awaitingEnd = markedLine != null && lines[markedLine]?.timestamp != null && lines[markedLine]?.endTime == null ? markedLine : null;
+  // The line the next press stamps: the one clicked in the list if it is still waiting for a
+  // time, else the first such line.
+  const selected = selectedLine != null ? lines[selectedLine] : undefined;
+  const selectedWaits = !!selected && selected.type !== 'section' && selected.timestamp == null && (selected.text ?? '').trim() !== '';
+  const markTarget = awaitingEnd == null ? (selectedWaits ? selectedLine : nextUntimed >= 0 ? nextUntimed : null) : null;
   const mark = useCallback(() => {
     const at = playerRef.current?.getCurrentTime?.();
     if (at == null) return;
     if (awaitingEnd != null) {
       setLines((prev) => markEnd(prev, awaitingEnd, at, cues, { duration: duration || undefined, minGap: srt?.minSubtitleGap }) ?? prev);
       setMarkedLine(null);
-    } else if (nextUntimed >= 0) {
-      setSelectedLine(nextUntimed);
-      setMarkedLine(nextUntimed);
-      setLines((prev) => markStart(prev, nextUntimed, at));
+    } else if (markTarget != null) {
+      setSelectedLine(markTarget);
+      setMarkedLine(markTarget);
+      setLines((prev) => markStart(prev, markTarget, at));
     }
-  }, [playerRef, awaitingEnd, nextUntimed, cues, duration, srt?.minSubtitleGap, setLines]);
+  }, [playerRef, awaitingEnd, markTarget, cues, duration, srt?.minSubtitleGap, setLines]);
 
   const clearEnd = useCallback((cueIndex: number) => {
     const cue = cues[cueIndex];
@@ -180,13 +225,6 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
     [stampEdge, splitCue, mergeCue, clearEnd, clearTimes, removeCue],
   );
 
-  const backButton = (
-    <Button variant="outline" onClick={onClose} className="h-11 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent px-3.5 text-[13px] font-semibold text-foreground">
-      <Icon name="arrow_back" size={16} />
-      {t('editor.studio.back')}
-    </Button>
-  );
-
   // One chip says where the file stands and, when something is wrong, filters the list to it.
   const chip = errorCount > 0
     ? { tone: 'border-destructive/50 bg-destructive/10 text-destructive', icon: 'error', label: tx('editor.studio.chipFix', { count: errorCount }) }
@@ -196,7 +234,7 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
 
   return (
     <>
-      {/* The stage, list and timeline need the width; below lg the editor is the place to work. */}
+      {/* The stage, list and timeline need the width, so a phone gets this note and the export. */}
       <div className="lg:hidden flex flex-1 flex-col items-center justify-center gap-5 p-8 text-center">
         <div className="grid size-[72px] place-items-center rounded-[20px] border border-zinc-800 bg-zinc-900 text-primary">
           <Icon name="subtitles" size={34} />
@@ -204,7 +242,6 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
         <h1 className="m-0 font-heading text-[22px] font-bold leading-tight text-foreground">{t('editor.studio.desktopTitle')}</h1>
         <p className="m-0 text-[15px] leading-relaxed text-foreground/65">{t('editor.studio.desktopOnly')}</p>
         <div className="flex w-full flex-col gap-2.5">
-          {backButton}
           <Button
             variant="outline"
             onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
@@ -220,10 +257,7 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
 
       <div className="max-lg:hidden flex min-h-0 flex-1 flex-col">
         <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-2.5">
-          <div className="flex min-w-0 items-center gap-3.5">
-            {backButton}
-            <h1 className="m-0 truncate font-heading text-lg font-bold text-foreground">{t('editor.studio.title')}</h1>
-          </div>
+          <h1 className="m-0 min-w-0 truncate font-heading text-lg font-bold text-foreground">{t('editor.studio.title')}</h1>
           <div className="flex items-center gap-2.5">
             {cues.length > 0 && (
               <button
@@ -239,6 +273,15 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
               </button>
             )}
             <Button
+              variant="outline"
+              onClick={() => void onSave()}
+              disabled={isSaving}
+              className="h-11 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent px-3.5 text-[13px] font-semibold text-foreground"
+            >
+              <Icon name="save" size={16} />
+              {isSaving ? t('project.saving') : t('project.save')}
+            </Button>
+            <Button
               onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
               disabled={cues.length === 0}
               className="h-11 gap-2 rounded-[calc(var(--radius)*1)] bg-primary px-[18px] text-[13px] font-bold text-zinc-950 hover:bg-primary-dim"
@@ -251,7 +294,7 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
 
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,3fr)_minmax(420px,2fr)]">
           <div className="flex min-h-0 min-w-0 flex-col justify-center gap-4 p-5">
-            <VideoStage cues={cues} full={full} onToggleFull={toggleFull} onChooseMedia={onClose} controls={<PlayerBar cues={cues} full={full} onToggleFull={toggleFull} />} />
+            <VideoStage cues={cues} full={full} onToggleFull={toggleFull} onChooseMedia={() => setMediaOpen(true)} controls={<PlayerBar cues={cues} full={full} onToggleFull={toggleFull} />} />
             {!full && <PlayerBar cues={cues} full={full} onToggleFull={toggleFull} />}
           </div>
           <div className="flex min-h-0 flex-col border-l border-zinc-800">
@@ -277,6 +320,7 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
                 </button>
               </div>
             </div>
+            <TranslationBar languages={languages} onAdd={addLanguage} onRemove={removeLanguage} />
             {(untimedCount > 0 || awaitingEnd != null) && (
               <div className="mx-3 mb-2 flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2.5">
                 <div className="min-w-0 text-xs">
@@ -284,7 +328,7 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
                     {awaitingEnd != null ? tx('editor.studio.markingLine', { text: lines[awaitingEnd]?.text ?? '' }) : tx('editor.studio.untimed', { count: untimedCount })}
                   </div>
                   <div className="truncate text-foreground/65">
-                    {awaitingEnd != null ? t('editor.studio.markEndHint') : tx('editor.studio.stampNextLine', { text: lines[nextUntimed]?.text ?? '' })}
+                    {awaitingEnd != null ? t('editor.studio.markEndHint') : tx('editor.studio.stampNextLine', { text: lines[markTarget ?? nextUntimed]?.text ?? '' })}
                   </div>
                 </div>
                 <Button onClick={mark} className="h-11 shrink-0 rounded-[calc(var(--radius)*1)] bg-primary px-3.5 text-xs font-bold text-zinc-950 hover:bg-primary-dim">
@@ -292,21 +336,26 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
                 </Button>
               </div>
             )}
-            {cues.length === 0 ? (
-              <p className="m-0 p-6 text-center text-sm text-foreground/65">{t('editor.studio.noCues')}</p>
-            ) : (
-              <CueList
-                cues={cues}
-                texts={texts}
-                issuesByCue={issuesByCue}
-                onlyIssues={onlyIssues && problemCount > 0}
-                selectedLine={selectedLine}
-                onSelect={selectCue}
-                onTimes={commitTimes}
-                onText={commitText}
-                actions={cueActions}
-              />
-            )}
+            <CueList
+              rows={rows}
+              cues={cues}
+              lineTexts={lineTexts}
+              languages={languages}
+              translationTexts={translationTexts}
+              issuesByCue={issuesByCue}
+              onlyIssues={onlyIssues && problemCount > 0}
+              selectedLine={selectedLine}
+              markTarget={markTarget}
+              onSelect={selectCue}
+              onSelectLine={selectLine}
+              onTimes={commitTimes}
+              onText={commitText}
+              onLineText={commitLineText}
+              onTranslation={commitTranslation}
+              onMark={mark}
+              onAddLine={addLine}
+              actions={cueActions}
+            />
           </div>
         </div>
 
@@ -321,6 +370,7 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
           actions={cueActions}
         />
       </div>
+      <ChangeMediaDialog open={mediaOpen} onOpenChange={setMediaOpen} />
     </>
   );
 }

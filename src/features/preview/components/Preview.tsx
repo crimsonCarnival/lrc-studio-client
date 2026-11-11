@@ -158,6 +158,8 @@ export default function Preview(props: PreviewProps) {
     setExportFormat,
     subtitleFormat,
     setSubtitleFormat,
+    subtitleOnly,
+    bundleFileNames,
     cueIssues,
     exportOffset,
     setExportOffset,
@@ -578,6 +580,8 @@ export default function Preview(props: PreviewProps) {
         setExportFormat={setExportFormat}
         subtitleFormat={subtitleFormat}
         setSubtitleFormat={setSubtitleFormat}
+        subtitleOnly={subtitleOnly}
+        bundleFileNames={bundleFileNames}
         cueIssues={cueIssues}
         exportOffset={exportOffset}
         setExportOffset={setExportOffset}
