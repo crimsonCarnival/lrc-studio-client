@@ -32,7 +32,7 @@ export default function PhonePlayerStrip({ onAddMedia }: PhonePlayerStripProps) 
 
   if (!hasMedia) {
     return (
-      <div className="px-4 py-2">
+      <div data-tour="phone-player" className="px-4 py-2">
         <Button
           variant="outline"
           onClick={onAddMedia}
@@ -53,7 +53,7 @@ export default function PhonePlayerStrip({ onAddMedia }: PhonePlayerStripProps) 
   };
 
   return (
-    <div className="px-2 pt-1 pb-1">
+    <div data-tour="phone-player" className="px-2 pt-1 pb-1">
       {/* Seek row: a full-height (44px) native range, so it is a real touch target with its own
           thumb and focus ring, then the current time. */}
       <div className="flex h-11 items-center gap-2 px-1">

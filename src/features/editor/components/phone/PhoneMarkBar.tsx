@@ -35,7 +35,7 @@ export default function PhoneMarkBar({ onMark, onUndo, canUndo, label, disabled 
   const tap = useMarkTap(onMark, disabled);
 
   return (
-    <div className="flex items-center gap-2 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div data-tour="phone-mark" className="flex items-center gap-2 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <Button
         variant="outline"
         size="icon"

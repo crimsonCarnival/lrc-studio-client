@@ -152,7 +152,7 @@ export default function PhoneEditor({
             </p>
           )}
         </div>
-        {sessionBar}
+        {sessionBar && <div data-tour="phone-session" className="flex shrink-0 items-center">{sessionBar}</div>}
         {visibility}
         {focus && tab === 'sync' && !selectBar && (
           <Button
@@ -171,6 +171,7 @@ export default function PhoneEditor({
             variant="ghost"
             size="icon"
             onClick={onSave}
+            data-tour="phone-save"
             disabled={saveState === 'saving'}
             aria-label={t('common.save')}
             className={`size-11 lg:size-11 shrink-0 ${saveState === 'unsaved' || saveState === 'failed' ? 'bg-primary/15 text-primary hover:text-primary' : 'text-foreground/80'}`}
@@ -183,6 +184,7 @@ export default function PhoneEditor({
           size="icon"
           aria-label={t('common.moreActions')}
           aria-haspopup="dialog"
+          data-tour="phone-tools"
           aria-disabled={onOpenTools ? undefined : 'true'}
           onClick={onOpenTools}
           className={`size-11 lg:size-11 shrink-0 ${onOpenTools ? 'text-foreground/80' : 'text-foreground/40'}`}
@@ -191,7 +193,7 @@ export default function PhoneEditor({
         </Button>
       </header>
 
-      <div className="flex shrink-0 border-b border-zinc-800">
+      <div data-tour="phone-tabs" className="flex shrink-0 border-b border-zinc-800">
         <div role="tablist" aria-label={t('editor.phone.tabs')} className="flex flex-[2_1_0%]">
           {tabButton('sync', t('editor.sync'))}
           {tabButton('edit', t('editor.edit'))}

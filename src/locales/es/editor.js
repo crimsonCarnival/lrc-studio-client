@@ -528,27 +528,71 @@ export default {
     steps: {
       sync: {
         title: "Sincroniza tu letra",
-        body: "Reproduce el audio y presiona Enter (o tu tecla de marca) para marcar la línea activa con el tiempo actual. La siguiente línea se selecciona automáticamente, salvo que desactives el avance automático en Ajustes."
+        body: "Reproduce el audio y presiona Enter (o tu tecla de marca) cuando empiece cada línea. La línea recibe el tiempo actual y la siguiente se selecciona sola, salvo que desactives el avance automático en Ajustes."
       },
       player: {
         title: "Controles del reproductor",
-        body: "Reproduce, pausa, avanza y ajusta la velocidad aquí. Usa el bucle A-B para repetir una parte difícil mientras la sincronizas."
+        body: "Reproduce, pausa, avanza y cambia la velocidad aquí. Usa un bucle A-B para repetir un pasaje difícil mientras lo sincronizas."
       },
-      saveUndo: {
-        title: "Deshacer, rehacer y guardar",
-        body: "Tu trabajo se guarda automáticamente. Presiona Ctrl+S para guardar manualmente, y usa Deshacer/Rehacer (o Ctrl+Z / Ctrl+Y) si una marca sale mal."
+      modes: {
+        title: "Líneas y Palabras",
+        body: "Líneas marca el tiempo de cada línea completa. Palabras marca cada palabra para el efecto karaoke, y se desbloquea cuando sincronizas al menos una línea. Revisar te lleva a la vista previa."
+      },
+      tools: {
+        title: "Auto Stamp y búsqueda de letras",
+        body: "Auto Stamp escucha el audio y sincroniza tu letra por ti. A su lado, la búsqueda encuentra letras en línea, y los resultados sincronizados llegan ya con sus tiempos."
+      },
+      counterparts: {
+        title: "Contrapartes",
+        body: "Actívalo para capturar voces de fondo mientras suena la canción. Presiona la tecla cuando escuches una y se colocará sobre la línea sincronizada."
       },
       sections: {
         title: "Secciones y cantantes",
-        body: "Selecciona una o más líneas para marcarlas como una sección (como Coro o Verso) o asignarles un cantante para duetos."
+        body: "Selecciona líneas para marcarlas como una sección, como Coro o Verso, o para asignarles un cantante en duetos. Este aviso solo aparece mientras el proyecto no tiene secciones."
+      },
+      saveUndo: {
+        title: "Deshacer, rehacer y guardar",
+        body: "Tu trabajo se guarda automáticamente, y el indicador junto al título muestra cuándo está guardado. Presiona Ctrl+S para guardar al instante y usa Deshacer y Rehacer (Ctrl+Z, Ctrl+Y) si una marca sale mal."
       },
       preview: {
         title: "Vista previa en vivo",
-        body: "Mira tu letra sincronizada en formato karaoke aquí. ¿Sincronizando letras en japonés? Activa el furigana para mostrar la pronunciación sobre los kanji."
+        body: "Mira tu letra sincronizada en formato karaoke. ¿Sincronizas japonés? Activa el furigana para mostrar las lecturas sobre los kanji."
       },
       share: {
         title: "Compartir y exportar",
-        body: "¿Listo para publicar? Comparte un enlace en vivo, o exporta tu trabajo como .lrc, .srt o .txt con el botón de al lado."
+        body: "Exporta tu trabajo como .lrc, .srt o .txt, o publícalo para que otros puedan abrirlo, destacarlo y bifurcarlo."
+      },
+      session: {
+        title: "Trabajen juntos",
+        body: "Inicia una sesión para editar este proyecto en vivo con otras personas. Solo aparece en un proyecto guardado que sea tuyo."
+      },
+      phoneLines: {
+        title: "Tu letra",
+        body: "Toca una línea para mover el cursor hasta ella. La línea con el cursor es la próxima que se marcará."
+      },
+      phoneMark: {
+        title: "Barra de marca",
+        body: "Toca Marcar justo cuando empiece cada línea. Deshacer revierte la última marca, y los botones menos y más la adelantan o la retrasan."
+      },
+      phonePlayer: {
+        title: "Reproductor",
+        body: "Reproduce y pausa, retrocede unos segundos, repite la línea actual o cambia la velocidad. Sin audio cargado, aquí agregas el medio."
+      },
+      phoneTabs: {
+        title: "Sincronizar, Editar y Vista previa",
+        body: "Sincronizar es donde marcas las líneas. Editar cambia el texto de la letra. Vista previa muestra el formato karaoke."
+      },
+      phoneTools: {
+        title: "Más herramientas",
+        body: "Abre este menú para cambiar entre Líneas y Palabras, usar Auto Stamp, buscar letras en línea, exportar o publicar tu proyecto."
+      },
+      phoneSave: {
+        title: "Guardado",
+        body: "Tu trabajo se guarda automáticamente. Toca el botón de guardar para guardar al instante y revisa el estado bajo el título para ver si todo está guardado."
+      },
+      phoneSession: {
+        title: "Trabajen juntos",
+        body: "Inicia o administra una sesión en vivo para editar este proyecto con otras personas. Solo aparece en un proyecto guardado que sea tuyo."
       }
     }
   },

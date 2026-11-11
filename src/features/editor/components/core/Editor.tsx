@@ -1633,7 +1633,7 @@ export default function Editor({
         <div className="lg:hidden w-full flex">{modeTabs}</div>
         {wordsFocus ? (
           <>
-            <div className="hidden lg:flex shrink-0">{modeTabs}</div>
+            <div data-tour="editor-modes" className="hidden lg:flex shrink-0">{modeTabs}</div>
             <div className="flex flex-col gap-1 flex-[1_1_220px] min-w-0">
               <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
                 {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
@@ -1682,7 +1682,7 @@ export default function Editor({
             )}
           </div>
         ) : null}
-        <div className="hidden lg:flex flex-1 min-w-0 justify-center">{modeTabs}</div>
+        <div data-tour="editor-modes" className="hidden lg:flex flex-1 min-w-0 justify-center">{modeTabs}</div>
         {lines.length > 0 && (
           <SegmentedControl<'all' | 'unmarked'>
             label={t('editor.filterGroup')}
@@ -1698,6 +1698,7 @@ export default function Editor({
           <Button
             variant="outline"
             aria-pressed={counterpartOpen}
+            data-tour="editor-counterparts"
             onClick={() => setCounterpartOpen((open) => !open)}
             className={`relative h-9 lg:h-9 coarse:h-11 gap-1.5 rounded-lg px-3 lg:px-3 text-[13px] lg:text-[13px] font-semibold ${counterpartOpen ? 'bg-counterpart-soft text-counterpart-ink inset-ring-counterpart hover:bg-counterpart-soft' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
           >

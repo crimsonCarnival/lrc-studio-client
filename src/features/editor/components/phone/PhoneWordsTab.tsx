@@ -78,7 +78,7 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
 
   return (
     <div role="tabpanel" id={p.id} aria-labelledby={p.labelledBy} className="flex flex-1 min-h-0 flex-col short-landscape:flex-row">
-      <div data-testid="phone-list-pane" className="flex flex-1 min-h-0 min-w-0 flex-col">
+      <div data-testid="phone-list-pane" data-tour="phone-lines" className="flex flex-1 min-h-0 min-w-0 flex-col">
         {p.banner}
         {p.list}
       </div>

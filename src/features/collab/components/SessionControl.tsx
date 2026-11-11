@@ -48,6 +48,7 @@ export function SessionControl({ owner, collab, lines, onBeforeStart }: Props) {
       <Button
         variant="outline"
         disabled={starting}
+        data-tour="editor-session"
         // The text is hidden below `sm`; the icon alone needs a name.
         aria-label={label}
         onClick={() => (owner.live ? setOpen(true) : void start())}

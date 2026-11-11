@@ -502,27 +502,71 @@ export default {
     steps: {
       sync: {
         title: "Sync your lyrics",
-        body: "Play the audio and press Enter (or your mark key) to stamp the active line with the current time. The next line is selected automatically, unless Auto-Advance is off in Settings."
+        body: "Play the audio and press Enter (or your mark key) as each line starts. The line gets the current time and the next one is selected automatically, unless Auto-Advance is off in Settings."
       },
       player: {
         title: "Player controls",
-        body: "Play, pause, seek and adjust playback speed here. Use the A-B loop to repeat a tricky section while you sync it."
+        body: "Play, pause, seek and change the speed here. Set an A-B loop to repeat a tricky passage while you sync it."
       },
-      saveUndo: {
-        title: "Undo, redo & save",
-        body: "Your work autosaves as you go. Press Ctrl+S to save manually anytime, and use Undo/Redo (or Ctrl+Z / Ctrl+Y) if a mark goes wrong."
+      modes: {
+        title: "Lines and Words",
+        body: "Lines times each line as a whole. Words times every word for karaoke fill, and unlocks once you have synced at least one line. Review takes you to the preview."
+      },
+      tools: {
+        title: "Auto Stamp and lyrics search",
+        body: "Auto Stamp listens to the audio and times your lyrics for you. Next to it, search finds lyrics online, and synced results arrive already timed."
+      },
+      counterparts: {
+        title: "Counterparts",
+        body: "Turn this on to capture background vocals while the song plays. Press the key when you hear one and it lands over the synced line."
       },
       sections: {
-        title: "Sections & singers",
-        body: "Select one or more lines to tag them as a section (like Chorus or Verse) or assign a singer for duets."
+        title: "Sections and singers",
+        body: "Select lines to tag them as a section like Chorus or Verse, or to assign a singer for duets. This tip only shows while the project has no sections."
+      },
+      saveUndo: {
+        title: "Undo, redo and save",
+        body: "Your work autosaves, and the indicator beside the title shows when it is saved. Press Ctrl+S to save right away, and use Undo and Redo (Ctrl+Z, Ctrl+Y) if a mark goes wrong."
       },
       preview: {
         title: "Live preview",
-        body: "Watch your synced lyrics play back karaoke-style here. Syncing Japanese lyrics? Toggle furigana readings so pronunciation shows above kanji."
+        body: "Watch your synced lyrics play back karaoke-style. Syncing Japanese? Turn on furigana to show readings above the kanji."
       },
       share: {
-        title: "Share & export",
-        body: "Ready to publish? Share a live link with others, or export your work as .lrc, .srt or .txt from the button right next to it."
+        title: "Share and export",
+        body: "Export your work as .lrc, .srt or .txt, or publish it so others can open, star and fork it."
+      },
+      session: {
+        title: "Work together",
+        body: "Start a session to edit this project live with others. It only appears on a saved project you own."
+      },
+      phoneLines: {
+        title: "Your lyrics",
+        body: "Tap a line to move the cursor to it. The line with the cursor is the next one to be stamped."
+      },
+      phoneMark: {
+        title: "Mark bar",
+        body: "Tap Mark right as each line starts. Undo reverses the last stamp, and the minus and plus buttons nudge it earlier or later."
+      },
+      phonePlayer: {
+        title: "Player",
+        body: "Play and pause, jump back a few seconds, loop the current line or change the speed. With no audio loaded, this is where you add media."
+      },
+      phoneTabs: {
+        title: "Sync, Edit and Preview",
+        body: "Sync is where you stamp lines. Edit changes the lyric text. Preview shows the karaoke view."
+      },
+      phoneTools: {
+        title: "More tools",
+        body: "Open this menu to switch between Lines and Words, run Auto Stamp, find lyrics online, export, or publish your project."
+      },
+      phoneSave: {
+        title: "Saving",
+        body: "Your work autosaves. Tap the save button to save right away, and check the status under the title to see if everything is saved."
+      },
+      phoneSession: {
+        title: "Work together",
+        body: "Start or manage a live session to edit this project with others. It only appears on a saved project you own."
       }
     }
   },
