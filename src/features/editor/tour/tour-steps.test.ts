@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import en from '@/locales/en/editor.js';
 import es from '@/locales/es/editor.js';
+import { GUIDE_SECTION_IDS } from '@/features/guide/guide-sections';
 import { EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS, tourStepsFor } from './tour-steps';
-
-// Literal until Task 8 exports GUIDE_SECTION_IDS from the Guide.
-const GUIDE_SECTION_IDS = [
-  'start', 'sync', 'player', 'saveUndo', 'preview', 'words', 'counterparts', 'srt',
-  'sections', 'furigana', 'autoStamp', 'lyricsSearch', 'subtitles', 'sessions', 'share', 'look',
-];
 
 const resolve = (dict: unknown, key: string): unknown =>
   key.replace(/^editor\./, '').split('.').reduce<unknown>(
