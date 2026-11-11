@@ -523,7 +523,8 @@ export default {
     skip: "Omitir",
     done: "Listo",
     stepOf: "{{current}} de {{total}}",
-    learnMore: "Más información en la guía",
+    learnMore: "Más información",
+    dontShowAgain: "No volver a mostrar",
     steps: {
       sync: {
         title: "Sincroniza tu letra",

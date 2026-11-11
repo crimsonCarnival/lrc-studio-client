@@ -123,7 +123,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // fixed header/nav; only the editor needs the dvh clamp this early.
   const isEditorPage = isEditorPath(location.pathname) || isSetupPage;
 
-  const { isOpen: isTourOpen, start: startTour, close: closeTour, maybeStartForNewProject } = useGuidedTour();
+  const { isOpen: isTourOpen, offerOptOut, start: startTour, close: closeTour, maybeStartForNewProject } = useGuidedTour();
 
   // Media loads report their title asynchronously (YT onReady fires 1-3s after
   // player creation) through closures captured at load time. Read the CURRENT
@@ -279,7 +279,11 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           </div>
           )}
 
-          <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={() => closeTour(false)} />
+          <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} offerOptOut={offerOptOut}
+            narrow={false}
+            onClose={closeTour}
+            onLearnMore={(anchor) => { closeTour(false); navigate('/guide#' + anchor); }}
+          />
 
           <div
             className={`relative z-base flex-1 min-h-0 flex flex-col transition-[padding-bottom] duration-500 ease-in-out

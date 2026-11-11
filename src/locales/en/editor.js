@@ -497,7 +497,8 @@ export default {
     skip: "Skip",
     done: "Done",
     stepOf: "{{current}} of {{total}}",
-    learnMore: "Learn more in the guide",
+    learnMore: "Learn more",
+    dontShowAgain: "Don't show this again",
     steps: {
       sync: {
         title: "Sync your lyrics",
