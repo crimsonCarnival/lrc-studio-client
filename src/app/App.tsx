@@ -16,6 +16,7 @@ import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectS
 
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { ProjectKind } from '@/types';
+import { markNewProject } from '@/features/editor/tour/tour-launch';
 import { AppLayout } from './AppLayout';
 import { AppRouter } from './AppRouter';
 
@@ -223,6 +224,7 @@ function AppInner() {
       // Guest: handleManualSave writes to localStorage only (no token).
       // The editor's Save button uses the server-side claim flow instead.
       await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, lines, editorMode, kind, syncMode: true });
+      markNewProject();
       navigate('/project/local');
       return;
     }
@@ -237,6 +239,7 @@ function AppInner() {
       ...(_coverImage ? { coverImage: _coverImage } : {}),
     });
 
+    markNewProject();
     navigate('/project/local');
   }, [setLines, setEditorMode, setSyncMode, setMediaTitle, handleYtUrlChange, handleMediaUpload, appState, navigate, user]);
 
