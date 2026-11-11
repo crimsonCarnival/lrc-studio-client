@@ -204,6 +204,9 @@ function PlayerEngineInner(
   // screen asks for it through context (words mode works on one line at a time).
   const [loopActiveLine, setLoopActiveLine] = useState(false);
   const loopLine = settings.playback?.loopCurrentLine || loopActiveLine;
+  // Whether the loop in place was drawn by this effect: only such a loop is cleared when
+  // line looping is switched off, so one the user made is not wiped by an active-line change.
+  const autoLoopRef = useRef(false);
   useEffect(() => {
     if (loopLine && lines?.[activeLineIndex] && lines[activeLineIndex].timestamp != null) {
       const currentLine = lines[activeLineIndex];
@@ -213,10 +216,11 @@ function PlayerEngineInner(
         const nextLine = lines.slice(activeLineIndex + 1).find(l => l.timestamp != null);
         b = nextLine ? (nextLine.timestamp ?? null) : duration;
       }
+      autoLoopRef.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoop({ a, b });
-    } else if (!loopLine) {
-      // Only clear if it was an auto-loop. For simplicity, we'll just clear it when disabled.
+    } else if (!loopLine && autoLoopRef.current) {
+      autoLoopRef.current = false;
       setLoop({ a: null, b: null });
     }
     // setLoop is a stable useState setter
