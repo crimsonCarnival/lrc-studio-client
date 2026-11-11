@@ -8,10 +8,21 @@ import { isAdminPathname } from '@/features/admin/admin-nav';
 import { isAdminHost, wwwHostUrl, redirectOffMobileHostIfNeeded, redirectToMobileHostIfNeeded } from '@/shared/utils/host';
 import { isStaff } from '@/features/auth/permissions';
 
-// Auto-reload when a new deployment invalidates lazy-loaded chunks
-// window.addEventListener('vite:preloadError', () => {
-// window.location.reload();
-// });
+// A deploy replaces the hashed chunks, and the host answers a missing one with index.html, so a tab
+// opened before it fails its next lazy import ("Expected a JavaScript module ... text/html").
+// Reload to pick up the new build, at most once a minute so a chunk that is truly broken still
+// reaches the ErrorBoundary instead of looping. Unsaved edits are covered by the beforeunload prompt.
+const CHUNK_RELOAD_KEY = 'lrc_chunk_reload_at';
+window.addEventListener('vite:preloadError', (event) => {
+  try {
+    if (Date.now() - Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) ?? 0) < 60_000) return;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {
+    return;
+  }
+  event.preventDefault();
+  window.location.reload();
+});
 import { Toaster } from 'react-hot-toast'
 import { AppToast } from '@ui/app-toast'
 
