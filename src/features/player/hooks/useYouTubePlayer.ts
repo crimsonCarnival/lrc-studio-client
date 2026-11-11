@@ -17,6 +17,15 @@ import type { PlaybackEntry } from '../playback-history';
 // tracking system so React DevTools never walks the cross-origin iframe.
 const ytPlayerStore = new WeakMap();
 
+/** Stops YouTube drawing its own captions: the app draws the subtitles itself. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function turnCaptionsOff(player: any): void {
+  for (const module of ['captions', 'cc']) {
+    try { player.setOption?.(module, 'track', {}); } catch { /* module not loaded yet */ }
+    try { player.unloadModule?.(module); } catch { /* module not loaded yet */ }
+  }
+}
+
 interface UseYouTubePlayerParams {
   containerRef: RefObject<HTMLDivElement | null>;
   t: TFunction;
@@ -179,14 +188,23 @@ export default function useYouTubePlayer({
         videoId,
         height: '100%',
         width: '100%',
+        // The picture is only ever shown inside this app's own player (the subtitle studio),
+        // which draws its own controls and subtitles: YouTube's controls, keyboard shortcuts,
+        // annotations and captions are all switched off so none of its chrome competes.
         playerVars: {
           autoplay: 0,
-          controls: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          cc_load_policy: 0,
+          playsinline: 1,
           modestbranding: 1,
           rel: 0,
         },
         events: {
           onReady: (e) => {
+            turnCaptionsOff(e.target);
             setYtReady(true);
             setYtLoading(false);
             const d = e.target.getDuration();
@@ -198,7 +216,11 @@ export default function useYouTubePlayer({
             onYtUrlChangeRef.current?.(urlToLoad);
             onTrackLoadRef.current?.({ url: urlToLoad, title: title ?? '', type: 'youtube' });
           },
+          // The captions module loads on first play and a viewer's "always show captions"
+          // preference beats cc_load_policy, so switch it off whenever the player reports it.
+          onApiChange: (e) => turnCaptionsOff(e.target),
           onStateChange: (e) => {
+            turnCaptionsOff(e.target);
             const playing = e.data === window.YT.PlayerState.PLAYING;
             setIsPlaying(playing);
             if (e.data === window.YT.PlayerState.PAUSED && settings.playback?.autoRewindOnPause?.enabled) {

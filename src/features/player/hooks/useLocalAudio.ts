@@ -46,6 +46,9 @@ export default function useLocalAudio({
   onTrackLoad,
 }: UseLocalAudioParams) {
   const [localUrl, setLocalUrl] = useState<string | null>(null);
+  // A video file picked in this session, so the player can show its picture. Media restored
+  // from a stored copy (loadFromUrl) is never marked: nothing says it is a video.
+  const [isVideo, setIsVideo] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAbortRef = useRef<boolean | null>(null);
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -63,6 +66,7 @@ export default function useLocalAudio({
     const url = URL.createObjectURL(file);
     setSource('local');
     setLocalUrl(url);
+    setIsVideo(file.type.startsWith('video/'));
     setIsPlaying(false);
     setCurrentTime(0);
     const fileTitle = file.name.replace(/\.[^/.]+$/, '');
@@ -189,6 +193,7 @@ export default function useLocalAudio({
     }
     if (localUrl) URL.revokeObjectURL(localUrl);
     setLocalUrl(null);
+    setIsVideo(false);
     blobRef.current = null;
     uploadAbortRef.current = true;
     setIsUploading(false);
@@ -227,6 +232,7 @@ export default function useLocalAudio({
 
   return {
     localUrl,
+    isVideo,
     isUploading,
     handleFileChange,
     handleTimeUpdate,
@@ -247,6 +253,7 @@ export default function useLocalAudio({
       // Set the URL directly — browser streams it without downloading the full blob
       setSource('local');
       setLocalUrl(url);
+      setIsVideo(false);
       setIsPlaying(false);
       setCurrentTime(0);
       if (title) onTitleChange?.(title);

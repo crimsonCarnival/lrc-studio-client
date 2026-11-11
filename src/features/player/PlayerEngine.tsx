@@ -121,6 +121,7 @@ function PlayerEngineInner(
   const localBlobRef = useRef<Blob | null>(null);
   const ytContainerRef = useRef<HTMLDivElement | null>(null);
 
+
   const sourceRef = useRef(source);
 
   useLayoutEffect(() => { loopARef.current = loopA; });
@@ -267,6 +268,45 @@ function PlayerEngineInner(
     onYtUrlChange,
     onTrackLoad: pushPlaybackEntry,
   });
+
+  // The YouTube iframe normally sits off-screen (audio only). A page that wants the
+  // picture registers an element and the iframe's box is laid over it. The box is moved
+  // with styles, never re-parented: moving an iframe in the DOM reloads it.
+  // `zIndex` is where the picture sits; the registrant draws its own layer one above it.
+  const [stageState, setStageState] = useState<{ el: HTMLElement; zIndex: number } | null>(null);
+  const registerVideoStage = useCallback((el: HTMLElement | null, zIndex = 30) => {
+    setStageState(el ? { el, zIndex } : null);
+  }, []);
+  const videoStage = stageState?.el ?? null;
+  const stageZ = stageState?.zIndex ?? 30;
+  useLayoutEffect(() => {
+    // What shows the picture: the YouTube iframe's box, or a video file's own element.
+    const box: HTMLElement | null = source === 'youtube'
+      ? ytContainerRef.current
+      : source === 'local' && local.isVideo ? audioRef.current : null;
+    if (!box || !videoStage) return;
+    const place = () => {
+      const r = videoStage.getBoundingClientRect();
+      Object.assign(box.style, {
+        position: 'fixed', display: 'block', background: '#000', objectFit: 'contain',
+        top: `${r.top}px`, left: `${r.left}px`, width: `${r.width}px`, height: `${r.height}px`,
+        // No pointer events on the iframe: the stage's own layer takes every click, so YouTube's
+        // hover chrome and click handling never see the pointer.
+        opacity: '1', pointerEvents: 'none', zIndex: String(stageZ),
+      });
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(videoStage);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+      box.removeAttribute('style');
+    };
+  }, [videoStage, stageZ, source, local.isVideo, local.localUrl]);
 
   const detectedUrlType = useMemo(() => {
     const v = yt.ytUrl.trim().split(/\s+/)[0];
@@ -615,39 +655,44 @@ function PlayerEngineInner(
     failedAudioUrl,
     retryAudio,
     setLoopActiveLine,
+    registerVideoStage,
   }), [
     source, isSeeking, isPlaying, currentTime, duration, playbackSpeed, hasMedia, loop, loopA, loopB,
     mediaTitle, projectMetadata?.songName, projectCoverImage, local, yt, mediaUploads, cdnLoading,
     syncMode, viewerMode, SPEED_PRESETS, MIN_SPEED, MAX_SPEED,
     lines, playbackPosition, detectedUrlType, mediaPopoverProps, fetchUploads,
     togglePlay, seek, applySpeed, setLoop, handleLoopChange, clearLoop,
-    handleUrlLoad, handleSelectUpload, handleClearMedia, failedAudioUrl, retryAudio,
+    handleUrlLoad, handleSelectUpload, handleClearMedia, failedAudioUrl, retryAudio, registerVideoStage,
   ]);
   /* eslint-enable react-hooks/refs */
 
   return (
     <PlayerContext.Provider value={value}>
       {/* Always-rendered media elements — must survive layout switches */}
-      {source === 'local' && local.localUrl && (
-        <audio
+      {source === 'local' && local.localUrl && (() => {
+        // One element plays the sound either way. A video file gets a <video> so its picture can
+        // be shown by the subtitle studio (see registerVideoStage); it stays hidden otherwise.
+        const mediaProps = {
           // Once the visualizer routes an element through Web Audio it plays only through
           // that graph, and a source it cannot read would go silent. Keyed by readability,
           // a switch to such a source gets a fresh, unrouted element.
-          key={isReadableAudioUrl(local.localUrl) ? 'readable' : 'sealed'}
-          ref={audioRef}
-          crossOrigin={audioCorsMode(local.localUrl)}
-          src={local.localUrl}
-          onTimeUpdate={local.handleTimeUpdate}
-          onLoadedMetadata={local.handleLoadedMetadata}
-          onPause={local.handlePause}
-          onEnded={() => setIsPlaying(false)}
-          onError={(e) => {
-            console.error('[audio] load error:', (e.currentTarget as HTMLAudioElement).error, '| src:', (e.currentTarget as HTMLAudioElement).src?.slice(0, 80));
+          key: isReadableAudioUrl(local.localUrl) ? 'readable' : 'sealed',
+          crossOrigin: audioCorsMode(local.localUrl),
+          src: local.localUrl,
+          onTimeUpdate: local.handleTimeUpdate,
+          onLoadedMetadata: local.handleLoadedMetadata,
+          onPause: local.handlePause,
+          onEnded: () => setIsPlaying(false),
+          onError: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+            console.error('[audio] load error:', e.currentTarget.error, '| src:', e.currentTarget.src?.slice(0, 80));
             setFailedAudioUrl(local.localUrl);
-          }}
-          className="hidden"
-        />
-      )}
+          },
+          className: 'hidden',
+        };
+        return local.isVideo
+          ? <video {...mediaProps} ref={audioRef as unknown as Ref<HTMLVideoElement>} playsInline />
+          : <audio {...mediaProps} ref={audioRef} />;
+      })()}
       <div
         ref={ytContainerRef}
         className="fixed -top-[9999px] -left-[9999px] size-0 opacity-0 pointer-events-none"

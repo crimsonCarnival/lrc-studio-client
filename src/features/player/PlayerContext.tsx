@@ -82,6 +82,12 @@ export interface PlayerContextValue {
   retryAudio: () => void;
   /** Keeps playback looping over the cursor line while true, whatever the loopCurrentLine setting says. */
   setLoopActiveLine: (on: boolean) => void;
+  /**
+   * Shows the YouTube picture over this element, at `zIndex` (default 30); null sends it
+   * back off-screen. The picture takes no pointer events, so the caller draws a layer above
+   * it to take the clicks.
+   */
+  registerVideoStage: (el: HTMLElement | null, zIndex?: number) => void;
 }
 
 export const PlayerContext = createContext<PlayerContextValue | null>(null);
