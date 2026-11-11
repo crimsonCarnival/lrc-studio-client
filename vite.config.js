@@ -157,6 +157,9 @@ export default defineConfig(({ mode }) => ({
   envPrefix: 'VITE_',
   build: {
     chunkSizeWarningLimit: 500,
+    // Never inline fonts: the CSP says font-src 'self', so a data: URI face is blocked. The tiny
+    // CJK slices from @fontsource fell under the default 4 KB limit and were inlined that way.
+    assetsInlineLimit: (file) => (/\.woff2?$/.test(file) ? false : undefined),
     // Hidden: maps are emitted for debugging large prod bundles, but with no
     // //# sourceMappingURL comment in the JS, so DevTools/Lighthouse don't
     // auto-load them for anyone just browsing the site.
