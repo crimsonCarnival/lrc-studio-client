@@ -513,8 +513,8 @@ export default {
         body: "Lines times each line as a whole. Words times every word for karaoke fill, and unlocks once you have synced at least one line. Review takes you to the preview."
       },
       tools: {
-        title: "Auto Stamp and lyrics search",
-        body: "Auto Stamp listens to the audio and times your lyrics for you. The search button before it finds lyrics online, and synced results arrive already timed."
+        title: "Auto Stamp",
+        body: "Auto Stamp listens to the audio and times the whole song for you. By default it only fills lines that have no timestamp yet. Search Lyrics can also fetch lyrics, some of them already timed."
       },
       counterparts: {
         title: "Counterparts",

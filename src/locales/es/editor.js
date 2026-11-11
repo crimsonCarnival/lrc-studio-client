@@ -539,8 +539,8 @@ export default {
         body: "Líneas marca el tiempo de cada línea completa. Palabras marca cada palabra para el efecto karaoke, y se desbloquea cuando sincronizas al menos una línea. Revisar te lleva a la vista previa."
       },
       tools: {
-        title: "Auto Stamp y búsqueda de letras",
-        body: "Auto Stamp escucha el audio y sincroniza tu letra por ti. El botón de búsqueda anterior encuentra letras en línea, y los resultados sincronizados llegan ya con sus tiempos."
+        title: "Auto Stamp",
+        body: "Auto Stamp escucha el audio y sincroniza toda la canción por ti. De forma predeterminada solo rellena las líneas que aún no tienen marca de tiempo. Buscar letra también puede traer letras, algunas ya sincronizadas."
       },
       counterparts: {
         title: "Contrapartes",
