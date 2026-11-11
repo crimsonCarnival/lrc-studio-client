@@ -137,6 +137,22 @@ describe('SegmentedControl', () => {
       expect(document.activeElement).toBe(tab)
     })
 
+    it('leaves focus on the control the user moved to when it closes', async () => {
+      render(
+        <>
+          <SegmentedControl semantics="tabs" label="Modo" options={lockedOptions('Why it is locked')} value="lines" onChange={vi.fn()} />
+          <input aria-label="Other" />
+        </>,
+      )
+      await userEvent.click(screen.getByRole('tab', { name: 'Palabras' }))
+      await screen.findByText('Why it is locked')
+
+      await userEvent.click(screen.getByRole('textbox', { name: 'Other' }))
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+      expect(screen.getByRole('textbox', { name: 'Other' })).toHaveFocus()
+    })
+
     it('closes when a link inside the detail is clicked', async () => {
       renderLocked(<a href="#words" onClick={(e) => e.preventDefault()}>How it works</a>)
       await userEvent.click(screen.getByRole('tab', { name: 'Palabras' }))

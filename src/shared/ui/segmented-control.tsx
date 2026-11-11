@@ -75,6 +75,7 @@ type SegmentProps<T extends string | number> = {
 function Segment<T extends string | number>({ option, value, onChange, tabs, mono }: SegmentProps<T>) {
   const [detailOpen, setDetailOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const outsideInteractionRef = useRef(false)
   const hasDetail = Boolean(option.disabled && option.disabledDetail)
   const active = option.value === value
   const segment = (
@@ -90,7 +91,10 @@ function Segment<T extends string | number>({ option, value, onChange, tabs, mon
       aria-label={option.ariaLabel}
       onClick={() => {
         if (!option.disabled) onChange(option.value)
-        else if (hasDetail) setDetailOpen(true)
+        else if (hasDetail) {
+          outsideInteractionRef.current = false
+          setDetailOpen(true)
+        }
       }}
       className={cn(
         "h-10 rounded-[calc(var(--radius)*1)] px-[18px] text-base text-subtle hover:bg-transparent hover:text-foreground",
@@ -114,10 +118,14 @@ function Segment<T extends string | number>({ option, value, onChange, tabs, mon
       <PopoverContent
         align="center"
         className="p-3 text-sm"
+        // Mirrors Radix: focus only returns when the user did not move it elsewhere.
+        onInteractOutside={() => {
+          outsideInteractionRef.current = true
+        }}
         // No PopoverTrigger exists, so Radix has nothing to return focus to.
         onCloseAutoFocus={(e) => {
           e.preventDefault()
-          buttonRef.current?.focus()
+          if (!outsideInteractionRef.current) buttonRef.current?.focus()
         }}
         // A link inside the detail navigates away; close explicitly rather than rely on unmounting.
         onClick={(e) => {
