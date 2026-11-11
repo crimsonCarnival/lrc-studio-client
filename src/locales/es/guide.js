@@ -25,6 +25,19 @@ export default {
     nudgeEarlier: "Adelantar {{amount}} segundos",
     nudgeLater: "Retrasar {{amount}} segundos",
     loop: "Bucle A-B",
+    wordsLabel: "Demo del modo palabras",
+    wordsList: "Palabras de la línea",
+    wordsHintLines: "Pulsa Reproducir y luego Marcar para sellar la línea. Se desbloquea Palabras. Cambia a él y vuelve a marcar en cada palabra. Nada de esto se guarda.",
+    wordsHintWords: "Marca (o Espacio) cuando empieza cada palabra; el relleno sigue al cabezal. Nada de esto se guarda.",
+    counterpartsLabel: "Demo de contrapartes",
+    counterpartsHint: "Pulsa Reproducir y usa Contracanto aquí cuando oigas una voz de fondo; luego ponle nombre. Una contraparte necesita una línea sincronizada y tiempos por palabra para saber cuánto dura. Nada de esto se guarda.",
+    counterpartSave: "Guardar",
+    srtLabel: "Demo de tiempos de subtítulos",
+    srtStart: "Inicio",
+    srtEnd: "Fin",
+    srtLength: "Duración",
+    srtSeconds: "{{value}} s",
+    srtHint: "Pulsa Reproducir, marca una vez para el inicio y otra para el final. Un final anterior al inicio se ignora. Nada de esto se guarda.",
   },
   mock: {
     setup: {
@@ -107,14 +120,17 @@ export default {
     words: {
       title: "Modo palabras",
       body1: "El modo palabras es una segunda pasada: sincroniza primero tus líneas y luego afínalas palabra por palabra para un tiempo estilo karaoke.",
+      body2: "El selector Líneas | Palabras está en el encabezado del editor en escritorio y en la hoja Herramientas en el móvil. Palabras sigue bloqueado hasta que al menos una línea esté sincronizada; prueba el selector abajo antes y después de sellar una línea.",
     },
     counterparts: {
       title: "Contrapartes",
       body1: "Una contraparte es una voz de fondo que canta sobre una línea ya sincronizada. Necesita una línea sincronizada y tiempos por palabra para que LRC Studio sepa cuánto dura.",
+      body2: "Las contrapartes se capturan mientras suena la canción: pulsa la tecla de captura cuando oigas una, escribe o elige su texto y afínala en su propio carril.",
     },
     srt: {
       title: "Tiempos de subtítulos",
       body1: "En modo SRT, una segunda marca en la misma línea fija su tiempo final, así cada línea se convierte en un bloque de subtítulo con inicio y fin.",
+      body2: "Cada bloque de subtítulo tiene un inicio y un final. El final debe ir después del inicio, así que una segunda marca anterior se ignora.",
     },
     sections: {
       title: "Secciones y cantantes",

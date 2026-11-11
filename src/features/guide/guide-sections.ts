@@ -25,6 +25,9 @@ const BODIES: Partial<Record<GuideSectionId, GuideSectionDef['load']>> = {
   player: () => import('./sections/PlayerSection'),
   saveUndo: () => import('./sections/SaveUndoSection'),
   preview: () => import('./sections/PreviewSection'),
+  words: () => import('./sections/WordsSection'),
+  counterparts: () => import('./sections/CounterpartsSection'),
+  srt: () => import('./sections/SrtSection'),
 };
 
 const BASICS: ReadonlySet<GuideSectionId> = new Set(['start', 'sync', 'player', 'saveUndo', 'preview']);

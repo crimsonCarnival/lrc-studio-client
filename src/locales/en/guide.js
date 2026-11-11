@@ -25,6 +25,19 @@ export default {
     nudgeEarlier: "Nudge {{amount}} seconds earlier",
     nudgeLater: "Nudge {{amount}} seconds later",
     loop: "A-B loop",
+    wordsLabel: "Words mode demo",
+    wordsList: "Words of the line",
+    wordsHintLines: "Press Play, then Mark to stamp the line. Words unlocks. Switch to it, then Mark again on each word. Nothing here is saved.",
+    wordsHintWords: "Mark (or Space) as each word starts; the fill follows the playhead. Nothing here is saved.",
+    counterpartsLabel: "Counterparts demo",
+    counterpartsHint: "Press Play and use Counterpart here when you hear a background vocal, then name it. A counterpart needs a synced line, and word times to know how long it lasts. Nothing here is saved.",
+    counterpartSave: "Save",
+    srtLabel: "Subtitle timing demo",
+    srtStart: "Start",
+    srtEnd: "End",
+    srtLength: "Length",
+    srtSeconds: "{{value}} s",
+    srtHint: "Press Play, Mark once for the start and again for the end. An end before the start is ignored. Nothing here is saved.",
   },
   mock: {
     setup: {
@@ -107,14 +120,17 @@ export default {
     words: {
       title: "Words mode",
       body1: "Words mode is a second pass: sync your lines first, then refine them word by word for karaoke-style timing.",
+      body2: "The Lines | Words switch is in the editor header on desktop, and in the Tools sheet on a phone. Words stays locked until at least one line is synced, so try the switch below before and after stamping a line.",
     },
     counterparts: {
       title: "Counterparts",
       body1: "A counterpart is a background vocal that sings over a line you have already synced. It needs a synced line, and word times so LRC Studio knows how long it lasts.",
+      body2: "Counterparts are captured while the song plays: press the capture key when you hear one, type or pick its text, then fine-tune it in its own lane.",
     },
     srt: {
       title: "Subtitle timing",
       body1: "In SRT mode, a second mark on the same line sets its end time, so each line becomes a subtitle block with a start and an end.",
+      body2: "Each subtitle block is a start and an end. The end must come after the start, so a second mark that lands earlier is ignored.",
     },
     sections: {
       title: "Sections & singers",
