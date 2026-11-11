@@ -38,6 +38,9 @@ export default {
     srtLength: "Duración",
     srtSeconds: "{{value}} s",
     srtHint: "Pulsa Reproducir, marca una vez para el inicio y otra para el final. Un final anterior al inicio se ignora y, con ambos fijados, pulsa Reiniciar para empezar de nuevo. Nada de esto se guarda.",
+    furiganaLabel: "Demo de furigana",
+    furiganaField: "Línea con lecturas",
+    furiganaHint: "Encierra una palabra con kanji y su lectura entre llaves, como {palabra|lectura}. Una lectura sobre texto solo en kana se descarta. Nada de esto se guarda.",
   },
   mock: {
     setup: {
@@ -59,6 +62,9 @@ export default {
     },
     preview: {
       tabs: "Formato de exportación",
+    },
+    furigana: {
+      translation: "La ciudad de noche",
     },
   },
 
@@ -134,26 +140,37 @@ export default {
     },
     sections: {
       title: "Secciones y cantantes",
-      body1: "Selecciona una o más líneas y usa la barra de etiquetas que aparece para marcarlas como sección — Estrofa, Coro, Puente, etc. Las secciones se tratan de forma distinta en las exportaciones y en la vista previa en vivo.",
-      body2: "Para dúos, asigna un cantante a una línea o a palabras individuales para colorear las partes. Los atajos 1–4 asignan la línea activa al cantante 1–4; 0 lo quita.",
+      body1: "Selecciona una o más líneas y usa la barra que aparece para marcarlas como sección: {{names}} y más. Un marcador de sección es su propia fila en la lista, y las secciones se tratan de forma distinta en las exportaciones y en la vista previa.",
+      body2: "Para dúos, añade los cantantes en el campo de cantantes del proyecto (hasta cuatro) y asígnalos a líneas completas o a palabras sueltas. Una línea con más de un cantante puede ponerse en “{{duet}}” o “{{split}}”.",
+      body3: "Cada cantante tiene un color en la letra. Puedes cambiar los predeterminados en Ajustes, en “{{colors}}”.",
     },
     furigana: {
       title: "Furigana, texto secundario y traducciones",
-      body1: "Pega o escribe letras en japonés y LRC Studio genera automáticamente lecturas por palabra (furigana) para los kanji, mostradas como texto pequeño sobre cada palabra en el editor y la vista previa.",
-      body2: "Las lecturas no siempre son correctas para kanji que dependen del contexto — haz doble clic en una palabra para abrir su editor de lectura y corregirla manualmente.",
-      body3: "Cambia cómo se muestran las lecturas — hiragana o katakana — desde el menú \"⋯\" (Más acciones) de la barra del editor. En la vista previa, usa el icono de libro para mostrar u ocultar el furigana por completo.",
+      body1: "En letras japonesas, las lecturas (furigana) se muestran como texto pequeño sobre los kanji. Se escriben como {palabra|lectura}, por ejemplo {夜|よる}. Pruébalo aquí: edita el marcado y la línea se dibuja debajo.",
+      body2: "Para escribir el marcado en el editor real, haz doble clic en una línea para editar su texto. Una lectura solo se aplica a una palabra que contiene kanji, así que una lectura sobre kana se muestra como texto normal.",
+      body3: "Cuando el proyecto tiene kanji, aparece un botón “{{open}}” en la barra del editor. Recorre cada palabra con kanji: escribe la lectura en kana o romaji, Enter guarda y Tab pasa a la siguiente palabra. El ajuste “{{format}}” cambia las lecturas entre hiragana y katakana, y la vista previa tiene un interruptor “{{toggle}}” para mostrarlas u ocultarlas.",
+      body4: "El texto secundario (romaji, por ejemplo) y las traducciones van bajo la línea principal. El botón “{{secondary}}” de la barra del editor añade el texto secundario de todas las líneas a la vez, uno por línea y en orden; “{{add}}” añade una traducción a una línea. El control “{{toggleTr}}” de la vista previa muestra u oculta las traducciones.",
     },
     autoStamp: {
       title: "Auto Stamp",
-      body1: "Auto Stamp transcribe tu audio y lo alinea con tu letra, así toda la canción se marca sin hacerlo a mano. Por defecto solo rellena las líneas que aún no tienen marca de tiempo.",
+      body1: "Auto Stamp transcribe tu audio y lo empareja con tu letra, así toda la canción recibe marcas de tiempo sin hacerlo a mano. Usa el botón “{{button}}” de la barra del editor (en el móvil, en la hoja de Herramientas); carga el audio antes. En modo Palabras es “{{words}}” y marca cada palabra.",
+      body2: "Una ventana pequeña muestra cada paso mientras se ejecuta, por ejemplo “{{transcribing}}” y luego “{{aligning}}”, y puedes cancelar en cualquier momento; si cancelas no se aplica nada.",
+      body3: "Al terminar recibes un resumen de líneas coincidentes, parciales, de baja confianza o no encontradas. Las líneas por debajo del umbral de confianza aparecen en “{{review}}”, y al hacer clic en una saltas a ella. El umbral y la tolerancia de coincidencia están en los ajustes de “{{settings}}”.",
+      body4: "Por defecto, Auto Stamp solo rellena las líneas que aún no tienen marca de tiempo (“{{only}}”), así que las que marcaste a mano se respetan. Si cambias el ajuste a “{{all}}” y una ejecución sustituiría marcas existentes, te pregunta antes: “{{confirm}}” La sustitución se puede deshacer.",
+      body5: "Los orígenes de YouTube no los descarga el servidor. En su lugar, la ventana ofrece “{{record}}”: graba esta pestaña mientras el vídeo se reproduce, así que tarda lo que dura la canción y necesita un navegador que pueda compartir el audio de la pestaña, como Chrome o Edge en escritorio. Sigue sus indicaciones y no pauses ni saltes mientras graba.",
     },
     lyricsSearch: {
       title: "Búsqueda de letras e importación sincronizada",
-      body1: "Busca una canción por título y artista. Los resultados marcados como \"Sincronizada\" ya traen marcas de tiempo, y puedes conservarlas al importar.",
+      body1: "Busca por título y artista en el paso de letra de la configuración inicial, o desde la opción “{{search}}” del editor. Las letras vienen de una cadena de proveedores, así que una canción que falta en una fuente aún puede aparecer en otra.",
+      body2: "Los resultados marcados como “{{synced}}” ya traen marcas de tiempo. Al abrir uno se indica que la letra ya está sincronizada, y “{{keep}}” viene marcada. Desárcala para importar texto sin formato; se quitan las marcas de tiempo.",
+      body3: "Importar reemplaza la letra que tiene el proyecto. En el editor, si hay algo que perder, se te pide confirmar antes (“{{title}}”), y después puedes deshacerlo.",
     },
     subtitles: {
       title: "Proyectos de subtítulos y estudio",
-      body1: "Cambia un proyecto de canción a subtítulos para temporizar subtítulos de vídeo y expórtalos como SRT, VTT o SBV.",
+      body1: "Al crear un proyecto, “{{kind}}” decide cómo funciona: los proyectos de “{{song}}” marcan líneas de letra sobre el audio y los de “{{subtitles}}” marcan subtítulos sobre un vídeo.",
+      body2: "Un proyecto de subtítulos se abre en el “{{studio}}” en lugar del editor de letras: el vídeo con los subtítulos encima, una lista de subtítulos y una línea de tiempo. Arrastra un bloque para moverlo o un borde para reajustar su tiempo; los bloques se detienen junto a sus vecinos. Necesita una pantalla ancha de escritorio, pero en una más pequeña aún puedes exportar lo que ya está marcado.",
+      body3: "El indicador de estado junto al título te dice cuándo el archivo está “{{ready}}”, o cuántos subtítulos hay que revisar o corregir (solapamientos, demasiado cortos, demasiado largos, etc.). Haz clic para mostrar solo esos.",
+      body4: "Exporta como {{srt}}, {{vtt}} o {{sbv}}. {{hint}}",
     },
     sessions: {
       title: "Sesiones",
@@ -161,12 +178,16 @@ export default {
     },
     share: {
       title: "Compartir y social",
-      body1: "Usa Compartir para generar un enlace en vivo a tu proyecto — cualquiera con el enlace puede verlo y, si sigues editando, verá las actualizaciones en tiempo real.",
-      body2: "Los proyectos publicados pueden recibir estrellas, bifurcarse, recibir reacciones y agruparse en listas.",
+      body1: "Un proyecto nuevo es privado. Usa “{{title}}” para hacerlo público: necesita una cuenta, un título y todas las líneas de letra con tiempo. Los proyectos públicos aparecen en Explorar, en la búsqueda y en tu perfil.",
+      body2: "“{{unlisted}}” es el punto intermedio: solo quien tenga el enlace puede abrirlo, y se queda fuera de Explorar, de la búsqueda, de los perfiles y de los buscadores. Cámbialo después con “{{manage}}”, o usa “{{makePrivate}}” para retirarlo. Los enlaces que compartiste dejan de funcionar.",
+      body3: "“{{share}}” te da un enlace para copiar, un código QR y un tiempo de inicio opcional. “{{forks}}” controla si otras personas pueden bifurcar tu proyecto; si está desactivado, bifurcarlo queda deshabilitado en ese proyecto.",
+      body4: "Los proyectos publicados pueden recibir estrellas, bifurcarse, recibir reacciones y agruparse en listas, que pueden ser públicas, no listadas o privadas.",
     },
     look: {
       title: "Temas y visualizadores",
-      body1: "Elige un tema claro u oscuro y un visualizador para la vista previa desde Ajustes.",
+      body1: "En Ajustes, elige un tema: “{{dark}}” o “{{light}}”, más paletas en “{{more}}”, o “{{create}}” para crear el tuyo a partir de uno. Los cambios se ven en vivo.",
+      body2: "En la página de un proyecto publicado, el botón “{{button}}” de los controles del reproductor abre el selector “{{title}}”: elige cómo se mueve el fondo tras la letra con la música, o déjalo apagado para ver solo la letra.",
+      body3: "Los visualizadores leen el audio de la canción. En YouTube la página no puede analizar el sonido por sí sola, así que pulsa con la letra sincronizada hasta que uses “{{share}}” y compartas el audio de esta pestaña.",
     },
   },
 };

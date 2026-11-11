@@ -28,6 +28,13 @@ const BODIES: Partial<Record<GuideSectionId, GuideSectionDef['load']>> = {
   words: () => import('./sections/WordsSection'),
   counterparts: () => import('./sections/CounterpartsSection'),
   srt: () => import('./sections/SrtSection'),
+  sections: () => import('./sections/SectionsSection'),
+  furigana: () => import('./sections/FuriganaSection'),
+  autoStamp: () => import('./sections/AutoStampSection'),
+  lyricsSearch: () => import('./sections/LyricsSearchSection'),
+  subtitles: () => import('./sections/SubtitlesSection'),
+  share: () => import('./sections/ShareSection'),
+  look: () => import('./sections/LookSection'),
 };
 
 const BASICS: ReadonlySet<GuideSectionId> = new Set(['start', 'sync', 'player', 'saveUndo', 'preview']);

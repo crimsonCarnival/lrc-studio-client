@@ -38,6 +38,9 @@ export default {
     srtLength: "Length",
     srtSeconds: "{{value}} s",
     srtHint: "Press Play, Mark once for the start and again for the end. An end before the start is ignored, and once both are set, press Reset to start over. Nothing here is saved.",
+    furiganaLabel: "Furigana demo",
+    furiganaField: "Line with readings",
+    furiganaHint: "Wrap a kanji word and its reading in braces, like {word|reading}. A reading over kana-only text is dropped. Nothing here is saved.",
   },
   mock: {
     setup: {
@@ -59,6 +62,9 @@ export default {
     },
     preview: {
       tabs: "Export format",
+    },
+    furigana: {
+      translation: "The city at night",
     },
   },
 
@@ -134,26 +140,37 @@ export default {
     },
     sections: {
       title: "Sections & singers",
-      body1: "Select one or more lines, then use the tagging bar that appears to mark them as a section — Verse, Chorus, Bridge and so on. Sections are treated distinctly in exports and the live preview.",
-      body2: "For duets, assign a singer to a line or individual words to color-code parts. Keyboard shortcuts 1–4 assign the active line to singer 1–4; 0 clears it.",
+      body1: "Select one or more lines and use the bar that appears to mark them as a section: {{names}} and more. A section marker is its own row in the list, and sections are treated differently in exports and the preview.",
+      body2: "For duets, add the singers in the project's Singers field (up to four), then assign them to whole lines or to individual words. A line with more than one singer can be set to “{{duet}}” or “{{split}}”.",
+      body3: "Each singer gets a colour in the lyrics. You can change the defaults in Settings, under “{{colors}}”.",
     },
     furigana: {
       title: "Furigana, secondary text & translations",
-      body1: "Paste or type Japanese lyrics and LRC Studio automatically generates word-level readings (furigana) for kanji, shown as small text above each word in the editor and preview.",
-      body2: "Readings aren't always right for context-dependent kanji — double-click a word to open its reading editor and correct it manually.",
-      body3: "Switch how readings are displayed — hiragana or katakana — from the \"⋯\" (More actions) menu in the editor toolbar. In the Preview panel, use the book icon to toggle furigana visibility on or off entirely.",
+      body1: "For Japanese lyrics, readings (furigana) show as small text above the kanji. You write them as {word|reading}, for example {夜|よる}. Try it here: edit the markup and the line renders underneath.",
+      body2: "To type markup in the real editor, double-click a line to edit its text. A reading only applies to a word that contains kanji, so a reading over kana is shown as plain text.",
+      body3: "Once the project has kanji, an “{{open}}” button appears in the editor toolbar. It steps through every kanji word: type the reading in kana or romaji, Enter saves, Tab moves to the next word. The setting “{{format}}” switches readings between hiragana and katakana, and the preview has a “{{toggle}}” switch to show or hide them.",
+      body4: "Secondary lyrics (romaji, for example) and translations sit under the main line. The “{{secondary}}” button in the editor toolbar adds secondary lyrics for every line at once, one per line and in order; “{{add}}” adds a translation to a line. The preview's “{{toggleTr}}” control shows or hides translations.",
     },
     autoStamp: {
       title: "Auto Stamp",
-      body1: "Auto Stamp transcribes your audio and aligns it to your lyrics, so the whole song is timestamped without marking by hand. By default it only fills lines that have no timestamp yet.",
+      body1: "Auto Stamp transcribes your audio and matches it to your lyrics, so the whole song gets timestamps without marking by hand. Use the “{{button}}” button in the editor toolbar (on a phone, in the Tools sheet); load audio first. In Words mode it is “{{words}}” and times each word.",
+      body2: "A small window shows each step while it runs, for example “{{transcribing}}” then “{{aligning}}”, and you can cancel at any point; nothing is applied if you do.",
+      body3: "When it finishes you get a summary of lines matched, partial, low confidence or not found. Lines below the confidence threshold are listed under “{{review}}”, and clicking one jumps to it. Both the threshold and the matching tolerance live in the “{{settings}}” settings.",
+      body4: "By default Auto Stamp only fills lines that have no timestamp yet (“{{only}}”), so lines you stamped by hand are left alone. If you switch the setting to “{{all}}” and a run would replace existing timestamps, you are asked first: “{{confirm}}” The replacement can be undone.",
+      body5: "YouTube sources are not downloaded by the server. Instead the window offers “{{record}}”: it records this tab while the video plays, so the run takes as long as the song and needs a browser that can share tab audio, such as desktop Chrome or Edge. Follow its prompt, and do not pause or skip while it records.",
     },
     lyricsSearch: {
       title: "Lyrics search & synced import",
-      body1: "Search for a song by title and artist. Results marked \"Synced\" already carry timestamps, and you can keep them when you import.",
+      body1: "Search by title and artist from the lyrics step of setup, or from the “{{search}}” option in the editor. Lyrics come from a chain of providers, so a song missing at one source can still turn up at another.",
+      body2: "Results marked “{{synced}}” already carry timestamps. Opening one shows that the lyrics are already timed, and “{{keep}}” is ticked for you. Untick it to import plain text instead; the timestamps are stripped.",
+      body3: "Importing replaces the lyrics currently in the project. In the editor, if there is anything to lose, you are asked to confirm first (“{{title}}”), and you can undo it afterwards.",
     },
     subtitles: {
       title: "Subtitle projects & studio",
-      body1: "Switch a project from song to subtitles to time video captions, then export them as SRT, VTT or SBV.",
+      body1: "When you create a project, “{{kind}}” decides how it works: “{{song}}” projects time lyric lines against audio, “{{subtitles}}” projects time captions against a video.",
+      body2: "A subtitles project opens in the “{{studio}}” instead of the lyric editor: the video with the subtitles over it, a list of subtitles and a timeline. Drag a block to move it or an edge to retime it; blocks stop at their neighbours. It needs a desktop-width screen, but on a smaller one you can still export what is already timed.",
+      body3: "The status chip beside the title tells you when the file is “{{ready}}”, or how many subtitles to check or must be fixed (overlaps, too short, too long and so on). Click it to show only those.",
+      body4: "Export as {{srt}}, {{vtt}} or {{sbv}}. {{hint}}",
     },
     sessions: {
       title: "Sessions",
@@ -161,12 +178,16 @@ export default {
     },
     share: {
       title: "Share & social",
-      body1: "Use Share to generate a live link to your project — anyone with the link can view it, and if you keep editing, viewers see updates in real time.",
-      body2: "Published projects can be starred, forked, reacted to and collected into playlists.",
+      body1: "A new project is private. Use “{{title}}” to make it public: it needs an account, a title and every lyric line timed. Public projects show in Explore, search and your profile.",
+      body2: "“{{unlisted}}” is the in-between: only people with the link can open it, and it stays out of Explore, search, profiles and search engines. Change it later with “{{manage}}”, or use “{{makePrivate}}” to take it down. Links you shared stop working.",
+      body3: "“{{share}}” gives you a link to copy, a QR code and an optional start time. “{{forks}}” controls whether other people can fork your project; when it is off, forking is disabled for that project.",
+      body4: "Published projects can be starred, forked, reacted to and collected into playlists, which can be public, unlisted or private.",
     },
     look: {
       title: "Themes & visualizers",
-      body1: "Pick a light or dark theme and a visualizer for the preview from Settings.",
+      body1: "In Settings, pick a theme: “{{dark}}” or “{{light}}”, more palettes under “{{more}}”, or “{{create}}” to build your own from one. Changes preview live.",
+      body2: "On a published project's page, the “{{button}}” button in the player controls opens the “{{title}}” picker: choose how the background behind the lyrics moves with the music, or switch it off to see the lyrics only.",
+      body3: "Visualizers read the audio of the song. For YouTube the page cannot analyse the sound by itself, so it pulses with the synced lyrics until you use “{{share}}” and share this tab's audio.",
     },
   },
 };
