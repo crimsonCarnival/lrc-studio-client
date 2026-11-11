@@ -514,7 +514,7 @@ export default {
       },
       tools: {
         title: "Auto Stamp and lyrics search",
-        body: "Auto Stamp listens to the audio and times your lyrics for you. Next to it, search finds lyrics online, and synced results arrive already timed."
+        body: "Auto Stamp listens to the audio and times your lyrics for you. The search button before it finds lyrics online, and synced results arrive already timed."
       },
       counterparts: {
         title: "Counterparts",
@@ -566,7 +566,7 @@ export default {
       },
       phoneSession: {
         title: "Work together",
-        body: "Start or manage a live session to edit this project with others. It only appears on a saved project you own."
+        body: "These are the people in your live session. Everyone edits the same lyrics, and changes are saved to the project automatically, so there is no save button."
       }
     }
   },

@@ -540,7 +540,7 @@ export default {
       },
       tools: {
         title: "Auto Stamp y búsqueda de letras",
-        body: "Auto Stamp escucha el audio y sincroniza tu letra por ti. A su lado, la búsqueda encuentra letras en línea, y los resultados sincronizados llegan ya con sus tiempos."
+        body: "Auto Stamp escucha el audio y sincroniza tu letra por ti. El botón de búsqueda anterior encuentra letras en línea, y los resultados sincronizados llegan ya con sus tiempos."
       },
       counterparts: {
         title: "Contrapartes",
@@ -592,7 +592,7 @@ export default {
       },
       phoneSession: {
         title: "Trabajen juntos",
-        body: "Inicia o administra una sesión en vivo para editar este proyecto con otras personas. Solo aparece en un proyecto guardado que sea tuyo."
+        body: "Aquí están las personas de tu sesión en vivo. Todos editan la misma letra y los cambios se guardan en el proyecto automáticamente, así que no hay botón de guardar."
       }
     }
   },

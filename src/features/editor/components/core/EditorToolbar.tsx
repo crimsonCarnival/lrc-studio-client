@@ -94,11 +94,12 @@ export default function EditorToolbar({
   const autoStampDisabled = autoStampBlockedReason !== null;
 
   return (
-    <div data-tour="editor-tools" className={`flex items-center min-w-0 ${trailing ? 'basis-full' : ''}`}>
+    <div className={`flex items-center min-w-0 ${trailing ? 'basis-full' : ''}`}>
       {onAutoStamp && (
         <Tip content={autoStampTip}>
           <Button
             variant="outline"
+            data-tour="editor-tools"
             aria-disabled={autoStampDisabled}
             aria-label={isWordsMode ? t('editor.autoStamp.buttonWords') : t('editor.autoStamp.button')}
             onClick={() => { if (!autoStampDisabled) onAutoStamp(); }}
