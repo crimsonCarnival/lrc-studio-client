@@ -57,13 +57,19 @@ export function splitCueLine(
   return [...lines.slice(0, cue.lineIndex), head, tail, ...lines.slice(cue.lineIndex + 1)];
 }
 
-/** Joins a cue with the cue after it (in time order): one line spanning both. Null for the last cue. */
+/**
+ * Joins a cue with the cue after it (in time order): one line spanning both. Null for the last
+ * cue, and when the merge would lose something: the second line's secondary or translation text
+ * has no place in one line, and a counterpart is a separate voice, not more lyric.
+ */
 export function mergeCueWithNext(lines: EditorLine[], cues: Cue[], index: number): EditorLine[] | null {
   const cue = cues[index];
   const next = cues[index + 1];
   const line = lines[cue?.lineIndex];
   const nextLine = lines[next?.lineIndex];
   if (!cue || !next || !line || !nextLine) return null;
+  if (nextLine.secondary?.trim() || nextLine.translations?.some((t) => t.text?.trim())) return null;
+  if ((line.adLibOf != null) !== (nextLine.adLibOf != null)) return null;
   const text = [line.text ?? '', nextLine.text ?? ''].map((s) => s.trim()).filter(Boolean).join(' ');
   const merged: EditorLine = { ...withoutWordTimes(line), text, timestamp: cue.start, endTime: Math.max(cue.end, next.end), source: 'manual' };
   return lines.flatMap((l, i) => (i === cue.lineIndex ? [merged] : i === next.lineIndex ? [] : [l]));

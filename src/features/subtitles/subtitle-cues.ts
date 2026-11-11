@@ -79,7 +79,7 @@ export function buildCues(lines: EditorLine[], opts: BuildCuesOptions = {}): Cue
     }
 
     const text = cleanCueText(parts.join('\n'));
-    if (text) cues.push({ start, end, text, lineIndex });
+    if (text) cues.push({ start, end, text, lineIndex, counterpart: line.adLibOf != null });
   });
 
   // Array.prototype.sort is stable, so cues starting together keep their line order.
@@ -101,8 +101,10 @@ const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), M
  * `MIN_EDIT_LENGTH`, and never into a neighbouring cue. Pass `start` or `end` to drag one
  * edge, or both to move the cue, which keeps its length and stops against a neighbour.
  *
- * Policy: neighbours are walls. Dragging into one stops there rather than pushing it
- * along or overlapping it, so one edit never silently retimes a second cue.
+ * Policy: the nearest neighbour of the same kind is a wall. Dragging into one stops there
+ * rather than pushing it along or overlapping it, so one edit never silently retimes a second
+ * cue. Counterparts are skipped by main cues and vice versa: a counterpart is meant to overlap
+ * its line, so treating it as a wall would pin the line to the counterpart's start.
  */
 export function constrainCueEdit(
   cues: Cue[],
@@ -111,8 +113,15 @@ export function constrainCueEdit(
   duration?: number,
 ): { start: number; end: number } {
   const cue = cues[index];
-  const lower = index > 0 ? cues[index - 1].end : 0;
-  const upper = index < cues.length - 1 ? cues[index + 1].start : duration || Infinity;
+  const sameKind = (c: Cue) => !!c.counterpart === !!cue.counterpart;
+  let lower = 0;
+  for (let i = index - 1; i >= 0; i--) {
+    if (sameKind(cues[i])) { lower = cues[i].end; break; }
+  }
+  let upper = duration || Infinity;
+  for (let i = index + 1; i < cues.length; i++) {
+    if (sameKind(cues[i])) { upper = cues[i].start; break; }
+  }
 
   if (edit.start != null && edit.end != null) {
     const length = edit.end - edit.start;

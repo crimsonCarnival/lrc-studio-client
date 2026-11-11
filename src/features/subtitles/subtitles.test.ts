@@ -129,6 +129,24 @@ describe('constrainCueEdit', () => {
     expect(constrainCueEdit(cues, 2, { end: 99 }, 10)).toEqual({ start: 6, end: 10 });
     expect(constrainCueEdit(cues, 2, { end: 99 })).toEqual({ start: 6, end: 99 });
   });
+
+  it('does not let a counterpart that starts with its line pin that line', () => {
+    const withAdLib = [
+      { ...cue(10, 12, 'main'), lineIndex: 0 },
+      { ...cue(10, 11.5, 'ad-lib'), lineIndex: 1, counterpart: true },
+      { ...cue(13, 15, 'next'), lineIndex: 2 },
+    ];
+    expect(constrainCueEdit(withAdLib, 0, { start: 10.5, end: 12.5 })).toEqual({ start: 10.5, end: 12.5 });
+    expect(constrainCueEdit(withAdLib, 0, { end: 13.5 })).toEqual({ start: 10, end: 13 });
+  });
+
+  it('does not let a main line pull a counterpart back to its line end', () => {
+    const withAdLib = [
+      { ...cue(10, 12, 'main'), lineIndex: 0 },
+      { ...cue(10, 11.5, 'ad-lib'), lineIndex: 1, counterpart: true },
+    ];
+    expect(constrainCueEdit(withAdLib, 1, { start: 9, end: 10.5 })).toEqual({ start: 9, end: 10.5 });
+  });
 });
 
 describe('splitText', () => {
@@ -171,6 +189,27 @@ describe('cue line edits', () => {
     expect(out[1]).toMatchObject({ id: 'a', text: 'one two three four five six', timestamp: 2, endTime: 9 });
     expect(out[1].words).toBeUndefined();
     expect(mergeCueWithNext(base, cues, 1)).toBeNull();
+  });
+
+  it('refuses a merge that would drop the second line’s secondary or translation text', () => {
+    const withTranslation: EditorLine[] = [
+      { id: 'a', text: 'one', timestamp: 2, endTime: 4 },
+      { id: 'b', text: 'two', timestamp: 5, endTime: 7, translations: [{ text: 'dos' }] },
+    ];
+    expect(mergeCueWithNext(withTranslation, buildCues(withTranslation), 0)).toBeNull();
+    const withSecondary: EditorLine[] = [
+      { id: 'a', text: 'one', timestamp: 2, endTime: 4 },
+      { id: 'b', text: 'two', timestamp: 5, endTime: 7, secondary: 'tu' },
+    ];
+    expect(mergeCueWithNext(withSecondary, buildCues(withSecondary), 0)).toBeNull();
+  });
+
+  it('does not merge a counterpart into its main line, which would delete it', () => {
+    const withAdLib: EditorLine[] = [
+      { id: 'a', text: 'main', timestamp: 2, endTime: 6 },
+      { id: 'c', text: 'yeah', timestamp: 3, endTime: 4, adLibOf: 2 },
+    ];
+    expect(mergeCueWithNext(withAdLib, buildCues(withAdLib), 0)).toBeNull();
   });
 
   it('removes only the cue line', () => {

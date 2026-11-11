@@ -6,6 +6,8 @@ export type Cue = {
   end: number;
   text: string;
   lineIndex: number;
+  /** A counterpart sits over a main line, so edits treat the two kinds as separate. */
+  counterpart?: boolean;
 };
 
 export type BuildCuesOptions = {
