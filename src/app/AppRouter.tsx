@@ -31,6 +31,8 @@ import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
 const PreviewLazy = lazy(() => import('@features/preview/components/Preview'));
+const SubtitleStudio = lazy(() => import('@features/subtitles/components/SubtitleStudio'));
+import type { SubtitleStudioProps } from '@features/subtitles/components/SubtitleStudio';
 
 // Memo wrappers prevent Editor/Preview from re-rendering when AppRouter
 // re-renders due to hover/drag/resize layout state changes — which are
@@ -112,20 +114,22 @@ function RedirectWithParams({ to }: { to: (params: Record<string, string>) => st
   return <Navigate to={`${to(params)}${search}${hash}`} replace />;
 }
 
-type WorkspaceView = 'editor' | 'preview';
+type WorkspaceView = 'editor' | 'preview' | 'studio';
 
 interface EditorWorkspaceProps {
   view: WorkspaceView;
   user?: AuthUser | null;
   editorProps: EditorProps;
   previewProps: PreviewComponentProps;
+  studioProps: Omit<SubtitleStudioProps, 'onClose'>;
+  onCloseStudio: () => void;
 }
 
 // One full-bleed view at a time. The editor is only mounted while it is the
 // active view, so its keyboard shortcuts (mark, nudge) cannot fire from the
 // preview. The preview stays mounted and merely hidden: it owns the export
 // dialog, which the editor's Export button opens without leaving the editor.
-const EditorWorkspace = memo(function EditorWorkspace({ view, user, editorProps, previewProps }: EditorWorkspaceProps) {
+const EditorWorkspace = memo(function EditorWorkspace({ view, user, editorProps, previewProps, studioProps, onCloseStudio }: EditorWorkspaceProps) {
   // The editor layouts publish their own view once mounted (EditorPage, Editor).
   usePresenceView(view === 'preview' ? 'preview' : null);
   return (
@@ -133,6 +137,12 @@ const EditorWorkspace = memo(function EditorWorkspace({ view, user, editorProps,
       {view === 'editor' && (
         <Suspense fallback={<SkeletonEditor />}>
           <Editor user={user} {...editorProps} />
+        </Suspense>
+      )}
+      {/* Replaces the editor while open, so the editor's mark and nudge keys cannot fire under it. */}
+      {view === 'studio' && (
+        <Suspense fallback={<SkeletonEditor />}>
+          <SubtitleStudio {...studioProps} onClose={onCloseStudio} />
         </Suspense>
       )}
       <div className={`flex-1 min-h-0 flex flex-col ${view === 'preview' ? '' : 'hidden'}`}>
@@ -432,7 +442,21 @@ export function AppRouter({
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the
   // phone tab bar already writes, so both ways of switching stay in step.
   // A session viewer cannot edit, so they only ever get the read-only preview.
-  const view: WorkspaceView = collabViewer || mobileTab === 'preview' ? 'preview' : 'editor';
+  // The subtitle studio is a third view of the same workspace, opened by `?studio=1`. A query
+  // flag rather than a route keeps every path-based rule (player mounting, save on leave,
+  // shortcuts, layout) applying to it unchanged. A session viewer cannot edit, so never for them.
+  const studioOpen = !collabViewer && new URLSearchParams(routerLocation.search).get('studio') === '1';
+  const view: WorkspaceView = studioOpen ? 'studio' : collabViewer || mobileTab === 'preview' ? 'preview' : 'editor';
+  const setStudioOpen = useCallback((open: boolean) => {
+    const params = new URLSearchParams(window.location.search);
+    if (open) params.set('studio', '1');
+    else params.delete('studio');
+    const search = params.toString();
+    // Pushed, not replaced, so the browser's Back button leaves the studio.
+    navigate({ pathname: window.location.pathname, search: search ? `?${search}` : '', hash: window.location.hash });
+  }, [navigate]);
+  const openStudio = useCallback(() => setStudioOpen(true), [setStudioOpen]);
+  const closeStudio = useCallback(() => setStudioOpen(false), [setStudioOpen]);
   const showEditorView = useCallback(() => setMobileTab('editor'), [setMobileTab]);
   const showPreviewView = useCallback(() => setMobileTab('preview'), [setMobileTab]);
 
@@ -487,6 +511,11 @@ export function AppRouter({
     [setShowNamingModal],
   );
 
+  const studioProps = useMemo(
+    () => ({ lines, setLines, duration, playerRef }),
+    [lines, setLines, duration, playerRef],
+  );
+
   const editorProps = useMemo(() => ({
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -507,6 +536,7 @@ export function AppRouter({
     declaredSingers: projectMetadata?.singers || EMPTY_STRING_ARRAY,
     playerSlot,
     onShowPreview: showPreviewView,
+    onOpenStudio: openStudio,
     onExit: handleExitEditor,
     uploadedAudio,
     hasMedia,
@@ -539,6 +569,7 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
+    openStudio,
     handleExitEditor,
     uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner, sessionPublicId,
     mediaTitle, projectCoverImage, projectIsPublic, projectIsListed, setProjectVisibility, canChangeVisibility, activepublicId,
@@ -645,14 +676,14 @@ export function AppRouter({
           ) : isProjectLoading ? (
             <SkeletonEditor />
           ) : (
-            <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+            <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} studioProps={studioProps} onCloseStudio={closeStudio} />
           )}
         </EditorContainer>
       } />
       <Route path="session/:publicId" element={
         <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} onRetry={retryCollab} t={t} navigate={navigate}>
           <SessionAudioNotice doc={collabSession.doc} me={collabMe} />
-          <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+          <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} studioProps={studioProps} onCloseStudio={closeStudio} />
         </SessionWorkspace>
       } />
       <Route path="join/:token" element={
@@ -673,7 +704,7 @@ export function AppRouter({
         editorReady && lines.length === 0 && !hasMedia && !pendingProject && !restoredMedia
           && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
           ? <Navigate to="/project/new" replace state={{ keepGuestDraft: true }} />
-          : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+          : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} studioProps={studioProps} onCloseStudio={closeStudio} />
       } />
       <Route path=":accountName/projects/:slugId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
