@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { BUILT_IN_THEME_SWATCHES } from '@/shared/theme/themes';
 
 const TILE = 'flex flex-col gap-2 rounded-lg border border-zinc-700 p-2.5';
 const KINDS = ['off', 'bars', 'wave', 'aurora'] as const;
@@ -8,17 +9,17 @@ const KINDS = ['off', 'bars', 'wave', 'aurora'] as const;
 export default function LookMock() {
   const { t } = useTranslation();
   const themes = [
-    { label: t('settings.options.themes.dark'), tone: 'dark bg-zinc-900' },
-    { label: t('settings.options.themes.light'), tone: 'bg-zinc-100' },
+    { label: t('settings.options.themes.dark'), swatch: BUILT_IN_THEME_SWATCHES.dark },
+    { label: t('settings.options.themes.light'), swatch: BUILT_IN_THEME_SWATCHES.light },
   ];
   return (
     <div aria-hidden="true" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 flex flex-col gap-3">
       <div className="grid grid-cols-3 gap-2">
         {themes.map((th) => (
           <div key={th.label} className={TILE}>
-            <span className={`flex h-9 items-center gap-1.5 rounded-md px-2 ${th.tone}`}>
-              <span className="size-3.5 rounded-xs bg-primary" />
-              <span className="h-1.5 flex-1 rounded-xs bg-subtle" />
+            <span className="flex h-9 items-center gap-1.5 rounded-md px-2" style={{ background: th.swatch.bg }}>
+              <span className="size-3.5 rounded-xs" style={{ background: th.swatch.main }} />
+              <span className="h-1.5 flex-1 rounded-xs opacity-55" style={{ background: th.swatch.text }} />
             </span>
             <span className="truncate text-xs font-medium text-foreground">{th.label}</span>
           </div>

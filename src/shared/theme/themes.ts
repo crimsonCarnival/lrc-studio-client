@@ -4,6 +4,12 @@ import { PALETTES, type ThemePalette } from './theme-palettes';
 export const BUILT_IN_THEMES = ['dark', 'light'] as const;
 export const DEFAULT_THEME = 'dark';
 
+/** Swatch colours of the two Rosé Pine themes, which come from index.css rather than a palette. */
+export const BUILT_IN_THEME_SWATCHES = {
+  dark: { bg: '#232136', main: '#c4a7e7', text: '#f0eeff' },
+  light: { bg: '#faf4ed', main: '#6f5a8f', text: '#1a1826' },
+} as const;
+
 export const THEME_PALETTES = PALETTES;
 const BY_ID = new Map(PALETTES.map((p) => [p.id, p]));
 

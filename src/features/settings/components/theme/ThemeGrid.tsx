@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
-import { THEME_PALETTES, shapeOf } from '@/shared/theme/themes';
+import { BUILT_IN_THEME_SWATCHES, THEME_PALETTES, shapeOf } from '@/shared/theme/themes';
 import { CUSTOM_THEME_ID, SHAPE_RADIUS, type CustomTheme } from '@/shared/theme/custom-theme';
 
 type Props = {
@@ -16,8 +16,8 @@ type Props = {
 
 // The two Rosé Pine themes come from index.css, so their swatches are fixed here.
 const BUILT_INS = [
-  { id: 'dark', labelKey: 'settings.options.themes.dark', bg: '#232136', main: '#c4a7e7', text: '#f0eeff' },
-  { id: 'light', labelKey: 'settings.options.themes.light', bg: '#faf4ed', main: '#6f5a8f', text: '#1a1826' },
+  { id: 'dark', labelKey: 'settings.options.themes.dark', ...BUILT_IN_THEME_SWATCHES.dark },
+  { id: 'light', labelKey: 'settings.options.themes.light', ...BUILT_IN_THEME_SWATCHES.light },
 ] as const;
 
 function Tile({ id, name, bg, main, text, radius, selected, onChange }: {

@@ -162,7 +162,7 @@ export default {
     lyricsSearch: {
       title: "Búsqueda de letras e importación sincronizada",
       body1: "Busca por título y artista en el paso de letra de la configuración inicial, o desde la opción “{{search}}” del editor. Las letras vienen de una cadena de proveedores, así que una canción que falta en una fuente aún puede aparecer en otra.",
-      body2: "Los resultados marcados como “{{synced}}” ya traen marcas de tiempo. Al abrir uno se indica que la letra ya está sincronizada, y “{{keep}}” viene marcada. Desárcala para importar texto sin formato; se quitan las marcas de tiempo.",
+      body2: "Los resultados marcados como “{{synced}}” ya traen marcas de tiempo. Al abrir uno se indica que la letra ya está sincronizada, y “{{keep}}” viene marcada. Desmárcala para importar texto sin formato; se quitan las marcas de tiempo.",
       body3: "Importar reemplaza la letra que tiene el proyecto. En el editor, si hay algo que perder, se te pide confirmar antes (“{{title}}”), y después puedes deshacerlo.",
     },
     subtitles: {
