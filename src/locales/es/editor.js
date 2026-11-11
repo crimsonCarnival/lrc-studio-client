@@ -518,6 +518,7 @@ export default {
   },
   tour: {
     replay: "Ver el tutorial",
+    take: "Hacer el recorrido",
     next: "Siguiente",
     back: "Atrás",
     skip: "Omitir",

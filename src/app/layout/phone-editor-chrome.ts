@@ -4,6 +4,8 @@ type PhoneEditorChrome = {
   /** True while the phone editor is on screen. */
   mounted: boolean;
   setMounted: (mounted: boolean) => void;
+  /** Starts the editor tour (owned by AppLayout, which renders it above the routes). */
+  startTour: () => void;
 };
 
 /**
@@ -32,4 +34,9 @@ export function usePhoneEditorChrome(): void {
 /** Whether the phone editor is on screen (false outside AppLayout). */
 export function usePhoneEditorMounted(): boolean {
   return useContext(PhoneEditorChromeContext)?.mounted ?? false;
+}
+
+/** Starts the editor tour from inside the editor; undefined outside AppLayout. */
+export function useStartTour(): (() => void) | undefined {
+  return useContext(PhoneEditorChromeContext)?.startTour;
 }

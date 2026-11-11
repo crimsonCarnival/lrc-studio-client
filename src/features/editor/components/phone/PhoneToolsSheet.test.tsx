@@ -25,6 +25,7 @@ function handlers() {
     onPublish: vi.fn(),
     onViewPublic: vi.fn(),
     onChangeSong: vi.fn(),
+    onTakeTour: vi.fn(),
     onNewProject: vi.fn(),
     onRemoveAll: vi.fn(),
   };
@@ -64,6 +65,7 @@ describe('PhoneToolsSheet', () => {
     ['public page', /view as public/i, (h) => h.onViewPublic],
     ['project settings', /project settings/i, (h) => h.onProjectSettings],
     ['change media', /change media/i, (h) => h.onChangeSong],
+    ['take the tour', /take the tour/i, (h) => h.onTakeTour],
     ['new project', /new project/i, (h) => h.onNewProject],
     ['remove all', /remove all lyrics/i, (h) => h.onRemoveAll],
   ];

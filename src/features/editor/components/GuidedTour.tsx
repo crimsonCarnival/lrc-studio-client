@@ -25,7 +25,7 @@ type GuidedTourProps = {
   offerOptOut: boolean;
   narrow: boolean;
   onClose: (optOut: boolean) => void;
-  onLearnMore: (anchor: string) => void;
+  onLearnMore: (anchor: string, optOut: boolean) => void;
 };
 
 export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLearnMore }: GuidedTourProps) {
@@ -48,7 +48,7 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
   }, [step]);
 
   // Reset to the first step whenever the tour (re)opens.
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setStepIndex(0);
@@ -156,7 +156,7 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
           variant="link"
           size="sm"
           className="h-auto p-0 self-start text-xs"
-          onClick={() => onLearnMore(step.guideAnchor)}
+          onClick={() => onLearnMore(step.guideAnchor, optOut)}
         >
           {t('editor.tour.learnMore')}
         </Button>

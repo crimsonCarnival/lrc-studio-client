@@ -55,6 +55,8 @@ export type PhoneToolsSheetProps = {
   onPublish?: () => void;
   onViewPublic?: () => void;
   onChangeSong?: () => void;
+  /** Starts the editor tour; absent outside the app layout. */
+  onTakeTour?: () => void;
   onNewProject: () => void;
   onRemoveAll: () => void;
 };
@@ -228,6 +230,7 @@ export default function PhoneToolsSheet(p: PhoneToolsSheetProps) {
           />
         )}
         {p.onChangeSong && !p.readOnly && <DrawerItem iconName="swap_horiz" label={t('player.changeSong')} onClick={run(p.onChangeSong)} />}
+        {p.onTakeTour && <DrawerItem iconName="school" label={t('editor.tour.take')} onClick={run(p.onTakeTour)} />}
         {!p.readOnly && (
           <>
             <DrawerItem iconName="add" label={t('home.newProject')} onClick={run(p.onNewProject)} />

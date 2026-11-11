@@ -56,10 +56,17 @@ describe('GuidedTour', () => {
     expect(onClose).toHaveBeenCalledWith(false);
   });
 
-  it('Learn more passes the step anchor', () => {
+  it('Learn more passes the step anchor and the ticked opt-out', () => {
+    const { onLearnMore } = setup({ offerOptOut: true });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'editor.tour.dontShowAgain' }));
+    fireEvent.click(screen.getByRole('button', { name: 'editor.tour.learnMore' }));
+    expect(onLearnMore).toHaveBeenCalledWith('anchor-a', true);
+  });
+
+  it('Learn more without the box ticked passes opt-out false', () => {
     const { onLearnMore } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'editor.tour.learnMore' }));
-    expect(onLearnMore).toHaveBeenCalledWith('anchor-a');
+    expect(onLearnMore).toHaveBeenCalledWith('anchor-a', false);
   });
 
   it('clicking the spotlighted target does not reach the target', () => {

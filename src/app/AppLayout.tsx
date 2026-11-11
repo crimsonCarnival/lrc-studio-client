@@ -21,7 +21,8 @@ import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
-import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tour-steps';
+import { tourStepsFor } from '@/features/editor/tour/tour-steps';
+import { consumeTourReplay, rememberEditorPath } from '@/features/editor/tour/tour-launch';
 import { PhoneEditorChromeContext } from './layout/phone-editor-chrome';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/app/useAppState';
@@ -97,7 +98,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // Set by the phone editor while it is mounted (see phone-editor-chrome): it draws its own
   // header and player strip, so the app header and the docked player step aside.
   const [phoneEditorMounted, setPhoneEditorMounted] = useState(false);
-  const phoneEditorChrome = useMemo(() => ({ mounted: phoneEditorMounted, setMounted: setPhoneEditorMounted }), [phoneEditorMounted]);
+  const { isOpen: isTourOpen, offerOptOut, start: startTour, close: closeTour, maybeStartForNewProject } = useGuidedTour();
+  const phoneEditorChrome = useMemo(() => ({ mounted: phoneEditorMounted, setMounted: setPhoneEditorMounted, startTour }), [phoneEditorMounted, startTour]);
   // The workspace shows one view at a time (see EditorWorkspace in AppRouter);
   // whichever is showing owns the desktop player dock.
   const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, phoneEditor: phoneEditorMounted });
@@ -122,8 +124,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // other route relies on min-h-screen so the page scrolls normally under the
   // fixed header/nav; only the editor needs the dvh clamp this early.
   const isEditorPage = isEditorPath(location.pathname) || isSetupPage;
-
-  const { isOpen: isTourOpen, offerOptOut, start: startTour, close: closeTour, maybeStartForNewProject } = useGuidedTour();
 
   // Media loads report their title asynchronously (YT onReady fires 1-3s after
   // player creation) through closures captured at load time. Read the CURRENT
@@ -159,11 +159,32 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     if (isPublicProjectView) playerRef.current?.pause?.();
   }, [isPublicProjectView, playerRef]);
 
+  // Not gated on the breakpoint: a project created on a phone must consume its new-project flag
+  // there, or a stale flag would fire later on desktop for an existing project.
   useEffect(() => {
-    if (!isLg || isSetupPage || isPublicProjectView) return;
+    if (isSetupPage || isPublicProjectView) return;
     if (!isReady || !lines || lines.length === 0) return;
-    maybeStartForNewProject();
-  }, [isLg, isSetupPage, isPublicProjectView, isReady, lines, maybeStartForNewProject]);
+    if (consumeTourReplay()) startTour();
+    else maybeStartForNewProject();
+  }, [isSetupPage, isPublicProjectView, isReady, lines, startTour, maybeStartForNewProject]);
+
+  // Crossing lg swaps the step list and the layout the spotlight points at, so end the tour
+  // rather than leave a step from the other list over the wrong layout.
+  // Only a breakpoint change closes it, so the latest values are read through a ref.
+  const tourRef = useRef({ isTourOpen, closeTour });
+  useEffect(() => { tourRef.current = { isTourOpen, closeTour }; });
+  const prevIsLgRef = useRef(isLg);
+  useEffect(() => {
+    if (prevIsLgRef.current === isLg) return;
+    prevIsLgRef.current = isLg;
+    if (tourRef.current.isTourOpen) tourRef.current.closeTour(false);
+  }, [isLg]);
+
+  // The guide's "Back to the editor" needs the last editor path. Leaving to /guide keeps it;
+  // only an empty editor clears it.
+  useEffect(() => {
+    if (isEditorPath(location.pathname)) rememberEditorPath(lines && lines.length > 0 ? location.pathname : null);
+  }, [location.pathname, lines]);
 
   const handleProjectConfirm = useCallback(({ name, description, tags, songName, artists, artistsChanged, songAlbum, songYear, genre, coverImage, singerColors, singers }: SetupConfirmData) => {
     const newTitle = name || mediaTitle || '';
@@ -279,10 +300,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           </div>
           )}
 
-          <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} offerOptOut={offerOptOut}
-            narrow={false}
+          <GuidedTour steps={tourStepsFor(isLg)} isOpen={isTourOpen} offerOptOut={offerOptOut}
+            narrow={!isLg}
             onClose={closeTour}
-            onLearnMore={(anchor) => { closeTour(false); navigate('/guide#' + anchor); }}
+            onLearnMore={(anchor, optOut) => { closeTour(optOut); navigate('/guide#' + anchor); }}
           />
 
           <div

@@ -492,6 +492,7 @@ export default {
   },
   tour: {
     replay: "Take the tour",
+    take: "Take the tour",
     next: "Next",
     back: "Back",
     skip: "Skip",

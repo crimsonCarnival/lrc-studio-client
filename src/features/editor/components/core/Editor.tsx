@@ -15,6 +15,7 @@ import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
 import { WordsFocusLine } from '../modes/WordsFocusLine';
 import { usePlayer } from '@/features/player/PlayerContext';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
+import { useStartTour } from '@/app/layout/phone-editor-chrome';
 import { formatTimestamp } from '@/shared/utils/lrc';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
@@ -679,6 +680,7 @@ export default function Editor({
   // the cursor line and the sidebar is how you move between lines. Below lg the
   // sidebar is not shown, so the full list stays.
   const isLg = useBreakpoint('lg');
+  const startTour = useStartTour();
   const wordsFocus = isWordsMode && isLg;
   usePresenceView(phone ? 'mobile' : wordsFocus ? 'words-focus' : 'editor');
 
@@ -1384,6 +1386,7 @@ export default function Editor({
           onPublish={canPublish ? openPublish : undefined}
           onViewPublic={onTogglePublicView && !inSession && serverProjectId ? onTogglePublicView : undefined}
           onChangeSong={hasMedia && !inSession ? () => setChangeMediaOpen(true) : undefined}
+          onTakeTour={startTour}
           onNewProject={onNewProject}
           onRemoveAll={handleRemoveAllLyrics}
         />
