@@ -47,7 +47,6 @@ import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import { ChangeMediaDialog } from '@/features/player/components/ChangeMediaDialog';
-import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
 import { Kbd } from '@ui/kbd';
 import { Button } from '@ui/button';
@@ -530,7 +529,7 @@ export default function Editor({
   // as a global editor setting. The same dock block renders in whichever slot is active.
   const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
   const playerDock = playerSlot === 'editor' ? (
-    <DragPointerIsolate
+    <div
       data-tour="player-controls"
       className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
         }`}
@@ -560,7 +559,7 @@ export default function Editor({
           </p>
         );
       })()}
-    </DragPointerIsolate>
+    </div>
   ) : null;
 
 
