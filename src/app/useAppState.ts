@@ -34,6 +34,7 @@ import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import type { AuthUser as AuthUserType } from '@/features/auth/auth.types';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { ProjectMetadata, RestoredMedia, UploadedAudio, ForkedFrom } from '@/types/app-state';
+import type { ProjectKind } from '@/types';
 import type { PlayerHandle } from '@/features/player/player.types';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -55,6 +56,9 @@ export function useAppState(user?: AuthUserType | null) {
   // ——— Lines state with undo/redo ———
   // editorMode must be declared before useHistory so getCompanion can close over it
   const [editorMode, setEditorModeRaw] = useState('lrc');
+  // What the open project is for. Fixed at creation (the server never changes it), so this only
+  // follows what a load, a restore or the setup screen says; a new project starts as a song.
+  const [projectKind, setProjectKind] = useState<ProjectKind>('song');
   const [isProjectLoading, setIsProjectLoading] = useState(() => {
     try {
       return !!localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT_ID);
@@ -336,6 +340,7 @@ export function useAppState(user?: AuthUserType | null) {
         const restoredMode = parsed.editorMode
           || (validLines.some((l) => l.endTime != null) ? 'srt' : 'lrc');
         setEditorModeRaw(restoredMode);
+        setProjectKind(parsed.kind === 'subtitles' ? 'subtitles' : 'song');
         if (parsed.ytUrl) setRestoredMedia({ type: 'youtube', url: parsed.ytUrl });
         if (typeof parsed.playbackPosition === 'number') setRestoredPosition(parsed.playbackPosition);
         if (typeof parsed.playbackSpeed === 'number') setRestoredSpeed(parsed.playbackSpeed);
@@ -377,6 +382,7 @@ export function useAppState(user?: AuthUserType | null) {
           setSyncMode(serverLines.length > 0 ? true : (project.state?.syncMode ?? true));
           setActiveLineIndex(project.state?.activeLineIndex || 0);
           setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
+          setProjectKind(project.kind === 'subtitles' ? 'subtitles' : 'song');
           setRestoredMedia(uploadToRestoredMedia(project.upload));
           // Mirror loadProject: pre-set the YT url so the player's onYtUrlChange
           // during hydration isn't mistaken for a user media change.
@@ -520,6 +526,7 @@ export function useAppState(user?: AuthUserType | null) {
         setActiveLineIndex(idx);
       }
       setEditorModeRaw(parsed.editorMode || 'lrc');
+      setProjectKind(parsed.kind === 'subtitles' ? 'subtitles' : 'song');
       if (parsed.ytUrl) {
         setRestoredMedia({ type: 'youtube', url: parsed.ytUrl });
         setProjectYtUrl(parsed.ytUrl);
@@ -719,6 +726,7 @@ export function useAppState(user?: AuthUserType | null) {
     syncMode,
     activeLineIndex,
     editorMode,
+    projectKind,
     projectYtUrl,
     playbackPosition,
     hasMedia,
@@ -778,6 +786,7 @@ export function useAppState(user?: AuthUserType | null) {
     pendingProject,
     setProjectCoverImage,
     setProjectVisibility,
+    setProjectKind,
     mediaTitle,
     projectMetadata,
     duration,
@@ -1155,6 +1164,8 @@ export function useAppState(user?: AuthUserType | null) {
     projectIsPublic,
     projectIsListed,
     setProjectVisibility,
+    projectKind,
+    setProjectKind,
     isProjectLoading,
     loadError,
     setLoadError,

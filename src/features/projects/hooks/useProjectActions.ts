@@ -21,6 +21,7 @@ export function useProjectActions({
   setSyncMode,
   setActiveLineIndex,
   setEditorModeRaw,
+  setProjectKind,
   setMediaTitle,
   setProjectMetadata,
   setProjectYtUrl,
@@ -69,6 +70,7 @@ export function useProjectActions({
       setSyncMode(project.state?.syncMode ?? true);
       setActiveLineIndex(project.state?.activeLineIndex || 0);
       setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
+      setProjectKind?.(project.kind === 'subtitles' ? 'subtitles' : 'song');
       // Always restore media
       setRestoredMedia(uploadToRestoredMedia(project.upload));
       if (project.upload?.source === 'youtube' && project.upload?.uploadUrl) {
@@ -125,7 +127,7 @@ export function useProjectActions({
     } finally {
       setIsProjectLoading(false);
     }
-  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActivepublicId, activepublicIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectMetadata, setProjectYtUrl, setUploadedAudio, setProjectCoverImage, setProjectVisibility, setProjectUserId]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setProjectKind, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActivepublicId, activepublicIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectMetadata, setProjectYtUrl, setUploadedAudio, setProjectCoverImage, setProjectVisibility, setProjectUserId]);
 
   // ── Restore pending (localStorage) project ────────────────────────────────
   const handleRestoreProject = useCallback(() => {
@@ -141,6 +143,7 @@ export function useProjectActions({
     if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) setActiveLineIndex(idx);
     const restoredMode = pendingProject.editorMode || (validLines.some((l) => l.endTime != null) ? 'srt' : 'lrc');
     setEditorModeRaw(restoredMode);
+    setProjectKind?.(pendingProject.kind === 'subtitles' ? 'subtitles' : 'song');
     if (pendingProject.title) setMediaTitle(pendingProject.title);
     if (pendingProject.metadata) setProjectMetadata(pendingProject.metadata);
     if (pendingProject.ytUrl) {
@@ -238,7 +241,8 @@ export function useProjectActions({
           }
           
           const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'restore_project');
-          const res = await projects.create({ ...serverPayload, recaptchaToken });
+          // `kind` is create-only: UpdateProjectInput does not take it, so it is not in serverPayload.
+          const res = await projects.create({ ...serverPayload, ...(pendingProject.kind === 'subtitles' ? { kind: 'subtitles' as const } : {}), recaptchaToken });
           setActivepublicId(res.publicId);
           activepublicIdRef.current = res.publicId;
           localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, res.publicId);
@@ -255,7 +259,7 @@ export function useProjectActions({
       isCreatingProjectRef.current = false;
       setPendingProject(null);
     }
-  }, [pendingProject, setPendingProject, setLines, setForkedFrom, setSyncMode, setActiveLineIndex, setEditorModeRaw, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setIsProjectLoading, activepublicId, activepublicIdRef, setActivepublicId, sessionUploadIdRef, mediaTitle, projectMetadata, duration, executeRecaptcha, isCreatingProjectRef, setMediaTitle, setProjectMetadata, setProjectYtUrl, setUploadedAudio]);
+  }, [pendingProject, setPendingProject, setLines, setForkedFrom, setSyncMode, setActiveLineIndex, setEditorModeRaw, setProjectKind, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setIsProjectLoading, activepublicId, activepublicIdRef, setActivepublicId, sessionUploadIdRef, mediaTitle, projectMetadata, duration, executeRecaptcha, isCreatingProjectRef, setMediaTitle, setProjectMetadata, setProjectYtUrl, setUploadedAudio]);
 
   // ── Discard pending project ───────────────────────────────────────────────
   const handleDiscardProject = useCallback(() => {
@@ -290,6 +294,7 @@ export function useProjectActions({
     setMediaTitle('');
     setProjectMetadata({ description: '', tags: [] });
     setForkedFrom(null);
+    setProjectKind?.('song');
     setProjectYtUrl('');
     setRestoredMedia(null);
     setRestoredPosition(0);
@@ -306,7 +311,7 @@ export function useProjectActions({
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
     lastServerSnapshotRef.current = null;
     sessionUploadIdRef.current = null;
-  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setForkedFrom, setProjectYtUrl, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActivepublicId, activepublicIdRef, setUploadedAudio, lastServerSnapshotRef, sessionUploadIdRef]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setForkedFrom, setProjectKind, setProjectYtUrl, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActivepublicId, activepublicIdRef, setUploadedAudio, lastServerSnapshotRef, sessionUploadIdRef]);
 
   // ── Media change handlers ─────────────────────────────────────────────────
   const handleMediaChange = useCallback((loaded) => {

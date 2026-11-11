@@ -11,6 +11,7 @@ const GET_PROJECTS = /* GraphQL */ `
       slug
       title
       type
+      kind
       readOnly
       public
       listed
@@ -75,6 +76,7 @@ const GET_PROJECT = /* GraphQL */ `
       slug
       title
       type
+      kind
       readOnly
       public
       listed
@@ -195,6 +197,7 @@ const GET_SHARE = /* GraphQL */ `
       publicId
       slug
       title
+      kind
       public
       listed
       readOnly

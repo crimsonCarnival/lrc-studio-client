@@ -308,6 +308,8 @@ export type CreatePlaylistInput = {
 export type CreateProjectInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
   createdFrom?: InputMaybe<Scalars['String']['input']>;
+  /** Set once at creation and never changed. Omitted means song. */
+  kind?: InputMaybe<ProjectKind>;
   lyrics?: InputMaybe<ProjectLyricsInput>;
   metadata?: InputMaybe<ProjectMetadataInput>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1371,7 +1373,12 @@ export type ProfileSharePage = {
   items: Array<ProfileShareItem>;
 };
 
+/** song: lyrics synced to a track. subtitles: captions timed against a video, edited in the subtitle studio. */
+export type ProjectKind = 'song' | 'subtitles';
+
 export type Project = {
+  /** What the project is for. Rows from before this field existed read as song. */
+  kind: ProjectKind;
   /** @deprecated Boost became Share to profile; use profileShareCount. */
   boostCount?: Maybe<Scalars['Int']['output']>;
   /** Oldest contribution first. Empty when the viewer cannot read the project. */

@@ -38,6 +38,7 @@ import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { ProjectKind } from '@/types';
 import { useSetupMedia } from '@/features/editor/hooks/useSetupMedia';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import SetupStepper, { type SetupStep } from './SetupStepper';
@@ -127,6 +128,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const { user } = useAuthContext();
   const location = useLocation();
   const prefill = (location.state as { prefill?: Prefill } | null)?.prefill || null;
+  // What is being made. `?kind=subtitles` opens setup already on subtitles, so a link can start one.
+  const [kind, setKind] = useState<ProjectKind>(() => (new URLSearchParams(location.search).get('kind') === 'subtitles' ? 'subtitles' : 'song'));
+  const isSubtitles = kind === 'subtitles';
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
   // Below lg the same panels are arranged as three steps; chosen by width, not by input method.
@@ -408,7 +412,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
+    // Subtitles are timed as blocks with an end, whatever the lyrics were imported as.
+    onComplete({ kind, lines: finalLines, editorMode: isSubtitles ? 'srt' : editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
   };
 
   // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
@@ -428,6 +433,25 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   // The three panels are built once and placed by the layout below: the desktop two-column card
   // pair, or the phone stepper. Same elements, same state; only the arrangement differs.
   const songFields = (<>
+            <div role="radiogroup" aria-label={t('setup.kindLabel')} className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-zinc-800/60 p-1">
+              {(['song', 'subtitles'] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={kind === k}
+                  onClick={() => setKind(k)}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                    kind === k ? 'bg-primary text-primary-foreground' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Icon name={k === 'song' ? 'music_note' : 'subtitles'} size={16} />
+                  {t(k === 'song' ? 'setup.kindSong' : 'setup.kindSubtitles')}
+                </button>
+              ))}
+            </div>
+            {isSubtitles && <p className="-mt-1 shrink-0 text-xs text-zinc-500">{t('setup.kindSubtitlesHint')}</p>}
+
             {/* Essentials: cover anchors the identity fields beside it */}
             <div className="flex gap-3 shrink-0">
               <CoverDropzone
@@ -480,6 +504,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             {/* Song name + primary artist are what the lookup needs, so the
                 button sits directly under them instead of after the featured
                 field, where it read as unrelated to the inputs it uses. */}
+            {!isSubtitles && (<>
             <div className="shrink-0 flex flex-col gap-3">
               <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
                 onChange={(e) => setMetadataState({ songName: e.target.value })}
@@ -621,6 +646,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 </div>
               </div>
             </CollapsibleSection>
+            </>)}
   </>);
 
   const rollbackNotice = prefill ? (

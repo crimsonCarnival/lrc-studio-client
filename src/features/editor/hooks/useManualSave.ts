@@ -7,7 +7,7 @@ import { projects, uploads, getAccessToken, auth } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
-import { isAuthError } from '@/types';
+import { isAuthError, type ProjectKind } from '@/types';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { mayWriteGuestDraft } from '@/features/projects/services/guest-draft';
 
@@ -219,6 +219,7 @@ export function useManualSave({
   syncMode,
   activeLineIndex,
   editorMode,
+  projectKind,
   projectYtUrl,
   playbackPosition,
   hasMedia,
@@ -268,6 +269,7 @@ export function useManualSave({
       lines: roundedLines,
       sections: flatToSections(roundedLines),
       syncMode, activeLineIndex, editorMode,
+      kind: projectKind,
       ytUrl: projectYtUrl || '',
       playbackPosition: hasMedia ? playbackPosition : 0,
       playbackSpeed: hasMedia ? (playerRef.current?.getSpeed?.() ?? 1) : 1,
@@ -276,7 +278,7 @@ export function useManualSave({
       metadata: projectMetadata,
       uploadedAudio: uploadedAudio || null,
     };
-  }, [lines, syncMode, activeLineIndex, editorMode, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, uploadedAudio]);
+  }, [lines, syncMode, activeLineIndex, editorMode, projectKind, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, uploadedAudio]);
 
   /**
    * Resolves `true` once the project is persisted where it belongs (the server for a signed-in
@@ -284,7 +286,7 @@ export function useManualSave({
    * boolean is for callers that must not go on with unsaved edits (starting a collab session).
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string; silent?: boolean } = {}): Promise<boolean> => {
+  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; lines?: any[]; editorMode?: string; kind?: ProjectKind; syncMode?: boolean; coverImage?: string; silent?: boolean } = {}): Promise<boolean> => {
     // A create is in flight: the project is not on the server yet, so the edits are unsaved.
     if (isCreatingProjectRef.current) return false;
     // No-op in a collab session: the shared doc is persisted server-side (see useAutosave).
@@ -302,6 +304,8 @@ export function useManualSave({
     }
     if (overrides.lines !== undefined) { payload.lines = overrides.lines; payload.sections = flatToSections(overrides.lines); }
     if (overrides.editorMode !== undefined) payload.editorMode = overrides.editorMode;
+    // Setup sets the kind and saves in the same tick, before the state it set can reach this closure.
+    if (overrides.kind !== undefined) payload.kind = overrides.kind;
     if (overrides.syncMode !== undefined) payload.syncMode = overrides.syncMode;
     payload.metadata = finalMetadata;
     payload.title = finalTitle;
@@ -428,6 +432,7 @@ export function useManualSave({
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const createData: Record<string, any> = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, sections: payload.sections }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime }, readOnly: false };
+      if (payload.kind) createData.kind = payload.kind;
       if (overrides.coverImage !== undefined) createData.coverImage = overrides.coverImage;
       if (uploadIdToSave) createData.uploadId = uploadIdToSave;
 

@@ -283,6 +283,7 @@ export function useAutosave({
         readOnly: false,
       };
       if (uploadIdToSave) createData.uploadId = uploadIdToSave;
+      if (payload.kind) createData.kind = payload.kind;
       const pendingProjectRef = sessionStorage.getItem('pendingProjectRef');
       if (pendingProjectRef) createData.createdFrom = pendingProjectRef;
 

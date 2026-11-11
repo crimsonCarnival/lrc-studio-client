@@ -15,6 +15,7 @@ import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
 
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { ProjectKind } from '@/types';
 import { AppLayout } from './AppLayout';
 import { AppRouter } from './AppRouter';
 
@@ -28,6 +29,7 @@ interface UploadLike {
 }
 
 interface SetupCompleteData {
+  kind?: ProjectKind;
   lines: EditorLine[];
   editorMode: string;
   audioSource?: string;
@@ -148,6 +150,7 @@ function AppInner() {
 
   // Called by SetupScreen when user finishes the 3-step setup
   const handleSetupComplete = useCallback(async ({
+    kind = 'song',
     lines,
     editorMode,
     audioSource,
@@ -172,6 +175,7 @@ function AppInner() {
   }: SetupCompleteData) => {
     setLines(lines);
     setEditorMode(editorMode);
+    appState.setProjectKind(kind);
     setSyncMode(true);
 
     const effectiveYtUrl = ytUrl || appState.projectYtUrl;
@@ -218,7 +222,7 @@ function AppInner() {
     if (!user) {
       // Guest: handleManualSave writes to localStorage only (no token).
       // The editor's Save button uses the server-side claim flow instead.
-      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, lines, editorMode, syncMode: true });
+      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, lines, editorMode, kind, syncMode: true });
       navigate('/project/local');
       return;
     }
@@ -228,6 +232,7 @@ function AppInner() {
       metadata: newMetadata,
       lines,
       editorMode,
+      kind,
       syncMode: true,
       ...(_coverImage ? { coverImage: _coverImage } : {}),
     });

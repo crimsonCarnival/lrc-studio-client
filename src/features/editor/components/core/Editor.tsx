@@ -1510,7 +1510,7 @@ export default function Editor({
               <span className="max-xl:hidden">{t('editor.previewAction')}</span>
             </Button>
           )}
-          {onOpenStudio && editorMode === 'srt' && (
+          {onOpenStudio && (
             <Button
               variant="outline"
               onClick={onOpenStudio}

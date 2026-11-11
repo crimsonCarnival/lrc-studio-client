@@ -36,6 +36,7 @@ export function useGuestAuth({ isReady, lines, mediaTitle, buildProjectPayload }
         saveTime: payload.saveTime,
       },
       metadata: payload.metadata,
+      ...(payload.kind ? { kind: payload.kind } : {}),
       ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
       ...(payload.uploadedAudio ? {
         uploadUrl: payload.uploadedAudio.uploadUrl,

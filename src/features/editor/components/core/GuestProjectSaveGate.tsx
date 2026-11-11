@@ -117,6 +117,7 @@ export default function GuestProjectSaveGate() {
             lyrics: payload.lyrics as any,
             state: payload.state as Record<string, unknown> | undefined,
             readOnly: false,
+            ...(payload.kind === 'subtitles' ? { kind: 'subtitles' as const } : {}),
             uploadId,
             recaptchaToken,
           });

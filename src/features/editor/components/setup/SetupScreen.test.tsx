@@ -76,6 +76,22 @@ describe('SetupScreen', () => {
     expect(screen.queryByText('setup.public')).not.toBeInTheDocument();
   });
 
+  it('starts on song lyrics, and switching to subtitles drops the song fields', () => {
+    renderSetup();
+    expect(screen.getByRole('radio', { name: 'setup.kindSong' })).toHaveAttribute('aria-checked', 'true');
+    expect(document.getElementById('song-name')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: 'setup.kindSubtitles' }));
+    expect(screen.getByRole('radio', { name: 'setup.kindSubtitles' })).toHaveAttribute('aria-checked', 'true');
+    expect(document.getElementById('song-name')).not.toBeInTheDocument();
+    expect(document.getElementById('project-name')).toBeInTheDocument();
+  });
+
+  it('opens on subtitles for ?kind=subtitles', () => {
+    renderSetup(undefined, '?kind=subtitles');
+    expect(screen.getByRole('radio', { name: 'setup.kindSubtitles' })).toHaveAttribute('aria-checked', 'true');
+    expect(document.getElementById('song-name')).not.toBeInTheDocument();
+  });
+
   it('preselects the upload passed from the uploads library', async () => {
     const playerRef = renderSetup({ uploadId: 'u2' });
     await waitFor(() => expect(screen.getByText('setup.audioReady')).toBeInTheDocument());
