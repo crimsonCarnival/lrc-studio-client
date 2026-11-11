@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { SegmentedControl } from './segmented-control'
@@ -87,11 +88,11 @@ describe('SegmentedControl', () => {
   })
 
   describe('disabledDetail', () => {
-    const lockedOptions = (detail?: string) => [
+    const lockedOptions = (detail?: ReactNode) => [
       { value: 'lines', label: 'Líneas' },
       { value: 'words', label: 'Palabras', disabled: true, disabledDetail: detail },
     ]
-    const renderLocked = (detail: string | undefined, onChange = vi.fn()) =>
+    const renderLocked = (detail: ReactNode, onChange = vi.fn()) =>
       render(<SegmentedControl semantics="tabs" label="Modo" options={lockedOptions(detail)} value="lines" onChange={onChange} />)
 
     it('disabled option with disabledDetail opens it on click and does not call onChange', async () => {
@@ -114,11 +115,35 @@ describe('SegmentedControl', () => {
     })
 
     it('disabled option without disabledDetail stays inert', async () => {
-      renderLocked(undefined)
+      const onChange = vi.fn()
+      renderLocked(undefined, onChange)
 
       await userEvent.click(screen.getByRole('tab', { name: 'Palabras' }))
 
       expect(screen.queryByRole('dialog')).toBeNull()
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('returns focus to the option when Escape closes the explanation', async () => {
+      renderLocked('Why it is locked')
+      const tab = screen.getByRole('tab', { name: 'Palabras' })
+      tab.focus()
+      await userEvent.keyboard('{Enter}')
+      await screen.findByText('Why it is locked')
+
+      await userEvent.keyboard('{Escape}')
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+      expect(document.activeElement).toBe(tab)
+    })
+
+    it('closes when a link inside the detail is clicked', async () => {
+      renderLocked(<a href="#words" onClick={(e) => e.preventDefault()}>How it works</a>)
+      await userEvent.click(screen.getByRole('tab', { name: 'Palabras' }))
+
+      await userEvent.click(await screen.findByRole('link', { name: 'How it works' }))
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     })
   })
 })

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 
 import { cn } from "@/shared/utils/utils"
 import { Button } from "@ui/button"
@@ -74,10 +74,12 @@ type SegmentProps<T extends string | number> = {
 
 function Segment<T extends string | number>({ option, value, onChange, tabs, mono }: SegmentProps<T>) {
   const [detailOpen, setDetailOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const hasDetail = Boolean(option.disabled && option.disabledDetail)
   const active = option.value === value
   const segment = (
     <Button
+      ref={buttonRef}
       type="button"
       variant="ghost"
       size={null}
@@ -109,7 +111,19 @@ function Segment<T extends string | number>({ option, value, onChange, tabs, mon
       <PopoverAnchor asChild>
         <span className="inline-flex">{tipped}</span>
       </PopoverAnchor>
-      <PopoverContent align="center" className="p-3 text-sm">
+      <PopoverContent
+        align="center"
+        className="p-3 text-sm"
+        // No PopoverTrigger exists, so Radix has nothing to return focus to.
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          buttonRef.current?.focus()
+        }}
+        // A link inside the detail navigates away; close explicitly rather than rely on unmounting.
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest("a")) setDetailOpen(false)
+        }}
+      >
         {option.disabledDetail}
       </PopoverContent>
     </Popover>
