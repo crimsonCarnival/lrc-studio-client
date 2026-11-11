@@ -1,7 +1,7 @@
 export default {
   title: "Atajos de teclado",
   playPause: "Reproducir / Pausar",
-  loopClick: "Bucle en la onda: clic en el inicio y luego en el final",
+  loopClick: "Hacer un bucle en la onda: clic aquí, luego su inicio y su final",
   mark: "Marcar línea actual",
   captureAdLib: "Capturar un contracanto aquí",
   nudgeLeft: "Ajustar marca -{{val}}s",

@@ -290,7 +290,7 @@ export default {
     toggleSelectLabel: "Pick individual lines",
     toggleSelectDesc: "Hold + Click to add/remove single lines",
     loopClickLabel: "Loop on the waveform",
-    loopClickDesc: "Hold + Click the waveform to set a loop start, then click again for its end",
+    loopClickDesc: "Hold + Click the waveform to start making a loop, then click where it starts and where it ends",
     playPauseLabel: "Play / Pause",
     playPauseDesc: "Toggle playback",
     seekBackwardLabel: "Seek Backward",

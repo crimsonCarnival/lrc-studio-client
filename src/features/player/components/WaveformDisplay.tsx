@@ -4,6 +4,8 @@ import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
+import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
 import { computeSectionBands } from '../timeline-bands';
 import { SectionBands } from './TimelineOverview';
 import { usePresenceActions } from '@/features/collab/collab-presence-context';
@@ -77,6 +79,9 @@ interface WaveformDisplayProps {
   loopModifier?: string;
 }
 
+// How long loop creation waits for a click before it switches itself off.
+const LOOP_CREATION_IDLE_MS = 10000;
+
 // The last decoded file's peaks. One entry is enough: only one file plays at a time, and a
 // blob URL is never reused for another file.
 let peaksCache: { url: string; peaks: Array<Float32Array | number[]>; duration: number } | null = null;
@@ -113,12 +118,22 @@ const WaveformDisplay = ({
   // Null outside a collab session.
   const presence = usePresenceActions();
 
-  // ─── Loop creation: modifier + click on the start, again on the end ─────────
-  const [modDown, setModDown] = useState(false);
-  // The loop start waiting for its end.
+  // ─── Loop creation ────────────────────────────────────────────────────────
+  // Modifier+click turns it on; then one plain click sets the start and another the end.
+  const [loopStage, setLoopStage] = useState<'off' | 'start' | 'end'>('off');
+  // The start, once clicked, while the end is awaited.
   const [loopDraft, setLoopDraft] = useState<number | null>(null);
   const [hoverTarget, setHoverTarget] = useState<number | null>(null);
-  const loopMode = modDown || loopDraft != null;
+  // The loop in place when creation was switched on: if it changes from somewhere else,
+  // creation is over.
+  const loopKey = `${loopA ?? ''}|${loopB ?? ''}`;
+  const [armedKey, setArmedKey] = useState<string | null>(null);
+  const loopMode = loopStage !== 'off' && armedKey === loopKey;
+  const cancelLoopCreation = useCallback(() => {
+    setLoopStage('off');
+    setLoopDraft(null);
+    setArmedKey(null);
+  }, []);
 
   // Timed lyric lines as loop targets: where each starts and how long it lasts (to the next
   // timed line, or the end of the track).
@@ -138,19 +153,17 @@ const WaveformDisplay = ({
     return e.shiftKey;
   }, [loopModifier]);
 
+  // Loop creation ends on Escape (anywhere) or after a few idle seconds.
   useEffect(() => {
-    if (!showWaveform) return;
-    const sync = (e: KeyboardEvent) => setModDown(modifierHeld(e));
-    const release = () => setModDown(false);
-    window.addEventListener('keydown', sync);
-    window.addEventListener('keyup', sync);
-    window.addEventListener('blur', release);
+    if (!loopMode) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cancelLoopCreation(); };
+    window.addEventListener('keydown', onKey);
+    const timer = window.setTimeout(cancelLoopCreation, LOOP_CREATION_IDLE_MS);
     return () => {
-      window.removeEventListener('keydown', sync);
-      window.removeEventListener('keyup', sync);
-      window.removeEventListener('blur', release);
+      window.removeEventListener('keydown', onKey);
+      window.clearTimeout(timer);
     };
-  }, [showWaveform, modifierHeld]);
+  }, [loopMode, loopStage, loopDraft, cancelLoopCreation]);
 
   // ─── Seek on click/drag ───────────────────────────────────────────────────
   const isDraggingPlayhead = useRef(false);
@@ -185,8 +198,19 @@ const WaveformDisplay = ({
     const rect = waveContainerRef.current.getBoundingClientRect();
     const pct = clientXToPct(e.clientX, rect);
 
+    // The modifier switches loop creation on, or off again; the click itself sets nothing.
     if (modifierHeld(e)) {
-      // A loop click: snap to a lyric line within a few pixels, else take the raw time.
+      if (loopMode) cancelLoopCreation();
+      else {
+        setLoopStage('start');
+        setArmedKey(loopKey);
+      }
+      return;
+    }
+
+    // While creating a loop, plain clicks pick its start and then its end, snapped to a
+    // lyric line within a few pixels.
+    if (loopMode) {
       const raw = pctToTime(pct);
       const tolerance = (10 / rect.width) * duration;
       let time = raw;
@@ -195,12 +219,13 @@ const WaveformDisplay = ({
         const dist = Math.abs(target.time - raw);
         if (dist <= best) { best = dist; time = target.time; }
       }
-      if (loopDraft == null) {
+      if (loopStage === 'start' || loopDraft == null) {
         setLoopDraft(time);
+        setLoopStage('end');
       } else {
         const a = Math.min(loopDraft, time);
         const b = Math.max(loopDraft, time);
-        setLoopDraft(null);
+        cancelLoopCreation();
         if (b - a >= 0.1) {
           onLoopChange?.(a, b);
           onSeek?.(a);
@@ -226,7 +251,7 @@ const WaveformDisplay = ({
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
-  }, [isReady, duration, onSeek, onLoopChange, pctToTime, clientXToPct, snapTime, modifierHeld, loopTargets, loopDraft]);
+  }, [isReady, duration, onSeek, onLoopChange, pctToTime, clientXToPct, snapTime, modifierHeld, loopTargets, loopDraft, loopMode, loopStage, loopKey, cancelLoopCreation]);
 
   // ─── Loop handle drag ─────────────────────────────────────────────────────
   const handleLoopHandleDrag = useCallback((which: 'A' | 'B', e: ReactPointerEvent) => {
@@ -416,7 +441,6 @@ const WaveformDisplay = ({
   }, [sectionStarts, playbackPosition]);
 
   const handleSeekKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape' && loopDraft != null) { setLoopDraft(null); return; }
     if (!isReady || !duration) return;
     if (e.key === 'ArrowRight') onSeek?.(Math.min(duration, playbackPosition + 5));
     else if (e.key === 'ArrowLeft') onSeek?.(Math.max(0, playbackPosition - 5));
@@ -492,6 +516,25 @@ const WaveformDisplay = ({
           </div>
         )}
 
+        {/* Discoverable entry to loop creation: a button for anyone who does not know the shortcut. */}
+        {isReady && !loopMode && loopA == null && (
+          <div className="absolute right-1 top-1 z-30" onPointerDown={(e) => e.stopPropagation()}>
+            <Tip content={`${t('player.makeLoop')} · ${loopModifier} + ${t('shortcuts.selection.click')}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoopStage('start');
+                  setArmedKey(loopKey);
+                }}
+                aria-label={t('player.makeLoop')}
+                className="grid size-6 place-items-center rounded-full border border-border bg-card/80 text-muted-foreground opacity-60 backdrop-blur-sm transition-opacity hover:text-foreground hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <Icon name="repeat" size={14} />
+              </button>
+            </Tip>
+          </div>
+        )}
+
         {/* Loop creation: every timed line becomes an easy target, and hovering one says what it is. */}
         {isReady && loopMode && loopTargets.map((target, i) => (
           <div
@@ -518,20 +561,22 @@ const WaveformDisplay = ({
           </div>
         )}
 
-        {/* The loop start, waiting for its end */}
-        {isReady && loopDraft != null && (
+        {/* Loop creation: what to click next, and the start once it is picked */}
+        {isReady && loopMode && (
           <>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 z-30 w-1 -translate-x-1/2 rounded-pill bg-accent-purple"
-              style={{ left: `${(loopDraft / duration) * 100}%` }}
-            />
+            {loopDraft != null && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 z-30 w-1 -translate-x-1/2 rounded-pill bg-accent-purple"
+                style={{ left: `${(loopDraft / duration) * 100}%` }}
+              />
+            )}
             <div
               role="status"
               className="pointer-events-none absolute bottom-1 z-30 -translate-x-1/2 whitespace-nowrap rounded-xs bg-accent-purple px-2 py-0.5 text-[11px] font-semibold text-background"
-              style={{ left: `clamp(8rem, ${(loopDraft / duration) * 100}%, calc(100% - 8rem))` }}
+              style={{ left: loopDraft != null ? `clamp(8rem, ${(loopDraft / duration) * 100}%, calc(100% - 8rem))` : '50%' }}
             >
-              {t('player.loopPickEnd')}
+              {loopStage === 'start' ? t('player.loopPickStart') : t('player.loopPickEnd')}
             </div>
           </>
         )}
