@@ -78,6 +78,8 @@ function Segmented({ left, right, active }: { left: string; right: string; activ
 function ProjectInfoMock({ t }: { t: TFunction }) {
   return (
     <div className={`${CARD} p-5 flex flex-col gap-4`}>
+      {/* The setup screen's project-type switch: song lyrics or subtitles. */}
+      <Segmented left={t('setup.kindSong')} right={t('setup.kindSubtitles')} active="left" />
       <div className="flex gap-4">
         <div className="shrink-0 flex flex-col items-center gap-2.5">
           <div className={`${WELL} size-[84px] rounded-[calc(var(--radius)*1.4)] flex flex-col items-center justify-center gap-1.5`}>
