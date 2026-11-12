@@ -41,6 +41,12 @@ describe('tour steps', () => {
     }
   });
 
+  it('desktop preview and share steps point at controls visible in the editor view', () => {
+    const targets = Object.fromEntries(EDITOR_TOUR_STEPS.map((s) => [s.id, s.target]));
+    expect(targets.preview).toBe('editor-review');
+    expect(targets.share).toBe('editor-export');
+  });
+
   it('has unique ids and targets within each list', () => {
     for (const list of [EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS]) {
       expect(new Set(list.map((s) => s.id)).size).toBe(list.length);

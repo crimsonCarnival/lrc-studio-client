@@ -180,8 +180,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     if (tourRef.current.isTourOpen) tourRef.current.closeTour(false);
   }, [isLg]);
 
-  // The guide's "Back to the editor" needs the last editor path. Leaving to /guide keeps it;
-  // only an empty editor clears it.
+  // Remembers the last editor path so the Guide's tour-replay button knows where to go. Leaving
+  // to /guide keeps it; only an empty editor clears it.
   useEffect(() => {
     if (isEditorPath(location.pathname)) rememberEditorPath(lines && lines.length > 0 ? location.pathname : null);
   }, [location.pathname, lines]);

@@ -24,8 +24,8 @@ export const EDITOR_TOUR_STEPS: TourStep[] = [
   step('counterparts', 'editor-counterparts', 'counterparts'),
   step('sections', 'editor-sections-banner', 'sections'),
   step('saveUndo', 'editor-undo-redo', 'saveUndo'),
-  step('preview', 'preview-panel', 'preview'),
-  step('share', 'preview-share', 'share'),
+  step('preview', 'editor-review', 'preview'),
+  step('share', 'editor-export', 'share'),
   step('session', 'editor-session', 'sessions'),
 ];
 

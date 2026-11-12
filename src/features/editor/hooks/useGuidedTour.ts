@@ -47,11 +47,12 @@ export function useGuidedTour() {
     setIsOpen(true);
   }, []);
 
+  // Capped at 1000: the server rejects more, and a rejected settings diff blocks all later sync.
   // Wired to GuidedTour's onShown: a tour that never found its targets must not use up a showing.
   const onShown = useCallback(() => {
     if (!countOnShownRef.current) return;
     countOnShownRef.current = false;
-    updateSetting('interface.editorTourShown', prefsRef.current.shown + 1);
+    updateSetting('interface.editorTourShown', Math.min(prefsRef.current.shown + 1, 1000));
   }, [updateSetting]);
 
   return { isOpen, offerOptOut, start, close, onShown, maybeStartForNewProject };

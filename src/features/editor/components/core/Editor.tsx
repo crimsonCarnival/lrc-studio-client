@@ -673,7 +673,7 @@ export default function Editor({
             </div>
           ),
         },
-        ...(onShowPreview ? [{ value: 'review' as const, label: t('editor.tabReview') }] : []),
+        ...(onShowPreview ? [{ value: 'review' as const, label: t('editor.tabReview'), tourId: 'editor-review' }] : []),
       ]}
     />
   );
@@ -1519,6 +1519,7 @@ export default function Editor({
             </Button>
           )}
           <Button
+            data-tour="editor-export"
             onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
             disabled={lines.length === 0}
             className="h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 text-[13px] lg:text-[13px] font-bold"

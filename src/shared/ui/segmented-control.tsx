@@ -21,6 +21,8 @@ type SegmentedOption<T extends string | number> = {
    * activated by keyboard. Reachable on touch, unlike `tip`. onChange is never called.
    */
   disabledDetail?: ReactNode
+  /** Rendered as data-tour, so the editor tour can spotlight this segment. */
+  tourId?: string
 }
 
 type SegmentedControlProps<T extends string | number> = {
@@ -89,6 +91,7 @@ function Segment<T extends string | number>({ option, value, onChange, tabs, mon
       aria-pressed={tabs ? undefined : active}
       aria-disabled={option.disabled || undefined}
       aria-label={option.ariaLabel}
+      data-tour={option.tourId}
       onClick={() => {
         if (!option.disabled) onChange(option.value)
         else if (hasDetail) {

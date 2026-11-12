@@ -130,3 +130,40 @@ describe('GuidedTour start and reopen', () => {
     a.remove();
   });
 });
+
+describe('GuidedTour off-screen targets', () => {
+  const box = (w: number, h: number) => ({ top: 100, left: 100, width: w, height: h, right: 100 + w, bottom: 100 + h, x: 100, y: 100, toJSON: () => ({}) });
+  const threeSteps: TourStep[] = ['a', 'b', 'c'].map((id) => ({
+    id, target: `tour-${id}`, titleKey: `${id}.title`, bodyKey: `${id}.body`, guideAnchor: id,
+  }));
+
+  function mount(hidden: string[], stepList: TourStep[]) {
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      return hidden.includes(this.getAttribute('data-tour') ?? '') ? box(0, 0) : box(100, 40);
+    };
+    const onClose = vi.fn();
+    render(
+      <>
+        {stepList.map((s) => <button key={s.id} data-tour={s.target}>{s.id}</button>)}
+        <GuidedTour steps={stepList} isOpen offerOptOut={false} narrow={false} onClose={onClose} onLearnMore={vi.fn()} />
+      </>,
+    );
+    return onClose;
+  }
+
+  it('skips a mounted but 0x0 step and still reaches Done', () => {
+    const onClose = mount(['tour-b'], threeSteps);
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'a.title');
+    fireEvent.click(screen.getByRole('button', { name: 'editor.tour.next' }));
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'c.title');
+    fireEvent.click(screen.getByRole('button', { name: 'editor.tour.done' }));
+    expect(onClose).toHaveBeenCalledWith(false);
+  });
+
+  it('closes when the only remaining target is 0x0 at the last step', () => {
+    const onClose = mount(['tour-b'], threeSteps.slice(0, 2));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'editor.tour.next' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

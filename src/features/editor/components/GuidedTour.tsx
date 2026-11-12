@@ -13,13 +13,19 @@ const TARGET_WAIT_MS = 5000;
 
 interface Rect { top: number; left: number; width: number; height: number }
 
-function measure(target: string): Rect | null {
-  const el = document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  if (r.width === 0 && r.height === 0) return null;
-  return { top: r.top, left: r.left, width: r.width, height: r.height };
+// A step is available only while its target is on screen. Some targets exist twice (a mobile and a
+// desktop copy of the mode switch) or stay mounted while hidden (the preview pane), so take the
+// first match with a real box.
+function findVisible(target: string): { el: HTMLElement; rect: Rect } | null {
+  for (const el of document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)) {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) continue;
+    return { el, rect: { top: r.top, left: r.left, width: r.width, height: r.height } };
+  }
+  return null;
 }
+
+const measure = (target: string): Rect | null => findVisible(target)?.rect ?? null;
 
 type GuidedTourProps = {
   steps: TourStep[];
@@ -41,17 +47,26 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
   const [optOut, setOptOut] = useState(false);
   const [cardHeight, setCardHeight] = useState<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const skippedCountRef = useRef(0);
   const shownRef = useRef(false);
   const [ready, setReady] = useState(false);
   const closeTour = useCallback(() => onClose(optOut), [onClose, optOut]);
 
   const step = steps[stepIndex];
 
+  // Move to the next available step after `from`, or close when there is none. Used when the
+  // current target is unavailable at any point, so the tour can never sit open with nothing drawn.
+  const skipPast = useCallback((from: number) => {
+    const next = steps.findIndex((s, i) => i > from && measure(s.target) !== null);
+    if (next < 0) closeTour();
+    else setStepIndex(next);
+  }, [steps, closeTour]);
+
   const recalc = useCallback(() => {
     if (!step) return;
-    setRect(measure(step.target));
-  }, [step]);
+    const r = measure(step.target);
+    if (r) setRect(r);
+    else skipPast(stepIndex);
+  }, [step, stepIndex, skipPast]);
 
   // Reset when the tour CLOSES, so the next open commit already sees step 0 (resetting on open
   // left the measuring effect below reading the previous run's step index).
@@ -62,7 +77,6 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
     setOptOut(false);
     setRect(null);
     setReady(false);
-    skippedCountRef.current = 0;
     shownRef.current = false;
   }, [isOpen]);
 
@@ -71,7 +85,7 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
   useLayoutEffect(() => {
     if (!isOpen || ready) return;
     const begin = (): boolean => {
-      const i = steps.findIndex((s) => document.querySelector(`[data-tour="${s.target}"]`) !== null);
+      const i = steps.findIndex((s) => measure(s.target) !== null);
       if (i < 0) return false;
       setStepIndex(i);
       setReady(true);
@@ -86,20 +100,14 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
 
   useLayoutEffect(() => {
     if (!isOpen || !ready || !step) return;
-    const el = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`);
-    if (!el) {
-      // Target not mounted (e.g. no sections yet) — skip this step rather than
-      // stall the tour. Bail out entirely if every step is unavailable.
-      skippedCountRef.current += 1;
-      if (skippedCountRef.current >= steps.length) { closeTour(); return; }
-      if (stepIndex + 1 < steps.length) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setStepIndex(stepIndex + 1);
-      } else {
-        closeTour();
-      }
+    const found = findVisible(step.target);
+    if (!found) {
+      // Target missing or off screen (e.g. no sections yet, hidden preview pane): skip the step.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      skipPast(stepIndex);
       return;
     }
+    const el = found.el;
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     recalc();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -211,7 +219,10 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
           </span>
           <div className="flex items-center gap-1.5">
             {stepIndex > 0 && (
-              <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs text-zinc-400 hover:text-zinc-200" onClick={() => setStepIndex(i => i - 1)}>
+              <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs text-zinc-400 hover:text-zinc-200" onClick={() => setStepIndex(i => {
+                  for (let j = i - 1; j >= 0; j--) if (measure(steps[j].target)) return j;
+                  return i;
+                })}>
                 {t('editor.tour.back')}
               </Button>
             )}

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { act, render } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
 
 const updateSetting = vi.fn();
+const prefs = vi.hoisted(() => ({ shown: 0 }));
 vi.mock('@/features/settings/useSettings', () => ({
-  useSettings: () => ({ settings: { interface: { editorTourShown: 0, editorTourEnabled: true } }, updateSetting }),
+  useSettings: () => ({ settings: { interface: { editorTourShown: prefs.shown, editorTourEnabled: true } }, updateSetting }),
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
@@ -27,6 +28,7 @@ function Harness({ mode }: { mode: 'auto' | 'manual' }) {
 
 beforeEach(() => {
   updateSetting.mockClear();
+  prefs.shown = 0;
   consumeNewProject();
   Element.prototype.scrollIntoView = vi.fn();
   Element.prototype.getBoundingClientRect = () => ({ top: 10, left: 10, width: 50, height: 20, right: 60, bottom: 30, x: 10, y: 10, toJSON: () => ({}) });
@@ -60,5 +62,17 @@ describe('tour showing count', () => {
     render(<Harness mode="manual" />);
     expect(document.querySelector('[role=dialog]')).not.toBeNull();
     expect(updateSetting).not.toHaveBeenCalled();
+  });
+
+  it('clamps the stored count at the server limit', () => {
+    prefs.shown = 1000;
+    markNewProject();
+    const el = document.createElement('div');
+    el.setAttribute('data-tour', 'tour-a');
+    document.body.appendChild(el);
+    const { result } = renderHook(() => useGuidedTour());
+    act(() => { result.current.maybeStartForNewProject(); });
+    act(() => { result.current.onShown(); });
+    expect(updateSetting).toHaveBeenCalledWith('interface.editorTourShown', 1000);
   });
 });

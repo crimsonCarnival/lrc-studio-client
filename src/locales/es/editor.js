@@ -560,11 +560,11 @@ export default {
       },
       preview: {
         title: "Vista previa en vivo",
-        body: "Mira tu letra sincronizada en formato karaoke. ¿Sincronizas japonés? Activa el furigana para mostrar las lecturas sobre los kanji."
+        body: "Revisar abre tu letra sincronizada como vista previa tipo karaoke. ¿Sincronizas japonés? Activa ahí el furigana para mostrar las lecturas sobre los kanji."
       },
       share: {
-        title: "Compartir y exportar",
-        body: "Exporta tu trabajo como .lrc, .srt o .txt, o publícalo para que otros puedan abrirlo, destacarlo y bifurcarlo."
+        title: "Exportar y publicar",
+        body: "Este botón exporta tu trabajo como .lrc, .srt o .txt. Para publicarlo y que otros puedan abrirlo, destacarlo y bifurcarlo, abre Revisar."
       },
       session: {
         title: "Trabajen juntos",

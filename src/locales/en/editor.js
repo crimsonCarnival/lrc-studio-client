@@ -534,11 +534,11 @@ export default {
       },
       preview: {
         title: "Live preview",
-        body: "Watch your synced lyrics play back karaoke-style. Syncing Japanese? Turn on furigana to show readings above the kanji."
+        body: "Review opens your synced lyrics as a karaoke-style preview. Syncing Japanese? Turn on furigana there to show readings above the kanji."
       },
       share: {
-        title: "Share and export",
-        body: "Export your work as .lrc, .srt or .txt, or publish it so others can open, star and fork it."
+        title: "Export and publish",
+        body: "This button exports your work as .lrc, .srt or .txt. To publish it so others can open, star and fork it, open Review."
       },
       session: {
         title: "Work together",
