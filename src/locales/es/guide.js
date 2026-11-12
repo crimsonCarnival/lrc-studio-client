@@ -19,7 +19,7 @@ export default {
     reset: "Reiniciar",
     mark: "Marcar",
     syncLabel: "Demo de sincronización",
-    syncHint: "Pulsa Reproducir y luego Marcar (o Espacio) cuando empiece cada línea. Nada de esto se guarda.",
+    syncHint: "Haz clic en la demo para enfocarla, pulsa Reproducir y luego Marcar (o Enter) cuando empiece cada línea. Nada de esto se guarda.",
     playerLabel: "Demo de herramientas de tiempo",
     playerHint: "Adelanta o retrasa la marca, activa el bucle y pulsa Reproducir: el cursor vuelve al inicio del bucle.",
     nudgeEarlier: "Adelantar {{amount}} segundos",
@@ -28,7 +28,7 @@ export default {
     wordsLabel: "Demo del modo palabras",
     wordsList: "Palabras de la línea",
     wordsHintLines: "Pulsa Reproducir y luego Marcar para sellar la línea. Se desbloquea Palabras. Cambia a él y vuelve a marcar en cada palabra. Nada de esto se guarda.",
-    wordsHintWords: "Marca (o Espacio) cuando empieza cada palabra; el relleno sigue al cabezal. Nada de esto se guarda.",
+    wordsHintWords: "Marca (o Enter) cuando empieza cada palabra; el relleno sigue al cabezal. Nada de esto se guarda.",
     counterpartsLabel: "Demo de contrapartes",
     counterpartsHint: "Pulsa Reproducir y usa Contracanto aquí cuando oigas una voz de fondo; luego ponle nombre. En el editor real, sella también las palabras de la contraparte en modo Palabras, o terminará cuando empiece la siguiente línea. Nada de esto se guarda.",
     counterpartSave: "Guardar",
@@ -110,7 +110,7 @@ export default {
     },
     player: {
       title: "Reproductor y herramientas de tiempo",
-      body1: "Reproduce, pausa, avanza y ajusta la velocidad desde la barra de transporte. Los botones de ajuste fino (±0,1 s y ±5 s por defecto) te permiten afinar la posición sin salir del teclado.",
+      body1: "Reproduce, pausa, avanza y ajusta la velocidad desde la barra de transporte. El ajuste mueve una marca 0,1 s por defecto (0,01 s en el ajuste fino) y la búsqueda salta 5 s, así puedes afinar la posición sin salir del teclado.",
       body2: "El icono de repetir activa un bucle A-B sobre la línea activa — de su marca de inicio a su tiempo final (o al inicio de la siguiente línea), para repetir una frase difícil mientras afinas el tiempo. Haz clic de nuevo para quitar el bucle, o arrastra sus dos tiradores en la barra de búsqueda para ajustar la región.",
     },
     saveUndo: {

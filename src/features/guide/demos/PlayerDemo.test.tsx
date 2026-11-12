@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import i18n from 'i18next';
 import PlayerDemo from './PlayerDemo';
+import { SAMPLE_LINES } from './sample-lines';
+import { formatTimestamp } from '@/shared/utils/lrc';
 
 beforeEach(async () => { await i18n.changeLanguage('en'); });
 
@@ -14,5 +16,11 @@ describe('PlayerDemo', () => {
     fireEvent.click(screen.getByRole('button', { name: /0\.1 seconds earlier/ }));
     fireEvent.click(screen.getByRole('button', { name: /0\.1 seconds earlier/ }));
     expect(screen.getByText('00:05.90')).toBeInTheDocument();
+  });
+
+  it('never nudges the stamp past the end of its line', () => {
+    render(<PlayerDemo />);
+    for (let i = 0; i < 200; i++) fireEvent.click(screen.getByRole('button', { name: /0\.1 seconds later/ }));
+    expect(screen.getByText(formatTimestamp(SAMPLE_LINES[1].end - 0.1))).toBeInTheDocument();
   });
 });

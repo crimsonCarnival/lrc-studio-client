@@ -22,7 +22,7 @@ export default function PlayerDemo() {
     if (loop && playing && time >= LINE.end) seek(stamp);
   }, [loop, playing, time, stamp, seek]);
 
-  const nudge = (delta: number) => setStamp((s) => Math.max(0, Math.round((s + delta) * 10) / 10));
+  const nudge = (delta: number) => setStamp((s) => Math.min(LINE.end - NUDGE, Math.max(0, Math.round((s + delta) * 10) / 10)));
 
   return (
     <div ref={ref} role="group" aria-label={t('guide.demo.playerLabel')} className="rounded-xl bg-zinc-900 border border-zinc-800 p-4 flex flex-col gap-3">

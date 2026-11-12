@@ -19,7 +19,7 @@ export default {
     reset: "Reset",
     mark: "Mark",
     syncLabel: "Sync demo",
-    syncHint: "Press Play, then Mark (or Space) as each line starts. Nothing here is saved.",
+    syncHint: "Click the demo to focus it, press Play, then Mark (or Enter) as each line starts. Nothing here is saved.",
     playerLabel: "Timing tools demo",
     playerHint: "Nudge the stamp earlier or later, then turn on the loop and press Play: the playhead wraps back to the start of the loop.",
     nudgeEarlier: "Nudge {{amount}} seconds earlier",
@@ -28,7 +28,7 @@ export default {
     wordsLabel: "Words mode demo",
     wordsList: "Words of the line",
     wordsHintLines: "Press Play, then Mark to stamp the line. Words unlocks. Switch to it, then Mark again on each word. Nothing here is saved.",
-    wordsHintWords: "Mark (or Space) as each word starts; the fill follows the playhead. Nothing here is saved.",
+    wordsHintWords: "Mark (or Enter) as each word starts; the fill follows the playhead. Nothing here is saved.",
     counterpartsLabel: "Counterparts demo",
     counterpartsHint: "Press Play and use Counterpart here when you hear a background vocal, then name it. In the real editor, stamp the counterpart's own words in Words mode too, or it stops when the next line starts. Nothing here is saved.",
     counterpartSave: "Save",
@@ -110,7 +110,7 @@ export default {
     },
     player: {
       title: "Player & timing tools",
-      body1: "Play, pause, seek and adjust playback speed from the transport bar. The nudge buttons (±0.1s and ±5s by default) let you fine-tune position without leaving the keyboard.",
+      body1: "Play, pause, seek and adjust playback speed from the transport bar. Nudge shifts a timestamp by 0.1 s by default (0.01 s for fine nudges), and seeking jumps 5 s, so you can fine-tune position without leaving the keyboard.",
       body2: "The repeat icon toggles an A-B loop over the active line — its start timestamp to its end time (or the next line's start), so you can play a tricky phrase on repeat while you nail the timing. Click again to clear the loop, or drag its two handles directly on the seek bar to adjust the loop region.",
     },
     saveUndo: {
