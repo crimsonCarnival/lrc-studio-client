@@ -9,6 +9,7 @@ import { LogoMark } from '@/shared/ui/LogoMark';
 import SmoothWavyCanvas from './SmoothWavyCanvas';
 import LandingDemo from './LandingDemo';
 import LandingTapDemo from './LandingTapDemo';
+import LandingWordsDemo from './LandingWordsDemo';
 import LandingSteps, { Kbd } from './LandingSteps';
 
 const SECTION = 'max-w-[1280px] mx-auto px-6';
@@ -163,16 +164,7 @@ export default function GuestLanding() {
                   <h3 className="mb-1.5 text-xl font-bold tracking-tight">{t('landing.features.wordsTitle')}</h3>
                   <p className="text-foreground/65">{t('landing.features.wordsDesc')}</p>
                 </div>
-                {/* Sample lyric with furigana; decorative, so kept out of the a11y tree. */}
-                <div aria-hidden="true" className="flex flex-col gap-2.5 p-5 rounded-[calc(var(--radius)*1.4)] bg-zinc-900 font-lyrics text-2xl">
-                  <p className="font-extrabold leading-tight">
-                    <span className="text-primary glow-line">Midnight echoes</span> through the empty halls
-                  </p>
-                  <p className="font-bold leading-[1.9]">
-                    <span className="text-primary glow-line"><ruby>月明<rt>つきあ</rt></ruby>かりに</span>
-                    <ruby>照<rt>て</rt></ruby>らされた<ruby>道<rt>みち</rt></ruby>を
-                  </p>
-                </div>
+                <LandingWordsDemo reducedMotion={reducedMotion} />
               </article>
 
               <article id="formats" className="lg:col-span-2 bg-zinc-950 p-5 lg:p-8 flex flex-wrap items-start gap-x-12 gap-y-6">
