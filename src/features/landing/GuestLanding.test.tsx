@@ -63,7 +63,7 @@ describe('GuestLanding steps', () => {
   it('shows compact rows on phones with the full walkthrough behind a disclosure', async () => {
     setWidth(360);
     renderLanding();
-    expect(screen.getByText('Name it, then add the song and artist.')).toBeInTheDocument();
+    expect(screen.getByText('Pick song lyrics or subtitles, then name it.')).toBeInTheDocument();
     expect(screen.queryByText(/Under Media, hit Search/)).not.toBeInTheDocument();
     const toggle = screen.getByRole('button', { name: 'See an example' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
