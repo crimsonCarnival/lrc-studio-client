@@ -472,7 +472,7 @@ function ProjectViewPageInner() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
-        <Spinner size={28} className="text-primary" />
+        <Spinner size={32} className="text-primary" />
       </div>
     );
   }
