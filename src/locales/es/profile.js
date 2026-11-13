@@ -187,7 +187,7 @@ export default {
       fullySynced: "Proyectos donde todas las líneas tienen marca de tiempo.",
       wordsTimestamped: "Total de palabras con datos de tiempo en todos tus proyectos.",
       karaokeLines: "Líneas marcadas para sincronización estilo karaoke palabra por palabra.",
-      currentStreak: "Días consecutivos en los que cambiaste letras o creaste un proyecto. Los días siguen tu zona horaria.",
+      currentStreak: "Días consecutivos en los que cambiaste letras o creaste un proyecto. Los días siguen tu zona horaria. Cambiar de zona horaria no suma días de racha: tras un cambio, un día nuevo solo cuenta cuando han pasado unas 20 horas reales desde tu última actividad.",
       longestStreak: "Tu serie más larga de días consecutivos creando.",
       syncTrend: "Cambio en proyectos creados en los últimos 30 días frente a los 30 anteriores.",
       publicProjects: "Proyectos visibles para otros usuarios.",

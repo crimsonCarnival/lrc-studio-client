@@ -187,7 +187,7 @@ export default {
       fullySynced: "Projects where every line has a timestamp.",
       wordsTimestamped: "Total words with timing data across all your projects.",
       karaokeLines: "Lines marked for karaoke-style word-by-word sync.",
-      currentStreak: "Consecutive days on which you changed lyrics or created a project. Days follow your timezone.",
+      currentStreak: "Consecutive days on which you changed lyrics or created a project. Days follow your timezone. Changing timezone can't add streak days: after a change, a new day only counts once about 20 hours have really passed since your last activity.",
       longestStreak: "Your longest ever run of consecutive authoring days.",
       syncTrend: "Change in projects created over the last 30 days vs. the previous 30 days.",
       publicProjects: "Projects visible to other users.",
