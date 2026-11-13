@@ -21,6 +21,7 @@ export default {
   sessions: "Sessions",
   settings: "Settings",
   guide: "Guide",
+  help: "Help",
   admin: "Admin",
   draft: "Draft",
   signIn: "Sign in",

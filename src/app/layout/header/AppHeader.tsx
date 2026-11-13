@@ -334,6 +334,22 @@ export function AppHeader({
 
             {/* Panel hide/show controls moved into the editor toolbar and preview (#11/#12/#13) */}
 
+            {/* Help: the Guide. Phones reach it from the drawer, which already lists it. */}
+            {!phoneNav && (
+              <Tip content={t('nav.help')} side="bottom">
+                <Button asChild variant="ghost" size="icon" className={iconBtn}>
+                  <Link
+                    to="/guide"
+                    onClick={(e) => guardedLinkClick(e, () => navTo('/guide'))}
+                    aria-label={t('nav.help')}
+                    aria-current={location.pathname === '/guide' ? 'page' : undefined}
+                  >
+                    <Icon name="help" size={20} />
+                  </Link>
+                </Button>
+              </Tip>
+            )}
+
             {isEditorPage && isReady && onStartTour && !isWorkspace && (
               <Tip content={t('editor.tour.replay')} side="bottom">
                 <Button
