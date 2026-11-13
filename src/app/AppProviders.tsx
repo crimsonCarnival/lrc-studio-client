@@ -13,7 +13,6 @@ import { useSessionSocket } from '@/features/auth/hooks/useSessionSocket';
 import { useTimezoneSync } from '@/shared/hooks/useTimezoneSync';
 import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal';
 
-import { BadgeDefsProvider } from '@/features/badges/BadgeDefsContext';
 
 // useTimezoneSync reads settings, which only exist below SettingsProvider.
 function TimezoneSync() {
@@ -98,11 +97,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <SetupProvider>
           <TooltipProvider>
             <NotificationsProvider>
-              <BadgeDefsProvider>
-                <TimezoneSync />
-                <SetAccountNameModal />
-                {children}
-              </BadgeDefsProvider>
+              <TimezoneSync />
+              <SetAccountNameModal />
+              {children}
             </NotificationsProvider>
           </TooltipProvider>
         </SetupProvider>
