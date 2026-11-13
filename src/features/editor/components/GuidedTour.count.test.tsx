@@ -64,8 +64,14 @@ describe('tour showing count', () => {
     expect(updateSetting).not.toHaveBeenCalled();
   });
 
-  it('clamps the stored count at the server limit', () => {
-    prefs.shown = 1000;
+  it('stores the 20th showing and opens no more after it', () => {
+    prefs.shown = 20;
+    markNewProject();
+    const { result: stopped } = renderHook(() => useGuidedTour());
+    act(() => { stopped.current.maybeStartForNewProject(); });
+    expect(stopped.current.isOpen).toBe(false);
+
+    prefs.shown = 19;
     markNewProject();
     const el = document.createElement('div');
     el.setAttribute('data-tour', 'tour-a');
@@ -73,6 +79,6 @@ describe('tour showing count', () => {
     const { result } = renderHook(() => useGuidedTour());
     act(() => { result.current.maybeStartForNewProject(); });
     act(() => { result.current.onShown(); });
-    expect(updateSetting).toHaveBeenCalledWith('interface.editorTourShown', 1000);
+    expect(updateSetting).toHaveBeenCalledWith('interface.editorTourShown', 20);
   });
 });

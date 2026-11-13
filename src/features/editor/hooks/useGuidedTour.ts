@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { storage, STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { useSettings } from '@/features/settings/useSettings';
 import { consumeNewProject } from '@/features/editor/tour/tour-launch';
-import { decideAutoTour } from '@/features/editor/tour/tour-decision';
+import { AUTO_TOUR_LIMIT, decideAutoTour } from '@/features/editor/tour/tour-decision';
 
 export function useGuidedTour() {
   const { settings, updateSetting } = useSettings();
@@ -47,12 +47,12 @@ export function useGuidedTour() {
     setIsOpen(true);
   }, []);
 
-  // Capped at 1000: the server rejects more, and a rejected settings diff blocks all later sync.
-  // Wired to GuidedTour's onShown: a tour that never found its targets must not use up a showing.
+  // Never past AUTO_TOUR_LIMIT: no tour auto-opens beyond it, and the server rejects counts over 1000
+  // (a rejected settings diff would block all later sync). Wired to GuidedTour's onShown: a tour that never found its targets must not use up a showing.
   const onShown = useCallback(() => {
     if (!countOnShownRef.current) return;
     countOnShownRef.current = false;
-    updateSetting('interface.editorTourShown', Math.min(prefsRef.current.shown + 1, 1000));
+    updateSetting('interface.editorTourShown', Math.min(prefsRef.current.shown + 1, AUTO_TOUR_LIMIT));
   }, [updateSetting]);
 
   return { isOpen, offerOptOut, start, close, onShown, maybeStartForNewProject };

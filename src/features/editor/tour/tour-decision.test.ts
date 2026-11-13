@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decideAutoTour } from './tour-decision';
+import { AUTO_TOUR_LIMIT, decideAutoTour } from './tour-decision';
 
 describe('decideAutoTour', () => {
   it('no new project → never shows', () => {
@@ -21,5 +21,11 @@ describe('decideAutoTour', () => {
     // Shown once on a phone, then a desktop new project: the count lives in
     // account settings, so the desktop caller sees shown=1 and gets the opt-out.
     expect(decideAutoTour(true, { shown: 1, enabled: true, legacySeen: false }).offerOptOut).toBe(true);
+  });
+
+  it('shows up to the 20th automatic showing, then stops', () => {
+    expect(AUTO_TOUR_LIMIT).toBe(20);
+    expect(decideAutoTour(true, { shown: 19, enabled: true, legacySeen: false }).show).toBe(true);
+    expect(decideAutoTour(true, { shown: 20, enabled: true, legacySeen: false })).toEqual({ show: false, offerOptOut: false });
   });
 });
