@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { lastEditorPath, requestTourReplay } from '@/features/editor/tour/tour-launch';
-import { GUIDE_SECTIONS } from './guide-sections';
+import { GUIDE_SECTIONS, type GuideSectionId } from './guide-sections';
 import { GuideSection } from './components/GuideSection';
+import { GuideToc, GuideTocList } from './components/GuideToc';
 
 const GROUPS = ['basics', 'features'] as const;
 
@@ -47,6 +48,27 @@ export default function GuidePage() {
     return cancel;
   }, []);
 
+  // The section being read: the topmost one inside a band just under the top of the scroller.
+  const [activeId, setActiveId] = useState<GuideSectionId | null>(null);
+  useEffect(() => {
+    const root = scrollerRef.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) visible.add(e.target.id);
+        else visible.delete(e.target.id);
+      }
+      const first = GUIDE_SECTIONS.find((s) => visible.has(s.id));
+      if (first) setActiveId(first.id);
+    }, { root, rootMargin: '0px 0px -70% 0px' });
+    for (const s of GUIDE_SECTIONS) {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, []);
+
   const replayTour = () => {
     if (!editorPath) return;
     requestTourReplay();
@@ -55,7 +77,11 @@ export default function GuidePage() {
 
   return (
     <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto">
-      <div className="flex flex-col px-4 pt-8 pb-24 max-w-3xl mx-auto w-full animate-fade-in">
+      <div className="flex gap-10 px-4 pt-8 pb-24 max-w-6xl mx-auto w-full animate-fade-in">
+      <aside className="hidden lg:block sticky top-8 self-start shrink-0 max-h-[calc(100dvh-8rem)] overflow-y-auto">
+        <GuideToc activeId={activeId} />
+      </aside>
+      <div className="flex flex-col flex-1 min-w-0 max-w-3xl mx-auto">
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
@@ -76,17 +102,18 @@ export default function GuidePage() {
           </div>
         </div>
 
-        <nav className="flex flex-wrap gap-1.5 mb-10 pb-6 border-b border-zinc-800/60">
-          {GUIDE_SECTIONS.map(({ id }) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className="px-3 py-1.5 text-xs font-medium rounded-pill bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
-            >
-              {t(`guide.nav.${id}`)}
-            </a>
-          ))}
-        </nav>
+        {/* Narrow screens: no room for the sidebar, so the same list folds under the title. */}
+        <details className="lg:hidden mb-10 pb-6 border-b border-zinc-800/60 group">
+          <summary className="flex items-center gap-2 cursor-pointer list-none text-sm font-semibold text-foreground min-h-11 [&::-webkit-details-marker]:hidden">
+            <Icon name="toc" size={18} />
+            {t('guide.toc.contents')}
+            <Icon name="expand_more" size={18} className="ml-auto transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="pt-3">
+            <GuideTocList activeId={activeId} label={t('guide.toc.contents')} />
+          </div>
+        </details>
+        <div className="hidden lg:block mb-10 pb-6 border-b border-zinc-800/60" />
 
         <div className="flex flex-col gap-16">
           {GROUPS.map((group) => (
@@ -104,6 +131,7 @@ export default function GuidePage() {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

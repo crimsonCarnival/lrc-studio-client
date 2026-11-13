@@ -28,11 +28,11 @@ beforeEach(async () => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('GuidePage', () => {
-  it('renders both group headings and one nav pill per section', () => {
+  it('renders both group headings and a contents link per section', () => {
     renderGuide();
     expect(screen.getByRole('heading', { name: 'Basics' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Features' })).toBeInTheDocument();
-    const nav = screen.getByRole('navigation');
+    const nav = screen.getByRole('navigation', { name: 'On this page' });
     const hrefs = Array.from(nav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual(GUIDE_SECTION_IDS.map((id) => `#${id}`));
   });
@@ -82,7 +82,7 @@ describe('GuidePage', () => {
     window.location.hash = '#sync';
     await new Promise((r) => setTimeout(r, 0)); // let jsdom's async hashchange fire before the page listens
     renderGuide();
-    fireEvent.wheel(screen.getByRole('navigation'));
+    fireEvent.wheel(screen.getByRole('navigation', { name: 'On this page' }));
     release();
     await new Promise((r) => setTimeout(r, 100));
     expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();

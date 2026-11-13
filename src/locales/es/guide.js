@@ -78,6 +78,12 @@ export default {
       6: "Ahora el eco tararea un adiós tranquilo",
     },
   },
+  toc: {
+    title: "En esta página",
+    contents: "Contenido",
+    hide: "Ocultar índice",
+    show: "Mostrar índice",
+  },
   nav: {
     start: "Primeros pasos",
     sync: "Sincronización",

@@ -78,6 +78,12 @@ export default {
       6: "Now the echo hums a quiet goodbye",
     },
   },
+  toc: {
+    title: "On this page",
+    contents: "Contents",
+    hide: "Hide contents",
+    show: "Show contents",
+  },
   nav: {
     start: "Getting started",
     sync: "Syncing",
