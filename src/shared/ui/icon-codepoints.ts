@@ -170,6 +170,7 @@ export const ICON_CODEPOINTS: Record<string, string> = {
   tablet: '\u{e32f}',
   tabs: '\u{e9ee}',
   tag: '\u{e9ef}',
+  target: '\u{e719}',
   terminal: '\u{eb8e}',
   text_decrease: '\u{eadd}',
   text_increase: '\u{eae2}',
