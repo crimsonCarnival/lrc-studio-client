@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { projectPath } from '@/features/projects/project-path';
-import { useTrendingProjects } from '../hooks/useExplore';
+import { useTrendingProjects, useExploreTracking } from '../hooks/useExplore';
 import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
 import type { ProjectKind } from '@/types';
@@ -30,6 +30,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
     loading: boolean;
     error: unknown;
   };
+  const trackOpen = useExploreTracking(projects);
 
   return (
     <section className="flex flex-col gap-4">
@@ -96,7 +97,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
               </>
             );
             return href
-              ? <Link key={project.id} to={href} className={CARD_CLASS}>{body}</Link>
+              ? <Link key={project.id} to={href} className={CARD_CLASS} onClick={() => trackOpen(project.publicId ?? project.id)}>{body}</Link>
               : <div key={project.id} className={CARD_CLASS}>{body}</div>;
           })}
         </div>

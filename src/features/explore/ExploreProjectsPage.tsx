@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { projectPath } from '@/features/projects/project-path';
-import { usePaginatedProjects } from './hooks/useExplore';
+import { usePaginatedProjects, useExploreTracking } from './hooks/useExplore';
 import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
@@ -27,7 +27,7 @@ interface ExploreProject {
 
 const CARD_CLASS = 'flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group';
 
-function ExploreProjectCard({ project }: { project: ExploreProject }) {
+function ExploreProjectCard({ project, onOpen }: { project: ExploreProject; onOpen?: (publicId: string) => void }) {
   const menuProject = { ...project, publicId: project.publicId ?? project.id };
   const ownerAccountName = project.user?.accountName ?? project.owner?.accountName ?? project.accountName;
   // No owner account name means no canonical URL: the card stays non-navigable
@@ -72,7 +72,7 @@ function ExploreProjectCard({ project }: { project: ExploreProject }) {
   return (
     <ProjectCardMenu project={menuProject} isOwner={false} ownerAccountName={ownerAccountName}>
       {href
-        ? <Link to={href} className={CARD_CLASS}>{body}</Link>
+        ? <Link to={href} className={CARD_CLASS} onClick={() => onOpen?.(menuProject.publicId)}>{body}</Link>
         : <div className={CARD_CLASS}>{body}</div>}
     </ProjectCardMenu>
   );
@@ -88,6 +88,7 @@ export default function ExploreProjectsPage() {
     hasMore: boolean;
     loadMore: () => void;
   };
+  const trackOpen = useExploreTracking(projects);
   // Reuses the existing `searchProjects` GraphQL query (public + own projects, Atlas
   // Search with regex fallback) and its 300ms debounce.
   const search = useProjectSearch();
@@ -146,7 +147,7 @@ export default function ExploreProjectsPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {projects.map(project => <ExploreProjectCard key={project.id} project={project} />)}
+            {projects.map(project => <ExploreProjectCard key={project.id} project={project} onOpen={trackOpen} />)}
           </div>
 
           {hasMore ? (

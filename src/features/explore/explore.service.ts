@@ -57,6 +57,21 @@ export const getTrendingProjects = (offset = 0, limit = 6): Promise<ProjectPage>
   gqlRequest<{ trendingProjects: ProjectPage | null }>(TRENDING_PROJECTS, { offset, limit })
     .then((d) => d?.trendingProjects ?? { projects: [], total: 0, hasMore: false });
 
+const TRACK_EXPLORE_EVENTS = /* GraphQL */ `
+  mutation TrackExploreEvents($events: [ExploreEventInput!]!) {
+    trackExploreEvents(events: $events)
+  }
+`;
+
+export type ExploreEvent = { publicId: string; type: 'IMPRESSION' | 'CLICK'; position?: number };
+
+// Anonymous feed telemetry for tuning the ranking. Best-effort: a failure here
+// must never reach the user, so errors are swallowed.
+export const trackExploreEvents = (events: ExploreEvent[]): Promise<void> =>
+  events.length === 0
+    ? Promise.resolve()
+    : gqlRequest(TRACK_EXPLORE_EVENTS, { events }).then(() => undefined, () => undefined);
+
 export const getPopularPlaylists = (offset = 0, limit = 6): Promise<PlaylistPage> =>
   gqlRequest<{ popularPlaylists: PlaylistPage | null }>(POPULAR_PLAYLISTS, { offset, limit })
     .then((d) => d?.popularPlaylists ?? { playlists: [], total: 0, hasMore: false });

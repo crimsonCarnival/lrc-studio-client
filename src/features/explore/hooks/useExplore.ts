@@ -1,10 +1,39 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import {
   getTrendingProjects,
   getPopularPlaylists,
   getSuggestedUsers,
+  trackExploreEvents,
+  type ExploreEvent,
 } from '../explore.service.js';
+
+// Matches the server's per-call cap (MAX_EVENTS_PER_CALL).
+const TRACK_BATCH = 50;
+
+/**
+ * Reports each project's first appearance in this feed (with its position) and
+ * returns a click reporter. "Impression" means rendered, not scrolled into view,
+ * so treat the resulting rates as relative between projects, not absolute.
+ * Nothing identifies the viewer; see the server's explore-event model.
+ */
+export function useExploreTracking(projects: { id: string; publicId?: string }[]) {
+  const seen = useRef(new Set<string>());
+  useEffect(() => {
+    const fresh: ExploreEvent[] = [];
+    projects.forEach((p, position) => {
+      const publicId = p.publicId ?? p.id;
+      if (seen.current.has(publicId)) return;
+      seen.current.add(publicId);
+      fresh.push({ publicId, type: 'IMPRESSION', position });
+    });
+    for (let i = 0; i < fresh.length; i += TRACK_BATCH) void trackExploreEvents(fresh.slice(i, i + TRACK_BATCH));
+  }, [projects]);
+
+  return useCallback((publicId: string) => {
+    void trackExploreEvents([{ publicId, type: 'CLICK' }]);
+  }, []);
+}
 
 // Each list has a preview query (first N, used by home/explore sections) and a
 // paged one (the dedicated listing page). They are separate cache entries: the
