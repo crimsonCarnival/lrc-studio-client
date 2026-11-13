@@ -1498,6 +1498,7 @@ export default function Editor({
               <Button
                 variant="outline"
                 size="icon"
+                data-tour="editor-save"
                 onClick={handleSaveClick}
                 disabled={isSaving}
                 aria-label={t('project.save')}
@@ -1723,6 +1724,7 @@ export default function Editor({
           <Button
             variant="outline"
             size="icon"
+            data-tour="editor-find-lyrics"
             onClick={() => setLyricsSearchOpen(true)}
             aria-label={t('lyricsSearch.findLyrics')}
             className="size-9 lg:size-9 coarse:size-11 rounded-lg border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground"

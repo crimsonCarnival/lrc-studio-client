@@ -506,7 +506,7 @@ export default {
     steps: {
       sync: {
         title: "Sync your lyrics",
-        body: "Play the audio and press Enter (or your mark key) as each line starts. The line gets the current time and the next one is selected automatically, unless Auto-Advance is off in Settings."
+        body: "Play the audio and press **Enter** (or your mark key) as each line starts. The line gets the current time and the next one is selected automatically, unless **Auto-Advance** is off in Settings."
       },
       player: {
         title: "Player controls",
@@ -514,11 +514,11 @@ export default {
       },
       modes: {
         title: "Lines and Words",
-        body: "Lines times each line as a whole. Words times every word for karaoke fill, and unlocks once you have synced at least one line. Review takes you to the preview."
+        body: "**Lines** times each line as a whole. **Words** times every word for karaoke fill, and unlocks once you have synced at least one line. **Review** takes you to the preview."
       },
       tools: {
         title: "Auto Stamp",
-        body: "Auto Stamp listens to the audio and times the whole song for you. By default it only fills lines that have no timestamp yet. Search Lyrics can also fetch lyrics, some of them already timed."
+        body: "**Auto Stamp** listens to the audio and times the whole song for you. By default it only fills lines that have no timestamp yet. **Search Lyrics** can also fetch lyrics, some of them already timed."
       },
       counterparts: {
         title: "Counterparts",
@@ -530,11 +530,11 @@ export default {
       },
       saveUndo: {
         title: "Undo, redo and save",
-        body: "Your work autosaves, and the indicator beside the title shows when it is saved. Press Ctrl+S to save right away, and use Undo and Redo (Ctrl+Z, Ctrl+Y) if a mark goes wrong."
+        body: "Your work autosaves, and the indicator beside the title shows when it is saved. Press **Ctrl+S** to save right away, and use **Undo** and **Redo** (Ctrl+Z, Ctrl+Y) if a mark goes wrong."
       },
       preview: {
         title: "Live preview",
-        body: "Review opens your synced lyrics as a karaoke-style preview. Syncing Japanese? Turn on furigana there to show readings above the kanji."
+        body: "**Review** opens your synced lyrics as a karaoke-style preview. Syncing Japanese? Turn on furigana there to show readings above the kanji."
       },
       share: {
         title: "Export and publish",
@@ -550,7 +550,7 @@ export default {
       },
       phoneMark: {
         title: "Mark bar",
-        body: "Tap Mark right as each line starts. Undo reverses the last stamp, and the minus and plus buttons nudge it earlier or later."
+        body: "Tap **Mark** right as each line starts. **Undo** reverses the last stamp, and the minus and plus buttons nudge it earlier or later."
       },
       phonePlayer: {
         title: "Player",
@@ -558,11 +558,11 @@ export default {
       },
       phoneTabs: {
         title: "Sync, Edit and Preview",
-        body: "Sync is where you stamp lines. Edit changes the lyric text. Preview shows the karaoke view."
+        body: "**Sync** is where you stamp lines. **Edit** changes the lyric text. **Preview** shows the karaoke view."
       },
       phoneTools: {
         title: "More tools",
-        body: "Open this menu to switch between Lines and Words, run Auto Stamp, find lyrics online, export, or publish your project."
+        body: "Open this menu to switch between **Lines** and **Words**, run **Auto Stamp**, find lyrics online, export, or publish your project."
       },
       phoneSave: {
         title: "Saving",

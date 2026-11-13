@@ -532,7 +532,7 @@ export default {
     steps: {
       sync: {
         title: "Sincroniza tu letra",
-        body: "Reproduce el audio y presiona Enter (o tu tecla de marca) cuando empiece cada línea. La línea recibe el tiempo actual y la siguiente se selecciona sola, salvo que desactives el avance automático en Ajustes."
+        body: "Reproduce el audio y presiona **Enter** (o tu tecla de marca) cuando empiece cada línea. La línea recibe el tiempo actual y la siguiente se selecciona sola, salvo que desactives el avance automático en Ajustes."
       },
       player: {
         title: "Controles del reproductor",
@@ -540,11 +540,11 @@ export default {
       },
       modes: {
         title: "Líneas y Palabras",
-        body: "Líneas marca el tiempo de cada línea completa. Palabras marca cada palabra para el efecto karaoke, y se desbloquea cuando sincronizas al menos una línea. Revisar te lleva a la vista previa."
+        body: "**Líneas** marca el tiempo de cada línea completa. **Palabras** marca cada palabra para el efecto karaoke, y se desbloquea cuando sincronizas al menos una línea. **Revisar** te lleva a la vista previa."
       },
       tools: {
         title: "Auto Stamp",
-        body: "Auto Stamp escucha el audio y sincroniza toda la canción por ti. De forma predeterminada solo rellena las líneas que aún no tienen marca de tiempo. Buscar letra también puede traer letras, algunas ya sincronizadas."
+        body: "**Auto Stamp** escucha el audio y sincroniza toda la canción por ti. De forma predeterminada solo rellena las líneas que aún no tienen marca de tiempo. **Buscar letra** también puede traer letras, algunas ya sincronizadas."
       },
       counterparts: {
         title: "Contrapartes",
@@ -556,11 +556,11 @@ export default {
       },
       saveUndo: {
         title: "Deshacer, rehacer y guardar",
-        body: "Tu trabajo se guarda automáticamente, y el indicador junto al título muestra cuándo está guardado. Presiona Ctrl+S para guardar al instante y usa Deshacer y Rehacer (Ctrl+Z, Ctrl+Y) si una marca sale mal."
+        body: "Tu trabajo se guarda automáticamente, y el indicador junto al título muestra cuándo está guardado. Presiona **Ctrl+S** para guardar al instante y usa **Deshacer** y **Rehacer** (Ctrl+Z, Ctrl+Y) si una marca sale mal."
       },
       preview: {
         title: "Vista previa en vivo",
-        body: "Revisar abre tu letra sincronizada como vista previa tipo karaoke. ¿Sincronizas japonés? Activa ahí el furigana para mostrar las lecturas sobre los kanji."
+        body: "**Revisar** abre tu letra sincronizada como vista previa tipo karaoke. ¿Sincronizas japonés? Activa ahí el furigana para mostrar las lecturas sobre los kanji."
       },
       share: {
         title: "Exportar y publicar",
@@ -576,7 +576,7 @@ export default {
       },
       phoneMark: {
         title: "Barra de marca",
-        body: "Toca Marcar justo cuando empiece cada línea. Deshacer revierte la última marca, y los botones menos y más la adelantan o la retrasan."
+        body: "Toca **Marcar** justo cuando empiece cada línea. **Deshacer** revierte la última marca, y los botones menos y más la adelantan o la retrasan."
       },
       phonePlayer: {
         title: "Reproductor",
@@ -584,11 +584,11 @@ export default {
       },
       phoneTabs: {
         title: "Sincronizar, Editar y Vista previa",
-        body: "Sincronizar es donde marcas las líneas. Editar cambia el texto de la letra. Vista previa muestra el formato karaoke."
+        body: "**Sincronizar** es donde marcas las líneas. **Editar** cambia el texto de la letra. **Vista previa** muestra el formato karaoke."
       },
       phoneTools: {
         title: "Más herramientas",
-        body: "Abre este menú para cambiar entre Líneas y Palabras, usar Auto Stamp, buscar letras en línea, exportar o publicar tu proyecto."
+        body: "Abre este menú para cambiar entre **Líneas** y **Palabras**, usar **Auto Stamp**, buscar letras en línea, exportar o publicar tu proyecto."
       },
       phoneSave: {
         title: "Guardado",

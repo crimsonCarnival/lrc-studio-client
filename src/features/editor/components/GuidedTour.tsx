@@ -25,7 +25,34 @@ function findVisible(target: string): { el: HTMLElement; rect: Rect } | null {
   return null;
 }
 
+// Editor terms in tour copy are written **like this** in the locale files and shown bold.
+const renderBold = (text: string) =>
+  text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <strong key={i} className="font-semibold text-zinc-200">{part}</strong> : part));
+
 const measure = (target: string): Rect | null => findVisible(target)?.rect ?? null;
+
+// The box the spotlight covers for a step: its target plus any `also` targets that are on screen,
+// or, once the step's delay has passed, its `later` target alone.
+function measureStep(step: TourStep, later: boolean): Rect | null {
+  if (later && step.later) {
+    const moved = measure(step.later.target);
+    if (moved) return moved;
+  }
+  const main = measure(step.target);
+  if (!main || !step.also) return main;
+  let { top, left } = main;
+  let right = main.left + main.width;
+  let bottom = main.top + main.height;
+  for (const extra of step.also) {
+    const r = measure(extra);
+    if (!r) continue;
+    top = Math.min(top, r.top);
+    left = Math.min(left, r.left);
+    right = Math.max(right, r.left + r.width);
+    bottom = Math.max(bottom, r.top + r.height);
+  }
+  return { top, left, width: right - left, height: bottom - top };
+}
 
 type GuidedTourProps = {
   steps: TourStep[];
@@ -61,12 +88,23 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
     else setStepIndex(next);
   }, [steps, closeTour]);
 
+  const [laterOn, setLaterOn] = useState(false);
+
   const recalc = useCallback(() => {
     if (!step) return;
-    const r = measure(step.target);
+    const r = measureStep(step, laterOn);
     if (r) setRect(r);
     else skipPast(stepIndex);
-  }, [step, stepIndex, skipPast]);
+  }, [step, stepIndex, skipPast, laterOn]);
+
+  // A step with a `later` target moves its spotlight there after a pause; every step change starts over.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLaterOn(false);
+    if (!isOpen || !ready || !step?.later || !measure(step.later.target)) return;
+    const timer = window.setTimeout(() => setLaterOn(true), step.later.afterMs);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, ready, step]);
 
   // Reset when the tour CLOSES, so the next open commit already sees step 0 (resetting on open
   // left the measuring effect below reading the previous run's step index).
@@ -112,6 +150,14 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
     recalc();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, ready, stepIndex, step]);
+
+  useLayoutEffect(() => {
+    if (!laterOn || !step?.later) return;
+    findVisible(step.later.target)?.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    recalc();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [laterOn]);
 
   // Reported once per open, when the first card actually renders: that is what counts as a showing.
   useEffect(() => {
@@ -192,7 +238,7 @@ export function GuidedTour({ steps, isOpen, offerOptOut, narrow, onClose, onLear
             </Button>
           </Tip>
         </div>
-        <p className="text-xs text-zinc-400 leading-relaxed">{t(step.bodyKey)}</p>
+        <p className="text-xs text-zinc-400 leading-relaxed">{renderBold(t(step.bodyKey))}</p>
         <Button
           type="button"
           variant="link"
