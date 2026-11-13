@@ -14,6 +14,7 @@ import { useSharedProject } from '@/features/sharing/hooks/useSharedProject';
 import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
+import { getSocket } from '@/app/socket.client';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { guestLyricsCleared, mayWriteGuestDraft, dropProgrammaticEmptyExpectation, noteLinesBecameEmpty, resetGuestLyricsCleared, restoreGuestDraft, storedGuestDraftLineCount } from '@/features/projects/services/guest-draft';
 import { useSaveOnLeave } from './useSaveOnLeave';
@@ -240,6 +241,19 @@ export function useAppState(user?: AuthUserType | null) {
   // Only meaningful while public: an unlisted project is open by link but not discoverable.
   const projectIsListed = !(visibility !== null && visibility.publicId === activepublicId && visibility.isPublic && !visibility.listed);
   const setProjectVisibility = useCallback((publicId: string, isPublic: boolean, listed = true) => setVisibility({ publicId, isPublic, listed }), []);
+  // The server unpublishes a public project that a save leaves unfinished, and tells every tab of
+  // the owner (the save response alone would miss other tabs and collab stores). Only listened to
+  // while the open project is public, which also means the owner is signed in and the socket is up.
+  useEffect(() => {
+    if (!projectIsPublic || !activepublicId) return;
+    const socket = getSocket();
+    if (!socket) return;
+    const onVisibility = (data: { publicId?: string; public?: boolean }) => {
+      if (data.publicId === activepublicId && data.public === false) setProjectVisibility(activepublicId, false);
+    };
+    socket.on('project:visibility', onVisibility);
+    return () => { socket.off('project:visibility', onVisibility); };
+  }, [projectIsPublic, activepublicId, setProjectVisibility]);
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastServerSnapshotRef = useRef<any>(null);
