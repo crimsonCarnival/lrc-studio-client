@@ -32,6 +32,17 @@ describe('installOverflowMarquee', () => {
     expect(el.style.getPropertyValue('--marquee-distance')).toBe('');
   });
 
+  it('pins the box width while scrolling and restores the previous min-width after', () => {
+    uninstall = installOverflowMarquee();
+    const el = box(300, 120);
+    el.style.minWidth = '10px';
+    Object.defineProperty(el, 'offsetWidth', { value: 124 });
+    over(el);
+    expect(el.style.minWidth).toBe('124px');
+    out(el, document.body);
+    expect(el.style.minWidth).toBe('10px');
+  });
+
   it('finds the clipped box from a child inside it', () => {
     uninstall = installOverflowMarquee();
     const el = box(300, 120);

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -3 64 64" role="img" aria-label="LRC Studio">
+  <!-- Brand mark alone on a transparent canvas: same geometry as src/shared/ui/LogoMark.tsx,
+       shifted 3 units down so the mark is centred in the square. -->
+  <style>
+    :root { --iris: #c4a7e7; --gold: #f6c177; }
+    @media (prefers-color-scheme: light) {
+      :root { --iris: #907aa9; --gold: #ea9d34; }
+    }
+  </style>
+  <g fill="var(--iris)">
+    <rect x="6" y="12" width="24" height="8" rx="4"/>
+    <rect x="6" y="26" width="24" height="8" rx="4"/>
+    <rect x="6" y="40" width="24" height="8" rx="4"/>
+  </g>
+  <g fill="var(--iris)" opacity="0.3">
+    <rect x="36" y="12" width="14" height="8" rx="4"/>
+    <rect x="36" y="26" width="22" height="8" rx="4"/>
+    <rect x="36" y="40" width="8" height="8" rx="4"/>
+  </g>
+  <rect x="31" y="9" width="3.5" height="48" rx="1.75" fill="var(--gold)"/>
+  <circle cx="32.75" cy="5" r="4" fill="var(--gold)"/>
+</svg>

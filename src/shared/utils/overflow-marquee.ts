@@ -26,12 +26,21 @@ function truncatingAncestor(start: EventTarget | null): HTMLElement | null {
   return null;
 }
 
+// Inline min-width an element had before the marquee pinned it, restored on stop.
+const savedMinWidth = new WeakMap<HTMLElement, string>();
+
 function start(el: HTMLElement): void {
   if (el.dataset.marquee !== undefined) return;
   const distance = el.scrollWidth - el.clientWidth;
   if (distance <= 1) return;
   // The keyframes spend 70% of each pass moving; the rest is the pause at either end.
   const duration = Math.max(MIN_DURATION_S, distance / PX_PER_SECOND / 0.7);
+  // A negative text-indent shrinks the element's max-content width, so a box sized to
+  // its content (flex item, inline-block, grid `auto` track) narrows as the text scrolls:
+  // the text jitters, neighbours shift, and the pointer can slip off and restart it.
+  // Pinning the current width for the pass keeps the box still.
+  savedMinWidth.set(el, el.style.minWidth);
+  el.style.minWidth = `${el.offsetWidth}px`;
   el.style.setProperty('--marquee-distance', `${distance}px`);
   el.style.setProperty('--marquee-duration', `${duration}s`);
   el.dataset.marquee = '';
@@ -41,6 +50,8 @@ function stop(el: HTMLElement): void {
   delete el.dataset.marquee;
   el.style.removeProperty('--marquee-distance');
   el.style.removeProperty('--marquee-duration');
+  el.style.minWidth = savedMinWidth.get(el) ?? '';
+  savedMinWidth.delete(el);
 }
 
 /** Installs the behaviour on the document; returns the uninstaller. */
