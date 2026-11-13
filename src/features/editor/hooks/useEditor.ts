@@ -164,6 +164,9 @@ export function useEditor({
   const pendingIndexMapRef = useRef<number[] | null>(null);
   const recordIndexMap = useCallback((indexMap: number[]) => { pendingIndexMapRef.current = indexMap; }, []);
   const remapPrevLinesRef = useRef(lines);
+  // A line the edit was opened on in the same update that inserted it: its index is already
+  // in NEW coordinates, so it must be resolved by id rather than remapped as an old index.
+  const pendingEditLineIdRef = useRef<string | null>(null);
   const committedActiveRef = useRef(activeLineIndex);
   const lastClickedRef = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -175,6 +178,9 @@ export function useEditor({
     const map = pending && pending.length === prevLines.length ? pending : indexMapByIdentity(prevLines, lines);
     const mapIdx = (i: number | null | undefined) => (i == null ? -1 : map[i] ?? -1);
     const isIdentity = map.length === lines.length && map.every((j, i) => j === i);
+    const pendingEditId = pendingEditLineIdRef.current;
+    pendingEditLineIdRef.current = null;
+    const explicitEdit = pendingEditId != null ? lines.findIndex((l) => l.id === pendingEditId) : -1;
     if (!isIdentity) {
       // Syncing derived index state to an external `lines` change — no render-time equivalent
       // because the change can come from undo/redo in the parent.
@@ -185,7 +191,10 @@ export function useEditor({
         const j = mapIdx(prev.lineIndex);
         return j >= 0 ? { ...prev, lineIndex: j } : null;
       });
-      setEditingLineIndex((prev) => (prev == null ? prev : (mapIdx(prev) >= 0 ? mapIdx(prev) : null)));
+      setEditingLineIndex((prev) => {
+        if (explicitEdit >= 0) return explicitEdit;
+        return prev == null ? prev : (mapIdx(prev) >= 0 ? mapIdx(prev) : null);
+      });
       setAwaitingEndMarkFor((prev) => {
         if (!prev) return prev;
         const j = mapIdx(prev.lineIndex);
@@ -1238,14 +1247,19 @@ export function useEditor({
     const depth = getDefaultDepthForLabel(finalLabel);
     const newIndex = afterIndex + 1;
 
+    const id = crypto.randomUUID();
     setLines((prev) => {
       const updated = [...prev];
-      updated.splice(newIndex, 0, { type: 'section', label: finalLabel, depth, timestamp: null, id: crypto.randomUUID() });
+      updated.splice(newIndex, 0, { type: 'section', label: finalLabel, depth, timestamp: null, id });
       return updated;
     });
 
     // Open the section editor immediately so the singer inputs are available without a
     // second click — the user can name singers right after adding the section.
+    // `newIndex` is a post-insert index, but the index remap above treats editingLineIndex as
+    // pre-insert and would shift it onto the lyric line below (whose modal then saved the
+    // section label as its text). Resolve it by id instead.
+    pendingEditLineIdRef.current = id;
     setEditingLineIndex(newIndex);
     setEditingText(finalLabel);
     setEditingSingers(['', '', '', '']);
