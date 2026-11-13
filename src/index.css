@@ -117,6 +117,10 @@ input[type="number"] {
    (shared/utils/overflow-marquee.ts sets the attribute and the two variables). */
 [data-marquee] {
   text-overflow: clip !important;
+}
+/* Fallback for elements with child markup; plain text slides a transformed copy instead
+   (data-marquee-slide, set by the same file). */
+[data-marquee]:not([data-marquee-slide]) {
   animation: overflow-marquee var(--marquee-duration, 3s) linear infinite alternate;
 }
 @keyframes overflow-marquee {
