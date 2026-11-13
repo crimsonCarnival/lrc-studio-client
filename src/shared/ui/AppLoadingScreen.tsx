@@ -11,7 +11,9 @@ const WAKE_MESSAGE_DELAY_MS = 4000;
 /**
  * Full-screen loading gate shown before the app has anything else to render
  * (auth restore, route chunk load). Not used for in-app loading states —
- * those stay on the small inline LogoLoader.
+ * those stay on the small inline LogoLoader. Keep its size equal to the route-level
+ * fallbacks in AppRouter (32) — the gate hands off to them, and a different size reads
+ * as a loader that shrinks mid-load.
  */
 export function AppLoadingScreen() {
   const { t } = useTranslation();
@@ -24,7 +26,7 @@ export function AppLoadingScreen() {
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-4">
-      <LogoLoader size={64} className="text-primary" />
+      <LogoLoader size={32} className="text-primary" />
       {showWakeMessage && (
         <p className="text-sm text-zinc-500 animate-fade-in px-4 text-center">
           {t('common.serverWakingUp')}
