@@ -8,7 +8,6 @@ export default {
     legendary: 'Legendary',
   },
 
-  defsLoadError: 'Could not load badge details',
 
   // ─── Showcase ───────────────────────────────────────────────────────────────
   showcase: {

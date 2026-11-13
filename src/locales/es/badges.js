@@ -8,7 +8,6 @@ export default {
     legendary: 'Legendario',
   },
 
-  defsLoadError: 'No se pudieron cargar los detalles de las insignias',
 
   // ─── Showcase ───────────────────────────────────────────────────────────────
   showcase: {

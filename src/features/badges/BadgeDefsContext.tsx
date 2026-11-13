@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
 import { gqlRequest } from '@/app/graphql.client';
 
 const BADGE_DEFS_QUERY = /* GraphQL */ `
@@ -38,16 +36,16 @@ async function fetchBadgeDefs(): Promise<BadgeDefsMap> {
 }
 
 export function BadgeDefsProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
   // Definitions change only when staff edit them, so one load per session is
   // enough; the query cache dedupes concurrent mounts and retries on failure.
+  // Failure is silent for the user: this is background data fetched on every page,
+  // badges fall back to their built-in labels, and a toast on each cold start or
+  // outage says nothing they can act on.
   const { data, error } = useQuery({ queryKey: ['badgeDefs'], queryFn: fetchBadgeDefs, staleTime: Infinity });
 
   useEffect(() => {
-    if (!error) return;
-    console.error('[badges] failed to load badge definitions', error);
-    toast.error(t('badges.defsLoadError'), { id: 'badge-defs-load-error' });
-  }, [error, t]);
+    if (error) console.error('[badges] failed to load badge definitions', error);
+  }, [error]);
 
   return (
     <BadgeDefsContext.Provider value={data ?? NO_DEFS}>
