@@ -10,6 +10,7 @@ const ScrollProgress = lazy(() =>
   import('@/shared/ui/magicui/scroll-progress').then((m) => ({ default: m.ScrollProgress }))
 );
 import { useTranslation } from 'react-i18next';
+import { useMySessions } from '@/features/collab/hooks/useMySessions';
 import type { i18n as I18nInstance } from 'i18next';
 import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
 import { guardedLinkClick } from './guarded-link-click';
@@ -70,11 +71,26 @@ interface AppHeaderProps {
   collabProvider?: HocuspocusProvider | null;
 }
 
+/** Live-session count next to the Sessions link; nothing when there are none. */
+function LiveSessionsBadge() {
+  const { t } = useTranslation();
+  const { sessions } = useMySessions();
+  if (sessions.length === 0) return null;
+  return (
+    <span className="ml-1.5 flex items-center gap-1 text-[11px] font-semibold text-love-ink">
+      <span className="size-[7px] rounded-full bg-love" aria-hidden="true" />
+      <span aria-hidden="true">{sessions.length}</span>
+      <span className="sr-only">{t('collab.sessions.navLive', { count: sessions.length })}</span>
+    </span>
+  );
+}
+
 // Desktop primary navigation, in display order.
 const NAV_LINKS = [
   ['/home', 'nav.home'],
   ['/explore', 'nav.explore'],
   ['/feed', 'nav.feed'],
+  ['/sessions', 'nav.sessions'],
   ['/leaderboard', 'nav.leaderboard'],
   ['/library', 'nav.library'],
 ] as const;
@@ -268,6 +284,7 @@ export function AppHeader({
                       className={`relative flex h-10 items-center rounded-[calc(var(--radius)*1)] px-3 text-[15px] font-semibold transition-colors duration-[var(--duration-state)] hover:bg-raised hover:text-foreground focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${current ? "text-foreground after:absolute after:bottom-0.5 after:left-1/2 after:h-[3px] after:w-4 after:-translate-x-1/2 after:rounded-sm after:bg-iris after:content-['']" : 'text-subtle'}`}
                     >
                       {t(labelKey)}
+                      {path === '/sessions' && <LiveSessionsBadge />}
                     </Link>
                   );
                 })}

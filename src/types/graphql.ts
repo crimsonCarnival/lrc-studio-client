@@ -234,6 +234,14 @@ export type CollabKickResult = {
   revokedInviteId?: Maybe<Scalars['ID']['output']>;
 };
 
+/** A member shown on a session list row. */
+export type CollabMemberPreview = {
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  /** 1-8, maps to --color-collab-<n>. */
+  colorIndex: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
 /** Someone in a live collaborative session. subject is user:<id> or guest:<id>. */
 export type CollabParticipant = {
   avatarUrl?: Maybe<Scalars['String']['output']>;
@@ -258,9 +266,12 @@ export type CollabSession = {
 
 /** A live session in the caller's session list, with the project it is about. */
 export type CollabSessionSummary = {
+  coverImage?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
   lastActivityAt: Scalars['String']['output'];
   memberCount: Scalars['Int']['output'];
+  /** The first few members, for an avatar stack. memberCount has the full count. */
+  members: Array<CollabMemberPreview>;
   publicId: Scalars['String']['output'];
   /** The caller's role: owner, editor or viewer. */
   role: Scalars['String']['output'];
@@ -389,6 +400,17 @@ export type EmailChange = {
   to: Scalars['String']['output'];
 };
 
+export type ExploreEventInput = {
+  /** 0-based position in the feed; used for impressions. */
+  position?: InputMaybe<Scalars['Int']['input']>;
+  publicId: Scalars['String']['input'];
+  type: ExploreEventType;
+};
+
+export type ExploreEventType =
+  | 'CLICK'
+  | 'IMPRESSION';
+
 export type ExploreStats = {
   totalPlaylists: Scalars['Int']['output'];
   totalProjects: Scalars['Int']['output'];
@@ -448,6 +470,7 @@ export type FollowUser = {
   level?: Maybe<Scalars['Int']['output']>;
   projectCount?: Maybe<Scalars['Int']['output']>;
   staffRole?: Maybe<Scalars['String']['output']>;
+  suggestionReason?: Maybe<SuggestionReason>;
   totalStarsReceived?: Maybe<Scalars['Int']['output']>;
 };
 
@@ -483,12 +506,13 @@ export type HistorySettingsInput = {
 };
 
 export type InterfaceSettings = {
+  autoHideHeader?: Maybe<Scalars['Boolean']['output']>;
   /** JSON of the user's own theme (client/src/shared/theme/custom-theme.ts), at most 600 characters. */
   customTheme?: Maybe<Scalars['String']['output']>;
   defaultLanguage?: Maybe<Scalars['String']['output']>;
   /** Show the editor tour on new projects. Default true. */
   editorTourEnabled?: Maybe<Scalars['Boolean']['output']>;
-  /** How many times the editor tour has been shown. Non-negative integer. */
+  /** Times the editor tour was shown automatically on a new project. */
   editorTourShown?: Maybe<Scalars['Int']['output']>;
   editorWidth?: Maybe<Scalars['Float']['output']>;
   focusContrast?: Maybe<Scalars['String']['output']>;
@@ -498,7 +522,6 @@ export type InterfaceSettings = {
   /** Keep the chosen theme on this browser after signing out. Default true. */
   keepThemeOnSignOut?: Maybe<Scalars['Boolean']['output']>;
   layoutSwap?: Maybe<Scalars['Boolean']['output']>;
-  autoHideHeader?: Maybe<Scalars['Boolean']['output']>;
   lockLayout?: Maybe<Scalars['Boolean']['output']>;
   mobileTab?: Maybe<Scalars['String']['output']>;
   playerTop?: Maybe<Scalars['Boolean']['output']>;
@@ -509,12 +532,13 @@ export type InterfaceSettings = {
 };
 
 export type InterfaceSettingsInput = {
+  autoHideHeader?: InputMaybe<Scalars['Boolean']['input']>;
   /** JSON of the user's own theme (client/src/shared/theme/custom-theme.ts), at most 600 characters. */
   customTheme?: InputMaybe<Scalars['String']['input']>;
   defaultLanguage?: InputMaybe<Scalars['String']['input']>;
   /** Show the editor tour on new projects. Default true. */
   editorTourEnabled?: InputMaybe<Scalars['Boolean']['input']>;
-  /** How many times the editor tour has been shown. Non-negative integer. */
+  /** Times the editor tour was shown automatically on a new project. */
   editorTourShown?: InputMaybe<Scalars['Int']['input']>;
   editorWidth?: InputMaybe<Scalars['Float']['input']>;
   focusContrast?: InputMaybe<Scalars['String']['input']>;
@@ -524,7 +548,6 @@ export type InterfaceSettingsInput = {
   /** Keep the chosen theme on this browser after signing out. Default true. */
   keepThemeOnSignOut?: InputMaybe<Scalars['Boolean']['input']>;
   layoutSwap?: InputMaybe<Scalars['Boolean']['input']>;
-  autoHideHeader?: InputMaybe<Scalars['Boolean']['input']>;
   lockLayout?: InputMaybe<Scalars['Boolean']['input']>;
   mobileTab?: InputMaybe<Scalars['String']['input']>;
   playerTop?: InputMaybe<Scalars['Boolean']['input']>;
@@ -731,6 +754,8 @@ export type Mutation = {
   /** Idempotent: returns the live session if one exists. */
   startCollabSession: CollabSession;
   submitRequest: StaffRequest;
+  /** Anonymous feed telemetry (no user/device stored). At most 50 events per call; unknown or non-public projects are ignored. */
+  trackExploreEvents: Scalars['Boolean']['output'];
   unblockUser: Scalars['Boolean']['output'];
   unfollow: Scalars['Boolean']['output'];
   unsavePlaylist: Scalars['Boolean']['output'];
@@ -1105,6 +1130,11 @@ export type MutationSubmitRequestArgs = {
 };
 
 
+export type MutationTrackExploreEventsArgs = {
+  events: Array<ExploreEventInput>;
+};
+
+
 export type MutationUnblockUserArgs = {
   accountName: Scalars['String']['input'];
 };
@@ -1314,9 +1344,9 @@ export type Playlist = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   isPublic: Scalars['Boolean']['output'];
+  isSavedByMe: Scalars['Boolean']['output'];
   /** False on a public list = unlisted: open by link, absent from discovery. */
   listed: Scalars['Boolean']['output'];
-  isSavedByMe: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   owner: FollowUser;
   projectCount: Scalars['Int']['output'];
@@ -1381,12 +1411,7 @@ export type ProfileSharePage = {
   items: Array<ProfileShareItem>;
 };
 
-/** song: lyrics synced to a track. subtitles: captions timed against a video, edited in the subtitle studio. */
-export type ProjectKind = 'song' | 'subtitles';
-
 export type Project = {
-  /** What the project is for. Rows from before this field existed read as song. */
-  kind: ProjectKind;
   /** @deprecated Boost became Share to profile; use profileShareCount. */
   boostCount?: Maybe<Scalars['Int']['output']>;
   /** Oldest contribution first. Empty when the viewer cannot read the project. */
@@ -1406,6 +1431,8 @@ export type Project = {
   isForkedByMe?: Maybe<Scalars['Boolean']['output']>;
   isSharedToProfileByMe?: Maybe<Scalars['Boolean']['output']>;
   isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
+  /** What the project is for. Rows from before this field existed read as song. */
+  kind: ProjectKind;
   lineCount?: Maybe<Scalars['Int']['output']>;
   /** False on a public project = unlisted: open by link, absent from discovery. Absent means listed. */
   listed?: Maybe<Scalars['Boolean']['output']>;
@@ -1444,6 +1471,11 @@ export type ProjectCollaborator = {
   /** The signed-in collaborator; null for guests. Only id, accountName, displayName and avatarUrl are guaranteed populated; do not select anything else. */
   user?: Maybe<User>;
 };
+
+/** song: lyrics synced to a track. subtitles: captions timed against a video, edited in the subtitle studio. */
+export type ProjectKind =
+  | 'song'
+  | 'subtitles';
 
 export type ProjectLyricsInput = {
   editorMode?: InputMaybe<Scalars['String']['input']>;
@@ -2092,18 +2124,24 @@ export type ShortcutsSettings = {
   clearTimestamp?: Maybe<Array<Scalars['String']['output']>>;
   deleteLine?: Maybe<Array<Scalars['String']['output']>>;
   deselect?: Maybe<Array<Scalars['String']['output']>>;
+  duplicateLine?: Maybe<Array<Scalars['String']['output']>>;
   focusPlayback?: Maybe<Array<Scalars['String']['output']>>;
   focusPreview?: Maybe<Array<Scalars['String']['output']>>;
   focusSync?: Maybe<Array<Scalars['String']['output']>>;
+  loopClick?: Maybe<Array<Scalars['String']['output']>>;
+  loopLine?: Maybe<Array<Scalars['String']['output']>>;
   mark?: Maybe<Array<Scalars['String']['output']>>;
   mute?: Maybe<Array<Scalars['String']['output']>>;
+  nextLine?: Maybe<Array<Scalars['String']['output']>>;
   nudgeLeft?: Maybe<Array<Scalars['String']['output']>>;
   nudgeLeftFine?: Maybe<Array<Scalars['String']['output']>>;
   nudgeRight?: Maybe<Array<Scalars['String']['output']>>;
   nudgeRightFine?: Maybe<Array<Scalars['String']['output']>>;
-  loopClick?: Maybe<Array<Scalars['String']['output']>>;
+  openVisualizer?: Maybe<Array<Scalars['String']['output']>>;
   playPause?: Maybe<Array<Scalars['String']['output']>>;
+  prevLine?: Maybe<Array<Scalars['String']['output']>>;
   rangeSelect?: Maybe<Array<Scalars['String']['output']>>;
+  searchLyrics?: Maybe<Array<Scalars['String']['output']>>;
   seekBackward?: Maybe<Array<Scalars['String']['output']>>;
   seekForward?: Maybe<Array<Scalars['String']['output']>>;
   showHelp?: Maybe<Array<Scalars['String']['output']>>;
@@ -2112,14 +2150,8 @@ export type ShortcutsSettings = {
   switchMode?: Maybe<Array<Scalars['String']['output']>>;
   toggleFullLyrics?: Maybe<Array<Scalars['String']['output']>>;
   togglePlayer?: Maybe<Array<Scalars['String']['output']>>;
-  searchLyrics?: Maybe<Array<Scalars['String']['output']>>;
-  loopLine?: Maybe<Array<Scalars['String']['output']>>;
-  prevLine?: Maybe<Array<Scalars['String']['output']>>;
-  nextLine?: Maybe<Array<Scalars['String']['output']>>;
-  duplicateLine?: Maybe<Array<Scalars['String']['output']>>;
   toggleSelect?: Maybe<Array<Scalars['String']['output']>>;
   toggleTranslation?: Maybe<Array<Scalars['String']['output']>>;
-  openVisualizer?: Maybe<Array<Scalars['String']['output']>>;
   toggleVisualizer?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -2134,18 +2166,24 @@ export type ShortcutsSettingsInput = {
   clearTimestamp?: InputMaybe<Array<Scalars['String']['input']>>;
   deleteLine?: InputMaybe<Array<Scalars['String']['input']>>;
   deselect?: InputMaybe<Array<Scalars['String']['input']>>;
+  duplicateLine?: InputMaybe<Array<Scalars['String']['input']>>;
   focusPlayback?: InputMaybe<Array<Scalars['String']['input']>>;
   focusPreview?: InputMaybe<Array<Scalars['String']['input']>>;
   focusSync?: InputMaybe<Array<Scalars['String']['input']>>;
+  loopClick?: InputMaybe<Array<Scalars['String']['input']>>;
+  loopLine?: InputMaybe<Array<Scalars['String']['input']>>;
   mark?: InputMaybe<Array<Scalars['String']['input']>>;
   mute?: InputMaybe<Array<Scalars['String']['input']>>;
+  nextLine?: InputMaybe<Array<Scalars['String']['input']>>;
   nudgeLeft?: InputMaybe<Array<Scalars['String']['input']>>;
   nudgeLeftFine?: InputMaybe<Array<Scalars['String']['input']>>;
   nudgeRight?: InputMaybe<Array<Scalars['String']['input']>>;
   nudgeRightFine?: InputMaybe<Array<Scalars['String']['input']>>;
-  loopClick?: InputMaybe<Array<Scalars['String']['input']>>;
+  openVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
   playPause?: InputMaybe<Array<Scalars['String']['input']>>;
+  prevLine?: InputMaybe<Array<Scalars['String']['input']>>;
   rangeSelect?: InputMaybe<Array<Scalars['String']['input']>>;
+  searchLyrics?: InputMaybe<Array<Scalars['String']['input']>>;
   seekBackward?: InputMaybe<Array<Scalars['String']['input']>>;
   seekForward?: InputMaybe<Array<Scalars['String']['input']>>;
   showHelp?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2154,14 +2192,8 @@ export type ShortcutsSettingsInput = {
   switchMode?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleFullLyrics?: InputMaybe<Array<Scalars['String']['input']>>;
   togglePlayer?: InputMaybe<Array<Scalars['String']['input']>>;
-  searchLyrics?: InputMaybe<Array<Scalars['String']['input']>>;
-  loopLine?: InputMaybe<Array<Scalars['String']['input']>>;
-  prevLine?: InputMaybe<Array<Scalars['String']['input']>>;
-  nextLine?: InputMaybe<Array<Scalars['String']['input']>>;
-  duplicateLine?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleSelect?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleTranslation?: InputMaybe<Array<Scalars['String']['input']>>;
-  openVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -2213,6 +2245,26 @@ export type StaffRequest = {
   summary: Scalars['String']['output'];
   type: Scalars['String']['output'];
 };
+
+export type SuggestionReason = {
+  kind: SuggestionReasonKind;
+  /** MUTUAL: how many people the viewer follows follow this user. */
+  mutualCount: Scalars['Int']['output'];
+  /** MUTUAL: one of them, by display name (else account name). */
+  mutualName?: Maybe<Scalars['String']['output']>;
+  /** TASTE: how many artists both libraries share. */
+  sharedArtistCount: Scalars['Int']['output'];
+  /** TASTE: up to three of those artists. */
+  sharedArtists: Array<Scalars['String']['output']>;
+};
+
+export type SuggestionReasonKind =
+  /** Someone the viewer follows follows them. */
+  | 'MUTUAL'
+  /** A new account, used when the other sources run short. */
+  | 'NEW'
+  /** They share artists with the viewer's music library. */
+  | 'TASTE';
 
 export type Translation = {
   language: Scalars['String']['output'];
@@ -2274,9 +2326,9 @@ export type UpdateProfileInput = {
 
 export type UpdateProjectInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
-  lyrics?: InputMaybe<ProjectLyricsInput>;
   /** With public: true, false makes the project unlisted: anyone with the link can open it, but it is not discoverable. Defaults to listed whenever public changes. */
   listed?: InputMaybe<Scalars['Boolean']['input']>;
+  lyrics?: InputMaybe<ProjectLyricsInput>;
   metadata?: InputMaybe<ProjectMetadataInput>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
   readOnly?: InputMaybe<Scalars['Boolean']['input']>;

@@ -38,6 +38,10 @@ let signedIn = true;
 vi.mock('@/features/auth/useAuthContext', () => ({
   useAuthContext: () => ({ user: signedIn ? USER : null, logout: vi.fn(), isLoading: false }),
 }));
+// The header's live-sessions badge reads a React Query hook; this test mounts no query client.
+vi.mock('@/features/collab/hooks/useMySessions', () => ({
+  useMySessions: () => ({ sessions: [], loading: false, error: null, refresh: () => Promise.resolve() }),
+}));
 vi.mock('@/features/notifications/NotificationsContext', () => ({
   useNotificationsContext: () => ({ notifications: [], unreadCount: 0, markRead: vi.fn(), markAllRead: vi.fn(), dismiss: vi.fn() }),
   NotificationsProvider: ({ children }: { children: unknown }) => children,

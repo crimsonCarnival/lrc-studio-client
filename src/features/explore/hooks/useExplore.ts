@@ -4,6 +4,7 @@ import {
   getTrendingProjects,
   getPopularPlaylists,
   getSuggestedUsers,
+  getExploreStats,
   trackExploreEvents,
   type ExploreEvent,
 } from '../explore.service.js';
@@ -44,6 +45,7 @@ export const exploreKeys = {
   playlistsPreview: (limit: number) => ['explore', 'playlists', 'preview', limit] as const,
   playlistsPaged: (limit: number) => ['explore', 'playlists', 'paged', limit] as const,
   suggestedUsers: (limit: number) => ['explore', 'suggestedUsers', limit] as const,
+  stats: ['explore', 'stats'] as const,
 };
 
 // Trending scores are recomputed hourly on the server, so a minute-old ranking
@@ -79,6 +81,12 @@ export function useSuggestedUsers(limit = 8) {
     queryFn: () => getSuggestedUsers(limit),
   });
   return { users: query.data ?? NO_USERS, loading: query.isPending, error: query.error };
+}
+
+/** Site-wide totals for the Explore header; the server caches them for a minute too. */
+export function useExploreStats() {
+  const query = useQuery({ queryKey: exploreKeys.stats, staleTime: RANKED_STALE_MS, queryFn: getExploreStats });
+  return query.data ?? null;
 }
 
 export function usePaginatedProjects(limit = 12) {

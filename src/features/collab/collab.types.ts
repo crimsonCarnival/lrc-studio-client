@@ -132,6 +132,12 @@ export type CollabSessionSummary = {
   songArtist: string
   role: CollabRole
   memberCount: number
+  /** The first few members, for the avatar stack; memberCount has the full count. */
+  members: CollabMemberPreview[]
+  coverImage: string | null
   createdAt: string
   lastActivityAt: string
 }
+
+/** A member on a session list row. colorIndex is 1-8, matching --color-collab-1..8. */
+export type CollabMemberPreview = { name: string; avatarUrl: string | null; colorIndex: number }

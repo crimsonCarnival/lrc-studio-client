@@ -61,6 +61,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
       explore: t('explore.nav'),
       leaderboard: t('badges.leaderboard.title'),
       notifications: t('notifications.bell'),
+      sessions: t('collab.sessions.title'),
     };
     return map[seg] || seg.replace(/-/g, ' ');
   };

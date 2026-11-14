@@ -1,5 +1,6 @@
 import { gqlRequest } from '@/app/graphql.client';
 import type { ProjectPage, PlaylistPage, FollowUser } from '@/types';
+import type { ExploreStats } from '@/types/graphql';
 
 const TRENDING_PROJECTS = /* GraphQL */ `
   query TrendingProjects($offset: Int, $limit: Int) {
@@ -14,7 +15,8 @@ const TRENDING_PROJECTS = /* GraphQL */ `
         trendingScore
         starCount
         forkCount
-        user { id accountName displayName avatarUrl }
+        metadata { songName songArtist }
+        user { id accountName displayName avatarUrl staffRole }
       }
       total
       hasMore
@@ -49,9 +51,20 @@ const SUGGESTED_USERS = /* GraphQL */ `
       accountName
       displayName
       avatarUrl staffRole
+      isFollowedByMe
+      suggestionReason { kind mutualCount mutualName sharedArtistCount sharedArtists }
     }
   }
 `;
+
+const EXPLORE_STATS = /* GraphQL */ `
+  query ExploreStats {
+    exploreStats { totalProjects totalUsers totalPlaylists }
+  }
+`;
+
+export const getExploreStats = (): Promise<ExploreStats | null> =>
+  gqlRequest<{ exploreStats: ExploreStats | null }>(EXPLORE_STATS).then((d) => d?.exploreStats ?? null);
 
 export const getTrendingProjects = (offset = 0, limit = 6): Promise<ProjectPage> =>
   gqlRequest<{ trendingProjects: ProjectPage | null }>(TRENDING_PROJECTS, { offset, limit })

@@ -1,6 +1,47 @@
 export default {
   title: 'Feed',
-  loadMore: 'Cargar más',
+  loadMore: 'Cargar más actividad',
+  filters: {
+    label: 'Filtrar actividad',
+    all: 'Todo',
+    projects: 'Proyectos',
+    lists: 'Listas',
+    people: 'Personas',
+  },
+  emptyFilter: 'No hay actividad de este tipo todavía.',
+  followBack: 'Seguir también',
+  showAll: 'Ver las {{count}}',
+  showLess: 'Ocultar',
+  type: {
+    project_published: 'Proyecto publicado',
+    project_starred: 'Estrella',
+    project_forked: 'Bifurcación',
+    project_shared: 'Compartido',
+    playlist_created: 'Lista',
+    user_followed: 'Seguimiento',
+    followedYou: 'Seguidor nuevo',
+  },
+  group: {
+    project_forked: { self: 'bifurcaste {{count}} proyectos', other: 'bifurcó {{count}} proyectos', mine: 'bifurcó {{count}} de tus proyectos' },
+    project_starred: { self: 'marcaste {{count}} proyectos con estrella', other: 'marcó {{count}} proyectos con estrella', mine: 'marcó {{count}} de tus proyectos con estrella' },
+    project_published: { self: 'publicaste {{count}} proyectos', other: 'publicó {{count}} proyectos', mine: 'publicó {{count}} proyectos' },
+    project_shared: { self: 'compartiste {{count}} proyectos', other: 'compartió {{count}} proyectos', mine: 'compartió {{count}} de tus proyectos' },
+    playlist_created: { self: 'creaste {{count}} listas', other: 'creó {{count}} listas', mine: 'creó {{count}} listas' },
+    user_followed: { self: 'comenzaste a seguir a {{count}} personas', other: 'comenzó a seguir a {{count}} personas', mine: 'comenzó a seguir a {{count}} personas' },
+  },
+  names: {
+    two: '{{a}} y {{b}}',
+    many: '{{list}} y {{last}}',
+  },
+  rail: {
+    label: 'Para ti',
+    sessions: 'Sesiones en vivo',
+    seeAll: 'Ver todas',
+    noSessions: 'Ninguna sesión activa.',
+    startOne: 'Iniciar una',
+    live: 'En vivo',
+    explore: 'Explorar',
+  },
   error: 'No se pudo cargar el feed. Intenta más tarde.',
   empty: {
     title: [
