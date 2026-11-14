@@ -7,6 +7,7 @@ import { useAutoStamp, type AutoStampPhase, type TabPlayback } from '@features/e
 import EditorToolbar from './EditorToolbar';
 import { WordsModeLayerControl } from '../modes/WordsModeColumn';
 import EditorSidePanel from './EditorSidePanel';
+import EditorStatusBar from './EditorStatusBar';
 import { CounterpartStrip } from '../counterparts/CounterpartStrip';
 import { matchKey } from '@/shared/utils/keyboard';
 import { CountDot } from '@ui/count-dot';
@@ -56,6 +57,7 @@ import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
+import { syncedCoverage } from '@features/editor/utils/sync-coverage';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
@@ -67,8 +69,10 @@ import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
 import { Icon } from '@/shared/ui/Icon';
-import { MorphIcon } from '@/shared/ui/MorphIcon';
-import { getSingerOptionsForSelection, applyTagToSelection, linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
+import { getSingerOptionsForSelection, applyTagToSelection, linesToRawText, flatToSections, rawLineText, toggleSingerOnLines, clearSingersOnLines } from '@/features/editor/utils/sections';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
+import { PublicHeaderPlayer } from '@/features/project-view/PublicHeaderPlayer';
+import { lineLoopAt } from '@/features/player/line-loop';
 import { hasCJK, hasKanji } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 // import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
@@ -79,12 +83,13 @@ import { LogoLoader } from '@ui/LogoLoader';
 const EMPTY_ARTISTS: string[] = [];
 const WORDS_LOOP_KEY = 'lrc_words_loop_line';
 const PHONE_LINE_HINT_KEY = 'lrc_phone_line_hint';
+const PLAYER_HIDDEN_KEY = 'lrc_editor_player_hidden';
+const MARK_USED_KEY = 'lrc_editor_mark_used';
 
 // Teal is `success`; in the light theme that token is too pale to read as text,
 // so it is mixed toward the foreground there.
 const TEAL_TEXT = 'text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success';
 const HEADER_ICON_BTN = 'size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground disabled:opacity-30';
-const EDITOR_SPEEDS = [0.25, 0.5, 1].map((speed) => ({ value: speed, label: `${speed}×` }));
 
 const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: React.ReactNode; icon?: string; label?: string }) => {
   const { t } = useTranslation();
@@ -138,6 +143,8 @@ interface EditorProps {
   isSaving?: boolean;
   /** The last manual save was rejected by the server. */
   saveFailed?: boolean;
+  /** When the server last stored this project; read at render, after a save settles. */
+  getLastSaveTime?: () => string | null;
   compact?: boolean;
   onNewProject: () => void;
   onShowKeyboardHelp?: () => void;
@@ -204,6 +211,7 @@ export default function Editor({
   handleRemoveAllLyrics,
   isSaving,
   saveFailed,
+  getLastSaveTime,
   compact,
   onNewProject,
   onShowKeyboardHelp,
@@ -291,6 +299,7 @@ export default function Editor({
     handleClearAllWordTimestamps,
     handleSaveLineText,
     handleSetSecondaryLines,
+    handleSetTranslationLines,
     handleToggleLineMode,
     handleDeleteLine,
     handleToggleCounterpart,
@@ -429,6 +438,21 @@ export default function Editor({
   const [autoStampDismissed, setAutoStampDismissed] = useState(false);
   const [lyricsSearchOpen, setLyricsSearchOpen] = useState(false);
   const [changeMediaOpen, setChangeMediaOpen] = useState(false);
+  // Hiding the dock gives its height to the lyrics; a small player takes its place in the header.
+  // A per-browser layout choice, like the public view's, so it lives in localStorage.
+  const [playerHidden, setPlayerHidden] = useState(() => {
+    try { return localStorage.getItem(PLAYER_HIDDEN_KEY) === '1'; } catch { return false; }
+  });
+  const togglePlayerHidden = useCallback(() => {
+    setPlayerHidden((was) => {
+      try { localStorage.setItem(PLAYER_HIDDEN_KEY, was ? '0' : '1'); } catch { /* still applies for this session */ }
+      return !was;
+    });
+  }, []);
+  // The "press Enter to stamp" line is for someone who has not found the key yet.
+  const [markUsed, setMarkUsed] = useState(() => {
+    try { return localStorage.getItem(MARK_USED_KEY) === '1'; } catch { return false; }
+  });
   // Inside a live session the doc is the project: solo save, the public view and the
   // project's media are not the participant's to change (the server refuses solo saves anyway).
   const inSession = collab !== undefined;
@@ -490,6 +514,7 @@ export default function Editor({
   const autoStampOpen = (autoStamp.phase !== 'idle' && !autoStampDismissed) || autoStamp.pendingResult != null;
   const [furiganaOpen, setFuriganaOpen] = useState(false);
   const [secondaryOpen, setSecondaryOpen] = useState(false);
+  const [translationsOpen, setTranslationsOpen] = useState(false);
   // Button-enable signal: `hasMedia` is the freshest render-time approximation for
   // "a local file might exist" (refs can't be read during render). It's true for
   // YouTube-only media too, but that's acceptable — start() re-checks the actual
@@ -529,12 +554,27 @@ export default function Editor({
   // #3: the in-editor player docks at the top (below the toolbar) or bottom, persisted
   // as a global editor setting. The same dock block renders in whichever slot is active.
   const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
-  const playerDock = playerSlot === 'editor' ? (
+  // Never hidden without media: the dock is where a song is loaded.
+  const playerDocked = playerSlot === 'editor' && !(playerHidden && hasMedia);
+  const playerDock = playerDocked ? (
     <div
       data-tour="player-controls"
       className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
         }`}
     >
+      {hasMedia && (
+        // A handle on the dock's own edge: it reads as "this strip can be put away".
+        <Tip content={<ShortcutHint label={t('projectView.hidePlayer')} shortcut="togglePlayer" fallback="p" />}>
+          <button
+            type="button"
+            onClick={togglePlayerHidden}
+            aria-label={t('projectView.hidePlayer')}
+            className={`absolute right-6 z-10 grid h-5 w-10 place-items-center rounded-pill bg-card text-subtle inset-ring inset-ring-hl transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${playerPosition === 'top' ? '-bottom-2.5' : '-top-2.5'}`}
+          >
+            <Icon name={playerPosition === 'top' ? 'expand_less' : 'expand_more'} size={14} />
+          </button>
+        </Tip>
+      )}
       <PlayerControls variant="editor" />
       {(() => {
         const symbols = KEY_SYMBOLS as Record<string, string>;
@@ -547,18 +587,18 @@ export default function Editor({
           deselect: symbols[deselectKey] ?? deselectKey
         });
 
-        return (
-          <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">
-            {selectedLines.size > 0
-              ? selectionHintText
-              : editorMode === 'srt'
-                ? (awaitingEndMark != null ? t('editor.markEndInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter') : t('editor.markInstructionSRT').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter'))
-                : editorMode === 'words'
-                  ? t('editor.markInstructionWords').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter')
-                  : t('editor.markInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter')
-            }
-          </p>
-        );
+        const markKeyName = settings.shortcuts?.mark?.[0] || 'Enter';
+        const withKey = (text: string) => text.replace(/Space|Espacio/gi, markKeyName);
+        // What the selection keys do, and the pending SRT end mark, are about the current state
+        // and stay. "Press the mark key" is a first-use hint and goes once the key has been used.
+        const hint = selectedLines.size > 0
+          ? selectionHintText
+          : editorMode === 'srt' && awaitingEndMark != null
+            ? withKey(t('editor.markEndInstruction'))
+            : markUsed
+              ? null
+              : withKey(t(editorMode === 'srt' ? 'editor.markInstructionSRT' : editorMode === 'words' ? 'editor.markInstructionWords' : 'editor.markInstruction'));
+        return hint ? <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">{hint}</p> : null;
       })()}
     </div>
   ) : null;
@@ -578,6 +618,8 @@ export default function Editor({
     return { synced, total: lyricLines.length, wordCount, charCount, charCountNoSpaces, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
+  const coveredSeconds = useMemo(() => syncedCoverage(lines, duration ?? 0), [lines, duration]);
+
   // The phone layout draws its own header, so it leaves the app header's slots empty.
   const statusSlot = useHeaderSlot('status', !phone);
   const [publishOpen, setPublishOpen] = useState(false);
@@ -588,6 +630,9 @@ export default function Editor({
   );
   const publishPrompt = usePublishPrompt(serverProjectId, readiness.complete && !isPublic && !!user && !user.isGuest && canChangeVisibility && !inSession);
   const actionsSlot = useHeaderSlot('actions', !phone);
+  // The header carries the player while the dock is hidden.
+  const compactHeader = playerSlot === 'editor' && playerHidden && !!hasMedia;
+  const exportFormat = editorMode === 'srt' ? 'SRT' : 'LRC';
 
   // 'failed' only while there is still something unsaved: a later autosave that gets the
   // changes through clears the markers, and with them the error.
@@ -645,6 +690,19 @@ export default function Editor({
   useLayoutEffect(() => {
     if (editorMode !== 'words') lineModeRef.current = editorMode;
   }, [editorMode]);
+
+  // The "W" chip on a line asks for Words mode on that line (see LineTextContent).
+  const selectModeRef = useRef(selectMode);
+  useLayoutEffect(() => { selectModeRef.current = selectMode; });
+  useEffect(() => {
+    const onOpenWords = (e: Event) => {
+      const lineIndex = (e as CustomEvent<{ lineIndex?: number }>).detail?.lineIndex;
+      if (typeof lineIndex === 'number') setActiveLineIndex(lineIndex);
+      selectModeRef.current('words');
+    };
+    window.addEventListener('editor:open-words', onOpenWords);
+    return () => window.removeEventListener('editor:open-words', onOpenWords);
+  }, [setActiveLineIndex]);
 
   // "review" is never the current value: it leaves the editor instead of switching mode.
   const modeTabs = (
@@ -735,11 +793,12 @@ export default function Editor({
     setActiveLineIndex(sectionIndex < lineIndex ? sectionIndex + 1 : sectionIndex);
   }, [handleMoveToSection, setActiveLineIndex]);
   const handleInspectorSinger = useCallback((name: string, lineIndex: number) => {
-    handleAssignSinger(name, [lineIndex]);
-  }, [handleAssignSinger]);
+    if (name) toggleSingerOnLines(lines, [lineIndex], name, handleAssignSinger);
+    else clearSingersOnLines(lines, [lineIndex], handleAssignSinger);
+  }, [lines, handleAssignSinger]);
 
   // ── Words focus ──
-  const { seek, togglePlay, isPlaying: playerIsPlaying, applySpeed, playbackSpeed, setLoopActiveLine } = usePlayer();
+  const { seek, togglePlay, isPlaying: playerIsPlaying, setLoopActiveLine, setLoop, clearLoop, loopA, loopB } = usePlayer();
   // Words focus keeps playback inside the line being worked on. On by default;
   // the choice is a per-browser convenience, so it lives in localStorage.
   const [loopFocusLine, setLoopFocusLine] = useState(() => {
@@ -755,6 +814,67 @@ export default function Editor({
     setLoopActiveLine(wordsFocus && loopFocusLine);
     return () => setLoopActiveLine(false);
   }, [wordsFocus, loopFocusLine, setLoopActiveLine]);
+  // ── Editor shortcuts that belong to no single component: search, loop, line stepping, player.
+  // None of these are in the Shortcuts settings panel yet (rebinding them needs the server's
+  // settings schema to accept the new ids), so the fallbacks below are the bindings.
+  const keyStateRef = useRef({ lines, activeLineIndex, playbackPosition, duration: duration ?? 0, looping: false, hasMedia: !!hasMedia });
+  useLayoutEffect(() => {
+    keyStateRef.current = { lines, activeLineIndex, playbackPosition, duration: duration ?? 0, looping: loopA != null && loopB != null, hasMedia: !!hasMedia };
+  });
+  const markKey = settings.shortcuts?.mark?.[0] || 'Enter';
+  const searchKey = settings.shortcuts?.searchLyrics?.[0] || '/';
+  const loopLineKey = settings.shortcuts?.loopLine?.[0] || 'l';
+  const prevLineKey = settings.shortcuts?.prevLine?.[0] || 'ArrowUp';
+  const nextLineKey = settings.shortcuts?.nextLine?.[0] || 'ArrowDown';
+  const togglePlayerKey = settings.shortcuts?.togglePlayer?.[0] || 'p';
+  useEffect(() => {
+    if (phone) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.isComposing) return;
+      // A key event's target can be the document or the window, which are not elements.
+      const target = e.target instanceof HTMLElement ? e.target : null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
+      // Menus, dialogs, pickers and sliders use the arrows and letters themselves.
+      if (target?.closest('[role="menu"],[role="dialog"],[role="listbox"],[role="combobox"],[role="slider"],[role="tablist"]')) return;
+      const state = keyStateRef.current;
+      if (matchKey(e, markKey)) {
+        // useEditor does the marking; this only notes that the key has been found.
+        setMarkUsed((used) => {
+          if (!used) { try { localStorage.setItem(MARK_USED_KEY, '1'); } catch { /* shown again next visit */ } }
+          return true;
+        });
+      } else if (matchKey(e, searchKey)) {
+        e.preventDefault();
+        setLyricsSearchOpen(true);
+      } else if (matchKey(e, loopLineKey)) {
+        e.preventDefault();
+        if (state.looping) clearLoop();
+        else {
+          const bounds = lineLoopAt(state.lines, state.playbackPosition, state.duration);
+          if (bounds) setLoop(bounds);
+        }
+      } else if (matchKey(e, prevLineKey) || matchKey(e, nextLineKey)) {
+        const step = matchKey(e, prevLineKey) ? -1 : 1;
+        let at = state.activeLineIndex + step;
+        while (at >= 0 && at < state.lines.length && state.lines[at].type === 'section') at += step;
+        if (at < 0 || at >= state.lines.length) return;
+        e.preventDefault();
+        setFocusedTimestamp(null);
+        setActiveLineIndex(at);
+        // Key repeat can outrun a render; the next press must start from this line.
+        keyStateRef.current = { ...state, activeLineIndex: at };
+        // A timed line is also where playback goes, as its own play button would do.
+        const time = state.lines[at].timestamp;
+        if (time != null && state.hasMedia) seek(time);
+      } else if (state.hasMedia && matchKey(e, togglePlayerKey)) {
+        e.preventDefault();
+        togglePlayerHidden();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden]);
+
   const focusLine: EditorLine | undefined = lines[activeLineIndex];
   const focusInfo = useMemo(() => {
     let lyricNumber = 0;
@@ -814,17 +934,11 @@ export default function Editor({
       distributeWords();
     }
   };
-  // Words focus has no transport footer, so this one button both starts the line
-  // and pauses playback.
-  const handlePlayLine = () => {
-    if (playerIsPlaying) {
-      togglePlay();
-      return;
-    }
-    if (focusStart == null) return;
-    seek(focusStart);
-    togglePlay();
-  };
+  // Plays from a word's own time (the timeline's per-word play buttons).
+  const handlePlayFrom = useCallback((time: number) => {
+    seek(time);
+    if (!playerIsPlaying) togglePlay();
+  }, [seek, togglePlay, playerIsPlaying]);
 
   // ── Phone layout state ──
   // Held here, not in PhoneEditor, because the sheets drive handlers that live in this component
@@ -1141,6 +1255,14 @@ export default function Editor({
         onOpenChange={setSecondaryOpen}
         lines={lines}
         onApply={handleSetSecondaryLines}
+      />
+
+      <SecondaryLyricsModal
+        kind="translation"
+        open={translationsOpen}
+        onOpenChange={setTranslationsOpen}
+        lines={lines}
+        onApply={handleSetTranslationLines}
       />
 
       <AutoStampModal
@@ -1473,19 +1595,28 @@ export default function Editor({
         </span>,
         statusSlot,
       )}
+      {statusSlot && compactHeader && createPortal(
+        <div className="ml-2.5 flex items-center">
+          <PublicHeaderPlayer playerHidden onTogglePlayer={togglePlayerHidden} hasInitialMedia />
+        </div>,
+        statusSlot,
+      )}
       {actionsSlot && createPortal(
         <>
           {canChangeVisibility && !inSession && (
-            <VisibilityChip isPublic={isPublic} isListed={isListed} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
+            // Header actions are icons; the tooltip carries the label.
+            <Tip content={t(isPublic && !isListed ? 'project.visibilityChipUnlisted' : isPublic ? 'project.visibilityChipPublic' : 'project.visibilityChipPrivate')}>
+              <VisibilityChip iconOnly isPublic={isPublic} isListed={isListed} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
+            </Tip>
           )}
           {syncMode && lines.length > 0 && (
             <div data-tour="editor-undo-redo" className="flex items-center gap-2">
-              <Tip content={t('editor.undoTitle')}>
+              <Tip content={<ShortcutHint label={t('editor.undo')} shortcut="undo" fallback="Ctrl+Z" />}>
                 <Button variant="outline" size="icon" onClick={undo} disabled={!canUndo} aria-label={t('editor.undo')} className={HEADER_ICON_BTN}>
                   <Icon name="undo" size={18} />
                 </Button>
               </Tip>
-              <Tip content={t('editor.redoTitle')}>
+              <Tip content={<ShortcutHint label={t('editor.redo')} shortcut="redo" fallback="Ctrl+Y" />}>
                 <Button variant="outline" size="icon" onClick={redo} disabled={!canRedo} aria-label={t('editor.redo')} className={HEADER_ICON_BTN}>
                   <Icon name="redo" size={18} />
                 </Button>
@@ -1494,7 +1625,7 @@ export default function Editor({
           )}
           {/* Save stays in the bar: it is the one action nobody should have to look for. */}
           {handleManualSave && !inSession && (
-            <Tip content={isSaving ? t('project.saving') : t('project.save')}>
+            <Tip content={isSaving ? t('project.saving') : <ShortcutHint label={t('project.save')} shortcut="save" fallback="Ctrl+S" />}>
               <Button
                 variant="outline"
                 size="icon"
@@ -1509,25 +1640,30 @@ export default function Editor({
             </Tip>
           )}
           {onShowPreview && (
-            <Button
-              variant="outline"
-              onClick={onShowPreview}
-              aria-label={t('editor.previewAction')}
-              className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
-            >
-              <Icon name="visibility" size={16} />
-              <span className="max-xl:hidden">{t('editor.previewAction')}</span>
-            </Button>
+            <Tip content={t('editor.previewAction')}>
+              <Button
+                variant="outline"
+                onClick={onShowPreview}
+                aria-label={t('editor.previewAction')}
+                className="h-10 lg:h-10 coarse:h-11 w-10 lg:w-10 coarse:w-11 px-0 lg:px-0 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground"
+              >
+                <Icon name="visibility" size={16} />
+                <span className="sr-only">{t('editor.previewAction')}</span>
+              </Button>
+            </Tip>
           )}
-          <Button
-            data-tour="editor-export"
-            onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
-            disabled={lines.length === 0}
-            className="h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 text-[13px] lg:text-[13px] font-bold"
-          >
-            <Icon name="download" size={16} />
-            <span className="max-sm:hidden">{t('editor.exportAs', { format: editorMode === 'srt' ? 'SRT' : 'LRC' })}</span>
-          </Button>
+          <Tip content={t('editor.exportAs', { format: exportFormat })}>
+            <Button
+              data-tour="editor-export"
+              onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
+              disabled={lines.length === 0}
+              aria-label={t('editor.exportAs', { format: exportFormat })}
+              className="h-10 lg:h-10 coarse:h-11 w-10 lg:w-10 coarse:w-11 px-0 lg:px-0 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950"
+            >
+              <Icon name="download" size={16} />
+              <span className="sr-only">{t('editor.exportAs', { format: exportFormat })}</span>
+            </Button>
+          </Tip>
           <ActionsDropdown icon="more_horiz">
             <div className="p-1 space-y-0.5">
               {syncMode && lines.length > 0 && (
@@ -1636,7 +1772,7 @@ export default function Editor({
 
       {publishPromptNode}
 
-      {playerPosition === 'top' && (!wordsFocus || !hasMedia) && playerDock}
+      {playerPosition === 'top' && playerDock}
 
       <div className="flex flex-1 min-h-0">
       {wordsFocus && <WordsLineNav lines={lines} activeLineIndex={activeLineIndex} onSelect={setActiveLineIndex} />}
@@ -1707,7 +1843,7 @@ export default function Editor({
             ]}
           />
         )}
-        <Tip content={t('editor.counterpart.toggleTip')}>
+        <Tip content={<ShortcutHint label={t('editor.counterpart.toggleTip')} shortcut="captureAdLib" fallback="a" />}>
           <Button
             variant="outline"
             aria-pressed={counterpartOpen}
@@ -1720,7 +1856,7 @@ export default function Editor({
             <CountDot count={pendingCounterparts} className="-top-1.5 -right-1.5 bg-gold" />
           </Button>
         </Tip>
-        <Tip content={t('lyricsSearch.findLyrics')}>
+        <Tip content={<ShortcutHint label={t('lyricsSearch.findLyrics')} shortcut="searchLyrics" fallback="/" />}>
           <Button
             variant="outline"
             size="icon"
@@ -1742,17 +1878,13 @@ export default function Editor({
           onAutoStamp={handleAutoStampStart}
           onOpenFurigana={() => setFuriganaOpen(true)}
           onOpenSecondary={() => setSecondaryOpen(true)}
+          onOpenTranslations={() => setTranslationsOpen(true)}
           onStartTour={startTour}
           sessionOwner={sessionOwner}
           collab={collab}
           onBeforeStartSession={handleManualSave ?? undefined}
-          trailing={!wordsFocus && syncProgress ? (
-            <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
-              <span className="ml-auto pl-3 text-[13px] text-subtle whitespace-nowrap cursor-default">
-                {t('editor.wordCount', { count: syncProgress.wordCount })}
-              </span>
-            </Tip>
-          ) : undefined}
+          // The word and character counts that sat here are in the status bar now.
+          fullRow={!wordsFocus}
         />
       </div>
 
@@ -1859,6 +1991,7 @@ export default function Editor({
             activeWordIndex={playingWordIndex ?? (focusedTimestamp?.lineIndex === activeLineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp.wordIndex != null ? focusedTimestamp.wordIndex : activeWordIndex)}
             onSetWordTime={handleSetWordTime}
             markKey={keyCap(settings.shortcuts?.mark?.[0] || 'Enter')}
+            onPlayFrom={hasMedia ? handlePlayFrom : undefined}
           />
           <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-foreground/65">
@@ -1875,13 +2008,6 @@ export default function Editor({
               ))}
             </div>
             <div className="flex items-center gap-2.5">
-              <SegmentedControl
-                mono
-                label={t('player.speed')}
-                value={playbackSpeed}
-                onChange={applySpeed}
-                options={EDITOR_SPEEDS}
-              />
               <Tip content={loopFocusLine ? t('editor.words.loopOn') : t('editor.words.loopOff')}>
                 <Button
                   variant="outline"
@@ -1892,17 +2018,6 @@ export default function Editor({
                   className={`size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] ${loopFocusLine ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
                 >
                   <Icon name="repeat" size={18} />
-                </Button>
-              </Tip>
-              <Tip content={playerIsPlaying ? t('editor.words.pause') : focusStart == null ? t('editor.words.timelineUnavailable') : t('editor.words.playLine')}>
-                <Button
-                  size="icon"
-                  aria-disabled={!hasMedia || (!playerIsPlaying && focusStart == null)}
-                  aria-label={playerIsPlaying ? t('editor.words.pause') : t('editor.words.playLine')}
-                  onClick={() => { if (hasMedia) handlePlayLine(); }}
-                  className={`size-[52px] lg:size-[52px] rounded-full bg-primary hover:bg-primary-dim text-zinc-950 ${!hasMedia || (!playerIsPlaying && focusStart == null) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <MorphIcon name={playerIsPlaying ? 'pause' : 'play_arrow'} size={24} decorative />
                 </Button>
               </Tip>
             </div>
@@ -1921,13 +2036,34 @@ export default function Editor({
         settings={settings}
         singerColors={singerColors}
         onMoveToSection={handleInspectorSection}
-        onAssignSinger={handleInspectorSinger}
+        onToggleSinger={handleInspectorSinger}
         onNudge={shiftTimeWithConfidence}
+        onShowKeyboardHelp={onShowKeyboardHelp}
       />
       )}
       </div>
 
-      {playerPosition === 'bottom' && (!wordsFocus || !hasMedia) && playerDock}
+      {playerPosition === 'bottom' && playerDock}
+
+      {syncProgress && (
+        <EditorStatusBar
+          lineNumber={focusLine && focusLine.type !== 'section' ? focusInfo.lyricNumber : 0}
+          totalLines={syncProgress.total}
+          syncedLines={syncProgress.synced}
+          sectionLabel={focusInfo.sectionLabel ? formatSectionLabel(focusInfo.sectionLabel, t) : undefined}
+          wordCount={syncProgress.wordCount}
+          charCount={syncProgress.charCount}
+          charCountNoSpaces={syncProgress.charCountNoSpaces}
+          selectedCount={selectedLines.size}
+          format={isWordsMode ? t('editor.modeWords') : exportFormat}
+          coveredSeconds={coveredSeconds}
+          duration={hasMedia ? (duration ?? 0) : 0}
+          // Guest drafts are never on the server, so they have no "last saved".
+          lastSavedAt={user && !inSession ? (getLastSaveTime?.() ?? null) : null}
+          dirty={saveState !== 'saved'}
+          local={!user}
+        />
+      )}
 
       {overlays}
     </div>

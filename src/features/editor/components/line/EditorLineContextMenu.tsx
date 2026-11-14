@@ -9,10 +9,12 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
   ContextMenuLabel,
+  ContextMenuCheckboxItem,
 } from '@ui/context-menu';
 import { Icon } from '@/shared/ui/Icon';
 import { Kbd, KbdGroup } from '@ui/kbd';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
+import { toggleSingerOnLines, clearSingersOnLines } from '@features/editor/utils/sections';
 
 // Shortcut keys at the end of a menu row: smaller and quieter than a key cap in body text,
 // and hidden where there is no keyboard.
@@ -72,6 +74,36 @@ export function EditorLineContextMenu({
 
   const isRoot = line.depth === 0;
 
+  // Singers are ticked, not picked: a line can have several, and the tick shows who is on it.
+  // The menu stays open on a tick so a duet is two clicks in one visit.
+  const allLines = sectionLines ?? [];
+  const singerItems = (indices: number[]) => handleAssignSinger && songArtists && songArtists.length > 0 && (
+    <ContextMenuSub>
+      <ContextMenuSubTrigger>
+        <Icon name="person" />
+        {t('editor.assignSingerToLines', { count: indices.length })}
+      </ContextMenuSubTrigger>
+      <ContextMenuSubContent>
+        <ContextMenuLabel>{t('editor.assignSingerHint')}</ContextMenuLabel>
+        {songArtists.map((artist) => (
+          <ContextMenuCheckboxItem
+            key={artist}
+            checked={indices.length > 0 && indices.every((i) => allLines[i]?.singers?.includes(artist))}
+            onSelect={(e) => e.preventDefault()}
+            onCheckedChange={() => toggleSingerOnLines(allLines, indices, artist, handleAssignSinger)}
+          >
+            {artist}
+          </ContextMenuCheckboxItem>
+        ))}
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => clearSingersOnLines(allLines, indices, handleAssignSinger)}>
+          <Icon name="person_off" />
+          {t('editor.clearSingers')}
+        </ContextMenuItem>
+      </ContextMenuSubContent>
+    </ContextMenuSub>
+  );
+
   if (isSection) {
     return (
       <ContextMenu>
@@ -128,27 +160,7 @@ export function EditorLineContextMenu({
               </ContextMenuSubContent>
             </ContextMenuSub>
           )}
-          {handleAssignSinger && songArtists && songArtists.length > 0 && (
-            <ContextMenuSub>
-              <ContextMenuSubTrigger>
-                <Icon name="person" />
-                {t('editor.assignSingerToLines', { count: selectedCount})}
-              </ContextMenuSubTrigger>
-              <ContextMenuSubContent>
-                {songArtists.map(artist => (
-                  <ContextMenuItem key={artist} onClick={() => handleAssignSinger(artist, [...selectedLines], 0)}>
-                    <Icon name="person" />
-                    {artist}
-                  </ContextMenuItem>
-                ))}
-                <ContextMenuSeparator />
-                <ContextMenuItem onClick={() => handleAssignSinger('', [...selectedLines], 0)}>
-                  <Icon name="person_off" />
-                  {t('editor.clearSingers')}
-                </ContextMenuItem>
-              </ContextMenuSubContent>
-            </ContextMenuSub>
-          )}
+          {singerItems([...selectedLines])}
           <ContextMenuSeparator />
           <ContextMenuItem variant="destructive" disabled={deleteDisabled} onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
@@ -205,27 +217,7 @@ export function EditorLineContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
         )}
-        {handleAssignSinger && songArtists && songArtists.length > 0 && (
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <Icon name="person" />
-              {t('editor.assignSingerToLines', { count: 1})}
-            </ContextMenuSubTrigger>
-            <ContextMenuSubContent>
-              {songArtists.map(artist => (
-                <ContextMenuItem key={artist} onClick={() => handleAssignSinger(artist, [lineIndex], 0)}>
-                  <Icon name="person" />
-                  {artist}
-                </ContextMenuItem>
-              ))}
-              <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => handleAssignSinger('', [lineIndex], 0)}>
-                <Icon name="person_off" />
-                {t('editor.clearSingers')}
-              </ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
-        )}
+        {singerItems([lineIndex])}
         {handleToggleCounterpart && (
           <ContextMenuItem onClick={() => handleToggleCounterpart(lineIndex)}>
             <Icon name="queue_music" />

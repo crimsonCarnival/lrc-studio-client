@@ -518,7 +518,13 @@ const WaveformDisplay = ({
 
         {/* Discoverable entry to loop creation: a button for anyone who does not know the shortcut. */}
         {isReady && !loopMode && loopA == null && (
-          <div className="absolute right-1 top-1 z-30" onPointerDown={(e) => e.stopPropagation()}>
+          <div
+            className="absolute right-1 top-1 z-30"
+            onPointerDown={(e) => e.stopPropagation()}
+            // Over the button the wave's hover time would sit under the button's own tooltip.
+            onPointerEnter={() => setHoverPct(null)}
+            onPointerMove={(e) => e.stopPropagation()}
+          >
             <Tip content={`${t('player.makeLoop')} · ${loopModifier} + ${t('shortcuts.selection.click')}`}>
               <button
                 type="button"

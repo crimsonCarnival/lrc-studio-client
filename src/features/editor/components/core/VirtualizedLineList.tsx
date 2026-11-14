@@ -467,7 +467,8 @@ export default function VirtualizedLineList({
     if (count < 2) return null;
     const sections: { top: number; label: string }[] = [];
     const untimed: { top: number; height: number; lines: number }[] = [];
-    let cursor: { top: number; line: number } | null = null;
+    // `line` is 0 when the cursor sits on a section marker: those carry no lyric number.
+    let cursor: { top: number; line: number; text: string } | null = null;
     let runStart = -1;
     let runLines = 0;
     let lineNumber = 0;
@@ -479,7 +480,11 @@ export default function VirtualizedLineList({
     rows.forEach((lineIndex, row) => {
       const line = lines[lineIndex];
       if (line.type !== 'section') lineNumber++;
-      if (lineIndex === activeLineIndex) cursor = { top: row / count, line: lineNumber };
+      if (lineIndex === activeLineIndex) {
+        cursor = line.type === 'section'
+          ? { top: row / count, line: 0, text: formatSectionLabel(line.label, t) }
+          : { top: row / count, line: lineNumber, text: line.text?.trim() ?? '' };
+      }
       if (line.type === 'section') {
         sections.push({ top: row / count, label: formatSectionLabel(line.label, t) });
         closeRun(row);
@@ -491,7 +496,7 @@ export default function VirtualizedLineList({
       }
     });
     closeRun(count);
-    return { sections, untimed, cursor: cursor as { top: number; line: number } | null };
+    return { sections, untimed, cursor: cursor as { top: number; line: number; text: string } | null };
   }, [rows, lines, activeLineIndex, t]);
 
   // Whether to reserve furigana space is decided once for the whole project, not
@@ -757,7 +762,17 @@ export default function VirtualizedLineList({
               </Tip>
             ))}
             {railMarks.cursor != null && (
-              <Tip side="left" content={t('editor.rail.cursor', { line: railMarks.cursor.line })}>
+              <Tip
+                side="left"
+                content={(
+                  <span className="flex max-w-[260px] items-baseline gap-1.5">
+                    <span className="shrink-0">
+                      {railMarks.cursor.line > 0 ? t('editor.rail.cursor', { line: railMarks.cursor.line }) : t('editor.rail.cursorSection')}
+                    </span>
+                    {railMarks.cursor.text && <span className="truncate opacity-70">{railMarks.cursor.text}</span>}
+                  </span>
+                )}
+              >
                 <span className="absolute inset-x-0 h-2.5 -translate-y-1/2 pointer-events-auto flex items-center" style={{ top: `${railMarks.cursor.top * 100}%` }}>
                   <span className="h-[3px] w-full rounded-pill bg-primary" />
                 </span>

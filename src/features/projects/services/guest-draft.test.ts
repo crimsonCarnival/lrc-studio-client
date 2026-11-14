@@ -86,6 +86,25 @@ describe('restoreGuestDraft', () => {
     expect(new Set(d.lines.map((l) => l.id)).size).toBe(3);
   });
 
+  // A guest coming back from the sign-in page (or reloading) used to lose every section's
+  // singers, and each line's sing mode, per-word singers, secondary timing and timing source.
+  it('keeps singer and timing fields: a reload must not strip what the editor shows', () => {
+    localStorage.setItem(STORAGE_KEYS.PROJECT, JSON.stringify({
+      lines: [
+        { type: 'section', label: 'verse 1', depth: 1, id: 's1', singers: ['Ryo', 'Daisuke'] },
+        {
+          text: 'Two voices', id: 'a', timestamp: 2, singers: ['Ryo', 'Daisuke'], mode: 'split', source: 'asr',
+          words: [{ word: 'Two', time: 2, singerIndex: 0 }, { word: 'voices', time: 2.5, singerIndex: 1 }],
+          secondaryWords: [{ word: 'futatsu', time: 2 }],
+        },
+      ],
+    }));
+    const [section, line] = restoreGuestDraft()!.lines;
+    expect(section).toMatchObject({ type: 'section', label: 'verse 1', singers: ['Ryo', 'Daisuke'] });
+    expect(line).toMatchObject({ singers: ['Ryo', 'Daisuke'], mode: 'split', source: 'asr', secondaryWords: [{ word: 'futatsu', time: 2 }] });
+    expect(line.words).toEqual([{ word: 'Two', time: 2, singerIndex: 0 }, { word: 'voices', time: 2.5, singerIndex: 1 }]);
+  });
+
   it('never throws: unreadable, wrong shape or no usable line is null', () => {
     expect(restoreGuestDraft()).toBeNull();
     for (const raw of ['{nope', 'null', '"x"', '{"lines":"x"}', '{"lines":[]}', '{"lines":[null,{"a":1}]}']) {

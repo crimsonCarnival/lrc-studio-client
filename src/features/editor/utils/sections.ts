@@ -273,6 +273,39 @@ function getParentSectionSingers(lines: EditorLine[], lineIdx: number): string[]
   return [];
 }
 
+type AssignSinger = (name: string, indices: number[], slot: number) => void;
+
+/**
+ * Ticks or unticks one singer on the given lines, leaving their other singers alone: added to
+ * every line that lacks it, or removed when every line already has it. Goes through the editor's
+ * slot-based `assign` so line mode (solo / duet) is re-derived the same way as everywhere else.
+ */
+export function toggleSingerOnLines(lines: EditorLine[], indices: number[], name: string, assign: AssignSinger): void {
+  const targets = indices.filter((i) => lines[i] && lines[i].type !== 'section');
+  const singersOf = (i: number) => (lines[i].singers ?? []) as string[];
+  const remove = targets.every((i) => singersOf(i).includes(name));
+  for (const i of targets) {
+    const current = singersOf(i);
+    const at = current.indexOf(name);
+    if (remove) assign('', [i], at);
+    else if (at < 0 && current.length < MAX_LINE_SINGERS) assign(name, [i], current.length);
+  }
+}
+
+/** Removes every singer from the given lines (clearing slot 0 alone leaves the second singer behind). */
+export function clearSingersOnLines(lines: EditorLine[], indices: number[], assign: AssignSinger): void {
+  for (const i of indices) {
+    const count = lines[i]?.type === 'section' ? 0 : (lines[i]?.singers?.length ?? 0);
+    // Each call drops the first singer and the rest shift down.
+    for (let k = 0; k < count; k++) assign('', [i], 0);
+  }
+}
+
+/** "Ryo", "Ryo and Daisuke", "Ryo, Daisuke, and Mika" — worded and punctuated for the UI language. */
+export function formatNameList(names: string[], locale?: string): string {
+  return new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(names);
+}
+
 /**
  * Validate that all singers assigned to a line exist in their parent section.
  * Returns an array of invalid singer names (empty = valid).

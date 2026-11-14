@@ -8,7 +8,7 @@
  * individual field mappings.
  */
 import { describe, it, expect } from 'vitest';
-import { flatToSections, sectionsToFlat } from './sections';
+import { flatToSections, sectionsToFlat, toggleSingerOnLines, clearSingersOnLines, formatNameList } from './sections';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const lyric = (text: string, extra: Partial<EditorLine> = {}): EditorLine =>
@@ -213,5 +213,69 @@ describe('round trip', () => {
     const lines: EditorLine[] = [lyric('a'), lyric('b'), marker('Verse'), lyric('c')];
     const back = sectionsToFlat(flatToSections(lines));
     expect(back.filter((l) => l.type === 'section')).toHaveLength(1);
+  });
+});
+
+// Mirrors useEditor's handleAssignSinger: write a slot, drop blanks, cap at four.
+function assignInto(lines: EditorLine[]) {
+  return (name: string, indices: number[], slot: number) => {
+    for (const i of indices) {
+      const current = [...(lines[i].singers ?? [])];
+      while (current.length <= slot) current.push('');
+      current[slot] = name;
+      const clean = current.slice(0, 4).filter(Boolean);
+      lines[i] = { ...lines[i], singers: clean.length ? clean : undefined };
+    }
+  };
+}
+
+describe('singer toggles', () => {
+  const make = (): EditorLine[] => [
+    { type: 'section', label: 'verse 1' } as EditorLine,
+    { text: 'a', singers: ['Ryo'] } as EditorLine,
+    { text: 'b' } as EditorLine,
+  ];
+
+  it('adds a singer to lines missing it without touching the others', () => {
+    const lines = make();
+    toggleSingerOnLines(lines, [1, 2], 'Daisuke', assignInto(lines));
+    expect(lines[1].singers).toEqual(['Ryo', 'Daisuke']);
+    expect(lines[2].singers).toEqual(['Daisuke']);
+  });
+
+  it('adds to every line when only some have it, removes when all do', () => {
+    const lines = make();
+    toggleSingerOnLines(lines, [1, 2], 'Ryo', assignInto(lines));
+    expect(lines[2].singers).toEqual(['Ryo']);
+    toggleSingerOnLines(lines, [1, 2], 'Ryo', assignInto(lines));
+    expect(lines[1].singers).toBeUndefined();
+    expect(lines[2].singers).toBeUndefined();
+  });
+
+  it('skips section markers and stops at four singers', () => {
+    const lines = make();
+    lines[1] = { text: 'a', singers: ['A', 'B', 'C', 'D'] } as EditorLine;
+    toggleSingerOnLines(lines, [0, 1], 'E', assignInto(lines));
+    expect(lines[0].singers).toBeUndefined();
+    expect(lines[1].singers).toEqual(['A', 'B', 'C', 'D']);
+  });
+
+  it('clears every singer, not only the first slot', () => {
+    const lines = make();
+    lines[1] = { text: 'a', singers: ['Ryo', 'Daisuke', 'Mika'] } as EditorLine;
+    clearSingersOnLines(lines, [1], assignInto(lines));
+    expect(lines[1].singers).toBeUndefined();
+  });
+});
+
+describe('formatNameList', () => {
+  it('joins with "and", and a serial comma past two', () => {
+    expect(formatNameList(['Ryo'], 'en')).toBe('Ryo');
+    expect(formatNameList(['Ryo', 'Daisuke'], 'en')).toBe('Ryo and Daisuke');
+    expect(formatNameList(['Ryo', 'Daisuke', 'Mika'], 'en')).toBe('Ryo, Daisuke, and Mika');
+  });
+
+  it('uses the UI language', () => {
+    expect(formatNameList(['Ryo', 'Daisuke'], 'es')).toBe('Ryo y Daisuke');
   });
 });

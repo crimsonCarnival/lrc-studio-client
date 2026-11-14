@@ -26,6 +26,7 @@ import { useCollabMedia, useCollabSong, collabMediaToRestored } from '@/features
 import { otherLockHolder } from '@/features/collab/useLineLocks';
 import type { LinesUpdater } from '@/features/collab/collab.types';
 import { migrateLines } from '@/shared/utils/lrc';
+import { sanitizeLines } from '@/shared/utils/sanitize-lines';
 import { hasCJK } from '@/shared/utils/furigana';
 import { loadCjkFont } from '@/app/cjk-font';
 import { creditsOf } from '@/features/artists/artist-credits';
@@ -257,6 +258,9 @@ export function useAppState(user?: AuthUserType | null) {
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastServerSnapshotRef = useRef<any>(null);
+  // The snapshot is replaced on load and after every successful save, so its saveTime is
+  // "last saved". A getter, since the ref changes without a render of its own.
+  const getLastSaveTime = useCallback((): string | null => lastServerSnapshotRef.current?.state?.saveTime ?? null, []);
   // Guard: prevents two concurrent project.create() calls (manual + autosave race)
   const isCreatingProjectRef = useRef(false);
   // Mirror isProjectLoading in a ref so the beforeunload handler (a non-reactive
@@ -311,39 +315,9 @@ export function useAppState(user?: AuthUserType | null) {
         if (!saved) return;
         const parsed = JSON.parse(saved);
         // \u2705 FIX: Allow restoring even if lines are empty (user may have deleted all lyrics)
-        const validLines = migrateLines((parsed.lines || []).flatMap((l) => {
-          if (!(l && typeof l === 'object')) return [];
-          // Section marker
-          if (l.type === 'section') {
-            return [{ type: 'section', label: l.label || '', depth: l.depth, singers: Array.isArray(l.singers) ? l.singers : undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
-          }
-          if (typeof l.text !== 'string') return [];
-          return [{
-            text: l.text,
-            timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
-            endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
-            adLibOf: typeof l.adLibOf === 'number' && isFinite(l.adLibOf) ? l.adLibOf : undefined,
-            secondary: typeof l.secondary === 'string' ? l.secondary : '',
-            singers: Array.isArray(l.singers) ? l.singers : undefined,
-            translations: Array.isArray(l.translations) ? l.translations : undefined,
-            id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
-            words: Array.isArray(l.words) ? l.words.flatMap((w) => {
-              const word = typeof w.word === 'string' ? w.word : '';
-              return word ? [{
-                word,
-                time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null,
-                ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}),
-              }] : [];
-            }) : undefined,
-            secondaryWords: Array.isArray(l.secondaryWords) ? l.secondaryWords.flatMap((w) => {
-              const word = typeof w.word === 'string' ? w.word : '';
-              return word ? [{
-                word,
-                time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null,
-              }] : [];
-            }) : undefined,
-          }];
-        }));
+        // The same validator as every other load path. A hand-written copy here kept only some
+        // fields and dropped each line's sing mode, timing source and per-word singers.
+        const validLines = migrateLines(sanitizeLines(parsed.lines));
         setSoloLines(validLines);
         clearSoloHistory();
         setSyncMode(validLines.length > 0 ? true : (parsed.syncMode ?? true));
@@ -1163,6 +1137,7 @@ export function useAppState(user?: AuthUserType | null) {
     pendingSyncs,
     isSaving,
     saveFailed,
+    getLastSaveTime,
     isSharedProject,
     sharedReadOnly,
     setSharedReadOnly,

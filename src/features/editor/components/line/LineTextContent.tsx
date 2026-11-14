@@ -520,7 +520,12 @@ const LineTextContent = memo(({
             <button
               type="button"
               className="flex-shrink-0 text-[9px] font-mono text-accent-blue/60 px-1 py-0.5 bg-accent-blue/10 rounded-xs border border-accent-blue/20 leading-none cursor-pointer hover:bg-accent-blue/20 hover:text-accent-blue transition-colors focus:ring-1 focus:ring-accent-blue/40 outline-none"
-              onClick={(e) => { e.stopPropagation(); }}
+              aria-label={t('editor.wordBadgeHint', { count: line.words.filter(w => w.time != null).length })}
+              // The editor owns the mode; it listens for this, as it does for 'editor:start-syncing'.
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('editor:open-words', { detail: { lineIndex } }));
+              }}
             >
               W
             </button>

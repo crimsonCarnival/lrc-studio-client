@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { applySecondaryLines, mainLineIndices, secondaryText, splitSecondaryText } from './secondary-lines';
+import { applySecondaryLines, applyTranslationLines, mainLineIndices, secondaryText, splitSecondaryText, translationLanguages, translationText } from './secondary-lines';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const lyric = (text: string, extra: Partial<EditorLine> = {}): EditorLine =>
@@ -39,5 +39,33 @@ describe('secondary lines', () => {
     const timed = [lyric('一', { secondary: 'ichi', secondaryWords: [{ word: 'ichi', time: 1 }] })];
     expect(applySecondaryLines(timed, ['ichi']).lines[0].secondaryWords).toHaveLength(1);
     expect(applySecondaryLines(timed, ['itchi']).lines[0].secondaryWords).toBeUndefined();
+  });
+});
+
+describe('translation lines', () => {
+  const lines = [
+    marker('verse'),
+    lyric('一', { translations: [{ text: 'one', language: 'English' }, { text: 'uno', language: 'Spanish' }] }),
+    lyric('二', { translations: [{ text: 'dos', language: 'Spanish' }] }),
+  ];
+
+  it('lists the languages in use and round-trips one of them', () => {
+    expect(translationLanguages(lines)).toEqual(['English', 'Spanish']);
+    const text = translationText(lines, 'English');
+    expect(text).toBe('one\n');
+    expect(applyTranslationLines(lines, splitSecondaryText(text), 'English').changed).toEqual([]);
+  });
+
+  it('writes one language and leaves the others in place', () => {
+    const { lines: next, changed } = applyTranslationLines(lines, ['ONE', 'two'], 'English');
+    expect(changed).toEqual([1, 2]);
+    expect(next[1].translations).toEqual([{ text: 'ONE', language: 'English' }, { text: 'uno', language: 'Spanish' }]);
+    expect(next[2].translations).toEqual([{ text: 'dos', language: 'Spanish' }, { text: 'two', language: 'English' }]);
+  });
+
+  it('a blank removes that language only, and the field goes when nothing is left', () => {
+    const { lines: next } = applyTranslationLines(lines, ['', ''], 'Spanish');
+    expect(next[1].translations).toEqual([{ text: 'one', language: 'English' }]);
+    expect(next[2].translations).toBeUndefined();
   });
 });

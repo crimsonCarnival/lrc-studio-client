@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import LineActionsPopover from './LineActionsPopover';
@@ -102,7 +103,8 @@ const LineActionToolbar = memo(({
       {/* Mark button — always visible on the active unsaved line */}
       {isActive && editingLineIndex !== lineIndex && (
         <Tip content={(() => {
-          if (editorMode !== 'words' || line.timestamp == null) return t('editor.mark');
+          const hint = (label: string) => <ShortcutHint label={label} shortcut="mark" fallback="Enter" />;
+          if (editorMode !== 'words' || line.timestamp == null) return hint(t('editor.mark'));
           const isFocusedOnLineWord = focusedTimestamp?.lineIndex === lineIndex &&
             (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord') &&
             focusedTimestamp.wordIndex != null;
@@ -118,12 +120,12 @@ const LineActionToolbar = memo(({
             const secWords = line.secondaryWords ?? (line.secondary?.trim().split(/\s+/).flatMap(w => w ? [{ word: w }] : []) ?? []);
             const curIdx = Math.max(0, Math.min(targetIdx, Math.max(0, secWords.length - 1)));
             const word = secWords[curIdx]?.word || 'word';
-            return t('editor.stampWordTip', { word, current: secWords.length ? curIdx + 1 : 0, total: secWords.length });
+            return hint(t('editor.stampWordTip', { word, current: secWords.length ? curIdx + 1 : 0, total: secWords.length }));
           }
           const priWords = line.words ?? [];
           const curIdx = Math.max(0, Math.min(targetIdx, Math.max(0, priWords.length - 1)));
           const word = priWords[curIdx]?.word || 'word';
-          return t('editor.stampWordTip', { word, current: priWords.length ? curIdx + 1 : 0, total: priWords.length });
+          return hint(t('editor.stampWordTip', { word, current: priWords.length ? curIdx + 1 : 0, total: priWords.length }));
         })()}>
           <Button
             size="icon-sm"
@@ -172,9 +174,9 @@ const LineActionToolbar = memo(({
                     <Tip content={(() => {
                       const nudgeVal = settings.editor?.nudge?.default || 0.1;
                       if (focusedTimestamp?.lineIndex === lineIndex) {
-                        if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `-${nudgeVal}` });
+                        if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return <ShortcutHint label={t('editor.nudgeEndTime', { delta: `-${nudgeVal}` })} shortcut="nudgeLeft" fallback="Alt+ArrowLeft" />;
                       }
-                      return t('editor.nudgeLine', { delta: `-${nudgeVal}` });
+                      return <ShortcutHint label={t('editor.nudgeLine', { delta: `-${nudgeVal}` })} shortcut="nudgeLeft" fallback="Alt+ArrowLeft" />;
                     })()}>
                       <Button
                         variant="ghost"
@@ -188,9 +190,9 @@ const LineActionToolbar = memo(({
                     <Tip content={(() => {
                       const nudgeVal = settings.editor?.nudge?.default || 0.1;
                       if (focusedTimestamp?.lineIndex === lineIndex) {
-                        if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `+${nudgeVal}` });
+                        if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return <ShortcutHint label={t('editor.nudgeEndTime', { delta: `+${nudgeVal}` })} shortcut="nudgeRight" fallback="Alt+ArrowRight" />;
                       }
-                      return t('editor.nudgeLine', { delta: `+${nudgeVal}` });
+                      return <ShortcutHint label={t('editor.nudgeLine', { delta: `+${nudgeVal}` })} shortcut="nudgeRight" fallback="Alt+ArrowRight" />;
                     })()}>
                       <Button
                         variant="ghost"
@@ -205,7 +207,7 @@ const LineActionToolbar = memo(({
                 )}
                 {editorMode === 'words' && (line.words?.some(w => w.time != null) || line.secondaryWords?.some(w => w.time != null)) && (
                   <>
-                    <Tip content={t('editor.nudgeWord', { delta: `-${settings.editor?.nudge?.fine || 0.01}` })}>
+                    <Tip content={<ShortcutHint label={t('editor.nudgeWord', { delta: `-${settings.editor?.nudge?.fine || 0.01}` })} shortcut="nudgeLeftFine" fallback="Shift+ArrowLeft" />}>
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -215,7 +217,7 @@ const LineActionToolbar = memo(({
                         <Icon name="keyboard_double_arrow_left" size={16} />
                       </Button>
                     </Tip>
-                    <Tip content={t('editor.nudgeWord', { delta: `+${settings.editor?.nudge?.fine || 0.01}` })}>
+                    <Tip content={<ShortcutHint label={t('editor.nudgeWord', { delta: `+${settings.editor?.nudge?.fine || 0.01}` })} shortcut="nudgeRightFine" fallback="Shift+ArrowRight" />}>
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -228,7 +230,7 @@ const LineActionToolbar = memo(({
                   </>
                 )}
                 <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
-                <Tip content={t('editor.addLine')}>
+                <Tip content={<ShortcutHint label={t('editor.addLine')} shortcut="addLine" fallback="Ctrl+Enter" />}>
                   <Button
                     variant="ghost"
                     size="icon-sm"

@@ -18,7 +18,7 @@ import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
-import { validateLineSingers, sectionCollapseKey } from '@features/editor/utils/sections';
+import { validateLineSingers, sectionCollapseKey, formatNameList } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import type { EditorLine, EditorWord, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -221,7 +221,7 @@ const EditorLineItem = React.memo(({
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [editingTimestamp, setEditingTimestamp] = useState<string | null>(null); // null | 'start' | 'end'
   const [editingReadingWordIndex, setEditingReadingWordIndex] = useState<number | null>(null);
   const [selection, setSelection] = useState<CharSelection>({ start: null, end: null, range: null });
@@ -237,6 +237,42 @@ const EditorLineItem = React.memo(({
       return () => clearTimeout(timer);
     }
   }, [editingLineIndex, i]);
+
+  // ── Section marker editor: Enter or a click elsewhere saves, Esc or the close button discards.
+  const isSectionEditing = line.type === 'section' && editingLineIndex === i;
+  const sectionEditorRef = useRef<HTMLDivElement | null>(null);
+  const closeSectionEditor = useCallback((save: boolean) => {
+    if (save) {
+      // A name still sitting in the input counts: typing it and leaving is the common path.
+      const pending = sectionEditorRef.current?.querySelector<HTMLInputElement>('input[role="combobox"]')?.value.trim() ?? '';
+      const singers = editingSingers.filter(Boolean);
+      if (pending && !singers.includes(pending)) singers.push(pending);
+      handleSaveLineText(i, editingText, undefined, undefined, singers);
+    }
+    setEditingLineIndex(null);
+  }, [editingSingers, editingText, handleSaveLineText, i, setEditingLineIndex]);
+
+  useEffect(() => {
+    if (!isSectionEditing) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      // The singer suggestions are portalled to <body>, so they are outside the box but part of it.
+      if (!target || sectionEditorRef.current?.contains(target) || target.closest('[role="listbox"]')) return;
+      closeSectionEditor(true);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [isSectionEditing, closeSectionEditor]);
+
+  // Opened from the context menu, the menu hands focus back to the row as it closes, after
+  // this editor has mounted: so the singer field takes focus once that has settled.
+  useEffect(() => {
+    if (!isSectionEditing) return;
+    const timer = setTimeout(() => {
+      sectionEditorRef.current?.querySelector<HTMLInputElement>('input[role="combobox"]')?.focus();
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [isSectionEditing]);
 
   const onCharClick = useCallback((ci: number) => {
     setSelection(prev => {
@@ -512,56 +548,76 @@ const EditorLineItem = React.memo(({
             const colorVar = firstSingerColorIdx >= 0 ? SINGER_GRADIENT_STOPS[firstSingerColorIdx] : 'var(--color-faint)';
 
             const label = formatSectionLabel(line.label, t);
-            const singersStr = lineSingers.length > 0 ? lineSingers.join(' + ') : t('editor.tagging.noSinger');
+            const singersStr = lineSingers.length > 0 ? formatNameList(lineSingers, i18n.language) : t('editor.tagging.noSinger');
 
             return isEditing ? (
               <div className="flex items-center gap-2 relative z-20 pl-2 py-1">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/40 bg-zinc-900 shadow-lg">
+                <div
+                  ref={sectionEditorRef}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    if (e.nativeEvent.isComposing) return;
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeSectionEditor(false);
+                    } else if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+                      // The custom label field. The singer field handles its own Enter below.
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeSectionEditor(true);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/40 bg-zinc-900 shadow-lg"
+                >
                   <SectionPickerDropdown
                     value={editingText}
                     onChange={(v: string) => setEditingText(v)}
                   />
                   <div className="w-px h-4 bg-zinc-700 mx-1" />
                   <div className="flex items-center gap-1">
-                    {editingSingers.map((s, si) => (
-                      <span key={si} className="text-[11px] bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-pill pl-2 pr-1 py-0.5 flex items-center gap-1">
+                    {editingSingers.filter(Boolean).map((s) => (
+                      <span key={s} className="text-[11px] bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-pill pl-2 pr-1 py-0.5 flex items-center gap-1">
                         {s}
                         <Tip content={t('common.actions.removeSinger')}>
-                          <button aria-label={t('common.actions.removeSinger')}
-                            onClick={(e) => { e.stopPropagation(); setEditingSingers(prev => prev.filter((_, idx) => idx !== si)); }}
+                          <button type="button" aria-label={t('common.actions.removeSinger')}
+                            onClick={() => setEditingSingers(prev => prev.filter((name) => name !== s))}
                             className="hover:text-destructive opacity-70 hover:opacity-100"
                           ><Icon name="close" size={10} /></button>
                         </Tip>
                       </span>
                     ))}
                     <SuggestInput
-                      suggestions={songArtists ?? []}
+                      suggestions={(songArtists ?? []).filter((name) => !editingSingers.includes(name))}
                       placeholder={t('editor.addSinger')}
+                      autoFocus
                       className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-pill px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const val = e.currentTarget.value.trim();
-                          if (val && !editingSingers.includes(val)) {
-                            setEditingSingers(prev => [...prev, val]);
-                          }
-                          e.currentTarget.value = '';
-                        }
+                        if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const val = e.currentTarget.value.trim();
+                        // Enter on a name adds it; Enter on the empty field is "done".
+                        if (!val) { closeSectionEditor(true); return; }
+                        if (!editingSingers.includes(val)) setEditingSingers(prev => [...prev.filter(Boolean), val]);
+                        e.currentTarget.value = '';
                       }}
-                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
-                  <Tip content={t('common.actions.saveChanges')}>
-                    <button aria-label={t('common.actions.saveChanges')}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSaveLineText(i, editingText, undefined, undefined, editingSingers);
-                        setEditingLineIndex(null);
-                      }}
+                  <Tip content={t('editor.sectionEditor.save')}>
+                    <button type="button" aria-label={t('common.actions.saveChanges')}
+                      onClick={() => closeSectionEditor(true)}
                       className="ml-2 text-primary hover:text-primary/80 transition-colors flex items-center justify-center p-1 rounded-pill hover:bg-white/10"
                     >
                       <Icon name="check" size={16} />
+                    </button>
+                  </Tip>
+                  <Tip content={t('editor.sectionEditor.discard')}>
+                    <button type="button" aria-label={t('editor.sectionEditor.discard')}
+                      onClick={() => closeSectionEditor(false)}
+                      className="text-subtle hover:text-foreground transition-colors flex items-center justify-center p-1 rounded-pill hover:bg-white/10"
+                    >
+                      <Icon name="close" size={16} />
                     </button>
                   </Tip>
                 </div>
@@ -606,6 +662,20 @@ const EditorLineItem = React.memo(({
           )}
           {!compact && selectedLines.size === 0 && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 bottom-0 mb-1 flex items-center gap-1 pl-6 pr-2 bg-gradient-to-l from-zinc-900 via-zinc-900 to-transparent">
+              {/* Double-click is invisible; this is the same action where the eye already is. */}
+              <Tip content={t('editor.sectionEditor.edit')}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingLineIndex(i);
+                    setEditingText(line.label || '');
+                    setEditingSingers(getSingers(line));
+                  }}
+                  className="text-zinc-500 hover:text-primary px-1 flex items-center"
+                  aria-label={t('editor.sectionEditor.edit')}
+                ><Icon name="edit" size={14} /></button>
+              </Tip>
               <Tip content={isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}>
                 <button
                   type="button"
@@ -1064,11 +1134,15 @@ const EditorLineItem = React.memo(({
         )}
 
         {segmentProgress != null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[calc(var(--radius)*1.4)] overflow-hidden bg-hl/60 z-10 pointer-events-none animate-in fade-in duration-300">
-            <div
-              className="h-full bg-primary rounded-r-full"
-              style={{ width: `${segmentProgress * 100}%` }}
-            />
+          // Clipped by a box with the row's own radius: a 4px strip with that radius on its
+          // bottom corners cannot follow the curve, and stuck out past the row's ring.
+          <div className="absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] overflow-hidden pointer-events-none animate-in fade-in duration-300">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-hl/60">
+              <div
+                className="h-full bg-primary rounded-r-full"
+                style={{ width: `${segmentProgress * 100}%` }}
+              />
+            </div>
           </div>
         )}
       </div>

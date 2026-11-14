@@ -1,5 +1,6 @@
 import { getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from './storage.service';
+import { sanitizeLines } from '@/shared/utils/sanitize-lines';
 
 /**
  * Guards a guest's saved draft (localStorage `lrc-syncer-project`) against being replaced by an
@@ -70,37 +71,18 @@ function newId(): string {
   return `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
 }
 
-const finiteNumber = (v: unknown): number | undefined => (typeof v === 'number' && isFinite(v) ? v : undefined);
-
 /* eslint-disable @typescript-eslint/no-explicit-any -- stored JSON is untrusted and checked field by field */
+/**
+ * One stored line, validated by the same sanitizer every other load path uses (server loads,
+ * shared links). A hand-written copy here used to keep only some fields, so a guest coming back
+ * from the sign-in page or reloading lost every section's singers, each line's sing mode, per-word
+ * singers, secondary timing and timing source. Only the id is settled here first: sanitizeLines
+ * mints a missing one with crypto.randomUUID, which a phone on http://<lan-ip> does not have.
+ */
 function restoreLine(l: any): Record<string, unknown> | null {
   if (!(l && typeof l === 'object')) return null;
-  const id = typeof l.id === 'string' ? l.id : newId();
-  if (l.type === 'section') {
-    return { type: 'section', label: typeof l.label === 'string' ? l.label : '', depth: l.depth, timestamp: finiteNumber(l.timestamp) ?? null, id };
-  }
-  if (typeof l.text !== 'string') return null;
-  const words = Array.isArray(l.words)
-    ? l.words.flatMap((w: any) => {
-      if (!(w && typeof w === 'object') || typeof w.word !== 'string' || !w.word) return [];
-      return [{
-        word: w.word,
-        time: finiteNumber(w.time) ?? null,
-        ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}),
-      }];
-    })
-    : undefined;
-  return {
-    text: l.text,
-    timestamp: finiteNumber(l.timestamp) ?? null,
-    endTime: finiteNumber(l.endTime),
-    adLibOf: finiteNumber(l.adLibOf),
-    secondary: typeof l.secondary === 'string' ? l.secondary : '',
-    singers: Array.isArray(l.singers) ? l.singers : undefined,
-    translations: Array.isArray(l.translations) ? l.translations : undefined,
-    id,
-    words,
-  };
+  const [line] = sanitizeLines([{ ...l, id: typeof l.id === 'string' ? l.id : newId() }]);
+  return (line as Record<string, unknown> | undefined) ?? null;
 }
 
 export type RestoredGuestDraft = {

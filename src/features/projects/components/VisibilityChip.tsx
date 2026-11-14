@@ -8,13 +8,15 @@ type VisibilityChipProps = {
   isListed?: boolean;
   onOpen: () => void;
   className?: string;
+  /** Icon and colour only; the state stays in the accessible name (and the caller's tooltip). */
+  iconOnly?: boolean;
 };
 
 /**
  * The project's visibility, always visible in the editor header. Tapping it opens the
  * publish flow; it never changes visibility by itself. Short enough for a phone header.
  */
-export function VisibilityChip({ isPublic, isListed = true, onOpen, className }: VisibilityChipProps) {
+export function VisibilityChip({ isPublic, isListed = true, onOpen, className, iconOnly = false }: VisibilityChipProps) {
   const { t } = useTranslation();
   const unlisted = isPublic && !isListed;
   const state = t(unlisted ? 'project.visibilityChipUnlisted' : isPublic ? 'project.visibilityChipPublic' : 'project.visibilityChipPrivate');
@@ -31,12 +33,13 @@ export function VisibilityChip({ isPublic, isListed = true, onOpen, className }:
           : isPublic
           ? 'bg-foam-soft text-foam-ink inset-ring inset-ring-foam'
           : 'bg-raised text-subtle inset-ring inset-ring-hl hover:bg-overlay hover:text-foreground',
+        iconOnly && 'min-w-10 coarse:min-w-11 px-0',
         className,
       )}
     >
       <Icon name={unlisted ? 'link' : isPublic ? 'public' : 'lock'} size={14} />
       {/* Narrow headers keep the icon and the colour; the state stays in the accessible name. */}
-      <span className="max-[420px]:sr-only">{state}</span>
+      <span className={iconOnly ? 'sr-only' : 'max-[420px]:sr-only'}>{state}</span>
     </button>
   );
 }
