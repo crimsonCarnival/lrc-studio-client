@@ -13,7 +13,7 @@ import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
 import LrcModeColumn from '../modes/LrcModeColumn';
 import SrtModeColumn from '../modes/SrtModeColumn';
-import { WordsModeTimestamp, WordsModeChips, WordsModeLayerControl } from '../modes/WordsModeColumn';
+import { WordsModeTimestamp, WordsModeChips } from '../modes/WordsModeColumn';
 import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
@@ -962,15 +962,6 @@ const EditorLineItem = React.memo(({
                 <span className="truncate font-mono text-[11px] tracking-[0.08em] text-label uppercase select-none">
                   {formatSectionLabel(sectionLabel, t)}
                 </span>
-              )}
-              {/* Only the line being worked on: a mark lands on it, so the layer
-                  choice is only actionable there. */}
-              {isActive && (
-                <WordsModeLayerControl
-                  line={line as ComponentProps<typeof WordsModeLayerControl>['line']}
-                  stampTarget={stampTarget}
-                  handleSetStampTarget={handleSetStampTarget}
-                />
               )}
               {!!line.words?.length && (
                 <span className="ml-auto flex w-28 shrink-0 items-center gap-2 select-none">

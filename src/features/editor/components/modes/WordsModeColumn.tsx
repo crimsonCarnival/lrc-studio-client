@@ -195,47 +195,6 @@ export function WordsModeTimestamp({
   );
 }
 
-/**
- * Which layer a mark lands on: the Japanese, its romaji, or both at once.
- *
- * Rendered only on the line being worked on and only when that line actually
- * contains Japanese — a greyed-out control repeated down every English line was
- * noise. Each glyph carries its label, because 主 and ロ alone do not read.
- */
-export function WordsModeLayerControl({
-  line,
-  stampTarget,
-  handleSetStampTarget,
-}: Pick<WordsModeColumnProps, 'line' | 'stampTarget' | 'handleSetStampTarget'>) {
-  const { t } = useTranslation();
-  if (!hasCJK(line.text || '')) return null;
-  return (
-    <div className="flex items-center gap-0.5 rounded-md bg-background/70 p-0.5 shrink-0 inset-ring inset-ring-hl">
-      {([
-        { key: 'main', glyph: '主', label: t('editor.stampLayerMainShort'), hint: t('editor.stampLayerMain') },
-        { key: 'secondary', glyph: 'ロ', label: t('editor.stampLayerSecondaryShort'), hint: t('editor.stampLayerSecondary') },
-        { key: 'both', glyph: null, label: t('editor.stampLayerBoth'), hint: t('editor.stampLayerBothHint') },
-      ] as const).map(({ key, glyph, label, hint }) => (
-        <Tip content={hint}>
-          <button
-            key={key}
-            type="button"
-            aria-pressed={stampTarget === key}
-            onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
-            className={`inline-flex items-center gap-1 rounded-xs px-1.5 py-0.5 text-[10px] font-semibold leading-none transition-all ${stampTarget === key
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-subtle hover:text-foreground'
-              }`}
-          >
-            {glyph && <span aria-hidden="true" className="font-bold">{glyph}</span>}
-            {label}
-          </button>
-        </Tip>
-      ))}
-    </div>
-  );
-}
-
 /** The chip tray reads none of the start-timestamp editing props the header badge needs. */
 export type WordsModeChipsProps = Pick<WordsModeColumnProps,
   'line' | 'lineIndex' | 'isActive' | 'isMobile' | 'focusedTimestamp' | 'stampTarget' | 'activeWordIndex'

@@ -666,10 +666,15 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
   const doFill = wordHighlight && isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
   // secondary stays dim (inactive style) when fillTrack is 'main' — no active styling applied
   const treatAsActive = isActive && fillTrack !== 'main';
-  const baseClass = `transition-all duration-500 ease-out w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive
-    ? `${activeSecondarySizes[sizeOption]} text-zinc-400 font-medium`
-    : `${inactiveSecondarySizes[sizeOption]} text-zinc-600`
-    }`;
+  // Semantic tokens, not the zinc scale: the dark theme remaps zinc-400/600 to near-white, which
+  // drew the romaji brighter than the lyric it reads. The secondary line always sits below its
+  // main line (active → subtle; otherwise faint at 70 %, under the main line's faint/past), in a
+  // lighter weight with a little tracking so a romanised line reads as an annotation, not a lyric.
+  const tone = isActive ? 'text-subtle' : 'text-faint/70';
+  const baseClass = `transition-all duration-500 ease-out w-full font-lyrics font-normal tracking-[0.01em] leading-snug -mt-0.5 mb-1 break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive
+    ? activeSecondarySizes[sizeOption]
+    : inactiveSecondarySizes[sizeOption]
+    } ${tone}`;
 
   if (!doFill) {
     return <p className={baseClass}><ParsedSecondary text={line.secondary} /></p>;
@@ -738,10 +743,10 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
         return (
           <React.Fragment key={wi}>
             <span className="relative inline-block">
-              <span className="text-zinc-600 transition-colors duration-100">{w.word}</span>
+              <span className="text-faint transition-colors duration-100">{w.word}</span>
               {isActive && progress > 0 && (
                 <span
-                  className="absolute left-0 top-0 h-full w-full text-zinc-200 whitespace-nowrap pointer-events-none"
+                  className="absolute left-0 top-0 h-full w-full text-foreground/85 whitespace-nowrap pointer-events-none"
                   style={{
                     clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
                     WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,

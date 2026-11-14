@@ -14,8 +14,6 @@ export type PhoneWordsChip = {
   singer?: string;
 };
 
-export type StampLayer = 'main' | 'secondary' | 'both';
-
 export type PhoneWordsTabProps = {
   id?: string;
   labelledBy?: string;
@@ -38,8 +36,6 @@ export type PhoneWordsTabProps = {
   onNextLine: () => void;
   canPrev: boolean;
   canNext: boolean;
-  /** Absent unless the line has Japanese text, the only case with a second layer to stamp. */
-  layer?: { value: StampLayer; onChange: (layer: StampLayer) => void };
   /** Absent for a read-only viewer. */
   mark?: { onMark: () => void; onUndo: () => void; canUndo: boolean; label: string; disabled: boolean };
 };
@@ -117,26 +113,6 @@ export default function PhoneWordsTab(p: PhoneWordsTabViewProps) {
               <Icon name="chevron_right" size={22} />
             </button>
           </div>
-
-          {p.layer && (
-            <div role="group" aria-label={t('editor.phone.words.layerGroup')} className="flex gap-1 rounded-pill bg-raised p-1">
-              {([
-                { key: 'main', label: t('editor.stampLayerMainShort') },
-                { key: 'secondary', label: t('editor.stampLayerSecondaryShort') },
-                { key: 'both', label: t('editor.stampLayerBoth') },
-              ] as const).map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  aria-pressed={p.layer!.value === key}
-                  onClick={() => p.layer!.onChange(key)}
-                  className={`h-9 flex-1 rounded-pill text-[13px] font-semibold transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus ${p.layer!.value === key ? 'bg-primary text-zinc-950' : 'text-subtle'}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
 
           {p.words.length === 0 ? (
             <p role="note" className="py-3 text-center text-sm text-subtle">{t('editor.phone.words.noWords')}</p>

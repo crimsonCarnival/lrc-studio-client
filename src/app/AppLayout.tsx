@@ -86,7 +86,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     setIsPlaying, setPlaybackSpeed,
     projectCoverImage, setProjectCoverImage,
     projectIsPublic, setProjectVisibility, isSharedProject,
-    collabViewer,
+    collabViewer, editorMode,
   } = appState;
 
   const { settings, updateSetting } = settingsState;
@@ -300,7 +300,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           </div>
           )}
 
-          <GuidedTour steps={tourStepsFor(isLg)} isOpen={isTourOpen} offerOptOut={offerOptOut}
+          <GuidedTour steps={tourStepsFor(isLg, mobileTab === 'preview' ? 'review' : editorMode === 'words' ? 'words' : 'lines')} isOpen={isTourOpen} offerOptOut={offerOptOut}
             narrow={!isLg}
             onClose={closeTour}
             onShown={onTourShown}

@@ -5,7 +5,6 @@ import { useEditor } from '@features/editor/hooks/useEditor';
 import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
 import { useAutoStamp, type AutoStampPhase, type TabPlayback } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
-import { WordsModeLayerControl } from '../modes/WordsModeColumn';
 import EditorSidePanel from './EditorSidePanel';
 import EditorStatusBar from './EditorStatusBar';
 import { CounterpartStrip } from '../counterparts/CounterpartStrip';
@@ -1516,7 +1515,6 @@ export default function Editor({
       setFocusedTimestamp(null);
       setActiveLineIndex(index);
     };
-    const secondaryAvailable = cursorIsLyric && hasCJK(cursorLine.text ?? '');
     // The line -/+ move: the cursor line when it already has a time (the user tapped a stamped row),
     // otherwise the line stamped just before the cursor (Mark advances, so that is the one to fix).
     let nudgeTarget: number | null = null;
@@ -1638,9 +1636,6 @@ export default function Editor({
             onNextLine: () => goToLine(nextLyric),
             canPrev: prevLyric != null,
             canNext: nextLyric != null,
-            layer: secondaryAvailable && !readOnly
-              ? { value: stampTarget as 'main' | 'secondary' | 'both', onChange: handleSetStampTarget }
-              : undefined,
             mark: readOnly ? undefined : {
               onMark: () => handleMarkWithConfidence(),
               onUndo: undo,
@@ -1822,19 +1817,6 @@ export default function Editor({
               </Button>
             </Tip>
           )}
-          {onShowPreview && (
-            <Tip content={t('editor.previewAction')}>
-              <Button
-                variant="outline"
-                onClick={onShowPreview}
-                aria-label={t('editor.previewAction')}
-                className="h-10 lg:h-10 coarse:h-11 w-10 lg:w-10 coarse:w-11 px-0 lg:px-0 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground"
-              >
-                <Icon name="visibility" size={16} />
-                <span className="sr-only">{t('editor.previewAction')}</span>
-              </Button>
-            </Tip>
-          )}
           <Tip content={t('editor.exportAs', { format: exportFormat })}>
             <Button
               data-tour="editor-export"
@@ -1966,7 +1948,7 @@ export default function Editor({
         {wordsFocus ? (
           <>
             <div data-tour="editor-modes" className="hidden lg:flex shrink-0">{modeTabs}</div>
-            <div className="flex flex-col gap-1 flex-[1_1_150px] min-w-0">
+            <div data-tour="words-line-info" className="flex flex-col gap-1 flex-[1_1_150px] min-w-0">
               <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
                 {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
                 {focusInfo.sectionLabel && ` · ${formatSectionLabel(focusInfo.sectionLabel, t)}`}
@@ -1977,16 +1959,10 @@ export default function Editor({
                 {focusLength != null && ` · ${focusLength.toFixed(2)} s`}
               </span>
             </div>
-            {focusLine && (
-              <WordsModeLayerControl
-                line={focusLine as ComponentProps<typeof WordsModeLayerControl>['line']}
-                stampTarget={stampTarget}
-                handleSetStampTarget={handleSetStampTarget}
-              />
-            )}
             <Tip content={focusLength == null ? t('editor.words.distributeUnavailable') : t('editor.words.distributeTip')}>
               <Button
                 variant="outline"
+                data-tour="words-distribute"
                 // aria-disabled keeps the tooltip that explains why reachable.
                 aria-disabled={focusLength == null || !focusLine?.words?.length}
                 onClick={() => { if (focusLength != null && focusLine?.words?.length) handleDistributeWords(); }}
@@ -2001,6 +1977,7 @@ export default function Editor({
         {/* Sync progress lives in the status bar along the bottom. */}
         <div data-tour="editor-modes" className="hidden lg:flex flex-1 min-w-0">{modeTabs}</div>
         {lines.length > 0 && (
+          <div data-tour="editor-filter" className="flex">
           <SegmentedControl<'all' | 'unmarked'>
             label={t('editor.filterGroup')}
             value={lineFilter}
@@ -2010,6 +1987,7 @@ export default function Editor({
               { value: 'unmarked', label: t('editor.filterUnmarked', { count: unmarkedCount }) },
             ]}
           />
+          </div>
         )}
         <Tip content={<ShortcutHint label={t('editor.counterpart.toggleTip')} shortcut="captureAdLib" fallback="a" />}>
           <Button

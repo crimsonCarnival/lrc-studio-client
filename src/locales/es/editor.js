@@ -106,7 +106,6 @@ export default {
   wordCount_other: "{{count}} palabras",
   tabLines: "Líneas",
   tabReview: "Revisar",
-  previewAction: "Vista previa",
   exportAs: "Exportar {{format}}",
   studio: {
     title: "Estudio de subtítulos",
@@ -305,7 +304,6 @@ export default {
       changeSingerFrom: "Cambiar cantante de {{word}}, ahora {{singer}}",
       section: "Tiempos de la línea {{number}}",
       unstamped: "{{word}}, sin marcar",
-      layerGroup: "Capa a marcar",
       changeSinger: "Cambiar cantante de {{word}}",
       wordCount: "{{done}} de {{total}} palabras marcadas",
     },
@@ -455,12 +453,6 @@ export default {
     split: "Separar en caracteres",
     regroup: "Reagrupar esta línea",
   },
-  stampLayerMain: "Marcar letra principal",
-  stampLayerSecondary: "Marcar letra secundaria (romaji)",
-  stampLayerMainShort: "Principal",
-  stampLayerSecondaryShort: "Romaji",
-  stampLayerBoth: "Ambas",
-  stampLayerBothHint: "Muestra las dos capas; las marcas van a la letra principal",
   startTime: "Inicio",
   endTime: "Fin",
   syncModeOnly: "Solo en Editor",
@@ -640,6 +632,78 @@ export default {
       session: {
         title: "Trabajen juntos",
         body: "Inicia una sesión para editar este proyecto en vivo con otras personas. Solo aparece en un proyecto guardado que sea tuyo."
+      },
+      unmarkedFilter: {
+        title: "Lo que falta",
+        body: "**Sin marcar** oculta las líneas que ya tienen tiempo, así solo ves el trabajo pendiente. La línea del cursor siempre sigue visible. **Todas** vuelve a mostrar cada línea."
+      },
+      wordsNav: {
+        title: "Todas las líneas, de una en una",
+        body: "El modo Palabras trabaja una línea a la vez. Elige aquí una línea para marcar sus palabras; la barra de cada línea muestra cuántas palabras tienen tiempo."
+      },
+      wordsLine: {
+        title: "La línea actual",
+        body: "Su número, sección, inicio y fin, y cuánto dura. Las palabras de abajo se reparten ese tiempo."
+      },
+      wordsStamp: {
+        title: "Marca cada palabra",
+        body: "Reproduce la canción y pulsa **Enter** (o haz clic aquí) cuando empiece cada palabra. La primera pulsación también marca el inicio de la línea. **Retroceso** deshace la última marca y **K** termina la palabra que suena, dejando una pausa antes de la siguiente."
+      },
+      wordsRow: {
+        title: "Una fila por palabra",
+        body: "Cada palabra muestra su lectura y su inicio. Haz clic en una palabra para llevar el cursor a ella y vuelve a marcar solo esa. El botón **⋮** (o clic derecho) tiene el resto: editar la lectura, unir o dividir palabras, elegir cantante, borrar su tiempo."
+      },
+      wordsTimeline: {
+        title: "Las palabras en el tiempo",
+        body: "Cada bloque dura lo que su palabra, sobre la forma de onda. **Haz clic en un bloque** para reproducir desde esa palabra. **Arrastra su borde izquierdo** para mover dónde empieza y **el derecho** para terminarla antes. Un bloque dorado es demasiado corto, casi siempre una doble pulsación."
+      },
+      wordsViewTools: {
+        title: "Imán, sílabas y zoom",
+        body: "**Imán** atrae el borde que arrastras al cabezal, a otros bordes o a centésimas exactas. **Sílabas** divide los bloques en kana. Acerca el zoom para líneas rápidas (arrastra la regla para desplazarte) y **Repetir** repite la línea mientras la afinas."
+      },
+      wordsDistribute: {
+        title: "Repartir uniforme",
+        body: "¿Sin tiempo para marcar cada palabra? Cuando la línea tiene inicio y fin, esto reparte el tiempo por igual entre sus palabras como punto de partida."
+      },
+      wordsTools: {
+        title: "Herramientas de palabras",
+        body: "**Auto Stamp** marca cada palabra a partir del audio. Los otros botones añaden traducciones y lecturas furigana a toda la canción."
+      },
+      wordsModes: {
+        title: "Líneas, Palabras, Revisar",
+        body: "Vuelve a **Líneas** para corregir tiempos de línea, o abre **Revisar** para ver el resultado como karaoke."
+      },
+      reviewLyrics: {
+        title: "Tu letra como karaoke",
+        body: "Así suena la canción para los demás. Haz clic en cualquier línea para reproducir desde ella. Las líneas sin tiempo aparecen atenuadas para que se vean enseguida."
+      },
+      reviewProgress: {
+        title: "Cuánto está marcado",
+        body: "Muestra cuántas líneas tienen tiempo. Si faltan, **ir a la primera línea sin tiempo** te lleva directo a ella en el editor."
+      },
+      reviewShow: {
+        title: "Qué mostrar",
+        body: "Activa o desactiva marcas de tiempo, secciones y cantantes, resaltado palabra por palabra, furigana o traducciones. **Seguir reproducción** mantiene la línea actual a la vista."
+      },
+      reviewAlign: {
+        title: "Alineación",
+        body: "Izquierda, centro o derecha: cómo se colocan las letras en pantalla."
+      },
+      reviewPlayer: {
+        title: "Reprodúcelo",
+        body: "Reproduce, pausa y busca. Ver la canción entera una vez es la forma más rápida de pillar una línea que llega tarde o pronto."
+      },
+      reviewPublish: {
+        title: "Publicar",
+        body: "Publicar hace el proyecto público, para que otros lo encuentren, le den estrella y lo bifurquen. Vuelve a hacer clic para retirarlo. Guarda el proyecto primero."
+      },
+      reviewMore: {
+        title: "Exportar, compartir y más",
+        body: "Exporta como .lrc, .srt o .txt, comparte un enlace, o pega letra secundaria y traducciones para todas las líneas a la vez."
+      },
+      reviewBack: {
+        title: "Volver al editor",
+        body: "¿Viste algo? Vuelve al editor para corregirlo y regresa para comprobarlo."
       },
       phoneLines: {
         title: "Tu letra",

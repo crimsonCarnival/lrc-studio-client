@@ -8,6 +8,7 @@ import PreviewPasteArea from './PreviewPasteArea';
 import PreviewViewport from './PreviewViewport';
 import PublicPlaybackBar from '@/features/project-view/PublicPlaybackBar';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
+import { useStartTour } from '@/app/layout/phone-editor-chrome';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { Button } from '@ui/button';
@@ -240,6 +241,8 @@ export default function Preview(props: PreviewProps) {
     return () => window.removeEventListener('preview:open-export', open);
   }, [setShowExportPanel]);
 
+  // Desktop only: AppLayout runs the Review tour while this view is showing; phones have their own tour.
+  const startTour = useStartTour();
   const statusSlot = useHeaderSlot('status', active);
   const centerSlot = useHeaderSlot('center', active);
   const actionsSlot = useHeaderSlot('actions', active);
@@ -256,10 +259,10 @@ export default function Preview(props: PreviewProps) {
     { key: 'follow', label: t('preview.followPlayback'), checked: followPlayback, set: setFollowPlayback },
   ];
 
-  const cardClass = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-5 py-[18px] flex flex-col gap-2';
+  const cardClass = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-4 py-3 flex flex-col gap-1.5';
   const captionClass = 'text-sm font-semibold text-subtle';
-  const checkboxClass = 'size-[22px] rounded-md';
-  const toggleRowClass = 'flex items-center gap-3 min-h-9 coarse:min-h-11 text-base font-medium text-foreground cursor-pointer';
+  const checkboxClass = 'size-[18px] rounded-md';
+  const toggleRowClass = 'flex items-center gap-2.5 min-h-8 coarse:min-h-11 text-sm font-medium text-foreground cursor-pointer';
 
   const translationChips = hasTranslations && (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -310,6 +313,7 @@ export default function Preview(props: PreviewProps) {
       {statusSlot && onShowEditor && createPortal(
         <Button
           variant="outline"
+          data-tour="review-back"
           onClick={onShowEditor}
           aria-label={t('preview.backToEditor')}
           className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
@@ -350,6 +354,7 @@ export default function Preview(props: PreviewProps) {
           {!viewerMode && !sessionMode && !isSharedProject && (
             <Tip content={canPublish ? (isPublic ? t('preview.unpublishTip') : t('preview.publishTip')) : t('preview.publishNeedsSave')}>
               <Button
+                data-tour="review-publish"
                 // aria-disabled keeps the tooltip reachable when the project is not saved yet.
                 aria-disabled={!canPublish}
                 aria-pressed={canPublish ? isPublic : undefined}
@@ -369,6 +374,19 @@ export default function Preview(props: PreviewProps) {
                     <span className="hidden group-hover/publish:inline group-focus-visible/publish:inline">{t('preview.unpublish')}</span>
                   </>
                 ) : t('preview.publish')}
+              </Button>
+            </Tip>
+          )}
+          {startTour && (
+            <Tip content={t('editor.tour.take')} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('editor.tour.take')}
+                onClick={startTour}
+                className="max-lg:hidden size-10 lg:size-10 text-foreground/65 hover:text-foreground"
+              >
+                <Icon name="school" size={18} />
               </Button>
             </Tip>
           )}
@@ -440,7 +458,7 @@ export default function Preview(props: PreviewProps) {
 
       <div data-tour="preview-panel" className="flex flex-col flex-1 min-h-0 animate-fade-in">
         <div className="flex flex-1 min-h-0">
-          <div className="flex flex-col flex-1 min-w-0 min-h-0 px-3 sm:px-8 pt-3 lg:pt-7">
+          <div data-tour="review-lyrics" className="flex flex-col flex-1 min-w-0 min-h-0 px-3 sm:px-8 pt-3 lg:pt-7">
             {/* Below lg the review card collapses into this banner */}
             {untimedCount > 0 && !pastingType && (
               <button
@@ -497,9 +515,9 @@ export default function Preview(props: PreviewProps) {
 
           <aside
             aria-label={t('preview.review')}
-            className="lrc-scroll max-lg:hidden w-[300px] xl:w-[340px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-6 border-l border-zinc-800 bg-zinc-950/40"
+            className="lrc-scroll max-lg:hidden w-[300px] xl:w-[340px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-3 p-4 border-l border-zinc-800 bg-zinc-950/40"
           >
-            <div className={cardClass}>
+            <div data-tour="review-progress" className={cardClass}>
               <span className={captionClass}>{t('preview.review')}</span>
               <div className="flex items-baseline gap-2">
                 <span className="font-heading text-[28px] font-bold leading-none tabular-nums">{lineStats.timed}/{lineStats.total}</span>
@@ -529,16 +547,15 @@ export default function Preview(props: PreviewProps) {
               )}
             </div>
 
-            <fieldset className={cardClass}>
+            <fieldset data-tour="review-show" className={cardClass}>
               <legend className="sr-only">{t('preview.show')}</legend>
               <span aria-hidden className={captionClass}>{t('preview.show')}</span>
               {viewToggleList}
               {translationChips}
-            </fieldset>
-
-            <div className={cardClass}>
-              <span className={captionClass}>{t('preview.alignment')}</span>
-              {/* Icons instead of words: alignment is one of the few settings a glyph says better. */}
+              {/* Alignment shares this card as one row, so the panel fits between header and player
+                  without scrolling. Icons instead of words: a glyph says alignment better. */}
+              <div data-tour="review-align" className="mt-1 flex items-center justify-between gap-3 border-t border-hl/60 pt-2.5">
+                <span className={captionClass}>{t('preview.alignment')}</span>
               <SegmentedControl<'left' | 'center' | 'right'>
                 label={t('preview.alignment')}
                 value={alignment as 'left' | 'center' | 'right'}
@@ -547,17 +564,20 @@ export default function Preview(props: PreviewProps) {
                   value,
                   ariaLabel: t(`preview.align.${value}`),
                   tip: t(`preview.align.${value}`),
-                  label: <Icon name={ALIGN_ICON[value]} size={20} />,
+                  label: <Icon name={ALIGN_ICON[value]} size={18} />,
                 }))}
-                className="flex w-full [&>button]:flex-1 [&>button]:px-0"
+                className="flex"
               />
-            </div>
+              </div>
+            </fieldset>
           </aside>
         </div>
 
         {/* This view owns the desktop player dock while it is showing */}
         {playerSlot === 'preview' && (
-          <PublicPlaybackBar lines={lines as unknown as EditorLine[]} hasInitialMedia={!!hasMedia} docked minimal />
+          <div data-tour="review-player">
+            <PublicPlaybackBar lines={lines as unknown as EditorLine[]} hasInitialMedia={!!hasMedia} docked minimal />
+          </div>
         )}
       </div>
       <ExportPanel
