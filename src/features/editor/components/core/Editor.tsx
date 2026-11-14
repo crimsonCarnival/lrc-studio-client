@@ -1817,19 +1817,6 @@ export default function Editor({
               </Button>
             </Tip>
           )}
-          {onShowPreview && (
-            <Tip content={t('editor.previewAction')}>
-              <Button
-                variant="outline"
-                onClick={onShowPreview}
-                aria-label={t('editor.previewAction')}
-                className="h-10 lg:h-10 coarse:h-11 w-10 lg:w-10 coarse:w-11 px-0 lg:px-0 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground"
-              >
-                <Icon name="visibility" size={16} />
-                <span className="sr-only">{t('editor.previewAction')}</span>
-              </Button>
-            </Tip>
-          )}
           <Tip content={t('editor.exportAs', { format: exportFormat })}>
             <Button
               data-tour="editor-export"

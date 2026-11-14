@@ -106,7 +106,6 @@ export default {
   wordCount_other: "{{count}} palabras",
   tabLines: "Líneas",
   tabReview: "Revisar",
-  previewAction: "Vista previa",
   exportAs: "Exportar {{format}}",
   studio: {
     title: "Estudio de subtítulos",

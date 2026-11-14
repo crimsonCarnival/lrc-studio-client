@@ -103,7 +103,6 @@ export default {
   wordCount_other: "{{count}} words",
   tabLines: "Lines",
   tabReview: "Review",
-  previewAction: "Preview",
   exportAs: "Export {{format}}",
   studio: {
     title: "Subtitle studio",

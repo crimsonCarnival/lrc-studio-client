@@ -256,10 +256,10 @@ export default function Preview(props: PreviewProps) {
     { key: 'follow', label: t('preview.followPlayback'), checked: followPlayback, set: setFollowPlayback },
   ];
 
-  const cardClass = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-5 py-[18px] flex flex-col gap-2';
+  const cardClass = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-4 py-3 flex flex-col gap-1.5';
   const captionClass = 'text-sm font-semibold text-subtle';
-  const checkboxClass = 'size-[22px] rounded-md';
-  const toggleRowClass = 'flex items-center gap-3 min-h-9 coarse:min-h-11 text-base font-medium text-foreground cursor-pointer';
+  const checkboxClass = 'size-[18px] rounded-md';
+  const toggleRowClass = 'flex items-center gap-2.5 min-h-8 coarse:min-h-11 text-sm font-medium text-foreground cursor-pointer';
 
   const translationChips = hasTranslations && (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -497,7 +497,7 @@ export default function Preview(props: PreviewProps) {
 
           <aside
             aria-label={t('preview.review')}
-            className="lrc-scroll max-lg:hidden w-[300px] xl:w-[340px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-6 border-l border-zinc-800 bg-zinc-950/40"
+            className="lrc-scroll max-lg:hidden w-[300px] xl:w-[340px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-3 p-4 border-l border-zinc-800 bg-zinc-950/40"
           >
             <div className={cardClass}>
               <span className={captionClass}>{t('preview.review')}</span>
@@ -534,11 +534,10 @@ export default function Preview(props: PreviewProps) {
               <span aria-hidden className={captionClass}>{t('preview.show')}</span>
               {viewToggleList}
               {translationChips}
-            </fieldset>
-
-            <div className={cardClass}>
-              <span className={captionClass}>{t('preview.alignment')}</span>
-              {/* Icons instead of words: alignment is one of the few settings a glyph says better. */}
+              {/* Alignment shares this card as one row, so the panel fits between header and player
+                  without scrolling. Icons instead of words: a glyph says alignment better. */}
+              <div className="mt-1 flex items-center justify-between gap-3 border-t border-hl/60 pt-2.5">
+                <span className={captionClass}>{t('preview.alignment')}</span>
               <SegmentedControl<'left' | 'center' | 'right'>
                 label={t('preview.alignment')}
                 value={alignment as 'left' | 'center' | 'right'}
@@ -547,11 +546,12 @@ export default function Preview(props: PreviewProps) {
                   value,
                   ariaLabel: t(`preview.align.${value}`),
                   tip: t(`preview.align.${value}`),
-                  label: <Icon name={ALIGN_ICON[value]} size={20} />,
+                  label: <Icon name={ALIGN_ICON[value]} size={18} />,
                 }))}
-                className="flex w-full [&>button]:flex-1 [&>button]:px-0"
+                className="flex"
               />
-            </div>
+              </div>
+            </fieldset>
           </aside>
         </div>
 
