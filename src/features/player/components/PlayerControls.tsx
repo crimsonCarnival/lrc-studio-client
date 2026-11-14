@@ -459,6 +459,8 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       loopA={loopA}
                       loopB={loopB}
                       onLoopChange={handleLoopChange}
+                      onLoopClear={viewerMode ? undefined : clearLoop}
+                      loopKeyHint={variant === 'editor'}
                     />
                   </Suspense>
                 </div>
@@ -717,6 +719,15 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                           <VolumeControl />
                         </div>
                       </div>
+                      {/* The loop button only exists in the wide layout; a loop made here must still be removable. */}
+                      {!viewerMode && loopA != null && loopB != null && (
+                        <div className="p-2 border-b border-zinc-800/60">
+                          <Button variant="ghost" size="sm" onClick={clearLoop} className="w-full justify-start gap-2">
+                            <Icon name="close" size={14} />
+                            {t('player.clearLoop')}
+                          </Button>
+                        </div>
+                      )}
                       {!viewerMode && (
                         <ChangeMediaPopoverContent fileInputId="change-media-file-editor-narrow" {...mediaPopoverProps} />
                       )}

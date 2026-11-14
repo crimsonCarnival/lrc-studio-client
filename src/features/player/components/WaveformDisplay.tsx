@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import { computeSectionBands } from '../timeline-bands';
 import { SectionBands } from './TimelineOverview';
 import { usePresenceActions } from '@/features/collab/collab-presence-context';
@@ -75,6 +76,10 @@ interface WaveformDisplayProps {
   loopA?: number | null;
   loopB?: number | null;
   onLoopChange?: (a: number, b: number) => void;
+  /** Removes the A-B loop. Without it a loop made on the waveform could only be dragged, never removed. */
+  onLoopClear?: () => void;
+  /** The editor binds a key to loop / unloop the current line; name it on the clear button. */
+  loopKeyHint?: boolean;
   /** The modifier held while clicking to make a loop: 'Shift' | 'Ctrl' | 'Alt'. */
   loopModifier?: string;
 }
@@ -105,6 +110,8 @@ const WaveformDisplay = ({
   loopA,
   loopB,
   onLoopChange,
+  onLoopClear,
+  loopKeyHint = false,
   loopModifier = 'Shift',
 }: WaveformDisplayProps) => {
   const { t } = useTranslation();
@@ -536,6 +543,27 @@ const WaveformDisplay = ({
                 className="grid size-6 place-items-center rounded-full border border-border bg-card/80 text-muted-foreground opacity-60 backdrop-blur-sm transition-opacity hover:text-foreground hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               >
                 <Icon name="repeat" size={14} />
+              </button>
+            </Tip>
+          </div>
+        )}
+
+        {/* The same corner removes the loop once there is one. */}
+        {isReady && !loopMode && loopA != null && loopB != null && onLoopClear && (
+          <div
+            className="absolute right-1 top-1 z-30"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerEnter={() => setHoverPct(null)}
+            onPointerMove={(e) => e.stopPropagation()}
+          >
+            <Tip content={loopKeyHint ? <ShortcutHint label={t('player.clearLoop')} shortcut="loopLine" fallback="l" /> : t('player.clearLoop')}>
+              <button
+                type="button"
+                onClick={onLoopClear}
+                aria-label={t('player.clearLoop')}
+                className="grid size-6 place-items-center rounded-full border border-violet-400/60 bg-card/90 text-violet-300 backdrop-blur-sm transition-colors hover:bg-violet-500/20 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <Icon name="close" size={14} />
               </button>
             </Tip>
           </div>
