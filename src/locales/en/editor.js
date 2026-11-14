@@ -226,6 +226,7 @@ export default {
     emptyTitle: "Mark the start of the line",
     emptyDesc: "Press <0>{{key}}</0> when the first word begins. The rest will show up here, in time.",
     dragHint: "Drag the edge of a block to adjust where a word starts.",
+    colWord: "Word",
     noRomaji: "No romaji",
     boundaryLabel: "Start of “{{word}}”",
     tooShort: "“{{word}}” lasts {{seconds}} s: too short, or overlapping the next word",
