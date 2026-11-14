@@ -27,6 +27,8 @@ interface EditorToolbarProps {
   onBeforeStartSession?: () => Promise<boolean>;
   /** Takes its own full-width row, with the tour button pinned to the far end. */
   fullRow?: boolean;
+  /** Icons only (labels move to the tooltips and aria-labels): words mode keeps its header on one row. */
+  iconOnly?: boolean;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on
@@ -49,7 +51,9 @@ export default function EditorToolbar({
   collab,
   onBeforeStartSession,
   fullRow,
+  iconOnly = false,
 }: EditorToolbarProps) {
+  const labelClass = iconOnly ? 'sr-only' : 'hidden sm:inline whitespace-nowrap';
   const { t } = useTranslation();
 
   // Offered only where it applies: a furigana button on an English-only project
@@ -108,14 +112,14 @@ export default function EditorToolbar({
             aria-disabled={autoStampDisabled}
             aria-label={isWordsMode ? t('editor.autoStamp.buttonWords') : t('editor.autoStamp.button')}
             onClick={() => { if (!autoStampDisabled) onAutoStamp(); }}
-            className={`h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold border-success/40 bg-success/10 dark:border-success/40 dark:bg-success/10 ${TEAL_TEXT} ${
+            className={`h-9 lg:h-9 coarse:h-11 ${iconOnly ? 'px-2.5 lg:px-2.5' : 'px-3.5 lg:px-3.5'} gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold border-success/40 bg-success/10 dark:border-success/40 dark:bg-success/10 ${TEAL_TEXT} ${
               autoStampDisabled
                 ? 'opacity-50 cursor-not-allowed hover:bg-success/10 dark:hover:bg-success/10'
                 : 'hover:bg-success/20 dark:hover:bg-success/20 hover:border-success/60'
             }`}
           >
             {autoStampRunning ? <LogoLoader size={16} /> : <Icon name={isWordsMode ? 'spellcheck' : 'auto_fix_high'} size={16} />}
-            <span className="hidden sm:inline whitespace-nowrap">
+            <span className={labelClass}>
               {isWordsMode ? t('editor.autoStamp.buttonWords') : t('editor.autoStamp.button')}
             </span>
           </Button>
@@ -127,10 +131,10 @@ export default function EditorToolbar({
             variant="outline"
             aria-label={t('editor.translationBulk.open')}
             onClick={onOpenTranslations}
-            className="ml-2 h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold"
+            className={`ml-2 h-9 lg:h-9 coarse:h-11 ${iconOnly ? 'px-2.5 lg:px-2.5' : 'px-3.5 lg:px-3.5'} gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold`}
           >
             <Icon name="language" size={16} />
-            <span className="hidden sm:inline whitespace-nowrap">{t('editor.translationBulk.open')}</span>
+            <span className={labelClass}>{t('editor.translationBulk.open')}</span>
           </Button>
         </Tip>
       )}
@@ -140,10 +144,10 @@ export default function EditorToolbar({
             variant="outline"
             aria-label={t('editor.furigana.open')}
             onClick={onOpenFurigana}
-            className="ml-2 h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold"
+            className={`ml-2 h-9 lg:h-9 coarse:h-11 ${iconOnly ? 'px-2.5 lg:px-2.5' : 'px-3.5 lg:px-3.5'} gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold`}
           >
             <span lang="ja" aria-hidden="true" className="text-[13px] font-bold leading-none">あ</span>
-            <span className="hidden sm:inline whitespace-nowrap">{t('editor.furigana.open')}</span>
+            <span className={labelClass}>{t('editor.furigana.open')}</span>
           </Button>
         </Tip>
       )}
@@ -153,10 +157,10 @@ export default function EditorToolbar({
             variant="outline"
             aria-label={t('editor.secondaryBulk.open')}
             onClick={onOpenSecondary}
-            className="ml-2 h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold"
+            className={`ml-2 h-9 lg:h-9 coarse:h-11 ${iconOnly ? 'px-2.5 lg:px-2.5' : 'px-3.5 lg:px-3.5'} gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold`}
           >
             <Icon name="translate" size={16} />
-            <span className="hidden sm:inline whitespace-nowrap">{t('editor.secondaryBulk.open')}</span>
+            <span className={labelClass}>{t('editor.secondaryBulk.open')}</span>
           </Button>
         </Tip>
       )}

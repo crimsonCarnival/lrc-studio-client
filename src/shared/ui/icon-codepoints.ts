@@ -171,6 +171,7 @@ export const ICON_CODEPOINTS: Record<string, string> = {
   step: '\u{f6fe}',
   storage: '\u{e1db}',
   style: '\u{e41d}',
+  sweep: '\u{e6ac}',
   switch: '\u{e1f4}',
   sync: '\u{e627}',
   tab: '\u{e8d8}',
