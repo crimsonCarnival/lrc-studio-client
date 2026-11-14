@@ -630,7 +630,7 @@ export default function Editor({
   );
   const publishPrompt = usePublishPrompt(serverProjectId, readiness.complete && !isPublic && !!user && !user.isGuest && canChangeVisibility && !inSession);
   const actionsSlot = useHeaderSlot('actions', !phone);
-  // The header carries the player while the dock is hidden, so its labelled actions go icon-only.
+  // The header carries the player while the dock is hidden.
   const compactHeader = playerSlot === 'editor' && playerHidden && !!hasMedia;
   const exportFormat = editorMode === 'srt' ? 'SRT' : 'LRC';
 
@@ -1604,9 +1604,9 @@ export default function Editor({
       {actionsSlot && createPortal(
         <>
           {canChangeVisibility && !inSession && (
-            // With the player in the header, the labelled actions shrink to their icons; the tooltip carries the label.
-            <Tip content={compactHeader ? t(isPublic && !isListed ? 'project.visibilityChipUnlisted' : isPublic ? 'project.visibilityChipPublic' : 'project.visibilityChipPrivate') : undefined}>
-              <VisibilityChip iconOnly={compactHeader} isPublic={isPublic} isListed={isListed} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
+            // Header actions are icons; the tooltip carries the label.
+            <Tip content={t(isPublic && !isListed ? 'project.visibilityChipUnlisted' : isPublic ? 'project.visibilityChipPublic' : 'project.visibilityChipPrivate')}>
+              <VisibilityChip iconOnly isPublic={isPublic} isListed={isListed} onOpen={() => { publishPrompt.dismiss(); setPublishOpen(true); }} />
             </Tip>
           )}
           {syncMode && lines.length > 0 && (
@@ -1640,28 +1640,28 @@ export default function Editor({
             </Tip>
           )}
           {onShowPreview && (
-            <Tip content={compactHeader ? t('editor.previewAction') : undefined}>
+            <Tip content={t('editor.previewAction')}>
               <Button
                 variant="outline"
                 onClick={onShowPreview}
                 aria-label={t('editor.previewAction')}
-                className={`h-10 lg:h-10 coarse:h-11 gap-2 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground ${compactHeader ? 'w-10 lg:w-10 coarse:w-11 px-0 lg:px-0' : 'px-3.5 lg:px-3.5'}`}
+                className="h-10 lg:h-10 coarse:h-11 w-10 lg:w-10 coarse:w-11 px-0 lg:px-0 rounded-[calc(var(--radius)*1)] border-zinc-800 bg-transparent text-foreground"
               >
                 <Icon name="visibility" size={16} />
-                <span className={compactHeader ? 'sr-only' : 'max-xl:hidden'}>{t('editor.previewAction')}</span>
+                <span className="sr-only">{t('editor.previewAction')}</span>
               </Button>
             </Tip>
           )}
-          <Tip content={compactHeader ? t('editor.exportAs', { format: exportFormat }) : undefined}>
+          <Tip content={t('editor.exportAs', { format: exportFormat })}>
             <Button
               data-tour="editor-export"
               onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
               disabled={lines.length === 0}
               aria-label={t('editor.exportAs', { format: exportFormat })}
-              className={`h-10 lg:h-10 coarse:h-11 gap-2 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950 text-[13px] lg:text-[13px] font-bold ${compactHeader ? 'w-10 lg:w-10 coarse:w-11 px-0 lg:px-0' : 'px-4 lg:px-4'}`}
+              className="h-10 lg:h-10 coarse:h-11 w-10 lg:w-10 coarse:w-11 px-0 lg:px-0 rounded-[calc(var(--radius)*1)] bg-primary hover:bg-primary-dim text-zinc-950"
             >
               <Icon name="download" size={16} />
-              <span className={compactHeader ? 'sr-only' : 'max-sm:hidden'}>{t('editor.exportAs', { format: exportFormat })}</span>
+              <span className="sr-only">{t('editor.exportAs', { format: exportFormat })}</span>
             </Button>
           </Tip>
           <ActionsDropdown icon="more_horiz">
