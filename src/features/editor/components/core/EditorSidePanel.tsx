@@ -5,6 +5,7 @@ import { formatTimestamp } from '@/shared/utils/lrc';
 import { shortcutParts } from '@features/settings/key-symbols';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
+import { formatNameList } from '@features/editor/utils/sections';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
@@ -115,7 +116,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
 const SINGER_BUTTON = 'flex h-9 items-center justify-center px-3 rounded-[calc(var(--radius)*1)] text-sm font-semibold transition-shadow duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus coarse:h-11';
 
 function LineInspector({ lines, activeLineIndex, duration, singers, singerColors, settings, onMoveToSection, onToggleSinger, onNudge }: Pick<EditorSidePanelProps, 'lines' | 'activeLineIndex' | 'duration' | 'singers' | 'singerColors' | 'settings' | 'onMoveToSection' | 'onToggleSinger' | 'onNudge'>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const id = useId();
   const line: EditorLine | undefined = lines[activeLineIndex];
 
@@ -170,7 +171,7 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
             {currentSection === -1 && <SelectItem value="-1">{t('editor.inspector.noSection')}</SelectItem>}
             {sections.map((s) => {
               const meta = s.singers[0]
-                ? t('editor.inspector.sectionMetaWithSinger', { count: s.lineCount, singer: s.singers[0] })
+                ? t('editor.inspector.sectionMetaWithSinger', { count: s.lineCount, singer: formatNameList(s.singers, i18n.language) })
                 : t('editor.inspector.sectionMeta', { count: s.lineCount });
               return (
                 <SelectItem key={s.index} value={String(s.index)}>
