@@ -24,6 +24,13 @@ export default {
   openVisualizer: "Elegir un visualizador",
   toggleFullLyrics: "Activar / desactivar letra completa",
   togglePlayer: "Ocultar / mostrar reproductor",
+  prevLine: "Línea anterior",
+  nextLine: "Línea siguiente",
+  addLine: "Añadir una línea debajo",
+  duplicateLine: "Duplicar la línea",
+  clearTimestamp: "Borrar la marca de la línea",
+  searchLyrics: "Buscar letra",
+  loopLine: "Repetir la línea actual",
   selection: {
     title: "Selección",
     click: "Clic",
@@ -41,6 +48,7 @@ export default {
     view: "Vista del proyecto"
   },
   sections: {
+    lines: "Líneas",
     playback: "Reproducción",
     preview: "Vista previa",
     lyrics: "Letra"

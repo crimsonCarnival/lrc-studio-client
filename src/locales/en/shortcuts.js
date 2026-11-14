@@ -24,6 +24,13 @@ export default {
   openVisualizer: "Choose a visualizer",
   toggleFullLyrics: "Full lyrics on / off",
   togglePlayer: "Hide / show player",
+  prevLine: "Previous line",
+  nextLine: "Next line",
+  addLine: "Add a line below",
+  duplicateLine: "Duplicate the line",
+  clearTimestamp: "Clear the line's timestamp",
+  searchLyrics: "Search lyrics",
+  loopLine: "Loop the current line",
   selection: {
     title: "Selection",
     click: "Click",
@@ -41,6 +48,7 @@ export default {
     view: "Project view"
   },
   sections: {
+    lines: "Lines",
     playback: "Playback",
     preview: "Preview",
     lyrics: "Lyrics"

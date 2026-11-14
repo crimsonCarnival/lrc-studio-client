@@ -83,6 +83,7 @@ const GET_SETTINGS = /* GraphQL */ `
         speedUp speedDown addSecondary addTranslation toggleTranslation
         focusSync focusPreview focusPlayback captureAdLib
         alignLeft alignCenter alignRight toggleVisualizer openVisualizer toggleFullLyrics togglePlayer
+        searchLyrics loopLine prevLine nextLine duplicateLine
       }
       advanced {
         autoSave { enabled timeInterval }

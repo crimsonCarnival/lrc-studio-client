@@ -22,10 +22,16 @@ const SHORTCUTS: ShortcutDef[] = [
   { id: 'mark', group: 'editor', fallback: 'Enter' },
   { id: 'nudgeLeft', group: 'editor', fallback: 'Alt+ArrowLeft' },
   { id: 'nudgeRight', group: 'editor', fallback: 'Alt+ArrowRight' },
+  { id: 'nudgeLeftFine', group: 'editor', fallback: 'Shift+ArrowLeft' },
+  { id: 'nudgeRightFine', group: 'editor', fallback: 'Shift+ArrowRight' },
+  { id: 'prevLine', group: 'editor', fallback: 'ArrowUp' },
+  { id: 'nextLine', group: 'editor', fallback: 'ArrowDown' },
   { id: 'addLine', group: 'editor', fallback: 'Ctrl+Enter' },
+  { id: 'duplicateLine', group: 'editor', fallback: 'Ctrl+D' },
   { id: 'deleteLine', group: 'editor', fallback: 'Delete' },
   { id: 'clearTimestamp', group: 'editor', fallback: 'Backspace' },
   { id: 'captureAdLib', group: 'editor', fallback: 'a' },
+  { id: 'searchLyrics', group: 'editor', fallback: '/' },
   { id: 'switchMode', group: 'editor', fallback: 'Ctrl+M' },
   { id: 'deselect', group: 'editor', fallback: 'Escape' },
   { id: 'showHelp', group: 'editor', fallback: '?' },
@@ -33,6 +39,7 @@ const SHORTCUTS: ShortcutDef[] = [
   { id: 'toggleSelect', group: 'editor', modifier: true, fallback: 'Ctrl' },
   { id: 'playPause', group: 'player', fallback: 'Space' },
   { id: 'loopClick', group: 'player', modifier: true, fallback: 'Shift' },
+  { id: 'loopLine', group: 'player', fallback: 'L' },
   { id: 'seekBackward', group: 'player', fallback: 'ArrowLeft' },
   { id: 'seekForward', group: 'player', fallback: 'ArrowRight' },
   { id: 'mute', group: 'player', fallback: 'm' },
@@ -53,13 +60,21 @@ const SHORTCUTS: ShortcutDef[] = [
 // Shortcuts that share a keystroke are flagged against each other (modifiers are a separate space).
 const COMBO_IDS = SHORTCUTS.filter((s) => !s.modifier).map((s) => s.id);
 
+// Which page each shortcut listens on: two shortcuts only clash when both are live on the same
+// page (the editor's L loops the line, the project view's L shows the full lyrics). Player keys
+// work in both, and so does hiding the player.
+const PAGES_BY_GROUP: Record<GroupId, readonly string[]> = { editor: ['editor'], preview: ['editor'], player: ['editor', 'view'], view: ['view'] };
+const PAGES_BY_ID: Record<string, readonly string[]> = { togglePlayer: ['editor', 'view'], loopLine: ['editor'] };
+const pagesOf = (id: string) => PAGES_BY_ID[id] ?? PAGES_BY_GROUP[SHORTCUTS.find((s) => s.id === id)!.group];
+const sharePage = (a: string, b: string) => pagesOf(a).some((p) => pagesOf(b).includes(p));
+
 const KEY_GLYPHS: Record<string, string> = {
   ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Backspace: '⌫', Escape: 'Esc',
 };
 
 interface ShortcutsSettingsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  settings: { shortcuts?: Record<string, string[] | undefined>; editor?: { nudge?: { default?: number } }; playback?: { seekTime?: number }; [key: string]: any };
+  settings: { shortcuts?: Record<string, string[] | undefined>; editor?: { nudge?: { default?: number; fine?: number } }; playback?: { seekTime?: number }; [key: string]: any };
   updateSetting: (path: string, value: unknown) => void;
   searchTerm?: string;
   validateShortcut: (value: string, key: string) => boolean;
@@ -77,7 +92,8 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
   const nudge = String(settings.editor?.nudge?.default ?? 0.1).replace('.', ',');
   const seek = settings.playback?.seekTime ?? 5;
   // Descriptions interpolate the nudge step, except the player seek ones (the seek interval).
-  const valsFor = (group: GroupId) => ({ val: group === 'player' ? seek : nudge });
+  const fine = String(settings.editor?.nudge?.fine ?? 0.01).replace('.', ',');
+  const valsFor = (group: GroupId) => ({ val: group === 'player' ? seek : nudge, fine });
   const valueOf = (def: ShortcutDef) => settings.shortcuts?.[def.id]?.[0] || def.fallback;
 
   const keyLabel = (part: string) => {
@@ -99,12 +115,14 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
     for (const ids of Object.values(byValue)) {
       if (ids.length < 2) continue;
       for (const id of ids) {
-        out[id] = ids.filter((o) => o !== id).map((o) => tk(`settings.shortcuts.${o}Label`, valsFor(SHORTCUTS.find((x) => x.id === o)!.group))).join(', ');
+        const clashing = ids.filter((o) => o !== id && sharePage(id, o));
+        if (clashing.length === 0) continue;
+        out[id] = clashing.map((o) => tk(`settings.shortcuts.${o}Label`, valsFor(SHORTCUTS.find((x) => x.id === o)!.group))).join(', ');
       }
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.shortcuts, nudge, seek, i18n.language]);
+  }, [settings.shortcuts, nudge, fine, seek, i18n.language]);
 
   const query = (searchTerm || localQuery).trim().toLowerCase();
   const rows = SHORTCUTS.map((def) => {

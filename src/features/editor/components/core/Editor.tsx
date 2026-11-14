@@ -827,6 +827,7 @@ export default function Editor({
   const prevLineKey = settings.shortcuts?.prevLine?.[0] || 'ArrowUp';
   const nextLineKey = settings.shortcuts?.nextLine?.[0] || 'ArrowDown';
   const togglePlayerKey = settings.shortcuts?.togglePlayer?.[0] || 'p';
+  const duplicateKey = settings.shortcuts?.duplicateLine?.[0] || 'Ctrl+D';
   useEffect(() => {
     if (phone) return;
     const onKey = (e: KeyboardEvent) => {
@@ -869,11 +870,18 @@ export default function Editor({
       } else if (state.hasMedia && matchKey(e, togglePlayerKey)) {
         e.preventDefault();
         togglePlayerHidden();
+      } else if (matchKey(e, duplicateKey)) {
+        // Same as the context menu's Duplicate: a copy below, with its own id.
+        const line = state.lines[state.activeLineIndex];
+        if (!line || line.type === 'section') return;
+        e.preventDefault();
+        // useEditor is untyped JS; its lineData parameter is inferred as null.
+        (handleAddLine as (i: number, lineData?: EditorLine | null) => void)(state.activeLineIndex, { ...line, id: crypto.randomUUID() });
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden]);
+  }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, duplicateKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden, handleAddLine]);
 
   const focusLine: EditorLine | undefined = lines[activeLineIndex];
   const focusInfo = useMemo(() => {
