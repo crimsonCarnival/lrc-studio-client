@@ -35,7 +35,7 @@ import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
-import { applySecondaryLines } from '../utils/secondary-lines';
+import { applySecondaryLines, applyTranslationLines } from '../utils/secondary-lines';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
@@ -881,6 +881,18 @@ export function useEditor({
     setLines((prev) => applySecondaryLines(prev, values, opened).lines);
   }, [lines, setLines, setModifiedLines]);
 
+  /** Bulk translations for one language; same contract as handleSetSecondaryLines. */
+  const handleSetTranslationLines = useCallback((values: string[], opened: EditorLine[], language: string) => {
+    const { changed } = applyTranslationLines(lines, values, language, opened);
+    if (!changed.length) return;
+    setModifiedLines(prev => {
+      const s = new Set(prev);
+      changed.forEach((i) => s.add(i));
+      return s;
+    });
+    setLines((prev) => applyTranslationLines(prev, values, language, opened).lines);
+  }, [lines, setLines, setModifiedLines]);
+
   const handleToggleLineMode = useCallback((index: number, next: EditorLine) => {
     setModifiedLines(prev => new Set(prev).add(index));
     setLines((prev) => {
@@ -1457,6 +1469,7 @@ export function useEditor({
     handleClearActiveLineWordTimestamps,
     handleSaveLineText,
     handleSetSecondaryLines,
+    handleSetTranslationLines,
     handleToggleLineMode,
     handleDeleteLine,
     handleToggleCounterpart,

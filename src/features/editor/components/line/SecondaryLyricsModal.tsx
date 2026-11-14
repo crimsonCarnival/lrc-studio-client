@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { Button } from '@ui/button';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
-import { mainLineIndices, secondaryText, splitSecondaryText } from '@/features/editor/utils/secondary-lines';
+import { mainLineIndices, secondaryText, splitSecondaryText, translationLanguages, translationText } from '@/features/editor/utils/secondary-lines';
+import { FloatingCombobox } from '@ui/floating-combobox';
+import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 /** Row height shared by the lyric column and the textarea, so row N and text line N line up. */
@@ -20,19 +22,53 @@ interface SecondaryLyricsModalProps {
    * as it was when the modal opened. The caller matches those back to the current
    * lines, which collaborators may have changed while the modal was open.
    */
-  onApply: (values: string[], opened: EditorLine[]) => void;
+  onApply: (values: string[], opened: EditorLine[], language: string) => void;
+  /**
+   * 'translation' edits one translation language per visit instead of the secondary lyrics:
+   * same pairing by position, plus a language picker (the text reloads when it changes).
+   */
+  kind?: 'secondary' | 'translation';
+}
+
+/** Rendered only in translation mode, so the language list is not fetched for the secondary editor. */
+function LanguagePicker({ value, onChange, used }: { value: string; onChange: (language: string) => void; used: string[] }) {
+  const { t } = useTranslation();
+  const options = useLanguageOptions();
+  const merged = useMemo(() => {
+    const known = new Set(options.map((o) => o.value));
+    return [...used.filter((l) => l && !known.has(l)).map((l) => ({ value: l, label: l })), ...options];
+  }, [options, used]);
+  return (
+    <FloatingCombobox
+      label=""
+      value={value}
+      onChange={onChange}
+      options={merged}
+      strict
+      size="sm"
+      placeholder={t('editor.langPlaceholder')}
+      className="w-44 shrink-0"
+    />
+  );
 }
 
 function caretLineOf(el: HTMLTextAreaElement): number {
   return el.value.slice(0, el.selectionStart).split('\n').length - 1;
 }
 
-export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: SecondaryLyricsModalProps) {
+export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind = 'secondary' }: SecondaryLyricsModalProps) {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState('');
   const [caretLine, setCaretLine] = useState(0);
   const [opened, setOpened] = useState<EditorLine[]>([]);
+  const isTranslation = kind === 'translation';
+  const [language, setLanguage] = useState('');
+  // What the textarea was loaded with, to tell typed text from text the project already had.
+  const [loadedText, setLoadedText] = useState('');
+  // The two editors share everything but their wording.
+  const copy = isTranslation ? 'editor.translationBulk' : 'editor.secondaryBulk';
+  const usedLanguages = useMemo(() => (isTranslation ? translationLanguages(lines) : []), [isTranslation, lines]);
 
   // Opens on what the project already has. A render-time adjustment, as FuriganaModal
   // does, so the previous session's text never paints for a frame.
@@ -40,7 +76,12 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setText(secondaryText(lines));
+      // Opens on the language the project already translates into, if any.
+      const first = isTranslation ? (translationLanguages(lines)[0] ?? '') : '';
+      setLanguage(first);
+      const initial = isTranslation ? translationText(lines, first) : secondaryText(lines);
+      setText(initial);
+      setLoadedText(initial);
       setOpened(mainLineIndices(lines).map((i) => lines[i]));
       setCaretLine(0);
     }
@@ -91,14 +132,36 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
     <ResponsiveModal
       open={open}
       onOpenChange={onOpenChange}
-      title={t('editor.secondaryBulk.title')}
-      description={t('editor.secondaryBulk.description')}
+      title={t(`${copy}.title`)}
+      description={t(`${copy}.description`)}
       dialogProps={{ className: 'sm:max-w-3xl' }}
     >
       <div className="flex flex-col gap-3 py-2">
+        {isTranslation && (
+          <div className="flex flex-wrap items-center gap-2 text-[13px] text-subtle">
+            <span>{t('editor.translationBulk.language')}</span>
+            <LanguagePicker
+              value={language}
+              used={usedLanguages}
+              onChange={(next) => {
+                // Each language has its own text, and only Apply writes it, so switching
+                // reloads from the project. The exception: text typed before a language was
+                // picked, going to a language with nothing yet, is kept rather than wiped.
+                setLanguage(next);
+                const existing = translationText(lines, next);
+                const typed = text !== loadedText;
+                if (typed && !existing.trim()) return;
+                setText(existing);
+                setLoadedText(existing);
+                setCaretLine(0);
+              }}
+            />
+            <span className="text-faint">{t('editor.translationBulk.languageHint')}</span>
+          </div>
+        )}
         <div className="flex items-center text-[11px] font-medium uppercase tracking-[0.08em] text-subtle">
           <span className="w-[45%] shrink-0 pl-3">{t('editor.secondaryBulk.mainColumn')}</span>
-          <span className="pl-3">{t('editor.secondaryBulk.secondaryColumn')}</span>
+          <span className="pl-3">{t(`${copy}.secondaryColumn`)}</span>
           <span className={`ml-auto font-mono tabular-nums normal-case tracking-normal ${overflow ? 'text-love' : ''}`}>
             {t('editor.secondaryBulk.count', { count: filled, total: mainCount })}
           </span>
@@ -149,7 +212,7 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
               wrap="off"
               spellCheck={false}
               placeholder={t('editor.secondaryBulk.placeholder')}
-              aria-label={t('editor.secondaryBulk.secondaryColumn')}
+              aria-label={t(`${copy}.secondaryColumn`)}
               className="relative flex-1 min-w-0 resize-none overflow-hidden whitespace-pre bg-transparent px-3 text-[14px] text-foreground outline-none placeholder:text-faint"
               style={{ lineHeight: `${ROW}px`, paddingTop: PAD, paddingBottom: PAD }}
             />
@@ -175,8 +238,9 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button
-            disabled={overflow > 0}
-            onClick={() => { onApply(splitSecondaryText(text), opened); onOpenChange(false); }}
+            // A translation needs a language: unlabelled ones cannot be told apart later.
+            disabled={overflow > 0 || (isTranslation && !language)}
+            onClick={() => { onApply(splitSecondaryText(text), opened, language); onOpenChange(false); }}
           >
             {t('common.apply')}
           </Button>

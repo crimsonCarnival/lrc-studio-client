@@ -352,6 +352,15 @@ export default {
     discard: "Descartar cambios (Esc)",
   },
   assignSingerHint: "Marca a todos los que cantan esta línea",
+  translationBulk: {
+    open: "Traducciones",
+    tip: "Añade o edita la traducción de todas las líneas a la vez, un idioma cada vez",
+    title: "Traducciones",
+    description: "Una línea por cada línea de la letra, en orden. Una línea en blanco deja esa letra sin traducción en este idioma.",
+    secondaryColumn: "Traducción",
+    language: "Idioma",
+    languageHint: "Al cambiar de idioma se cargan las líneas de ese idioma.",
+  },
   secondaryBulk: {
     open: "Letras secundarias",
     tip: "Añade las letras secundarias (romaji, traducción…) de todas las líneas a la vez",

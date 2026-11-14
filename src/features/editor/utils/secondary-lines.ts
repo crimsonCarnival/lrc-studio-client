@@ -55,3 +55,49 @@ export function applySecondaryLines(
   });
   return { lines: changed.length ? next : lines, changed };
 }
+
+const translationOf = (line: EditorLine, language: string): string =>
+  line.translations?.find((tr) => (tr.language || '') === language)?.text || '';
+
+/** One translation per main line in `language`, newline-separated: what the bulk editor opens on. */
+export function translationText(lines: EditorLine[], language: string): string {
+  return mainLineIndices(lines).map((i) => translationOf(lines[i], language)).join('\n');
+}
+
+/** The languages the project already has translations in, in first-seen order ('' = unlabelled). */
+export function translationLanguages(lines: EditorLine[]): string[] {
+  const seen = new Set<string>();
+  for (const line of lines) for (const tr of line.translations ?? []) if (tr.text?.trim()) seen.add(tr.language || '');
+  return [...seen];
+}
+
+/**
+ * Writes one language's translations onto the main lines, with the same matching rules as
+ * applySecondaryLines (by id against `opened`, untouched values are not written). A line's
+ * translations in other languages are left alone and keep their order.
+ */
+export function applyTranslationLines(
+  lines: EditorLine[],
+  values: string[],
+  language: string,
+  opened: EditorLine[] = mainLineIndices(lines).map((i) => lines[i]),
+): { lines: EditorLine[]; changed: number[] } {
+  const changed: number[] = [];
+  const openedIndexOf = sentIndexResolver(opened);
+  const next = lines.map((line, lineIndex) => {
+    if (line.type === 'section') return line;
+    const n = openedIndexOf(line);
+    if (n === undefined) return line;
+    const value = values[n] || '';
+    if (translationOf(opened[n], language) === value) return line;
+    if (translationOf(line, language) === value) return line;
+    const current = line.translations ?? [];
+    const at = current.findIndex((tr) => (tr.language || '') === language);
+    const translations = value
+      ? (at >= 0 ? current.map((tr, k) => (k === at ? { ...tr, text: value } : tr)) : [...current, { text: value, language }])
+      : current.filter((_, k) => k !== at);
+    changed.push(lineIndex);
+    return { ...line, translations: translations.length ? translations : undefined };
+  });
+  return { lines: changed.length ? next : lines, changed };
+}

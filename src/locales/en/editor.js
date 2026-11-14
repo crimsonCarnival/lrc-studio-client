@@ -349,6 +349,15 @@ export default {
     discard: "Discard changes (Esc)",
   },
   assignSingerHint: "Tick everyone who sings this line",
+  translationBulk: {
+    open: "Translations",
+    tip: "Add or edit a translation for every line at once, one language at a time",
+    title: "Translations",
+    description: "One line per lyric line, in order. A blank line leaves that lyric without a translation in this language.",
+    secondaryColumn: "Translation",
+    language: "Language",
+    languageHint: "Switching language loads that language's lines.",
+  },
   secondaryBulk: {
     open: "Secondary lyrics",
     tip: "Add the secondary lyrics (romaji, translation…) for every line at once",
