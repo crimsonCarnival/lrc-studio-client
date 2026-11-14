@@ -6,6 +6,9 @@ import { Button } from '@ui/button';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { mainLineIndices, secondaryText, splitSecondaryText, translationLanguages, translationText } from '@/features/editor/utils/secondary-lines';
 import { FloatingCombobox } from '@ui/floating-combobox';
+import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
+import { cn } from '@/shared/utils/utils';
 import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import type { EditorLine } from '@/features/editor/editor.types';
 
@@ -24,32 +27,48 @@ interface SecondaryLyricsModalProps {
    */
   onApply: (values: string[], opened: EditorLine[], language: string) => void;
   /**
-   * 'translation' edits one translation language per visit instead of the secondary lyrics:
-   * same pairing by position, plus a language picker (the text reloads when it changes).
+   * 'translation' edits translations instead of the secondary lyrics: same pairing by position,
+   * one tab per language. Apply calls onApply once per language (a removed tab with no values).
    */
   kind?: 'secondary' | 'translation';
 }
 
+const EMPTY_FOCUS = { current: null as HTMLElement | null };
+
 /** Rendered only in translation mode, so the language list is not fetched for the secondary editor. */
-function LanguagePicker({ value, onChange, used }: { value: string; onChange: (language: string) => void; used: string[] }) {
+function LanguagePicker({ onChange, used, exclude }: { onChange: (language: string) => void; used: string[]; exclude: string[] }) {
   const { t } = useTranslation();
   const options = useLanguageOptions();
   const merged = useMemo(() => {
     const known = new Set(options.map((o) => o.value));
-    return [...used.filter((l) => l && !known.has(l)).map((l) => ({ value: l, label: l })), ...options];
-  }, [options, used]);
+    const taken = new Set(exclude);
+    return [...used.filter((l) => l && !known.has(l)).map((l) => ({ value: l, label: l })), ...options]
+      .filter((o) => !taken.has(o.value));
+  }, [options, used, exclude]);
+  // Shown only after "Add language", so taking focus (which opens its list) is what was asked for.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { wrapRef.current?.querySelector('input')?.focus(); }, []);
   return (
+    <div ref={wrapRef} className="w-44 shrink-0">
     <FloatingCombobox
       label=""
-      value={value}
+      value=""
       onChange={onChange}
       options={merged}
       strict
       size="sm"
       placeholder={t('editor.langPlaceholder')}
-      className="w-44 shrink-0"
     />
+    </div>
   );
+}
+
+/** Lines with something on them, ignoring trailing blanks (a paste ending in a newline). */
+function filledLineCount(text: string): number {
+  const rows = text.split('\n');
+  let n = rows.length;
+  while (n > 0 && !rows[n - 1].trim()) n--;
+  return n;
 }
 
 function caretLineOf(el: HTMLTextAreaElement): number {
@@ -59,13 +78,19 @@ function caretLineOf(el: HTMLTextAreaElement): number {
 export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind = 'secondary' }: SecondaryLyricsModalProps) {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [text, setText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const [secondary, setSecondary] = useState('');
   const [caretLine, setCaretLine] = useState(0);
   const [opened, setOpened] = useState<EditorLine[]>([]);
   const isTranslation = kind === 'translation';
-  const [language, setLanguage] = useState('');
-  // What the textarea was loaded with, to tell typed text from text the project already had.
-  const [loadedText, setLoadedText] = useState('');
+  // Translation mode: one tab and one text buffer per language. Switching tabs keeps what was
+  // typed in the others; Apply writes every tab, and clears the languages whose tab was removed.
+  const [langs, setLangs] = useState<string[]>([]);
+  const [texts, setTexts] = useState<Record<string, string>>({});
+  const [removed, setRemoved] = useState<string[]>([]);
+  const [active, setActive] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   // The two editors share everything but their wording.
   const copy = isTranslation ? 'editor.translationBulk' : 'editor.secondaryBulk';
   const usedLanguages = useMemo(() => (isTranslation ? translationLanguages(lines) : []), [isTranslation, lines]);
@@ -76,12 +101,17 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      // Opens on the language the project already translates into, if any.
-      const first = isTranslation ? (translationLanguages(lines)[0] ?? '') : '';
-      setLanguage(first);
-      const initial = isTranslation ? translationText(lines, first) : secondaryText(lines);
-      setText(initial);
-      setLoadedText(initial);
+      if (isTranslation) {
+        // One tab per language the project already translates into.
+        const existing = translationLanguages(lines);
+        setLangs(existing);
+        setTexts(Object.fromEntries(existing.map((l) => [l, translationText(lines, l)])));
+        setRemoved([]);
+        setActive(existing[0] ?? null);
+        setAdding(false);
+      } else {
+        setSecondary(secondaryText(lines));
+      }
       setOpened(mainLineIndices(lines).map((i) => lines[i]));
       setCaretLine(0);
     }
@@ -101,11 +131,49 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
     return out;
   }, [lines]);
 
+  const text = isTranslation ? (active != null ? texts[active] ?? '' : '') : secondary;
+  const setText = (next: string) => {
+    if (!isTranslation) setSecondary(next);
+    else if (active != null) setTexts((prev) => ({ ...prev, [active]: next }));
+  };
   const textLines = text.split('\n');
-  // Trailing blank lines (a paste ending in a newline) say nothing, so they never count as extra.
-  let filled = textLines.length;
-  while (filled > 0 && !textLines[filled - 1].trim()) filled--;
+  const filled = filledLineCount(text);
   const overflow = Math.max(0, filled - mainCount);
+  // Apply waits until no tab has lines past the last lyric line, not only the one in view.
+  const anyOverflow = isTranslation ? langs.some((l) => filledLineCount(texts[l] ?? '') > mainCount) : overflow > 0;
+  const languageName = (l: string) => l || t('editor.translationBulk.unlabelled');
+
+  const addLanguage = (language: string) => {
+    setAdding(false);
+    if (!language) return;
+    if (!langs.includes(language)) {
+      setLangs((prev) => [...prev, language]);
+      // Re-adding a removed language brings back what the project had for it.
+      setTexts((prev) => ({ ...prev, [language]: translationText(lines, language) }));
+      setRemoved((prev) => prev.filter((l) => l !== language));
+    }
+    setActive(language);
+    setCaretLine(0);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  };
+  const removeLanguage = (language: string) => {
+    const at = langs.indexOf(language);
+    const rest = langs.filter((l) => l !== language);
+    setLangs(rest);
+    // Only a language the project has needs clearing on Apply; a tab added this visit just goes.
+    if (translationLanguages(lines).includes(language)) setRemoved((prev) => [...prev, language]);
+    if (active === language) setActive(rest[Math.min(at, rest.length - 1)] ?? null);
+    setCaretLine(0);
+  };
+  const apply = () => {
+    if (isTranslation) {
+      for (const l of langs) onApply(splitSecondaryText(texts[l] ?? ''), opened, l);
+      for (const l of removed) onApply([], opened, l);
+    } else {
+      onApply(splitSecondaryText(secondary), opened, '');
+    }
+    onOpenChange(false);
+  };
   const rowCount = Math.max(mainCount, textLines.length, 1);
 
   // Keep the caret's row in view: the textarea is as tall as its content, so the
@@ -134,29 +202,63 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
       onOpenChange={onOpenChange}
       title={t(`${copy}.title`)}
       description={t(`${copy}.description`)}
-      dialogProps={{ className: 'sm:max-w-3xl' }}
+      dialogProps={{
+        className: 'sm:max-w-3xl',
+        // Radix focuses the first focusable element, which in translation mode was the language
+        // picker: focusing it opens its list. Start where the typing happens instead.
+        onOpenAutoFocus: (e: Event) => {
+          e.preventDefault();
+          (textareaRef.current && !textareaRef.current.disabled ? textareaRef : addButtonRef.current ? addButtonRef : EMPTY_FOCUS).current?.focus();
+        },
+      }}
     >
       <div className="flex flex-col gap-3 py-2">
         {isTranslation && (
-          <div className="flex flex-wrap items-center gap-2 text-[13px] text-subtle">
-            <span>{t('editor.translationBulk.language')}</span>
-            <LanguagePicker
-              value={language}
-              used={usedLanguages}
-              onChange={(next) => {
-                // Each language has its own text, and only Apply writes it, so switching
-                // reloads from the project. The exception: text typed before a language was
-                // picked, going to a language with nothing yet, is kept rather than wiped.
-                setLanguage(next);
-                const existing = translationText(lines, next);
-                const typed = text !== loadedText;
-                if (typed && !existing.trim()) return;
-                setText(existing);
-                setLoadedText(existing);
-                setCaretLine(0);
-              }}
-            />
-            <span className="text-faint">{t('editor.translationBulk.languageHint')}</span>
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-hl pb-2">
+            <div role="tablist" aria-label={t('editor.translationBulk.languages')} className="flex flex-wrap items-center gap-1.5">
+              {langs.map((l) => {
+                const selected = l === active;
+                const over = filledLineCount(texts[l] ?? '') > mainCount;
+                return (
+                  <span
+                    key={l || '_'}
+                    className={cn(
+                      'inline-flex h-9 items-center rounded-lg text-[13px] font-semibold transition-colors',
+                      selected ? 'bg-primary-soft text-primary-ink inset-ring inset-ring-iris' : 'text-subtle hover:bg-raised hover:text-foreground',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => { setActive(l); setCaretLine(0); }}
+                      className="flex h-full items-center gap-1.5 rounded-lg pl-3 pr-1.5 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+                    >
+                      {over && <span aria-hidden className="size-1.5 rounded-full bg-love" />}
+                      {languageName(l)}
+                    </button>
+                    <Tip content={t('editor.translationBulk.removeLanguage', { language: languageName(l) })}>
+                      <button
+                        type="button"
+                        aria-label={t('editor.translationBulk.removeLanguage', { language: languageName(l) })}
+                        onClick={() => removeLanguage(l)}
+                        className="mr-1 grid size-6 place-items-center rounded-md opacity-60 hover:bg-overlay hover:opacity-100 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+                      >
+                        <Icon name="close" size={12} />
+                      </button>
+                    </Tip>
+                  </span>
+                );
+              })}
+            </div>
+            {adding ? (
+              <LanguagePicker onChange={addLanguage} used={usedLanguages} exclude={langs} />
+            ) : (
+              <Button ref={addButtonRef} variant="ghost" size="sm" onClick={() => setAdding(true)} className="gap-1.5 text-subtle hover:text-foreground">
+                <Icon name="add" size={14} />
+                {t('editor.translationBulk.addLanguage')}
+              </Button>
+            )}
           </div>
         )}
         <div className="flex items-center text-[11px] font-medium uppercase tracking-[0.08em] text-subtle">
@@ -205,15 +307,18 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
             </div>
 
             <textarea
+              ref={textareaRef}
               value={text}
+              // No language yet, nowhere for the text to go.
+              disabled={isTranslation && active == null}
               onChange={(e) => { setText(e.target.value); setCaretLine(caretLineOf(e.target)); }}
               onSelect={(e) => setCaretLine(caretLineOf(e.currentTarget))}
               onKeyDown={onKeyDown}
               wrap="off"
               spellCheck={false}
-              placeholder={t('editor.secondaryBulk.placeholder')}
+              placeholder={isTranslation && active == null ? t('editor.translationBulk.empty') : t('editor.secondaryBulk.placeholder')}
               aria-label={t(`${copy}.secondaryColumn`)}
-              className="relative flex-1 min-w-0 resize-none overflow-hidden whitespace-pre bg-transparent px-3 text-[14px] text-foreground outline-none placeholder:text-faint"
+              className="relative flex-1 min-w-0 resize-none overflow-hidden whitespace-pre bg-transparent px-3 text-[14px] text-foreground outline-none placeholder:text-faint disabled:cursor-not-allowed"
               style={{ lineHeight: `${ROW}px`, paddingTop: PAD, paddingBottom: PAD }}
             />
           </div>
@@ -237,11 +342,7 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-          <Button
-            // A translation needs a language: unlabelled ones cannot be told apart later.
-            disabled={overflow > 0 || (isTranslation && !language)}
-            onClick={() => { onApply(splitSecondaryText(text), opened, language); onOpenChange(false); }}
-          >
+          <Button disabled={anyOverflow} onClick={apply}>
             {t('common.apply')}
           </Button>
         </div>
