@@ -13,6 +13,8 @@ import {
 } from '@ui/context-menu';
 import { Icon } from '@/shared/ui/Icon';
 import { Kbd, KbdGroup } from '@ui/kbd';
+import { shortcutParts } from '@features/settings/key-symbols';
+import { useSettings } from '@/features/settings/useSettings';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { toggleSingerOnLines, clearSingersOnLines } from '@features/editor/utils/sections';
 
@@ -20,6 +22,22 @@ import { toggleSingerOnLines, clearSingersOnLines } from '@features/editor/utils
 // and hidden where there is no keyboard.
 const KEYS = 'ml-auto pl-3 coarse:hidden';
 const KEY = 'h-[22px] min-w-[22px] text-[11px] text-subtle';
+
+/**
+ * The key for a menu row, as the viewer has it bound. Mounted only while the menu is open, so the
+ * hundreds of rows that carry this menu do not each re-render on every settings change.
+ */
+function MenuShortcut({ shortcut, fallback, danger = false }: { shortcut: string; fallback: string; danger?: boolean }) {
+  const { settings } = useSettings();
+  const binding: string = settings.shortcuts?.[shortcut]?.[0] || fallback;
+  return (
+    <KbdGroup className={KEYS}>
+      {shortcutParts(binding).map((cap, i) => (
+        <Kbd key={i} className={`${KEY}${danger ? ' text-love-ink' : ''}`}>{cap.trim() || cap}</Kbd>
+      ))}
+    </KbdGroup>
+  );
+}
 import type { EditorLine } from '@/features/editor/editor.types';
 
 interface Props {
@@ -165,7 +183,7 @@ export function EditorLineContextMenu({
           <ContextMenuItem variant="destructive" disabled={deleteDisabled} onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
             {t('editor.selection.removeN', { count: selectedCount})}
-            <KbdGroup className={KEYS}><Kbd className={`${KEY} text-love-ink`}>Del</Kbd></KbdGroup>
+            <MenuShortcut shortcut="deleteLine" fallback="Delete" danger />
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -185,12 +203,12 @@ export function EditorLineContextMenu({
             <ContextMenuItem onClick={() => handleAddLine(lineIndex)}>
               <Icon name="vertical_align_bottom" />
               {t('editor.insertLineBelow')}
-              <KbdGroup className={KEYS}><Kbd className={KEY}>Alt</Kbd><Kbd className={KEY}>N</Kbd></KbdGroup>
+              <MenuShortcut shortcut="addLine" fallback="Ctrl+Enter" />
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, { ...line, id: crypto.randomUUID() })}>
               <Icon name="content_copy" />
               {t('editor.duplicateLine')}
-              <KbdGroup className={KEYS}><Kbd className={KEY}>Ctrl</Kbd><Kbd className={KEY}>D</Kbd></KbdGroup>
+              <MenuShortcut shortcut="duplicateLine" fallback="Ctrl+D" />
             </ContextMenuItem>
           </>
         )}
@@ -235,7 +253,7 @@ export function EditorLineContextMenu({
         <ContextMenuItem variant="destructive" disabled={deleteDisabled} onClick={() => handleDeleteLine(lineIndex)}>
           <Icon name="delete" />
           {t('editor.removeLine')}
-          <KbdGroup className={KEYS}><Kbd className={`${KEY} text-love-ink`}>Del</Kbd></KbdGroup>
+          <MenuShortcut shortcut="deleteLine" fallback="Delete" danger />
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

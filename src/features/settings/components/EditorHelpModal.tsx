@@ -60,6 +60,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
 
   const seekTime = settings.playback?.seekTime ?? 5;
   const nudge = settings.editor?.nudge?.default || 0.1;
+  const fineNudge = settings.editor?.nudge?.fine || 0.01;
 
   const tabContent: Record<string, HelpGroup[]> = {
     player: [
@@ -71,6 +72,8 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         { keys: resolveShortcut(settings.shortcuts?.mute?.[0] || 'm'),                    desc: t('shortcuts.mute') },
         { keys: resolveShortcut(settings.shortcuts?.speedUp?.[0] || '+'),                  desc: t('shortcuts.speedUp') },
         { keys: resolveShortcut(settings.shortcuts?.speedDown?.[0] || '-'),                desc: t('shortcuts.speedDown') },
+        { keys: resolveShortcut(settings.shortcuts?.loopLine?.[0] || 'l'),                 desc: t('shortcuts.loopLine') },
+        { keys: resolveShortcut(settings.shortcuts?.togglePlayer?.[0] || 'p'),             desc: t('shortcuts.togglePlayer') },
       ]},
     ],
     editor: [
@@ -78,7 +81,17 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         { keys: resolveShortcut(settings.shortcuts?.mark?.[0] || 'Enter'),       desc: t('shortcuts.mark') },
         { keys: resolveShortcut(settings.shortcuts?.nudgeLeft?.[0] || 'Alt+ArrowLeft'),  desc: t('shortcuts.nudgeLeft', { val: nudge }) },
         { keys: resolveShortcut(settings.shortcuts?.nudgeRight?.[0] || 'Alt+ArrowRight'), desc: t('shortcuts.nudgeRight', { val: nudge }) },
+        { keys: resolveShortcut(settings.shortcuts?.nudgeLeftFine?.[0] || 'Shift+ArrowLeft'),  desc: t('shortcuts.nudgeLeft', { val: fineNudge }) },
+        { keys: resolveShortcut(settings.shortcuts?.nudgeRightFine?.[0] || 'Shift+ArrowRight'), desc: t('shortcuts.nudgeRight', { val: fineNudge }) },
         { keys: resolveShortcut(settings.shortcuts?.captureAdLib?.[0] || 'a'), desc: t('shortcuts.captureAdLib') },
+      ]},
+      { section: t('shortcuts.sections.lines'), items: [
+        { keys: resolveShortcut(settings.shortcuts?.prevLine?.[0] || 'ArrowUp'),       desc: t('shortcuts.prevLine') },
+        { keys: resolveShortcut(settings.shortcuts?.nextLine?.[0] || 'ArrowDown'),     desc: t('shortcuts.nextLine') },
+        { keys: resolveShortcut(settings.shortcuts?.addLine?.[0] || 'Ctrl+Enter'),     desc: t('shortcuts.addLine') },
+        { keys: resolveShortcut(settings.shortcuts?.duplicateLine?.[0] || 'Ctrl+D'),   desc: t('shortcuts.duplicateLine') },
+        { keys: resolveShortcut(settings.shortcuts?.clearTimestamp?.[0] || 'Backspace'), desc: t('shortcuts.clearTimestamp') },
+        { keys: resolveShortcut(settings.shortcuts?.searchLyrics?.[0] || '/'),         desc: t('shortcuts.searchLyrics') },
       ]},
       { section: t('shortcuts.selection.title'), items: [
         { keys: [...resolveModifier(settings.shortcuts?.rangeSelect?.[0] || 'Shift'), t('shortcuts.selection.click')],  desc: t('shortcuts.selection.rangeSelect') },

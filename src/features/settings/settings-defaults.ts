@@ -123,6 +123,12 @@ export const DEFAULT_SETTINGS = {
     openVisualizer: ['Shift+V'],
     toggleFullLyrics: ['l'],
     togglePlayer: ['p'],
+    // Editor (configurable since the editor UX overhaul; older stored settings fall back to these)
+    searchLyrics: ['/'],
+    loopLine: ['l'],
+    prevLine: ['ArrowUp'],
+    nextLine: ['ArrowDown'],
+    duplicateLine: ['Ctrl+D'],
   },
   advanced: {
     autoSave: { enabled: true, timeInterval: 60 },

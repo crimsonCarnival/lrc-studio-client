@@ -827,6 +827,7 @@ export default function Editor({
   const prevLineKey = settings.shortcuts?.prevLine?.[0] || 'ArrowUp';
   const nextLineKey = settings.shortcuts?.nextLine?.[0] || 'ArrowDown';
   const togglePlayerKey = settings.shortcuts?.togglePlayer?.[0] || 'p';
+  const duplicateKey = settings.shortcuts?.duplicateLine?.[0] || 'Ctrl+D';
   useEffect(() => {
     if (phone) return;
     const onKey = (e: KeyboardEvent) => {
@@ -869,11 +870,18 @@ export default function Editor({
       } else if (state.hasMedia && matchKey(e, togglePlayerKey)) {
         e.preventDefault();
         togglePlayerHidden();
+      } else if (matchKey(e, duplicateKey)) {
+        // Same as the context menu's Duplicate: a copy below, with its own id.
+        const line = state.lines[state.activeLineIndex];
+        if (!line || line.type === 'section') return;
+        e.preventDefault();
+        // useEditor is untyped JS; its lineData parameter is inferred as null.
+        (handleAddLine as (i: number, lineData?: EditorLine | null) => void)(state.activeLineIndex, { ...line, id: crypto.randomUUID() });
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden]);
+  }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, duplicateKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden, handleAddLine]);
 
   const focusLine: EditorLine | undefined = lines[activeLineIndex];
   const focusInfo = useMemo(() => {
@@ -1815,23 +1823,8 @@ export default function Editor({
           </>
         ) : (
           <>
-        {/* Count and what it counts on the left; the mode tabs take the room the progress bar used to. */}
-        {syncProgress ? (
-          <div className="flex items-center gap-3.5 min-w-0 cursor-default">
-            <span className="font-heading text-[22px] font-bold leading-tight tracking-[-0.02em] whitespace-nowrap">
-              {t('editor.syncedCount', { synced: syncProgress.synced, count: syncProgress.total })}
-            </span>
-            <span className="text-[15px] text-subtle truncate">
-              {t('editor.syncedLabel', { count: syncProgress.total })}
-            </span>
-            {editorMode === 'words' && syncProgress.totalWordsInLine > 0 && (
-              <span className="text-xs font-mono tabular-nums text-subtle shrink-0">
-                {syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}
-              </span>
-            )}
-          </div>
-        ) : null}
-        <div data-tour="editor-modes" className="hidden lg:flex flex-1 min-w-0 justify-center">{modeTabs}</div>
+        {/* Sync progress lives in the status bar along the bottom. */}
+        <div data-tour="editor-modes" className="hidden lg:flex flex-1 min-w-0">{modeTabs}</div>
         {lines.length > 0 && (
           <SegmentedControl<'all' | 'unmarked'>
             label={t('editor.filterGroup')}

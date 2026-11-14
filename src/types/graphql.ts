@@ -2112,6 +2112,11 @@ export type ShortcutsSettings = {
   switchMode?: Maybe<Array<Scalars['String']['output']>>;
   toggleFullLyrics?: Maybe<Array<Scalars['String']['output']>>;
   togglePlayer?: Maybe<Array<Scalars['String']['output']>>;
+  searchLyrics?: Maybe<Array<Scalars['String']['output']>>;
+  loopLine?: Maybe<Array<Scalars['String']['output']>>;
+  prevLine?: Maybe<Array<Scalars['String']['output']>>;
+  nextLine?: Maybe<Array<Scalars['String']['output']>>;
+  duplicateLine?: Maybe<Array<Scalars['String']['output']>>;
   toggleSelect?: Maybe<Array<Scalars['String']['output']>>;
   toggleTranslation?: Maybe<Array<Scalars['String']['output']>>;
   openVisualizer?: Maybe<Array<Scalars['String']['output']>>;
@@ -2149,6 +2154,11 @@ export type ShortcutsSettingsInput = {
   switchMode?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleFullLyrics?: InputMaybe<Array<Scalars['String']['input']>>;
   togglePlayer?: InputMaybe<Array<Scalars['String']['input']>>;
+  searchLyrics?: InputMaybe<Array<Scalars['String']['input']>>;
+  loopLine?: InputMaybe<Array<Scalars['String']['input']>>;
+  prevLine?: InputMaybe<Array<Scalars['String']['input']>>;
+  nextLine?: InputMaybe<Array<Scalars['String']['input']>>;
+  duplicateLine?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleSelect?: InputMaybe<Array<Scalars['String']['input']>>;
   toggleTranslation?: InputMaybe<Array<Scalars['String']['input']>>;
   openVisualizer?: InputMaybe<Array<Scalars['String']['input']>>;
