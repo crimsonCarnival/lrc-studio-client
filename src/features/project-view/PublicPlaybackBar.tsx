@@ -114,7 +114,7 @@ export default function PublicPlaybackBar({
     source, isPlaying, currentTime, duration, playbackSpeed, hasMedia, isSeeking,
     loopA, loopB, local, yt, audioRef,
     MIN_SPEED, MAX_SPEED, speedPresets,
-    togglePlay, seek, applySpeed, handleLoopChange,
+    togglePlay, seek, applySpeed, handleLoopChange, clearLoop,
   } = usePlayer();
 
   // Phones get the compact section string instead of the waveform or the segmented bar.
@@ -252,6 +252,7 @@ export default function PublicPlaybackBar({
             loopA={loopA}
             loopB={loopB}
             onLoopChange={handleLoopChange}
+            onLoopClear={clearLoop}
           />
         </Suspense>
       )}
