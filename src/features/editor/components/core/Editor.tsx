@@ -1068,7 +1068,9 @@ export default function Editor({
   const playerDock = playerDocked ? (
     <div
       data-tour="player-controls"
-      className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
+      className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${wordsFocus
+        ? (playerPosition === 'top' ? 'border-b pt-1 pb-1.5' : 'border-t pt-2 pb-1.5')
+        : playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
         }`}
     >
       {hasMedia && (
@@ -1087,7 +1089,7 @@ export default function Editor({
       {wordsFocus ? (
         // The stamp button sits right of the player at a fixed size, so it never moves.
         <div className="flex items-center gap-4">
-          <div className="min-w-0 flex-1"><PlayerControls variant="editor" /></div>
+          <div className="min-w-0 flex-1"><PlayerControls variant="editor" compact /></div>
           {tapPad}
         </div>
       ) : (
@@ -1115,7 +1117,7 @@ export default function Editor({
             : markUsed
               ? null
               : withKey(t(editorMode === 'srt' ? 'editor.markInstructionSRT' : editorMode === 'words' ? 'editor.markInstructionWords' : 'editor.markInstruction'));
-        return hint ? <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">{hint}</p> : null;
+        return hint && !wordsFocus ? <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">{hint}</p> : null;
       })()}
     </div>
   ) : null;
@@ -1959,12 +1961,12 @@ export default function Editor({
       {wordsFocus && <WordsLineNav lines={lines} activeLineIndex={activeLineIndex} onSelect={setActiveLineIndex} />}
       <section aria-label={t('editor.lineList')} className="flex flex-col flex-1 min-w-0 min-h-0">
       {/* List header: sync progress on the left, mode switch + Auto Stamp on the right */}
-      <div className={`flex flex-wrap items-center gap-3 ${wordsFocus ? 'px-5 sm:px-8 pt-7 pb-2' : 'px-4 sm:px-6 py-4 border-b border-zinc-800'}`}>
+      <div className={`flex flex-wrap items-center gap-3 ${wordsFocus ? 'px-5 sm:px-8 pt-4 pb-0' : 'px-4 sm:px-6 py-4 border-b border-zinc-800'}`}>
         <div className="lg:hidden w-full flex">{modeTabs}</div>
         {wordsFocus ? (
           <>
             <div data-tour="editor-modes" className="hidden lg:flex shrink-0">{modeTabs}</div>
-            <div className="flex flex-col gap-1 flex-[1_1_220px] min-w-0">
+            <div className="flex flex-col gap-1 flex-[1_1_150px] min-w-0">
               <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
                 {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
                 {focusInfo.sectionLabel && ` · ${formatSectionLabel(focusInfo.sectionLabel, t)}`}
@@ -2051,10 +2053,11 @@ export default function Editor({
           onBeforeStartSession={handleManualSave ?? undefined}
           // The word and character counts that sat here are in the status bar now.
           fullRow={!wordsFocus}
+          iconOnly={wordsFocus}
         />
       </div>
 
-      <div className={`flex flex-col min-h-0 min-w-0 flex-1 ${wordsFocus ? 'px-5 sm:px-8 pt-3 pb-4' : 'px-3 sm:px-4 pt-3'}`}>
+      <div className={`flex flex-col min-h-0 min-w-0 flex-1 ${wordsFocus ? 'px-5 sm:px-8 pt-3 pb-3' : 'px-3 sm:px-4 pt-3'}`}>
 
         {/* Sync Mode View */}
         <div data-tour="editor-lines" className="relative flex flex-col min-h-0 flex-1">
@@ -2163,10 +2166,12 @@ export default function Editor({
                   { key: 'K', label: t('editor.words.hintEnd') },
                   { key: keyCap(settings.shortcuts?.playPause?.[0] || 'Space'), label: t('editor.shortcutHints.play') },
                 ].map((hint) => (
-                  <span key={hint.label} className="inline-flex items-center gap-1.5">
-                    <Kbd>{hint.key}</Kbd>
-                    {hint.label}
-                  </span>
+                  <Tip key={hint.label} content={hint.label}>
+                    <span className="inline-flex shrink-0 items-center gap-1.5">
+                      <Kbd>{hint.key}</Kbd>
+                      <span className="max-2xl:hidden">{hint.label}</span>
+                    </span>
+                  </Tip>
                 ))}
                 footerEnd={(
                   <>

@@ -80,6 +80,19 @@ describe('WordTimeline', () => {
   });
 });
 
+describe('WordTimeline zoom', () => {
+  it('gets a scrollbar once zoomed in, so every part of the line stays reachable', () => {
+    renderTimeline();
+    expect(screen.queryByRole('scrollbar')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'editor.words.zoomIn' }));
+    const bar = screen.getByRole('scrollbar');
+    fireEvent.keyDown(bar, { key: 'End' });
+    expect(bar.getAttribute('aria-valuenow')).toBe('100');
+    fireEvent.keyDown(bar, { key: 'Home' });
+    expect(bar.getAttribute('aria-valuenow')).toBe('0');
+  });
+});
+
 describe('WordsLineNav', () => {
   Element.prototype.scrollIntoView ??= () => {};
   it('shows the furigana of a line that has readings', () => {

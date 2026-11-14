@@ -231,6 +231,10 @@ export function WordTimeline({
   const format = settings.editor?.display?.readingFormat;
   const trackRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // The scrollbar track under the rows when zoomed in.
+  const hScrollRef = useRef<HTMLDivElement>(null);
+  // Dragging the ruler pans the view: where the drag started and the view at that moment.
+  const panRef = useRef<{ x: number; scroll: number } | null>(null);
   // Which edge is being dragged. The time is written to the line on every move; the undo history
   // groups changes that arrive in quick succession, so a drag is still one step back.
   const [drag, setDrag] = useState<{ index: number; edge: 'start' | 'end' } | null>(null);
@@ -371,12 +375,59 @@ export function WordTimeline({
     if (edge === 'start') nudgeStart(index, delta); else nudgeEnd(index, delta);
   };
 
+  // How far (0–1 of the scroll range) a horizontal move of `px` pixels takes the view.
+  const scrollPerPx = () => {
+    const width = trackRef.current?.getBoundingClientRect().width ?? 0;
+    return width > 0 && zoom > 1 ? 1 / (width - width / zoom) : 0;
+  };
+  const panBy = (px: number) => setScroll((s) => Math.min(1, Math.max(0, s + px * scrollPerPx())));
+  // Over the rows a sideways wheel (or Shift+wheel) pans; over the ruler, which has nothing to
+  // scroll up or down, any wheel does.
   const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
     if (zoom === 1) return;
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
-    if (!delta) return;
-    const width = trackRef.current?.getBoundingClientRect().width ?? 1;
-    setScroll((s) => Math.min(1, Math.max(0, s + delta / (width - width / zoom))));
+    if (delta) panBy(delta);
+  };
+  const handleRulerWheel = (e: WheelEvent<HTMLDivElement>) => {
+    if (zoom === 1) return;
+    panBy(Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
+  };
+  const handleRulerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (zoom === 1 || e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    panRef.current = { x: e.clientX, scroll };
+  };
+  const handleRulerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const pan = panRef.current;
+    if (!pan || !e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    const dx = e.clientX - pan.x;
+    setScroll(Math.min(1, Math.max(0, pan.scroll - dx * scrollPerPx())));
+  };
+  const handleRulerUp = () => { panRef.current = null; };
+  // The scrollbar: always drawn (overlay scrollbars hide until used, which reads as "stuck").
+  // Pressing the track centres the thumb there; dragging it pans; arrows and Home/End step.
+  const scrollFromTrack = (clientX: number) => {
+    const rect = hScrollRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return;
+    const thumb = rect.width / zoom;
+    setScroll(Math.min(1, Math.max(0, (clientX - rect.left - thumb / 2) / (rect.width - thumb))));
+  };
+  const handleTrackDown = (e: PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    scrollFromTrack(e.clientX);
+  };
+  const handleTrackMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) scrollFromTrack(e.clientX);
+  };
+  const handleTrackKey = (e: KeyboardEvent) => {
+    const page = 1 / (zoom - 1);
+    const next = e.key === 'ArrowLeft' ? scroll - page / 4 : e.key === 'ArrowRight' ? scroll + page / 4
+      : e.key === 'PageUp' ? scroll - page : e.key === 'PageDown' ? scroll + page
+        : e.key === 'Home' ? 0 : e.key === 'End' ? 1 : null;
+    if (next == null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setScroll(Math.min(1, Math.max(0, next)));
   };
   const changeZoom = (dir: 1 | -1) => {
     const k = ZOOMS.indexOf(zoom) + dir;
@@ -422,7 +473,14 @@ export function WordTimeline({
             <span className={CAPTION}>{t('editor.words.colWord')}</span>
             <span className={CAPTION}>{t('editor.inspector.start')}</span>
           </div>
-          <div className="relative min-w-0 flex-1 overflow-hidden" onWheel={handleWheel}>
+          <div
+            className={`relative min-w-0 flex-1 overflow-hidden ${zoom > 1 ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            onWheel={handleRulerWheel}
+            onPointerDown={handleRulerDown}
+            onPointerMove={handleRulerMove}
+            onPointerUp={handleRulerUp}
+            onPointerCancel={handleRulerUp}
+          >
             <div ref={trackRef} className="relative h-full touch-none select-none" style={stripStyle}>
               <div aria-hidden className="absolute inset-0 font-mono text-[10px] text-subtle">
                 {ticks.map((tick, k) => (
@@ -478,7 +536,7 @@ export function WordTimeline({
                 <ContextMenuTrigger asChild>
                   <div
                     ref={(el) => { rowRefs.current[i] = el; }}
-                    className={`group/row relative flex flex-1 border-b border-hl/40 last:border-b-0 ${compact ? 'min-h-[26px] max-h-14' : 'min-h-[44px] max-h-20'} ${highlight ? 'bg-foam/[0.06]' : ''}`}
+                    className={`group/row relative flex flex-1 border-b border-hl/40 last:border-b-0 ${compact ? 'min-h-[26px] max-h-14' : 'min-h-[34px] max-h-20'} ${highlight ? 'bg-foam/[0.06]' : ''}`}
                   >
                     {/* The word: what the old chip was. */}
                     <div className="relative flex w-[var(--label-w)] shrink-0 items-center gap-1 border-r border-hl/60 pl-3 pr-1">
@@ -636,11 +694,39 @@ export function WordTimeline({
             );
           })}
         </div>
+
+        {/* Zoomed in, a scrollbar under the rows: the view can always be dragged back. */}
+        {zoom > 1 && (
+          <div className="flex h-5 shrink-0 items-center border-t border-hl/40">
+            <div className="h-full w-[var(--label-w)] shrink-0 border-r border-hl/60" />
+            <div className="min-w-0 flex-1 px-1">
+              <div
+                ref={hScrollRef}
+                role="scrollbar"
+                tabIndex={0}
+                aria-label={t('editor.words.scroll')}
+                aria-orientation="horizontal"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(scroll * 100)}
+                onPointerDown={handleTrackDown}
+                onPointerMove={handleTrackMove}
+                onKeyDown={handleTrackKey}
+                className="group relative h-2.5 cursor-pointer touch-none rounded-pill bg-hl/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+              >
+                <span
+                  className="absolute inset-y-0 rounded-pill bg-faint transition-colors group-hover:bg-subtle"
+                  style={{ width: `${100 / zoom}%`, left: `${scroll * (100 - 100 / zoom)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer: shortcuts on the left; snapping, syllables, zoom and the line's own controls on the right. */}
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-t border-hl/60 px-3 py-2 text-xs text-subtle">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3.5 gap-y-1.5">
+      <div className="flex shrink-0 items-center gap-x-4 border-t border-hl/60 px-3 py-1.5 text-xs text-subtle">
+        <div className="flex min-w-0 flex-1 items-center gap-x-3.5 overflow-hidden whitespace-nowrap">
           {hints}
           {tooShortCount > 0 && (
             <span className="inline-flex items-center gap-1 text-gold">
@@ -649,7 +735,7 @@ export function WordTimeline({
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           <Tip content={t('editor.words.syllablesTip')}>
             <label className="inline-flex items-center gap-1.5 text-foreground/80">
               <input
@@ -685,17 +771,6 @@ export function WordTimeline({
           <button type="button" aria-label={t('editor.words.zoomIn')} disabled={zoom === ZOOMS[ZOOMS.length - 1]} onClick={() => changeZoom(1)} className={toolButton}>
             <Icon name="zoom_in" size={16} />
           </button>
-          {zoom > 1 && (
-            <input
-              type="range"
-              min={0}
-              max={1000}
-              value={Math.round(scroll * 1000)}
-              onChange={(e) => setScroll(Number(e.target.value) / 1000)}
-              aria-label={t('editor.words.scroll')}
-              className="w-24 accent-[var(--foam)]"
-            />
-          )}
           {footerEnd}
         </div>
       </div>

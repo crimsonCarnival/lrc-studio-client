@@ -26,7 +26,7 @@ function ContextMenuContent({
       <ContextMenuPrimitive.Content
         data-slot="context-menu-content"
         className={cn(
-          "z-popover min-w-[200px] max-w-[280px] overflow-hidden rounded-[calc(var(--radius)*1.4)] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
+          "z-popover min-w-[200px] max-w-[280px] max-h-[var(--radix-context-menu-content-available-height)] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[calc(var(--radius)*1.4)] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
@@ -146,7 +146,7 @@ function ContextMenuSubContent({
         sideOffset={sideOffset}
         alignOffset={alignOffset}
         className={cn(
-          "z-popover min-w-[180px] max-w-[260px] overflow-hidden rounded-[calc(var(--radius)*1.4)] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
+          "z-popover min-w-[180px] max-w-[260px] max-h-[var(--radix-context-menu-content-available-height)] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[calc(var(--radius)*1.4)] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           className

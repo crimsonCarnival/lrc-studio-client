@@ -163,7 +163,12 @@ function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: Audi
   );
 }
 
-export default function PlayerControls({ variant }: { variant: 'editor' | 'header' | 'mobile' }) {
+/**
+ * `compact` (editor only): words mode, whose timeline already draws the line's waveform and
+ * playhead. The song's waveform stays mounted (it decodes the peaks that timeline draws) but
+ * folds away, and a thin scrubber stands in for it, so the words get the height.
+ */
+export default function PlayerControls({ variant, compact = false }: { variant: 'editor' | 'header' | 'mobile'; compact?: boolean }) {
   const {
     source, isPlaying, isSeeking, currentTime, duration, playbackSpeed,
     hasMedia, loopA, loopB, mediaTitle, songName,
@@ -440,11 +445,11 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
       <div className="w-full flex flex-col items-center min-w-0 z-10">
         {(() => {
           const canShowWaveform = Boolean(source === 'local' && local.localUrl);
-          const isShowingWaveform = Boolean(settings.playback?.showWaveform && canShowWaveform);
+          const isShowingWaveform = Boolean(settings.playback?.showWaveform && canShowWaveform) && !compact;
           return (
             <>
               {canShowWaveform && (
-                <div className="animate-fade-in w-full">
+                <div className={compact ? 'h-0 w-full overflow-hidden' : 'animate-fade-in w-full'} aria-hidden={compact || undefined}>
                   <Suspense fallback={null}>
                     <WaveformDisplay
                       showWaveform={settings.playback?.showWaveform}
