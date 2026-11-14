@@ -7,7 +7,7 @@ import ActionDrawer from '@/shared/ui/ActionDrawer';
 import { Icon } from '@/shared/ui/Icon';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { LazyImage } from '@ui/LazyImage';
-import { LogoMark } from '@/shared/ui/LogoMark';
+import { LogoLockup } from '@/shared/ui/LogoMark';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import ThemeModal from '@/features/settings/components/theme/ThemeModal';
 import type { AuthUser } from '@/features/auth/auth.types';
@@ -126,10 +126,7 @@ export function AppDrawer({
       />
       <ActionDrawer isOpen={open} onClose={() => requestClose()} title={t('nav.menu')} side="left">
         <div className="space-y-4 pb-2">
-          <div className="flex items-center gap-2.5 px-3">
-            <LogoMark decorative className="size-8 shrink-0" />
-            <span className="truncate text-base font-bold text-foreground">{t('app.name')}</span>
-          </div>
+          <LogoLockup className="flex px-3 text-base text-foreground" markClassName="size-8" />
           {user ? (
             <div className="flex items-center gap-3 px-3 py-2">
               <StaffRing role={user.staffRole} outset={3.5}>

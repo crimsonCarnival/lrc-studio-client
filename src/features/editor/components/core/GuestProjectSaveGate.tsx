@@ -9,7 +9,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { getPendingProject, clearPendingProject } from '@/features/editor/services/guest-project-db';
 import { projectsService } from '@/features/projects/services/projects.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
-import { LogoLoader } from '@ui/LogoLoader';
+import { DragonflyLoader } from '@ui/DragonflyLoader';
 import { projectEditPath } from '@/features/projects/project-path';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
@@ -153,7 +153,7 @@ export default function GuestProjectSaveGate() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-sm gap-4">
-      <LogoLoader size={40} className="text-primary" />
+      <DragonflyLoader variant="wander" size={36} />
       <p className="text-base font-medium text-zinc-200">{t('editor.savingProject')}</p>
       {displayAttempt > 0 && (
         <p className="text-sm text-zinc-500">

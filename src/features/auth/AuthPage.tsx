@@ -8,7 +8,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
-import { LogoMark } from '@/shared/ui/LogoMark';
+import { LogoLockup } from '@/shared/ui/LogoMark';
 import LoginIdentifierStep from './LoginIdentifierStep';
 import LoginPasswordStep from './LoginPasswordStep';
 import SavedAccountStep from './SavedAccountStep';
@@ -511,10 +511,9 @@ export default function AuthPage() {
             swap sides underneath them. */}
         <Link
           to="/"
-          className="absolute top-9 left-6 sm:left-10 lg:left-16 z-raised flex items-center gap-2.5 text-[17px] font-bold tracking-tight text-zinc-100 hover:opacity-80 transition-opacity"
+          className="absolute top-9 left-6 sm:left-10 lg:left-16 z-raised flex text-[17px] text-zinc-100 hover:opacity-80 transition-opacity"
         >
-          <LogoMark className="size-7" decorative />
-          {t('app.name')}
+          <LogoLockup />
         </Link>
         <div className="absolute top-8 right-6 sm:right-10 lg:right-16 z-raised">
           <LangSwitcher i18n={i18n} />

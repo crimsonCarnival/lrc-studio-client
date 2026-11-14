@@ -5,7 +5,7 @@ import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { Icon } from '@/shared/ui/Icon';
 import { LangSwitcher } from '@/features/auth/auth-shared';
-import { LogoMark } from '@/shared/ui/LogoMark';
+import { LogoLockup } from '@/shared/ui/LogoMark';
 import SmoothWavyCanvas from './SmoothWavyCanvas';
 import LandingDemo from './LandingDemo';
 import LandingTapDemo from './LandingTapDemo';
@@ -67,10 +67,9 @@ export default function GuestLanding() {
           <button
             type="button"
             onClick={() => scrollTo()}
-            className="min-h-11 lg:min-h-0 flex items-center gap-2.5 text-[17px] font-bold tracking-tight hover:opacity-80 transition-opacity"
+            className="min-h-11 lg:min-h-0 flex items-center text-[17px] hover:opacity-80 transition-opacity"
           >
-            <LogoMark className="size-7" decorative />
-            {t('app.name')}
+            <LogoLockup />
           </button>
           <div className="hidden sm:flex gap-5 flex-1 text-[15px]">
             {NAV_LINKS.map(({ id, labelKey }) => (

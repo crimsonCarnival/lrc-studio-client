@@ -27,7 +27,8 @@ import type { CollabStatus } from '@features/collab/collab.types';
 import { usePresenceView } from '@features/collab/collab-presence-context';
 import { Button } from '@ui/button';
 import { artistDisplay, artistRoster, type ArtistCredit } from '@features/artists/artist-credits';
-import { LogoLoader } from '@ui/LogoLoader';
+import { DragonflyLoader } from '@ui/DragonflyLoader';
+import { ROUTE_LOADER_SIZE } from '@ui/AppLoadingScreen';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
 const PreviewLazy = lazy(() => import('@features/preview/components/Preview'));
@@ -87,9 +88,18 @@ type RouterLayoutState = Record<string, any>;
 // even when nothing about singers had changed.
 const EMPTY_STRING_ARRAY: readonly string[] = [];
 
+/** A lazy route's chunk is loading: the same hovering dragonfly the app gate just showed. */
+function RouteFallback() {
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <DragonflyLoader variant="hover" size={ROUTE_LOADER_SIZE} />
+    </div>
+  );
+}
+
 function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuthContext();
-  if (loading) return <div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>;
+  if (loading) return <RouteFallback />;
   if (!user) return <Navigate to="/auth/signin" replace />;
   // Any staff member (holds at least one permission) may reach the dashboard;
   // individual tabs/actions are gated by their specific permission.
@@ -298,7 +308,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-      <LogoLoader size={40} className="text-primary" />
+      <DragonflyLoader variant="wander" size={36} />
       <p className="text-sm font-medium animate-pulse">
         {t('project.cloning')}
       </p>
@@ -681,12 +691,12 @@ export function AppRouter({
         </SessionWorkspace>
       } />
       <Route path="join/:token" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <JoinSessionPage />
         </Suspense>
       } />
       <Route path="home" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <HomePage />
         </Suspense>
       } />
@@ -701,91 +711,91 @@ export function AppRouter({
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} studioProps={studioProps} />
       } />
       <Route path=":accountName/projects/:slugId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <ProjectViewPage />
         </Suspense>
       } />
       {/* Profiles and playlists live at the site root: /:accountName, /:accountName/lists and /:accountName/lists/:listId.
           Static routes above outrank :accountName, so every top-level route must be a reserved account name. */}
       <Route path=":accountName/lists" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <AllListsPage />
         </Suspense>
       } />
       <Route path=":accountName/lists/:listId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <ListPage />
         </Suspense>
       } />
       <Route path=":accountName" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <ProfilePage />
         </Suspense>
       } />
       <Route path=":accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
       <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
       <Route path="settings/:tab?" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <SettingsPage />
         </Suspense>
       } />
       <Route index element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <GuestLanding />
         </Suspense>
       } />
       <Route path="verify-email" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <VerifyEmailPage />
         </Suspense>
       } />
       <Route path="feed" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <FeedPage />
         </Suspense>
       } />
       <Route path="search" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <SearchPage />
         </Suspense>
       } />
       <Route path="explore" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <ExplorePage />
         </Suspense>
       } />
       <Route path="explore/projects" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <ExploreProjectsPage />
         </Suspense>
       } />
       <Route path="explore/playlists" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <ExplorePlaylistsPage />
         </Suspense>
       } />
       <Route path="leaderboard" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <LeaderboardPage />
         </Suspense>
       } />
       <Route path="notifications" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <NotificationsPage />
         </Suspense>
       } />
       <Route path="reports" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <MyReportsPage />
         </Suspense>
       } />
       <Route path="sessions" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <SessionsPage />
         </Suspense>
       } />
       <Route path="guide" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+        <Suspense fallback={<RouteFallback />}>
           <GuidePage />
         </Suspense>
       } />
