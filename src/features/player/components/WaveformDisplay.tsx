@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { getPeaksEntry, setPeaksEntry } from '@/features/player/waveform-peaks';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
@@ -89,7 +90,6 @@ const LOOP_CREATION_IDLE_MS = 10000;
 
 // The last decoded file's peaks. One entry is enough: only one file plays at a time, and a
 // blob URL is never reused for another file.
-let peaksCache: { url: string; peaks: Array<Float32Array | number[]>; duration: number } | null = null;
 
 /**
  *Enhanced Waveform display with:
@@ -326,10 +326,11 @@ const WaveformDisplay = ({
     // Crossing the layout breakpoint moves the player to another slot, which remounts this
     // component. The peaks of the file already decoded are reused so it draws at once instead of
     // fetching and decoding the whole file again behind the loader.
-    const cached = peaksCache?.url === localUrl ? peaksCache : null;
+    const entry = getPeaksEntry();
+    const cached = entry?.url === localUrl ? entry : null;
 
     const offReady = ws.on('ready', () => {
-      if (!cached) peaksCache = { url: localUrl, peaks: ws.exportPeaks(), duration: ws.getDuration() };
+      if (!cached) setPeaksEntry({ url: localUrl, peaks: ws.exportPeaks(), duration: ws.getDuration() });
       setIsReady(true);
       if (audioRef.current) ws.setTime(audioRef.current.currentTime);
     });

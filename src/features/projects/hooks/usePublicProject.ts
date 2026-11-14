@@ -18,8 +18,8 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
             singers
             mode
             adLibOf
-            words { word time reading singerIndex }
-            secondaryWords { word time singerIndex }
+            words { word time end reading singerIndex }
+            secondaryWords { word time end singerIndex }
           }
         }
       }

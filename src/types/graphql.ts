@@ -2588,6 +2588,7 @@ export type WallReportGroup = {
 };
 
 export type Word = {
+  end?: Maybe<Scalars['Float']['output']>;
   reading?: Maybe<Scalars['String']['output']>;
   singerIndex?: Maybe<Scalars['Int']['output']>;
   time?: Maybe<Scalars['Float']['output']>;
@@ -2595,6 +2596,7 @@ export type Word = {
 };
 
 export type WordInput = {
+  end?: InputMaybe<Scalars['Float']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
   reading?: InputMaybe<Scalars['String']['input']>;
   singerIndex?: InputMaybe<Scalars['Int']['input']>;

@@ -1,22 +1,101 @@
 import { EmptyState } from '@ui/EmptyState';
 import { Kbd } from '@ui/kbd';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import type { PointerEvent } from 'react';
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent, PointerEvent, ReactNode, WheelEvent } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
-import type { EditorLine } from '@/features/editor/editor.types';
+import { needsSpaceAfter, rubyFitStyle, rubyRatioClass, splitOkurigana, toHiragana, toKatakana } from '@/shared/utils/furigana';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import { useRemoteActiveLines } from '@/features/collab/collab-presence-context';
 import { collabColor } from '@/features/collab/collab-color';
+import { useSettings } from '@/features/settings/useSettings';
+import { getCachedPeaks, PEAKS_EVENT } from '@/features/player/waveform-peaks';
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@ui/context-menu';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
+import { MIN_WORD_GAP, TOO_SHORT, layoutWords, snapTime, splitMorae, wordKana } from '@/features/editor/utils/word-timing';
+import type { SnapMode } from '@/features/editor/utils/word-timing';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
-/** Smallest gap kept between two neighbouring word starts while dragging. */
-const MIN_WORD_GAP = 0.02;
-/** A timed word shorter than this (seconds) is flagged: nobody sings a word in under 80 ms. */
-const TOO_SHORT = 0.08;
-/** Spacing of the ruler ticks drawn along the bottom of each word block (seconds). */
+/** Spacing of the ruler ticks (seconds). */
 const RULER_TICK = 0.1;
+/** Zoom steps of the time axis: 1 shows the whole line. */
+const ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
+/** How close (px) a dragged edge has to come to something before it snaps there. */
+const SNAP_PX = 8;
+/** Bars drawn for the waveform behind the rows. */
+const WAVE_BINS = 240;
+
+/**
+ * Opens the context menu whose trigger is `target`, anchored under `anchor`: the ⋮ buttons
+ * give the right-click menus a way in from a click or the keyboard.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function openContextMenuAt(target: HTMLElement | null, anchor: HTMLElement) {
+  if (!target) return;
+  const r = anchor.getBoundingClientRect();
+  target.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: r.left, clientY: r.bottom }));
+}
+
+/** A word with its reading over the kanji only (the okurigana stays outside the ruby). */
+export function WordRuby({ word, reading, format }: { word: string; reading?: string | null; format?: string }) {
+  if (!reading) return <>{word}</>;
+  const { lead, kanji, tail } = splitOkurigana(word);
+  if (!kanji) return <>{word}</>;
+  const shown = format === 'katakana' ? toKatakana(reading) : toHiragana(reading);
+  return (
+    <>
+      {lead}
+      <ruby className={rubyRatioClass(kanji, reading)} style={rubyFitStyle(kanji, reading)}>
+        {kanji}
+        <rt>{shown}</rt>
+      </ruby>
+      {tail}
+    </>
+  );
+}
+
+/** A line's words with their readings, spaced the way the line is written. */
+function RubyLine({ words, format }: { words: EditorWord[]; format?: string }) {
+  return (
+    <>
+      {words.map((w, k) => (
+        <Fragment key={k}>
+          <WordRuby word={w.word ?? ''} reading={w.reading} format={format} />
+          {needsSpaceAfter(w.word, words[k + 1]?.word) ? ' ' : ''}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+/** Timed words that last less than TOO_SHORT, by their own end or the next word's start. */
+function countTooShort(words: EditorWord[] | undefined): number {
+  if (!words) return 0;
+  let n = 0;
+  words.forEach((w, i) => {
+    if (w.time == null) return;
+    const next = words.slice(i + 1).find((x) => x.time != null)?.time;
+    const stop = w.end ?? next;
+    if (stop != null && stop - w.time < TOO_SHORT) n++;
+  });
+  return n;
+}
+
+function usePersisted<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw != null ? (JSON.parse(raw) as T) : initial;
+    } catch {
+      return initial;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* kept for this visit only */ }
+  }, [key, value]);
+  return [value, setValue] as const;
+}
 
 interface WordsLineNavProps {
   lines: EditorLine[];
@@ -24,20 +103,24 @@ interface WordsLineNavProps {
   onSelect: (lineIndex: number) => void;
 }
 
-/** Left column of words mode: every lyric line with how many of its words are timed. */
+/** Left column of words mode: every lyric line, with its furigana and how many of its words are timed. */
 export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex, onSelect }: WordsLineNavProps) {
   const { t } = useTranslation();
+  const { settings } = useSettings();
+  const format = settings.editor?.display?.readingFormat;
   const activeRef = useRef<HTMLButtonElement>(null);
   // Lines other participants are on (null outside a session).
   const remoteActive = useRemoteActiveLines();
 
   const items = useMemo(() => {
-    const out: { index: number; id?: string; text: string; timed: number; total: number }[] = [];
+    const out: { index: number; id?: string; text: string; words?: EditorWord[]; timed: number; total: number; tooShort: number }[] = [];
     lines.forEach((line, index) => {
       if (line.type === 'section' || !line.text?.trim()) return;
       const total = line.words?.length || line.text.trim().split(/\s+/).length;
       const timed = line.words?.filter((w) => w.time != null).length ?? 0;
-      out.push({ index, id: line.id, text: line.text, timed, total });
+      // Words are only drawn one by one when there is a reading to show; otherwise the text keeps its own spacing.
+      const words = line.words?.some((w) => w.reading) ? line.words : undefined;
+      out.push({ index, id: line.id, text: line.text, words, timed, total, tooShort: countTooShort(line.words) });
     });
     return out;
   }, [lines]);
@@ -62,11 +145,11 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
             type="button"
             aria-current={active ? 'true' : undefined}
             onClick={() => onSelect(item.index)}
-            className={`flex flex-col gap-1.5 px-2.5 py-2.5 rounded-[calc(var(--radius)*1)] text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${active
+            className={`flex flex-col gap-1.5 px-2.5 py-2 rounded-[calc(var(--radius)*1)] text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${active
               ? 'bg-zinc-800 text-foreground font-semibold ring-1 ring-inset ring-primary/40'
               : 'text-foreground/80 hover:bg-zinc-800/50'}`}
           >
-            <span className="flex justify-between gap-2">
+            <span className="flex items-end justify-between gap-2">
               <span className="flex min-w-0 items-center gap-1.5">
                 {remote && (
                   <Tip content={t('collab.presence.onLine', { name: remote.name })}>
@@ -78,9 +161,17 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
                     />
                   </Tip>
                 )}
-                <span className="truncate">{item.text}</span>
+                {/* The rt sits above the line box; the padding is the room it needs inside the clip. */}
+                <span className={`truncate ${item.words ? 'pt-2.5 leading-[1.35]' : ''}`}>
+                  {item.words ? <RubyLine words={item.words} format={format} /> : item.text}
+                </span>
               </span>
-              <span className="flex-none font-mono text-[11px] font-normal tabular-nums text-foreground/65">{item.timed}/{item.total}</span>
+              <span className="flex flex-none items-center gap-1.5 pb-px">
+                {item.tooShort > 0 && (
+                  <span role="img" aria-label={t('editor.words.warnings', { count: item.tooShort })} className="grid text-gold"><Icon name="warning" size={14} /></span>
+                )}
+                <span className="font-mono text-[11px] font-normal tabular-nums text-foreground/65">{item.timed}/{item.total}</span>
+              </span>
             </span>
             <span className="h-1 rounded-pill bg-zinc-700/60 overflow-hidden">
               <span
@@ -100,65 +191,108 @@ interface WordTimelineProps {
   /** Where the line stops: its end time, the next timed line, or the track's end. */
   lineEnd: number | null;
   playbackPosition: number;
+  isPlaying: boolean;
   /** Index of the word the next mark will stamp, or -1. */
   activeWordIndex: number;
+  /** The word picked by a click (its time is what the nudge keys move), or null. */
+  selectedWordIndex: number | null;
+  /** The word being sung while the line plays, or null. */
+  playingWordIndex: number | null;
   onSetWordTime: (wordIndex: number, time: number) => void;
+  /** Sets where a word stops; null joins it back up with the word after it. */
+  onSetWordEnd: (wordIndex: number, end: number | null) => void;
+  /** Picks a word: seeks to it and makes it the one the keys act on. */
+  onSelectWord: (wordIndex: number) => void;
+  onEditLine?: () => void;
   /** The mark shortcut as the user configured it, already turned into a key-cap label. */
   markKey: string;
   /** Plays from a word's own stamped time. */
   onPlayFrom?: (time: number) => void;
+  /** The items of a word's context menu. */
+  wordMenu: (wordIndex: number) => ReactNode;
+  /** Controls drawn at the right of the footer (the loop button). */
+  footerEnd?: ReactNode;
+  /** Key hints drawn at the left of the footer. */
+  hints?: ReactNode;
 }
 
 /**
- * The focused line laid out in time: one block per word, as wide as the word
- * lasts. Dragging a block's left edge moves where that word starts, within the
- * line and its neighbours. Words with no time yet share what is left of the line evenly and
- * cannot be dragged.
+ * The focused line as one row per word: the word itself (with its furigana, start time and
+ * menu) on the left, and on the right a block as long as the word lasts. Dragging a block's left
+ * edge moves where the word starts; its right edge moves where it stops, leaving a pause before
+ * the next word. Words with no time yet share what is left of the line evenly and cannot be dragged.
  */
-export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex, onSetWordTime, markKey, onPlayFrom }: WordTimelineProps) {
+export function WordTimeline({
+  line, lineEnd, playbackPosition, isPlaying, activeWordIndex, selectedWordIndex, playingWordIndex,
+  onSetWordTime, onSetWordEnd, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
+}: WordTimelineProps) {
   const { t } = useTranslation();
+  const { settings } = useSettings();
+  const format = settings.editor?.display?.readingFormat;
   const trackRef = useRef<HTMLDivElement>(null);
-  // Which edge is being dragged. The time itself is written to the line on every
-  // move, so the word chips above follow the drag; the undo history groups
-  // changes that arrive in quick succession, so a drag is still one step back.
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Which edge is being dragged. The time is written to the line on every move; the undo history
+  // groups changes that arrive in quick succession, so a drag is still one step back.
+  const [drag, setDrag] = useState<{ index: number; edge: 'start' | 'end' } | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [scroll, setScroll] = useState(0);
+  const [snap, setSnap] = usePersisted<SnapMode>('lrc.words.snap', 'edges');
+  const [showSyllables, setShowSyllables] = usePersisted('lrc.words.syllables', true);
+  const [peaksVersion, setPeaksVersion] = useState(0);
+
+  useEffect(() => {
+    const onPeaks = () => setPeaksVersion((v) => v + 1);
+    window.addEventListener(PEAKS_EVENT, onPeaks);
+    return () => window.removeEventListener(PEAKS_EVENT, onPeaks);
+  }, []);
 
   const start = line.timestamp;
   const words = useMemo(() => line.words ?? [], [line.words]);
   const span = start != null && lineEnd != null && lineEnd > start ? lineEnd - start : null;
+  const end = start != null && span != null ? start + span : null;
 
-  const segments = useMemo(() => {
-    if (start == null || span == null) return [];
-    const end = start + span;
-    // Clamped for drawing: a word whose saved time lies outside the line (older
-    // data, or a line start moved after its words were stamped) sits at the edge
-    // instead of spilling out of the track.
-    const times = words.map((w) => (w.time == null ? null : Math.min(end, Math.max(start, w.time))));
-    let lastTimed = -1;
-    times.forEach((time, i) => { if (time != null) lastTimed = i; });
-    const untimedCount = words.length - 1 - lastTimed;
-    // The last timed word runs up to where the untimed ones begin sharing the rest.
-    const tailStart = lastTimed >= 0 ? (times[lastTimed] as number) : start;
-    const tailShare = (end - tailStart) / (untimedCount + (lastTimed >= 0 ? 1 : 0) || 1);
-    return words.map((w, i) => {
-      const time = times[i];
-      let from: number;
-      let to: number;
-      if (i <= lastTimed) {
-        // An untimed word between timed ones has no width of its own.
-        from = time ?? (times.slice(0, i).reverse().find((x) => x != null) ?? start);
-        const nextTimed = times.slice(i + 1, lastTimed + 1).find((x) => x != null);
-        to = time == null ? from : nextTimed ?? tailStart + tailShare;
-      } else {
-        const k = i - lastTimed - (lastTimed >= 0 ? 0 : 1);
-        from = tailStart + tailShare * k;
-        to = from + tailShare;
-      }
-      return { word: w.word, timed: time != null, from: Math.max(start, from), to: Math.max(from, Math.min(to, end)) };
-    });
-  }, [words, start, span]);
+  const segments = useMemo(
+    () => (start == null || end == null ? [] : layoutWords(words, start, end)),
+    [words, start, end],
+  );
 
-  if (start == null || span == null || words.length === 0) {
+  // The waveform under the line, normalised to its own loudest moment.
+  const wave = useMemo(() => {
+    void peaksVersion;
+    const cached = getCachedPeaks();
+    const channel = cached?.peaks[0];
+    if (!cached || !channel?.length || !cached.duration || start == null || span == null) return null;
+    const out: number[] = [];
+    let max = 0;
+    for (let b = 0; b < WAVE_BINS; b++) {
+      const from = Math.floor(((start + (span * b) / WAVE_BINS) / cached.duration) * channel.length);
+      const to = Math.max(from + 1, Math.ceil(((start + (span * (b + 1)) / WAVE_BINS) / cached.duration) * channel.length));
+      let m = 0;
+      for (let i = Math.max(0, from); i < to && i < channel.length; i++) m = Math.max(m, Math.abs(channel[i]));
+      out.push(m);
+      max = Math.max(max, m);
+    }
+    if (!max) return null;
+    return out.map((v, b) => {
+      const h = (v / max) * 92;
+      return `M${b} ${50 - h / 2}h0.7v${h}h-0.7z`;
+    }).join('');
+  }, [peaksVersion, start, span]);
+
+  // Zoomed in, the axis follows the playhead while the line plays: once the playhead nears the
+  // edge of the view, the view jumps so it sits a fifth of the way in. Adjusted during render
+  // (React's pattern for state that follows a prop), not in an effect, so it never draws a frame behind.
+  if (isPlaying && zoom > 1 && start != null && span != null) {
+    const p = (playbackPosition - start) / span;
+    const viewFrom = (scroll * (zoom - 1)) / zoom;
+    const viewTo = viewFrom + 1 / zoom;
+    if (p >= 0 && p <= 1 && (p < viewFrom || p > viewTo - 0.05 / zoom)) {
+      const target = Math.min(1, Math.max(0, ((p - 0.2 / zoom) * zoom) / (zoom - 1)));
+      if (Math.abs(target - scroll) > 1e-6) setScroll(target);
+    }
+  }
+
+  if (start == null || span == null || end == null || words.length === 0) {
     return (
       <EmptyState
         art="words"
@@ -169,212 +303,401 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
     );
   }
 
+  const pct = (time: number) => ((time - start) / span) * 100;
+  // Every track (header, rows, overlay) is this same wide strip, slid by the scroll position.
+  const stripStyle = { width: `${zoom * 100}%`, transform: `translateX(${zoom === 1 ? 0 : (-(zoom - 1) / zoom) * scroll * 100}%)` };
+
   const timeAt = (clientX: number) => {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect || rect.width === 0) return start;
     return start + Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * span;
   };
-  // A word stays after the timed word before it and before the one after it;
+  const snapReach = () => {
+    const width = trackRef.current?.getBoundingClientRect().width ?? 0;
+    return width ? (SNAP_PX / width) * span : 0;
+  };
+  // A word stays after the timed word before it (and its end) and before the one after it;
   // the first and last are held by the line's own start and end instead.
-  const clampFor = (index: number, time: number) => {
+  const clampStart = (index: number, time: number) => {
     const before = words.slice(0, index).reverse().find((w) => w.time != null)?.time;
     const after = words.slice(index + 1).find((w) => w.time != null)?.time;
     const min = before != null ? Math.max(start, before + MIN_WORD_GAP) : start;
-    // Always short of the line's end, so the last word keeps some length.
-    const max = Math.min(start + span, after ?? Infinity) - MIN_WORD_GAP;
+    const ownEnd = segments[index]?.hasEnd ? segments[index].to : Infinity;
+    const max = Math.min(end, after ?? Infinity, ownEnd) - MIN_WORD_GAP;
     return Math.max(min, Math.min(Math.max(min, max), time));
   };
+  const edgesExcept = (index: number) => segments.flatMap((s, k) => (k === index || !s.timed ? [] : [s.from, s.to])).concat(start, end);
 
-  const handlePointerDown = (index: number) => (e: PointerEvent<HTMLSpanElement>) => {
+  const handlePointerDown = (index: number, edge: 'start' | 'end') => (e: PointerEvent<HTMLSpanElement>) => {
+    e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
-    setDragIndex(index);
+    setDrag({ index, edge });
   };
-  const handlePointerMove = (index: number) => (e: PointerEvent<HTMLSpanElement>) => {
+  const handlePointerMove = (index: number, edge: 'start' | 'end') => (e: PointerEvent<HTMLSpanElement>) => {
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-    const time = Number(clampFor(index, timeAt(e.clientX)).toFixed(3));
-    if (time !== words[index].time) onSetWordTime(index, time);
+    const raw = snapTime(timeAt(e.clientX), snap, snapReach(), playbackPosition, edgesExcept(index));
+    if (edge === 'start') {
+      const time = Number(clampStart(index, raw).toFixed(3));
+      if (time !== words[index].time) onSetWordTime(index, time);
+    } else {
+      const seg = segments[index];
+      const min = seg.from + MIN_WORD_GAP;
+      // Pulled back up to the next word, the end goes away: the word runs into it again.
+      if (raw >= seg.gapTo - 0.005) {
+        if (words[index].end != null) onSetWordEnd(index, null);
+        return;
+      }
+      const time = Number(Math.max(min, raw).toFixed(3));
+      if (time !== words[index].end) onSetWordEnd(index, time);
+    }
   };
-  const handlePointerUp = () => setDragIndex(null);
-  const nudge = (index: number, delta: number) => {
+  const handlePointerUp = () => setDrag(null);
+  const nudgeStart = (index: number, delta: number) => {
     const time = words[index].time;
-    if (time != null) onSetWordTime(index, Number(clampFor(index, time + delta).toFixed(3)));
+    if (time != null) onSetWordTime(index, Number(clampStart(index, time + delta).toFixed(3)));
+  };
+  const nudgeEnd = (index: number, delta: number) => {
+    const seg = segments[index];
+    const next = Number((seg.to + delta).toFixed(3));
+    if (next >= seg.gapTo - 0.005) onSetWordEnd(index, null);
+    else onSetWordEnd(index, Math.max(seg.from + MIN_WORD_GAP, next));
+  };
+  const edgeKeys = (index: number, edge: 'start' | 'end') => (e: KeyboardEvent) => {
+    const step = e.shiftKey ? 0.01 : 0.05;
+    const delta = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+    if (!delta) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (edge === 'start') nudgeStart(index, delta); else nudgeEnd(index, delta);
+  };
+
+  const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
+    if (zoom === 1) return;
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+    if (!delta) return;
+    const width = trackRef.current?.getBoundingClientRect().width ?? 1;
+    setScroll((s) => Math.min(1, Math.max(0, s + delta / (width - width / zoom))));
+  };
+  const changeZoom = (dir: 1 | -1) => {
+    const k = ZOOMS.indexOf(zoom) + dir;
+    if (k < 0 || k >= ZOOMS.length) return;
+    const next = ZOOMS[k];
+    setZoom(next);
+    // Zooming in centres on the playhead when it is in the line, else on the picked word.
+    const focusTime = playbackPosition >= start && playbackPosition <= end
+      ? playbackPosition
+      : segments[selectedWordIndex ?? Math.max(0, activeWordIndex)]?.from ?? start;
+    const p = (focusTime - start) / span;
+    setScroll(next === 1 ? 0 : Math.min(1, Math.max(0, (p - 0.5 / next) * next / (next - 1))));
   };
 
   const playhead = (playbackPosition - start) / span;
-  const end = start + span;
-  // The word the playhead is inside, for the "where am I in this word" readout.
-  const playingIndex = segments.findIndex((seg) => seg.timed && seg.to > seg.from && playbackPosition >= seg.from && playbackPosition < seg.to);
-  const playing = playingIndex >= 0 ? segments[playingIndex] : null;
-
   // Ruler ticks sit on absolute song time (multiples of the step), so two lines line up the same way.
-  const tickStep = span <= 20 ? RULER_TICK : 0.5;
-  const labelStep = span <= 8 ? 0.5 : span <= 20 ? 1 : 5;
+  const visibleSpan = span / zoom;
+  const tickStep = visibleSpan <= 20 ? RULER_TICK : 0.5;
+  const labelStep = visibleSpan <= 4 ? 0.25 : visibleSpan <= 8 ? 0.5 : visibleSpan <= 20 ? 1 : 5;
   const ticks: { pct: number; label: string | null }[] = [];
   for (let k = Math.ceil(start / tickStep - 1e-9); k * tickStep <= end + 1e-9; k++) {
     const time = Math.round(k * tickStep * 1000) / 1000;
     const rem = time / labelStep;
-    ticks.push({ pct: ((time - start) / span) * 100, label: Math.abs(rem - Math.round(rem)) < 1e-6 ? time.toFixed(1) : null });
+    ticks.push({ pct: pct(time), label: Math.abs(rem - Math.round(rem)) < 1e-6 ? time.toFixed(labelStep < 0.5 ? 2 : 1) : null });
   }
-  // Boundaries drawn down through every row: each timed word's start, and the line's end.
   const boundaries = [...segments.filter((s) => s.timed).map((s) => s.from), end];
-  const timedSegments = segments.map((seg, i) => ({ seg, i })).filter(({ seg }) => seg.timed);
+  const tooShortCount = segments.filter((s) => s.timed && s.to - s.from < TOO_SHORT).length;
+  // Long lines get shorter rows and smaller type so the whole line still fits on screen.
+  const compact = words.length > 9;
+
+  const toolButton = 'grid h-7 min-w-7 place-items-center rounded-md px-1.5 text-subtle hover:bg-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus disabled:opacity-40 disabled:hover:bg-transparent';
 
   return (
     <section
       aria-label={t('editor.words.timelineLabel')}
       // The label column is narrower on small screens; the track overlay reads the same variable.
-      className="[--label-w:132px] lg:[--label-w:200px] flex-1 flex flex-col rounded-[var(--radius-card)] bg-card inset-ring inset-ring-hl px-4 pt-3 pb-4"
+      className="[--label-w:150px] lg:[--label-w:240px] flex min-h-0 flex-1 flex-col rounded-[var(--radius-card)] bg-card inset-ring inset-ring-hl"
     >
-      <div className="relative flex flex-1 flex-col">
-        {/* Header: the per-word timestamps, then the 100 ms ruler. */}
-        <div className="flex h-16 shrink-0">
-          <div className="flex w-[var(--label-w)] shrink-0 items-end px-3 pb-2">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* Header: the 100 ms ruler with the playhead's time. */}
+        <div className="flex h-9 shrink-0 border-b border-hl/60">
+          <div className="flex w-[var(--label-w)] shrink-0 items-center justify-between border-r border-hl/60 px-3">
             <span className={CAPTION}>{t('editor.words.colWord')}</span>
+            <span className={CAPTION}>{t('editor.inspector.start')}</span>
           </div>
-          <div ref={trackRef} className="relative min-w-0 flex-1 touch-none select-none">
-            <div className="absolute inset-x-0 top-0 h-9 font-mono" aria-label={t('editor.words.timelineLabel')}>
-              {timedSegments.map(({ seg, i }) => (
-                <div
-                  key={i}
-                  className={`@container absolute inset-y-0 flex items-center justify-between gap-2 overflow-hidden border-l-2 px-2 whitespace-nowrap ${i === activeWordIndex ? 'border-foam' : 'border-subtle'}`}
-                  style={{ left: `${((seg.from - start) / span) * 100}%`, width: `${((seg.to - seg.from) / span) * 100}%` }}
-                >
-                  <span className={`text-xs font-semibold tabular-nums ${i === activeWordIndex ? 'text-foam' : 'text-foreground'}`}>{formatTime(seg.from)}</span>
-                  <span className="hidden text-[11px] tabular-nums text-subtle @[120px]:inline">{(seg.to - seg.from).toFixed(2)} s</span>
-                </div>
-              ))}
-              <span className="absolute inset-y-0 right-0 flex items-center border-r-2 border-subtle pr-2 text-xs font-semibold tabular-nums text-foreground">{formatTime(end)}</span>
-            </div>
-            <div aria-hidden className="absolute inset-x-0 bottom-0 h-7 font-mono text-[10px] text-subtle">
-              {ticks.map((tick, k) => (
-                <span key={k} className="absolute bottom-0" style={{ left: `${tick.pct}%` }}>
-                  <span className={`absolute bottom-0 w-px -translate-x-1/2 ${tick.label ? 'h-[11px] bg-subtle' : 'h-1.5 bg-faint'}`} />
-                  {tick.label && <span className="absolute bottom-3 -translate-x-1/2 tabular-nums">{tick.label}</span>}
+          <div className="relative min-w-0 flex-1 overflow-hidden" onWheel={handleWheel}>
+            <div ref={trackRef} className="relative h-full touch-none select-none" style={stripStyle}>
+              <div aria-hidden className="absolute inset-0 font-mono text-[10px] text-subtle">
+                {ticks.map((tick, k) => (
+                  <span key={k} className="absolute bottom-0" style={{ left: `${tick.pct}%` }}>
+                    <span className={`absolute bottom-0 w-px -translate-x-1/2 ${tick.label ? 'h-[9px] bg-subtle' : 'h-1 bg-faint'}`} />
+                    {tick.label && <span className="absolute bottom-2.5 -translate-x-1/2 tabular-nums">{tick.label}</span>}
+                  </span>
+                ))}
+              </div>
+              {playhead >= 0 && playhead <= 1 && (
+                <span className="absolute top-1 z-10 -translate-x-1/2 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background" style={{ left: `${playhead * 100}%` }}>
+                  {formatTime(playbackPosition)}
                 </span>
-              ))}
+              )}
             </div>
           </div>
         </div>
 
-        {/* One row per word, stretched to share the height the editor has: the player open or
-            hidden only changes how tall they are. Rows keep a minimum and scroll past it. */}
-        {segments.map((seg, i) => {
-          const isNow = i === activeWordIndex;
-          // A timed word this short is almost certainly a mis-stamp or an overlap with its
-          // neighbour, so it is called out in gold (redesign sheet 14).
-          const tooShort = seg.timed && seg.to - seg.from < TOO_SHORT;
-          const length = seg.to - seg.from;
-          const within = i === playingIndex ? (playbackPosition - seg.from) / length : null;
-          return (
-            <div
-              key={i}
-              className={`flex min-h-[52px] max-h-24 flex-1 border-t border-hl/60 ${isNow ? 'bg-foam/[0.06]' : ''}`}
-            >
-              <div className="flex w-[var(--label-w)] shrink-0 items-center gap-3 px-3">
-                <span className={`font-mono text-xs tabular-nums ${isNow ? 'text-foam' : 'text-subtle'}`}>{i + 1}</span>
-                <span className={`min-w-0 truncate font-heading text-xl lg:text-[28px] font-semibold ${isNow ? 'text-foam' : seg.timed ? 'text-foreground' : 'text-faint'}`}>{seg.word}</span>
-              </div>
-              <div className="relative min-w-0 flex-1">
-                <Tip content={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: length.toFixed(2) }) : undefined}>
-                  <span
-                    // @container: the readout hides itself once the block is too narrow for it.
-                    className={`@container absolute inset-y-3 flex items-center gap-2.5 overflow-hidden rounded-xl pl-4 pr-2 whitespace-nowrap ${isNow
-                      ? 'bg-raised inset-ring-[1.5px] inset-ring-foam'
-                      : tooShort
-                        ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
-                        : seg.timed ? 'bg-raised inset-ring inset-ring-hl' : 'bg-card text-faint inset-ring inset-ring-hl [border:1px_dashed_var(--faint)]'}`}
-                    style={{
-                      left: `calc(${((seg.from - start) / span) * 100}% + 2px)`,
-                      width: `max(0px, calc(${(length / span) * 100}% - 4px))`,
-                    }}
+        {/* One row per word, sharing the height the editor has. Rows shrink for long lines and only
+            scroll once even the smallest rows no longer fit. */}
+        <div className="lrc-scroll relative flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {/* Waveform, guides and playhead cross every row; they ignore the pointer so the edges stay draggable. */}
+          <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[var(--label-w)] right-0 overflow-hidden">
+            <div className="relative h-full" style={stripStyle}>
+              {wave && (
+                <svg viewBox={`0 0 ${WAVE_BINS} 100`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full text-foreground/[0.07]">
+                  <path d={wave} fill="currentColor" />
+                </svg>
+              )}
+              {boundaries.map((time, k) => (
+                <span key={k} className="absolute inset-y-0 border-l border-dashed border-faint/50" style={{ left: `${pct(time)}%` }} />
+              ))}
+              {playhead >= 0 && playhead <= 1 && (
+                <span className="absolute inset-y-0 z-20 w-0.5 -translate-x-1/2 rounded-pill bg-foam shadow-[0_0_8px_var(--foam)]" style={{ left: `${playhead * 100}%` }} />
+              )}
+            </div>
+          </div>
+
+          {segments.map((seg, i) => {
+            const w = words[i];
+            const isNext = i === activeWordIndex;
+            const isPlayingWord = i === playingWordIndex;
+            const isSelected = i === selectedWordIndex;
+            const length = seg.to - seg.from;
+            // A timed word this short is almost certainly a mis-stamp or an overlap with its neighbour.
+            const tooShort = seg.timed && length < TOO_SHORT;
+            const within = isPlayingWord && length > 0 ? Math.min(1, (playbackPosition - seg.from) / length) : null;
+            const kana = showSyllables && seg.timed ? wordKana(w) : null;
+            const morae = kana ? splitMorae(kana) : [];
+            const highlight = isSelected || isPlayingWord;
+            return (
+              <ContextMenu key={i}>
+                <ContextMenuTrigger asChild>
+                  <div
+                    ref={(el) => { rowRefs.current[i] = el; }}
+                    className={`group/row relative flex flex-1 border-b border-hl/40 last:border-b-0 ${compact ? 'min-h-[26px] max-h-14' : 'min-h-[44px] max-h-20'} ${highlight ? 'bg-foam/[0.06]' : ''}`}
                   >
-                    {seg.timed && !tooShort && (
-                      <span aria-hidden className={`absolute left-0 inset-y-2.5 w-1 rounded-sm ${isNow ? 'bg-foam' : 'bg-faint'}`} />
-                    )}
-                    {/* How far playback is into this word. */}
-                    {within != null && (
-                      <span aria-hidden className="absolute inset-y-0 left-0 bg-foam/20" style={{ width: `${within * 100}%` }} />
-                    )}
-                    {seg.timed && onPlayFrom && (
+                    {/* The word: what the old chip was. */}
+                    <div className="relative flex w-[var(--label-w)] shrink-0 items-center gap-1 border-r border-hl/60 pl-3 pr-1">
+                      {(isSelected || isPlayingWord || isNext) && (
+                        <span aria-hidden className={`absolute inset-y-1 left-0 w-[3px] rounded-r-sm ${isNext && !isSelected ? 'bg-primary' : 'bg-foam'}`} />
+                      )}
                       <button
                         type="button"
-                        aria-label={t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) })}
-                        onClick={(e) => { e.stopPropagation(); onPlayFrom(seg.from); }}
-                        className="relative hidden size-8 shrink-0 place-items-center rounded-lg bg-background text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus hover:bg-overlay @[84px]:grid"
+                        onClick={() => onSelectWord(i)}
+                        onDoubleClick={onEditLine}
+                        aria-pressed={isSelected}
+                        className="flex h-full min-w-0 flex-1 items-center gap-2 rounded-md text-left focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
                       >
-                        <Icon name="play_arrow" size={16} filled />
+                        <span className={`w-4 shrink-0 text-right font-mono text-[10px] tabular-nums ${highlight ? 'text-foam' : 'text-subtle'}`}>{i + 1}</span>
+                        <span
+                          className={`min-w-0 flex-1 truncate font-heading font-semibold leading-[1.3] ${compact ? 'text-[15px]' : 'text-lg lg:text-[22px]'} ${w.reading ? (compact ? 'pt-2.5' : 'pt-3') : ''} ${highlight ? 'text-foam' : seg.timed ? 'text-foreground' : 'text-faint'}`}
+                        >
+                          <WordRuby word={w.word ?? ''} reading={w.reading} format={format} />
+                        </span>
+                        {tooShort && (
+                          <Tip content={t('editor.words.tooShort', { word: seg.word, seconds: length.toFixed(2) })}>
+                            <span role="img" aria-label={t('editor.words.tooShort', { word: seg.word, seconds: length.toFixed(2) })} className="grid shrink-0 text-gold"><Icon name="warning" size={14} /></span>
+                          </Tip>
+                        )}
+                        {seg.timed ? (
+                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[11px] tabular-nums ${isSelected ? 'bg-foam text-background' : 'bg-raised text-foreground/80'}`}>
+                            {formatTime(seg.from)}
+                          </span>
+                        ) : isNext ? (
+                          <Kbd className="shrink-0">{markKey}</Kbd>
+                        ) : null}
                       </button>
-                    )}
-                    {seg.timed && (
-                      <span className="relative hidden flex-col gap-0.5 font-mono tabular-nums @[150px]:flex">
-                        <span className="text-[13px] font-semibold leading-none">{formatTime(seg.from)}</span>
-                        <span className="text-[11px] leading-none text-subtle">{length.toFixed(2)} s</span>
-                      </span>
-                    )}
-                  </span>
-                </Tip>
-                {/* The edge: at the word's own start. The first word's is the left side of its block;
-                    every other one is also the right side of the block above in time. */}
-                {seg.timed && (
-                  <span
-                    role="slider"
-                    tabIndex={0}
-                    aria-label={t('editor.words.boundaryLabel', { word: seg.word })}
-                    aria-valuemin={Number(start.toFixed(2))}
-                    aria-valuemax={Number(end.toFixed(2))}
-                    aria-valuenow={Number(seg.from.toFixed(2))}
-                    onPointerDown={handlePointerDown(i)}
-                    onPointerMove={handlePointerMove(i)}
-                    onPointerUp={handlePointerUp}
-                    onPointerCancel={handlePointerUp}
-                    onKeyDown={(e) => {
-                      if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); nudge(i, -0.05); }
-                      else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); nudge(i, 0.05); }
-                    }}
-                    className="group absolute inset-y-0 z-10 w-3 coarse:w-11 -translate-x-1/2 grid place-items-center cursor-ew-resize touch-none focus-visible:outline-none"
-                    style={{ left: `${((seg.from - start) / span) * 100}%` }}
-                  >
-                    <span className={`w-0.5 h-3/4 rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragIndex === i ? 'bg-foreground' : 'bg-transparent'}`} />
-                    {dragIndex === i && (
-                      <span className="absolute bottom-full mb-1 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background whitespace-nowrap pointer-events-none">
-                        {formatTime(seg.from)}
-                      </span>
-                    )}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                      <button
+                        type="button"
+                        aria-label={t('editor.words.wordActions', { word: seg.word })}
+                        aria-haspopup="menu"
+                        onClick={(e) => openContextMenuAt(rowRefs.current[i], e.currentTarget)}
+                        className={`grid size-7 shrink-0 place-items-center rounded-md text-subtle hover:bg-overlay hover:text-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus coarse:opacity-100 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/row:opacity-100'}`}
+                      >
+                        <Icon name="more_vert" size={16} />
+                      </button>
+                    </div>
 
-        {/* Guides and playhead cross every row; they ignore the pointer so the edges stay draggable. */}
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[var(--label-w)] right-0">
-          {boundaries.map((time, k) => (
-            <span key={k} className="absolute bottom-0 top-16 border-l border-dashed border-faint/70" style={{ left: `${((time - start) / span) * 100}%` }} />
-          ))}
-          {playhead >= 0 && playhead <= 1 && (
-            <>
-              <span className="absolute bottom-0 top-9 w-0.5 -translate-x-1/2 rounded-pill bg-foam" style={{ left: `${playhead * 100}%` }} />
-              <span className="absolute top-10 -translate-x-1/2 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background" style={{ left: `${playhead * 100}%` }}>
-                {formatTime(playbackPosition)}
-              </span>
-            </>
-          )}
+                    {/* Its time. */}
+                    <div className="relative min-w-0 flex-1 overflow-hidden" onWheel={handleWheel}>
+                      <div className="relative h-full" style={stripStyle}>
+                        {seg.timed && seg.gapTo - seg.to > 0.005 && (
+                          <Tip content={t('editor.words.gap', { seconds: (seg.gapTo - seg.to).toFixed(2) })}>
+                            <span
+                              className="absolute inset-y-[38%] rounded-sm bg-[repeating-linear-gradient(135deg,var(--hl)_0_2px,transparent_2px_6px)]"
+                              style={{ left: `${pct(seg.to)}%`, width: `${pct(seg.gapTo) - pct(seg.to)}%` }}
+                            />
+                          </Tip>
+                        )}
+                        <span
+                          // @container: what the block shows depends on how wide it is.
+                          className={`@container absolute ${compact ? 'inset-y-[3px]' : 'inset-y-2'} flex items-center gap-2 overflow-hidden rounded-lg pl-3 pr-2 whitespace-nowrap ${isSelected
+                            ? 'bg-foam/25 inset-ring-[1.5px] inset-ring-foam'
+                            : tooShort
+                              ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
+                              : isPlayingWord
+                                ? 'bg-raised inset-ring-[1.5px] inset-ring-foam'
+                                : seg.timed ? 'bg-raised inset-ring inset-ring-hl' : 'bg-card/60 text-faint [border:1px_dashed_var(--faint)]'}`}
+                          style={{
+                            left: `calc(${pct(seg.from)}% + 1px)`,
+                            width: `max(0px, calc(${pct(seg.to) - pct(seg.from)}% - 2px))`,
+                          }}
+                        >
+                          {/* How far playback is into this word. */}
+                          {within != null && within > 0 && (
+                            <span aria-hidden className="absolute inset-y-0 left-0 bg-foam/20" style={{ width: `${within * 100}%` }} />
+                          )}
+                          {morae.length > 1 ? (
+                            <span aria-hidden className="absolute inset-0 flex">
+                              {morae.map((m, k) => (
+                                <span key={k} className={`flex min-w-0 flex-1 items-center pl-1.5 text-[11px] font-semibold ${k ? 'border-l border-dashed border-faint/60' : ''} ${isSelected ? 'text-foreground' : 'text-foam'}`}>
+                                  <span className="truncate">{compact ? '' : m}</span>
+                                </span>
+                              ))}
+                            </span>
+                          ) : (
+                            <>
+                              {seg.timed && onPlayFrom && (
+                                <button
+                                  type="button"
+                                  aria-label={t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) })}
+                                  onClick={(e) => { e.stopPropagation(); onPlayFrom(seg.from); }}
+                                  className="relative hidden size-7 shrink-0 place-items-center rounded-md bg-background text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus hover:bg-overlay @[84px]:grid"
+                                >
+                                  <Icon name="play_arrow" size={14} filled />
+                                </button>
+                              )}
+                              {seg.timed && (
+                                <span className="relative hidden font-mono text-[11px] tabular-nums text-subtle @[120px]:inline">
+                                  {length.toFixed(2)} s
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </span>
+                        {seg.timed && (
+                          <>
+                            <span
+                              role="slider"
+                              tabIndex={0}
+                              aria-label={t('editor.words.boundaryLabel', { word: seg.word })}
+                              aria-valuemin={Number(start.toFixed(2))}
+                              aria-valuemax={Number(end.toFixed(2))}
+                              aria-valuenow={Number(seg.from.toFixed(2))}
+                              onPointerDown={handlePointerDown(i, 'start')}
+                              onPointerMove={handlePointerMove(i, 'start')}
+                              onPointerUp={handlePointerUp}
+                              onPointerCancel={handlePointerUp}
+                              onKeyDown={edgeKeys(i, 'start')}
+                              className="group absolute inset-y-0 z-10 grid w-3 -translate-x-1/2 cursor-ew-resize touch-none place-items-center focus-visible:outline-none coarse:w-11"
+                              style={{ left: `${pct(seg.from)}%` }}
+                            >
+                              <span className={`h-3/4 w-1 rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${drag?.index === i && drag.edge === 'start' ? 'bg-foreground' : isSelected ? 'bg-foam' : 'bg-faint'}`} />
+                              {drag?.index === i && drag.edge === 'start' && (
+                                <span className="pointer-events-none absolute top-0 left-2 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums whitespace-nowrap text-background">
+                                  {formatTime(seg.from)}
+                                </span>
+                              )}
+                            </span>
+                            <span
+                              role="slider"
+                              tabIndex={0}
+                              aria-label={t('editor.words.endLabel', { word: seg.word })}
+                              aria-valuemin={Number(seg.from.toFixed(2))}
+                              aria-valuemax={Number(seg.gapTo.toFixed(2))}
+                              aria-valuenow={Number(seg.to.toFixed(2))}
+                              onPointerDown={handlePointerDown(i, 'end')}
+                              onPointerMove={handlePointerMove(i, 'end')}
+                              onPointerUp={handlePointerUp}
+                              onPointerCancel={handlePointerUp}
+                              onKeyDown={edgeKeys(i, 'end')}
+                              className="group absolute inset-y-0 z-10 grid w-2.5 -translate-x-1/2 cursor-ew-resize touch-none place-items-center focus-visible:outline-none coarse:w-8"
+                              style={{ left: `${pct(seg.to)}%` }}
+                            >
+                              <span className={`h-1/2 w-[3px] rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${drag?.index === i && drag.edge === 'end' ? 'bg-foreground' : seg.hasEnd ? 'bg-foam/80' : 'bg-transparent'}`} />
+                              {drag?.index === i && drag.edge === 'end' && (
+                                <span className="pointer-events-none absolute top-0 right-2 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums whitespace-nowrap text-background">
+                                  {formatTime(seg.to)}
+                                </span>
+                              )}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-72">{wordMenu(i)}</ContextMenuContent>
+              </ContextMenu>
+            );
+          })}
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 text-[13px] text-subtle">
-        <span>{t('editor.words.dragHint')}</span>
-        {/* Where playback is inside the word under the playhead, with that word's own start to replay it from. */}
-        {playing && (
-          <span className="inline-flex items-center gap-2 font-mono text-xs tabular-nums text-foreground">
-            <span className="font-sans font-semibold">{playing.word}</span>
-            <span role="progressbar" aria-label={t('editor.words.wordProgress', { word: playing.word })} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((playbackPosition - playing.from) / (playing.to - playing.from)) * 100)} className="block h-1 w-20 overflow-hidden rounded-sm bg-hl">
-              <span className="block h-full bg-foam" style={{ width: `${((playbackPosition - playing.from) / (playing.to - playing.from)) * 100}%` }} />
+      {/* Footer: shortcuts on the left; snapping, syllables, zoom and the line's own controls on the right. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-t border-hl/60 px-3 py-2 text-xs text-subtle">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3.5 gap-y-1.5">
+          {hints}
+          {tooShortCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-gold">
+              <Icon name="warning" size={14} />
+              {t('editor.words.warnings', { count: tooShortCount })}
             </span>
-            <span className="text-subtle">{(playbackPosition - playing.from).toFixed(2)} / {(playing.to - playing.from).toFixed(2)} s</span>
-          </span>
-        )}
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Tip content={t('editor.words.syllablesTip')}>
+            <label className="inline-flex items-center gap-1.5 text-foreground/80">
+              <input
+                type="checkbox"
+                checked={showSyllables}
+                onChange={(e) => setShowSyllables(e.target.checked)}
+                className="size-4 accent-[var(--foam)]"
+              />
+              {t('editor.words.syllables')}
+            </label>
+          </Tip>
+          <span aria-hidden className="h-4 w-px bg-hl" />
+          <div role="radiogroup" aria-label={t('editor.words.snap')} className="flex items-center gap-0.5 rounded-md p-0.5 inset-ring inset-ring-hl">
+            <span className="px-1.5 text-foreground/65">{t('editor.words.snap')}</span>
+            {(['off', 'playhead', 'edges', 'grid'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={snap === mode}
+                onClick={() => setSnap(mode)}
+                className={`h-6 rounded px-2 font-medium focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus ${snap === mode ? 'bg-foam/20 text-foreground' : 'text-subtle hover:text-foreground'}`}
+              >
+                {t(`editor.words.snap${mode === 'off' ? 'Off' : mode === 'playhead' ? 'Playhead' : mode === 'edges' ? 'Edges' : 'Grid'}`)}
+              </button>
+            ))}
+          </div>
+          <span aria-hidden className="h-4 w-px bg-hl" />
+          <button type="button" aria-label={t('editor.words.zoomOut')} disabled={zoom === ZOOMS[0]} onClick={() => changeZoom(-1)} className={toolButton}>
+            <Icon name="zoom_out" size={16} />
+          </button>
+          <span className="w-10 text-center font-mono tabular-nums text-foreground/80">{Math.round(zoom * 100)}%</span>
+          <button type="button" aria-label={t('editor.words.zoomIn')} disabled={zoom === ZOOMS[ZOOMS.length - 1]} onClick={() => changeZoom(1)} className={toolButton}>
+            <Icon name="zoom_in" size={16} />
+          </button>
+          {zoom > 1 && (
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              value={Math.round(scroll * 1000)}
+              onChange={(e) => setScroll(Number(e.target.value) / 1000)}
+              aria-label={t('editor.words.scroll')}
+              className="w-24 accent-[var(--foam)]"
+            />
+          )}
+          {footerEnd}
+        </div>
       </div>
     </section>
   );

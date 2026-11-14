@@ -36,6 +36,7 @@ function sanitizeWords(raw: unknown, keepSingerIndex: boolean): EditorWord[] | u
     return [{
       word,
       time: finiteOrNull(w.time),
+      ...(finiteOrNull(w.end) != null ? { end: finiteOrNull(w.end) } : {}),
       ...(keepSingerIndex && w.singerIndex != null ? { singerIndex: w.singerIndex as number } : {}),
       ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}),
     }];

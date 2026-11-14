@@ -747,6 +747,27 @@ ruby.r3 rt {
   animation: word-stamp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* Words mode stamp button: a flash of light on every stamp (the button itself never moves). */
+@keyframes tap-flash {
+  from {
+    background-color: rgb(255 255 255 / 0.45);
+  }
+
+  to {
+    background-color: rgb(255 255 255 / 0);
+  }
+}
+
+.animate-tap-flash {
+  animation: tap-flash 0.35s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-tap-flash {
+    animation: none;
+  }
+}
+
 /* Settings tab slide in */
 @keyframes tab-slide-in {
   from {
