@@ -336,13 +336,21 @@ const WaveformDisplay = ({
     });
 
     // load() rejects with AbortError if the instance is destroyed mid-fetch
-    // (source change / unmount) — swallow it so it doesn't surface as an
-    // unhandled promise rejection.
-    ws.load(localUrl, cached?.peaks, cached?.duration).catch(() => { });
+    // (source change / unmount) — that one is expected and stays quiet. Anything
+    // else (fetch or decode failure) used to be swallowed too, which left the
+    // loading bars up forever while the <audio> element played normally — e.g. a
+    // CSP connect-src without `blob:` blocks WaveSurfer's fetch of a dropped file.
+    const report = (err: unknown) => {
+      if ((err as Error)?.name === 'AbortError') return;
+      console.warn('[waveform] failed to load', { url: localUrl.startsWith('blob:') ? 'blob' : localUrl, err });
+    };
+    const offError = ws.on('error', report);
+    ws.load(localUrl, cached?.peaks, cached?.duration).catch(report);
 
     return () => {
       try {
         offReady?.();
+        offError?.();
         ws.destroy();
       } catch { /* ignore abort errors on unmount */ }
       setIsReady(false);
