@@ -26,10 +26,12 @@ const step = (
 
 // A step whose target isn't mounted is skipped by GuidedTour, so conditional
 // controls (sections banner, session button) are safe to list.
+// The Lines view. It is also the tour a new project auto-starts with, since Lines is where one opens.
 export const EDITOR_TOUR_STEPS: TourStep[] = [
   step('sync', 'editor-lines', 'sync'),
   step('player', 'player-controls', 'player'),
   step('modes', 'editor-modes', 'words'),
+  step('unmarkedFilter', 'editor-filter', 'sync'),
   step('tools', 'editor-tools', 'autoStamp', { later: { target: 'editor-find-lyrics', afterMs: 3000 } }),
   step('counterparts', 'editor-counterparts', 'counterparts'),
   step('sections', 'editor-sections-banner', 'sections'),
@@ -49,4 +51,40 @@ export const PHONE_TOUR_STEPS: TourStep[] = [
   step('phoneSession', 'phone-session', 'sessions'),
 ];
 
-export const tourStepsFor = (isLg: boolean): TourStep[] => (isLg ? EDITOR_TOUR_STEPS : PHONE_TOUR_STEPS);
+// The Words view: one line at a time, one row per word.
+export const WORDS_TOUR_STEPS: TourStep[] = [
+  step('wordsNav', 'words-nav', 'words'),
+  step('wordsLine', 'words-line-info', 'words'),
+  step('wordsStamp', 'words-tap-pad', 'words'),
+  step('wordsRow', 'words-row', 'words'),
+  step('wordsTimeline', 'words-timeline', 'words'),
+  step('wordsViewTools', 'words-view-tools', 'words'),
+  step('wordsDistribute', 'words-distribute', 'words'),
+  step('wordsTools', 'editor-toolbar', 'furigana'),
+  step('wordsModes', 'editor-modes', 'preview'),
+];
+
+// The Review view: the karaoke preview, its display options, and publishing.
+export const REVIEW_TOUR_STEPS: TourStep[] = [
+  step('reviewLyrics', 'review-lyrics', 'preview'),
+  step('reviewProgress', 'review-progress', 'preview'),
+  step('reviewShow', 'review-show', 'preview'),
+  step('reviewAlign', 'review-align', 'look'),
+  step('reviewPlayer', 'review-player', 'player'),
+  step('reviewPublish', 'review-publish', 'share'),
+  step('reviewMore', 'preview-share', 'share'),
+  step('reviewBack', 'review-back', 'sync'),
+];
+
+export type TourView = 'lines' | 'words' | 'review';
+
+/**
+ * The tour for the screen on show, so "Take the tour" explains what is in front of the user.
+ * Phones keep their own tour: their editor is laid out differently and has no Review tab.
+ */
+export const tourStepsFor = (isLg: boolean, view: TourView = 'lines'): TourStep[] => {
+  if (!isLg) return PHONE_TOUR_STEPS;
+  if (view === 'words') return WORDS_TOUR_STEPS;
+  if (view === 'review') return REVIEW_TOUR_STEPS;
+  return EDITOR_TOUR_STEPS;
+};

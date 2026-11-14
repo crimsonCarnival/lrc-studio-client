@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import en from '@/locales/en/editor.js';
 import es from '@/locales/es/editor.js';
 import { GUIDE_SECTION_IDS } from '@/features/guide/guide-sections';
-import { EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS, tourStepsFor } from './tour-steps';
+import { EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS, REVIEW_TOUR_STEPS, WORDS_TOUR_STEPS, tourStepsFor } from './tour-steps';
+
+const ALL_STEPS = [...EDITOR_TOUR_STEPS, ...WORDS_TOUR_STEPS, ...REVIEW_TOUR_STEPS, ...PHONE_TOUR_STEPS];
 
 const resolve = (dict: unknown, key: string): unknown =>
   key.replace(/^editor\./, '').split('.').reduce<unknown>(
@@ -11,11 +13,19 @@ const resolve = (dict: unknown, key: string): unknown =>
   );
 
 describe('tour steps', () => {
-  it('desktop list is the ten steps in order', () => {
+  it('desktop Lines list is the eleven steps in order', () => {
     expect(tourStepsFor(true).map((s) => s.id)).toEqual([
-      'sync', 'player', 'modes', 'tools', 'counterparts', 'sections', 'saveUndo', 'preview', 'share', 'session',
+      'sync', 'player', 'modes', 'unmarkedFilter', 'tools', 'counterparts', 'sections', 'saveUndo', 'preview', 'share', 'session',
     ]);
     expect(tourStepsFor(true)).toBe(EDITOR_TOUR_STEPS);
+  });
+
+  it('picks the Words and Review tours by view on desktop, and the phone tour on any phone view', () => {
+    expect(tourStepsFor(true, 'lines')).toBe(EDITOR_TOUR_STEPS);
+    expect(tourStepsFor(true, 'words')).toBe(WORDS_TOUR_STEPS);
+    expect(tourStepsFor(true, 'review')).toBe(REVIEW_TOUR_STEPS);
+    expect(tourStepsFor(false, 'words')).toBe(PHONE_TOUR_STEPS);
+    expect(tourStepsFor(false, 'review')).toBe(PHONE_TOUR_STEPS);
   });
 
   it('phone list is the seven steps in order', () => {
@@ -33,7 +43,7 @@ describe('tour steps', () => {
     });
   });
 
-  it.each([...EDITOR_TOUR_STEPS, ...PHONE_TOUR_STEPS].map((s) => [s.id, s] as const))('%s resolves', (_id, step) => {
+  it.each(ALL_STEPS.map((s) => [s.id, s] as const))('%s resolves', (_id, step) => {
     expect(GUIDE_SECTION_IDS).toContain(step.guideAnchor);
     for (const dict of [en, es]) {
       expect(typeof resolve(dict, step.titleKey)).toBe('string');
@@ -48,7 +58,7 @@ describe('tour steps', () => {
   });
 
   it('has unique ids and targets within each list', () => {
-    for (const list of [EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS]) {
+    for (const list of [EDITOR_TOUR_STEPS, WORDS_TOUR_STEPS, REVIEW_TOUR_STEPS, PHONE_TOUR_STEPS]) {
       expect(new Set(list.map((s) => s.id)).size).toBe(list.length);
       expect(new Set(list.map((s) => s.target)).size).toBe(list.length);
     }

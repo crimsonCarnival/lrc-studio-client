@@ -1948,7 +1948,7 @@ export default function Editor({
         {wordsFocus ? (
           <>
             <div data-tour="editor-modes" className="hidden lg:flex shrink-0">{modeTabs}</div>
-            <div className="flex flex-col gap-1 flex-[1_1_150px] min-w-0">
+            <div data-tour="words-line-info" className="flex flex-col gap-1 flex-[1_1_150px] min-w-0">
               <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
                 {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
                 {focusInfo.sectionLabel && ` · ${formatSectionLabel(focusInfo.sectionLabel, t)}`}
@@ -1962,6 +1962,7 @@ export default function Editor({
             <Tip content={focusLength == null ? t('editor.words.distributeUnavailable') : t('editor.words.distributeTip')}>
               <Button
                 variant="outline"
+                data-tour="words-distribute"
                 // aria-disabled keeps the tooltip that explains why reachable.
                 aria-disabled={focusLength == null || !focusLine?.words?.length}
                 onClick={() => { if (focusLength != null && focusLine?.words?.length) handleDistributeWords(); }}
@@ -1976,6 +1977,7 @@ export default function Editor({
         {/* Sync progress lives in the status bar along the bottom. */}
         <div data-tour="editor-modes" className="hidden lg:flex flex-1 min-w-0">{modeTabs}</div>
         {lines.length > 0 && (
+          <div data-tour="editor-filter" className="flex">
           <SegmentedControl<'all' | 'unmarked'>
             label={t('editor.filterGroup')}
             value={lineFilter}
@@ -1985,6 +1987,7 @@ export default function Editor({
               { value: 'unmarked', label: t('editor.filterUnmarked', { count: unmarkedCount }) },
             ]}
           />
+          </div>
         )}
         <Tip content={<ShortcutHint label={t('editor.counterpart.toggleTip')} shortcut="captureAdLib" fallback="a" />}>
           <Button

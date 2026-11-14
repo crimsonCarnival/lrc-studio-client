@@ -131,6 +131,7 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
 
   return (
     <nav
+      data-tour="words-nav"
       aria-label={t('editor.words.navTitle')}
       className="lrc-scroll max-lg:hidden w-[300px] xl:w-[320px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-1 p-4 border-r border-zinc-800 bg-zinc-950/40"
     >
@@ -462,6 +463,7 @@ export function WordTimeline({
 
   return (
     <section
+      data-tour="words-timeline"
       aria-label={t('editor.words.timelineLabel')}
       // The label column is narrower on small screens; the track overlay reads the same variable.
       className="[--label-w:150px] lg:[--label-w:240px] flex min-h-0 flex-1 flex-col rounded-[var(--radius-card)] bg-card inset-ring inset-ring-hl"
@@ -539,6 +541,8 @@ export function WordTimeline({
             const BlockTag = playable ? 'button' : 'span';
                 <ContextMenuTrigger asChild>
                   <div
+                    // The tour points at the first word's row to explain a row: name, start, menu, block.
+                    data-tour={i === 0 ? 'words-row' : undefined}
                     ref={(el) => { rowRefs.current[i] = el; }}
                     className={`group/row relative flex flex-1 border-b border-hl/40 last:border-b-0 ${compact ? 'min-h-[26px] max-h-14' : 'min-h-[34px] max-h-20'} ${highlight ? 'bg-foam/[0.06]' : ''}`}
                   >
@@ -734,7 +738,7 @@ export function WordTimeline({
             </span>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+        <div data-tour="words-view-tools" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           <Tip content={t('editor.words.syllablesTip')}>
             <label className="inline-flex items-center gap-1.5 text-foreground/80">
               <input

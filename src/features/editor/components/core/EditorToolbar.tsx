@@ -103,7 +103,7 @@ export default function EditorToolbar({
   const autoStampDisabled = autoStampBlockedReason !== null;
 
   return (
-    <div className={`flex items-center min-w-0 ${fullRow ? 'basis-full' : ''}`}>
+    <div data-tour="editor-toolbar" className={`flex items-center min-w-0 ${fullRow ? 'basis-full' : ''}`}>
       {onAutoStamp && (
         <Tip content={autoStampTip}>
           <Button

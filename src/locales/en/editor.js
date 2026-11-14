@@ -607,6 +607,78 @@ export default {
         title: "Work together",
         body: "Start a session to edit this project live with others. It only appears on a saved project you own."
       },
+      unmarkedFilter: {
+        title: "Show what is left",
+        body: "**Unmarked** hides the lines that already have a time, so only the work left is on screen. The line with the cursor always stays visible. **All** brings every line back."
+      },
+      wordsNav: {
+        title: "Every line, one at a time",
+        body: "Words mode works on one line at a time. Pick a line here to time its words; the bar under each line shows how many of its words have a time."
+      },
+      wordsLine: {
+        title: "The line you are on",
+        body: "Its number, section, start and end, and how long it lasts. The words below share that span."
+      },
+      wordsStamp: {
+        title: "Stamp each word",
+        body: "Play the song and press **Enter** (or click here) as each word starts. The first press also sets when the line starts. **Backspace** takes back the last stamp, and **K** ends the word being sung, leaving a pause before the next one."
+      },
+      wordsRow: {
+        title: "One row per word",
+        body: "Each word shows its reading and its start time. Click a word to jump the cursor to it, then mark to re-stamp just that one. The **⋮** button (or right-click) has the rest: edit the reading, merge or split words, pick a singer, clear its time."
+      },
+      wordsTimeline: {
+        title: "Words over time",
+        body: "Each block is as long as its word lasts, over the song's waveform. **Click a block** to play from that word. **Drag its left edge** to move where the word starts and **its right edge** to end it early. A gold block is too short, usually a double press."
+      },
+      wordsViewTools: {
+        title: "Snap, syllables and zoom",
+        body: "**Snap** pulls a dragged edge to the playhead, to other edges or to whole hundredths of a second. **Syllables** splits blocks into kana. Zoom in for fast lines (drag the ruler to pan), and **Loop** repeats the line while you fine-tune it."
+      },
+      wordsDistribute: {
+        title: "Spread evenly",
+        body: "No time to stamp every word? Once the line has a start and an end, this shares the time evenly between its words as a starting point."
+      },
+      wordsTools: {
+        title: "Word tools",
+        body: "**Auto Stamp** times every word from the audio. The other buttons add translations and furigana readings to the whole song."
+      },
+      wordsModes: {
+        title: "Lines, Words, Review",
+        body: "Go back to **Lines** to fix line times, or open **Review** to watch the result as karaoke."
+      },
+      reviewLyrics: {
+        title: "Your lyrics as karaoke",
+        body: "This is how the song plays for others. Click any line to play from it. Lines without a time are dimmed so they are easy to spot."
+      },
+      reviewProgress: {
+        title: "How much is timed",
+        body: "Shows how many lines have a time. If some do not, **go to the first untimed line** takes you straight to it in the editor."
+      },
+      reviewShow: {
+        title: "What to show",
+        body: "Turn timestamps, sections and singers, word-by-word highlighting, furigana or translations on and off. **Follow playback** keeps the current line in view."
+      },
+      reviewAlign: {
+        title: "Alignment",
+        body: "Left, centered or right: how the lyrics sit on screen."
+      },
+      reviewPlayer: {
+        title: "Play it back",
+        body: "Play, pause and seek. Watching the whole song once is the quickest way to catch a late or early line."
+      },
+      reviewPublish: {
+        title: "Publish",
+        body: "Publishing makes the project public, so others can find it, star it and fork it. Click again to take it back down. Save the project first."
+      },
+      reviewMore: {
+        title: "Export, share and more",
+        body: "Export as .lrc, .srt or .txt, share a link, or paste secondary lyrics and translations for every line at once."
+      },
+      reviewBack: {
+        title: "Back to the editor",
+        body: "Spotted something? Go back to the editor to fix it, then come back to check."
+      },
       phoneLines: {
         title: "Your lyrics",
         body: "Tap a line to move the cursor to it. The line with the cursor is the next one to be stamped."
