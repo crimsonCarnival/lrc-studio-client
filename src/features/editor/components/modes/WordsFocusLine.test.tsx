@@ -8,7 +8,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }
 type Props = ComponentProps<typeof WordsFocusLine>;
 
 function renderAt(lines: Props['lines'], lineIndex: number) {
-  return render(<WordsFocusLine {...({ lines, lineIndex, settings: {}, selectedLines: new Set() } as unknown as Props)} />);
+  return render(<WordsFocusLine {...({ lines, lineIndex, settings: {}, selectedLines: new Set(), children: () => null } as unknown as Props)} />);
 }
 
 describe('WordsFocusLine', () => {

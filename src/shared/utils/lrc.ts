@@ -63,8 +63,11 @@ function formatWordsToLrc(words: EditorWord[], precision: string = 'hundredths')
   const cjk = (ch?: string) => { const c = ch?.codePointAt(0) ?? 0; return (c >= 0x3000 && c <= 0x9FFF) || (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFF00 && c <= 0xFFEF) || (c >= 0x20000 && c <= 0x2FA1F); };
   return words.map((w, i, arr) => {
     const ts = w.time != null ? formatWordTimestamp(w.time, precision) : '';
-    const token = `${ts}${w.word ?? ''}`;
     const next = arr[i + 1];
+    // A word that stops before the next one starts closes with an empty timed token.
+    const closes = w.time != null && w.end != null && w.end > w.time
+      && (next?.time == null || next.time - w.end > 0.005);
+    const token = `${ts}${w.word ?? ''}${closes ? formatWordTimestamp(w.end, precision) : ''}`;
     if (!next) return token;
     const lastChar = (w.word ?? '').slice(-1);
     const firstChar = (next.word ?? '').slice(0, 1);
@@ -183,7 +186,7 @@ export function compileLRC(lines: EditorLine[], includeTranslations = false, pre
   return lineEndings === 'crlf' ? result.replace(/\n/g, '\r\n') : result;
 }
 
-interface ParsedWord { word: string; time: number }
+interface ParsedWord { word: string; time: number; end?: number }
 
 /**
  * Parses inline word-level timestamp tokens from LRC line text.
@@ -197,6 +200,8 @@ function parseWordTimestamps(text: string): ParsedWord[] {
     const time = parseInt(match[1], 10) * 60 + parseFloat(match[2]);
     const word = match[3].trimEnd();
     if (word) words.push({ word, time });
+    // An empty timed token closes the word before it: that word ends there.
+    else if (words.length && time > words[words.length - 1].time) words[words.length - 1].end = time;
   }
   // Split CJK word groups into individual characters, distributing timestamps.
   // Latin/ASCII runs are kept as whole tokens.
@@ -238,7 +243,9 @@ function parseWordTimestamps(text: string): ParsedWord[] {
         const t = duration != null
           ? w.time + (duration * si / subTokens.length)
           : w.time + si * 0.1;
-        expanded.push({ word: token, time: parseFloat(t.toFixed(3)) });
+        const piece: ParsedWord = { word: token, time: parseFloat(t.toFixed(3)) };
+        if (si === subTokens.length - 1 && w.end != null) piece.end = w.end;
+        expanded.push(piece);
       });
     });
     return expanded;

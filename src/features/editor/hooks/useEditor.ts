@@ -796,7 +796,7 @@ export function useEditor({
   const handleClearAllWordTimestamps = () => {
     requestConfirm(t('confirm.clearWordTimestamps'), () => {
       setLines((prev) => prev.map((l) =>
-        l.words ? { ...l, words: l.words.map((w) => ({ ...w, time: null })) } : l
+        l.words ? { ...l, words: l.words.map((w) => ({ ...w, time: null, end: null })) } : l
       ));
     }, { title: t('confirm.clearWordTimestampsTitle'), variant: 'default' });
   };
@@ -806,7 +806,7 @@ export function useEditor({
     if (!line?.words) return;
     setLines((prev) => {
       const updated = [...prev];
-      updated[activeLineIndex] = { ...line, words: (line.words || []).map((w) => ({ ...w, time: null })) };
+      updated[activeLineIndex] = { ...line, words: (line.words || []).map((w) => ({ ...w, time: null, end: null })) };
       return updated;
     });
   };

@@ -123,7 +123,7 @@ export function useWordsMode({ setLines, setModifiedLines }: UseWordsModeParams)
       const line = updated[lineIndex];
       if (!line?.[field]) return prev;
       const newWords = [...(line[field] as EditorWord[])];
-      newWords[wordIndex] = { ...newWords[wordIndex], time: null };
+      newWords[wordIndex] = { ...newWords[wordIndex], time: null, end: null };
       updated[lineIndex] = { ...line, [field]: newWords };
       return updated;
     });

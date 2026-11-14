@@ -157,7 +157,7 @@ export function clearAllTimestamps(lines: EditorLine[], isSrt?: boolean, isWords
     timestamp: null,
     source: null,
     ...(isSrt && { endTime: null }),
-    ...(isWords && l.words && { words: l.words.map((w) => ({ ...w, time: null })) }),
+    ...(isWords && l.words && { words: l.words.map((w) => ({ ...w, time: null, end: null })) }),
   }));
 }
 
@@ -172,7 +172,7 @@ export function clearLineTimestamp(lines: EditorLine[], index: number, isSrt?: b
           timestamp: null,
           source: null,
           ...(isSrt && { endTime: null }),
-          ...(isWords && l.words && { words: l.words.map((w) => ({ ...w, time: null })) }),
+          ...(isWords && l.words && { words: l.words.map((w) => ({ ...w, time: null, end: null })) }),
         }
       : l,
   );

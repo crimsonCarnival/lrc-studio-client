@@ -4,6 +4,8 @@
 export interface EditorWord {
   word?: string;
   time?: number | null;
+  /** Where the word stops, when that is earlier than the next word's start (a pause). */
+  end?: number | null;
   reading?: string;
   singerIndex?: number;
 }

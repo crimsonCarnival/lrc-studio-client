@@ -14,6 +14,10 @@ import { CountDot } from '@ui/count-dot';
 import { isPendingCounterpart } from '@features/editor/services/counterparts';
 import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
 import { WordsFocusLine } from '../modes/WordsFocusLine';
+import { WordMenuItems } from '../modes/WordMenuItems';
+import { TapPad } from '../modes/TapPad';
+import toast from 'react-hot-toast';
+import { ToastBody } from '@/shared/ui/app-toast';
 import { usePlayer } from '@/features/player/PlayerContext';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useStartTour } from '@/app/layout/phone-editor-chrome';
@@ -556,52 +560,6 @@ export default function Editor({
   const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
   // Never hidden without media: the dock is where a song is loaded.
   const playerDocked = playerSlot === 'editor' && !(playerHidden && hasMedia);
-  const playerDock = playerDocked ? (
-    <div
-      data-tour="player-controls"
-      className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
-        }`}
-    >
-      {hasMedia && (
-        // A handle on the dock's own edge: it reads as "this strip can be put away".
-        <Tip content={<ShortcutHint label={t('projectView.hidePlayer')} shortcut="togglePlayer" fallback="p" />}>
-          <button
-            type="button"
-            onClick={togglePlayerHidden}
-            aria-label={t('projectView.hidePlayer')}
-            className={`absolute right-6 z-10 grid h-5 w-10 place-items-center rounded-pill bg-card text-subtle inset-ring inset-ring-hl transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${playerPosition === 'top' ? '-bottom-2.5' : '-top-2.5'}`}
-          >
-            <Icon name={playerPosition === 'top' ? 'expand_less' : 'expand_more'} size={14} />
-          </button>
-        </Tip>
-      )}
-      <PlayerControls variant="editor" />
-      {(() => {
-        const symbols = KEY_SYMBOLS as Record<string, string>;
-        const rangeKey = settings.shortcuts?.rangeSelect?.[0] || 'Shift';
-        const toggleKey = settings.shortcuts?.toggleSelect?.[0] || 'Ctrl';
-        const deselectKey = settings.shortcuts?.deselect?.[0] || 'Escape';
-        const selectionHintText = t('editor.selection.hint', {
-          range: symbols[rangeKey] ?? rangeKey,
-          toggle: symbols[toggleKey] ?? toggleKey,
-          deselect: symbols[deselectKey] ?? deselectKey
-        });
-
-        const markKeyName = settings.shortcuts?.mark?.[0] || 'Enter';
-        const withKey = (text: string) => text.replace(/Space|Espacio/gi, markKeyName);
-        // What the selection keys do, and the pending SRT end mark, are about the current state
-        // and stay. "Press the mark key" is a first-use hint and goes once the key has been used.
-        const hint = selectedLines.size > 0
-          ? selectionHintText
-          : editorMode === 'srt' && awaitingEndMark != null
-            ? withKey(t('editor.markEndInstruction'))
-            : markUsed
-              ? null
-              : withKey(t(editorMode === 'srt' ? 'editor.markInstructionSRT' : editorMode === 'words' ? 'editor.markInstructionWords' : 'editor.markInstruction'));
-        return hint ? <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">{hint}</p> : null;
-      })()}
-    </div>
-  ) : null;
 
 
   const syncProgress = useMemo(() => {
@@ -917,7 +875,27 @@ export default function Editor({
       const line = prev[activeLineIndex];
       if (!line?.words?.[wordIndex]) return prev;
       const next = [...prev];
-      next[activeLineIndex] = { ...line, words: line.words.map((w, i) => (i === wordIndex ? { ...w, time } : w)) };
+      next[activeLineIndex] = {
+        ...line,
+        words: line.words.map((w, i) => {
+          // An end the new start has passed no longer means anything: the word runs on again.
+          if (i === wordIndex) return { ...w, time, ...(w.end != null && w.end <= time ? { end: null } : {}) };
+          if (i < wordIndex && w.end != null && w.end > time) return { ...w, end: null };
+          return w;
+        }),
+      };
+      return next;
+    });
+  }, [setLines, activeLineIndex]);
+
+  // Where a word stops when the singer pauses before the next one; null joins them up again.
+  const handleSetWordEnd = useCallback((wordIndex: number, end: number | null) => {
+    setLines((prev) => {
+      const line = prev[activeLineIndex];
+      const word = line?.words?.[wordIndex];
+      if (!word || word.time == null || (end != null && end <= word.time)) return prev;
+      const next = [...prev];
+      next[activeLineIndex] = { ...line, words: line.words!.map((w, i) => (i === wordIndex ? { ...w, end } : w)) };
       return next;
     });
   }, [setLines, activeLineIndex]);
@@ -947,6 +925,200 @@ export default function Editor({
     seek(time);
     if (!playerIsPlaying) togglePlay();
   }, [seek, togglePlay, playerIsPlaying]);
+
+  // ── Words focus: what a word's row and menu do ──
+  const focusWords = focusLine?.words;
+  const selectedWordIndex = focusedTimestamp?.lineIndex === activeLineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp.wordIndex != null
+    ? focusedTimestamp.wordIndex
+    : null;
+  // Clicking a word seeks to it and makes it the one the nudge keys move, as a chip click did.
+  const handleSelectWord = useCallback((wordIndex: number) => {
+    const word = focusWords?.[wordIndex];
+    if (!word) return;
+    if (word.time != null) {
+      seek(word.time);
+      if (settings.playback?.seekPlays && !playerIsPlaying) togglePlay();
+    }
+    handleSetActiveWordIndex(wordIndex);
+    setFocusedTimestamp({ lineIndex: activeLineIndex, type: 'word', wordIndex });
+  }, [focusWords, seek, settings.playback?.seekPlays, playerIsPlaying, togglePlay, handleSetActiveWordIndex, setFocusedTimestamp, activeLineIndex]);
+  const wordStartBounds = useCallback((wordIndex: number) => {
+    const words = focusWords ?? [];
+    const before = words.slice(0, wordIndex).reverse().find((w) => w.time != null)?.time;
+    const after = words.slice(wordIndex + 1).find((w) => w.time != null)?.time;
+    const min = Math.max(focusStart ?? 0, before != null ? before + 0.02 : 0);
+    const max = Math.min(focusInfo.end ?? Infinity, after ?? Infinity) - 0.02;
+    return { min, max };
+  }, [focusWords, focusStart, focusInfo.end]);
+  const handleSetStartAtPlayhead = useCallback((wordIndex: number) => {
+    const { min, max } = wordStartBounds(wordIndex);
+    if (max < min) return;
+    handleSetWordTime(wordIndex, Number(Math.min(max, Math.max(min, playbackPosition)).toFixed(3)));
+  }, [wordStartBounds, handleSetWordTime, playbackPosition]);
+  const handleNudgeWordStart = useCallback((wordIndex: number, delta: number) => {
+    const time = focusWords?.[wordIndex]?.time;
+    if (time == null) return;
+    const { min, max } = wordStartBounds(wordIndex);
+    handleSetWordTime(wordIndex, Number(Math.min(max, Math.max(min, time + delta)).toFixed(3)));
+  }, [focusWords, wordStartBounds, handleSetWordTime]);
+  // Sets the end of the word the playhead is in (or just left) at the playhead: the singer paused.
+  const handleEndWordHere = useCallback((wordIndex?: number) => {
+    const words = focusWords ?? [];
+    let index = wordIndex ?? -1;
+    if (index < 0) words.forEach((w, i) => { if (w.time != null && w.time < playbackPosition) index = i; });
+    const word = words[index];
+    if (!word || word.time == null || playbackPosition <= word.time + 0.02) return;
+    const next = words.slice(index + 1).find((w) => w.time != null)?.time ?? focusInfo.end ?? Infinity;
+    if (playbackPosition >= next) return;
+    handleSetWordEnd(index, Number(playbackPosition.toFixed(3)));
+  }, [focusWords, playbackPosition, focusInfo.end, handleSetWordEnd]);
+  // Puts the stamping cursor back on a word and rewinds a little before it, to stamp again from there.
+  const handleRestampFrom = useCallback((wordIndex: number) => {
+    const words = focusWords ?? [];
+    const anchor = words[wordIndex]?.time ?? words.slice(0, wordIndex).reverse().find((w) => w.time != null)?.time ?? focusStart;
+    handleSetActiveWordIndex(wordIndex);
+    setFocusedTimestamp(null);
+    if (anchor != null && hasMedia) {
+      seek(Math.max(focusStart ?? 0, anchor - 1));
+      if (!playerIsPlaying) togglePlay();
+    }
+  }, [focusWords, focusStart, handleSetActiveWordIndex, setFocusedTimestamp, hasMedia, seek, playerIsPlaying, togglePlay]);
+  // Spreads this word and the ones after it evenly up to the line's end, keeping the ones before.
+  const handleDistributeFrom = useCallback((wordIndex: number) => {
+    const words = focusWords ?? [];
+    const from = words[wordIndex]?.time ?? words.slice(0, wordIndex).reverse().find((w) => w.time != null)?.time ?? focusStart;
+    const to = focusInfo.end;
+    if (from == null || to == null || to <= from) return;
+    const step = (to - from) / (words.length - wordIndex);
+    setLines((prev) => {
+      const line = prev[activeLineIndex];
+      if (!line?.words) return prev;
+      const next = [...prev];
+      next[activeLineIndex] = {
+        ...line,
+        words: line.words.map((w, i) => (i < wordIndex ? w : { ...w, time: Number((from + (i - wordIndex) * step).toFixed(3)), end: null })),
+      };
+      return next;
+    });
+  }, [focusWords, focusStart, focusInfo.end, setLines, activeLineIndex]);
+  // Clearing a word's time says what went and offers it back.
+  const handleClearWordWithUndo = useCallback((wordIndex: number) => {
+    const word = focusWords?.[wordIndex];
+    if (!word) return;
+    handleClearWordTimestamp(activeLineIndex, wordIndex, 'words');
+    const id = `word-cleared-${activeLineIndex}-${wordIndex}`;
+    toast(<ToastBody title={t('editor.words.cleared', { word: word.word })} action={{ label: t('editor.undo'), onClick: undo }} toastId={id} />, { id });
+  }, [focusWords, handleClearWordTimestamp, activeLineIndex, t, undo]);
+  // Backspace while stamping: the last stamp was early or late, so take it back and go again.
+  const handleUnstampLast = useCallback(() => {
+    const words = focusWords ?? [];
+    let index = -1;
+    words.forEach((w, i) => { if (w.time != null && (activeWordIndex < 0 || i < activeWordIndex)) index = i; });
+    if (index < 0) return false;
+    const time = words[index].time as number;
+    handleClearWordTimestamp(activeLineIndex, index, 'words');
+    handleSetActiveWordIndex(index);
+    setFocusedTimestamp(null);
+    if (hasMedia) seek(Math.max(focusStart ?? 0, time - 1.5));
+    return true;
+  }, [focusWords, activeWordIndex, handleClearWordTimestamp, activeLineIndex, handleSetActiveWordIndex, setFocusedTimestamp, hasMedia, seek, focusStart]);
+  const handleCopyTime = useCallback((time: number) => {
+    const text = formatTimestamp(time);
+    navigator.clipboard?.writeText(text).then(
+      () => toast.success(t('editor.words.copied', { time: text })),
+      () => { /* nothing was copied; the menu simply closes */ },
+    );
+  }, [t]);
+
+  // Words-focus keys, ahead of the editor-wide ones (capture phase): Backspace takes back the
+  // last stamp instead of the whole line's time, and K ends the word being sung (a pause).
+  const wordKeysRef = useRef({ handleUnstampLast, handleEndWordHere });
+  useLayoutEffect(() => { wordKeysRef.current = { handleUnstampLast, handleEndWordHere }; });
+  const clearTimestampKey = settings.shortcuts?.clearTimestamp?.[0] || 'Backspace';
+  useEffect(() => {
+    if (!wordsFocus || stampTarget === 'secondary') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.isComposing) return;
+      const target = e.target instanceof HTMLElement ? e.target : null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
+      if (target?.closest('[role="menu"],[role="dialog"],[role="listbox"],[role="combobox"]')) return;
+      if (selectedLines.size > 0) return;
+      if (matchKey(e, clearTimestampKey)) {
+        if (wordKeysRef.current.handleUnstampLast()) { e.preventDefault(); e.stopPropagation(); }
+      } else if (matchKey(e, 'k')) {
+        e.preventDefault();
+        e.stopPropagation();
+        wordKeysRef.current.handleEndWordHere();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [wordsFocus, stampTarget, clearTimestampKey, selectedLines.size]);
+
+  const tapPad = wordsFocus && hasMedia ? (
+    <TapPad
+      line={focusLine}
+      activeWordIndex={stampTarget === 'secondary' ? -1 : activeWordIndex}
+      markKey={keyCap(markKey)}
+      onMark={handleMarkWithConfidence}
+    />
+  ) : null;
+
+  // #3: the in-editor player docks at the top or bottom (see playerPosition above).
+  const playerDock = playerDocked ? (
+    <div
+      data-tour="player-controls"
+      className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
+        }`}
+    >
+      {hasMedia && (
+        // A handle on the dock's own edge: it reads as "this strip can be put away".
+        <Tip content={<ShortcutHint label={t('projectView.hidePlayer')} shortcut="togglePlayer" fallback="p" />}>
+          <button
+            type="button"
+            onClick={togglePlayerHidden}
+            aria-label={t('projectView.hidePlayer')}
+            className={`absolute right-6 z-10 grid h-5 w-10 place-items-center rounded-pill bg-card text-subtle inset-ring inset-ring-hl transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${playerPosition === 'top' ? '-bottom-2.5' : '-top-2.5'}`}
+          >
+            <Icon name={playerPosition === 'top' ? 'expand_less' : 'expand_more'} size={14} />
+          </button>
+        </Tip>
+      )}
+      {wordsFocus ? (
+        // The stamp button sits right of the player at a fixed size, so it never moves.
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1"><PlayerControls variant="editor" /></div>
+          {tapPad}
+        </div>
+      ) : (
+        <PlayerControls variant="editor" />
+      )}
+      {(() => {
+        const symbols = KEY_SYMBOLS as Record<string, string>;
+        const rangeKey = settings.shortcuts?.rangeSelect?.[0] || 'Shift';
+        const toggleKey = settings.shortcuts?.toggleSelect?.[0] || 'Ctrl';
+        const deselectKey = settings.shortcuts?.deselect?.[0] || 'Escape';
+        const selectionHintText = t('editor.selection.hint', {
+          range: symbols[rangeKey] ?? rangeKey,
+          toggle: symbols[toggleKey] ?? toggleKey,
+          deselect: symbols[deselectKey] ?? deselectKey
+        });
+
+        const markKeyName = settings.shortcuts?.mark?.[0] || 'Enter';
+        const withKey = (text: string) => text.replace(/Space|Espacio/gi, markKeyName);
+        // What the selection keys do, and the pending SRT end mark, are about the current state
+        // and stay. "Press the mark key" is a first-use hint and goes once the key has been used.
+        const hint = selectedLines.size > 0
+          ? selectionHintText
+          : editorMode === 'srt' && awaitingEndMark != null
+            ? withKey(t('editor.markEndInstruction'))
+            : markUsed
+              ? null
+              : withKey(t(editorMode === 'srt' ? 'editor.markInstructionSRT' : editorMode === 'words' ? 'editor.markInstructionWords' : 'editor.markInstruction'));
+        return hint ? <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">{hint}</p> : null;
+      })()}
+    </div>
+  ) : null;
 
   // ── Phone layout state ──
   // Held here, not in PhoneEditor, because the sheets drive handlers that live in this component
@@ -1606,6 +1778,7 @@ export default function Editor({
       {statusSlot && compactHeader && createPortal(
         <div className="ml-2.5 flex items-center">
           <PublicHeaderPlayer playerHidden onTogglePlayer={togglePlayerHidden} hasInitialMedia />
+          {tapPad && <div className="ml-3">{tapPad}</div>}
         </div>,
         statusSlot,
       )}
@@ -1881,10 +2054,10 @@ export default function Editor({
         />
       </div>
 
-      <div className={`flex flex-col min-h-0 min-w-0 ${wordsFocus ? 'flex-none px-5 sm:px-8 pt-4' : 'flex-1 px-3 sm:px-4 pt-3'}`}>
+      <div className={`flex flex-col min-h-0 min-w-0 flex-1 ${wordsFocus ? 'px-5 sm:px-8 pt-3 pb-4' : 'px-3 sm:px-4 pt-3'}`}>
 
         {/* Sync Mode View */}
-        <div data-tour="editor-lines" className={`relative flex flex-col min-h-0 ${wordsFocus ? 'flex-none h-[clamp(150px,26vh,260px)] overflow-y-auto lrc-scroll' : 'flex-1'}`}>
+        <div data-tour="editor-lines" className="relative flex flex-col min-h-0 flex-1">
           <div className="hidden xl:block empty:hidden">
           <SelectionActionBar
             selectedLines={selectedLines}
@@ -1915,20 +2088,10 @@ export default function Editor({
           <WordsFocusLine
             lines={lines}
             lineIndex={activeLineIndex}
-            playingWordIndex={playingWordIndex}
             settings={settings}
             selectedLines={selectedLines}
-            focusedTimestamp={focusedTimestamp}
-            setFocusedTimestamp={setFocusedTimestamp}
-            activeWordIndex={activeWordIndex}
-            handleSetActiveWordIndex={handleSetActiveWordIndex}
-            handleClearWordTimestamp={handleClearWordTimestamp}
-            onWordMenu={openWord}
-            onLineMenu={openLine}
-            stampTarget={stampTarget}
             playerRef={playerRef}
             projectSingers={combinedSingers}
-            singerColors={singerColors}
             songArtists={combinedSingers}
             editingLineIndex={editingLineIndex}
             setEditingLineIndex={setEditingLineIndex}
@@ -1951,7 +2114,91 @@ export default function Editor({
             handleMark={handleMarkWithConfidence}
             shiftTime={shiftTimeWithConfidence}
             onToggleLineMode={handleToggleLineMode}
-          />
+          >
+            {(lineApi) => (
+              <WordTimeline
+                line={focusLine as EditorLine}
+                lineEnd={focusInfo.end}
+                playbackPosition={playbackPosition}
+                isPlaying={playerIsPlaying}
+                activeWordIndex={activeWordIndex}
+                selectedWordIndex={selectedWordIndex}
+                playingWordIndex={playingWordIndex}
+                onSetWordTime={handleSetWordTime}
+                onSetWordEnd={handleSetWordEnd}
+                onSelectWord={handleSelectWord}
+                onEditLine={lineApi.editLine}
+                markKey={keyCap(markKey)}
+                onPlayFrom={hasMedia ? handlePlayFrom : undefined}
+                wordMenu={(wi) => {
+                  const word = focusWords?.[wi];
+                  if (!word) return null;
+                  return (
+                    <WordMenuItems
+                      word={word}
+                      wordIndex={wi}
+                      wordCount={focusWords?.length ?? 0}
+                      playbackPosition={playbackPosition}
+                      fine={settings.editor?.nudge?.fine || 0.01}
+                      onPlayFrom={hasMedia ? handlePlayFrom : undefined}
+                      onSetStartHere={() => handleSetStartAtPlayhead(wi)}
+                      onSetEndHere={() => handleEndWordHere(wi)}
+                      onClearEnd={() => handleSetWordEnd(wi, null)}
+                      onNudgeStart={(delta) => handleNudgeWordStart(wi, delta)}
+                      onCopyTime={handleCopyTime}
+                      onRestampFrom={() => handleRestampFrom(wi)}
+                      onDistributeFrom={() => handleDistributeFrom(wi)}
+                      onEditReading={() => openWord(activeLineIndex, wi, word as Parameters<typeof openWord>[2], false)}
+                      onMergeNext={() => handleMergeWordWithNext(activeLineIndex, wi)}
+                      onSplit={() => handleSplitWord(activeLineIndex, wi)}
+                      onRegroup={() => handleRegroupLine(activeLineIndex)}
+                      onEditLine={lineApi.editLine}
+                      onClear={() => handleClearWordWithUndo(wi)}
+                    />
+                  );
+                }}
+                hints={[
+                  { key: keyCap(markKey), label: t('editor.words.hintMark') },
+                  { key: keyCap(clearTimestampKey), label: t('editor.words.hintUndoStamp') },
+                  { key: 'K', label: t('editor.words.hintEnd') },
+                  { key: keyCap(settings.shortcuts?.playPause?.[0] || 'Space'), label: t('editor.shortcutHints.play') },
+                ].map((hint) => (
+                  <span key={hint.label} className="inline-flex items-center gap-1.5">
+                    <Kbd>{hint.key}</Kbd>
+                    {hint.label}
+                  </span>
+                ))}
+                footerEnd={(
+                  <>
+                    <Tip content={loopFocusLine ? t('editor.words.loopOn') : t('editor.words.loopOff')}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-pressed={loopFocusLine}
+                        aria-label={t('editor.words.loop')}
+                        onClick={toggleLoopFocusLine}
+                        className={`size-8 lg:size-8 coarse:size-11 rounded-md ${loopFocusLine ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
+                      >
+                        <Icon name="repeat" size={16} />
+                      </Button>
+                    </Tip>
+                    <Tip content={t('editor.words.lineActions')}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label={t('editor.words.lineActions')}
+                        aria-haspopup="menu"
+                        onClick={(e) => lineApi.openLineMenu(e.currentTarget)}
+                        className="size-8 lg:size-8 coarse:size-11 rounded-md border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground"
+                      >
+                        <Icon name="more_horiz" size={16} />
+                      </Button>
+                    </Tip>
+                  </>
+                )}
+              />
+            )}
+          </WordsFocusLine>
           ) : lineList}
         </div>
       </div>
@@ -1975,48 +2222,6 @@ export default function Editor({
         />
       )}
 
-      {wordsFocus && focusLine && focusLine.type !== 'section' && (
-        <div className="lrc-scroll flex flex-col flex-1 min-h-0 overflow-y-auto gap-6 px-5 sm:px-8 pt-2 pb-6">
-          <WordTimeline
-            line={focusLine}
-            lineEnd={focusInfo.end}
-            playbackPosition={playbackPosition}
-            activeWordIndex={playingWordIndex ?? (focusedTimestamp?.lineIndex === activeLineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp.wordIndex != null ? focusedTimestamp.wordIndex : activeWordIndex)}
-            onSetWordTime={handleSetWordTime}
-            markKey={keyCap(settings.shortcuts?.mark?.[0] || 'Enter')}
-            onPlayFrom={hasMedia ? handlePlayFrom : undefined}
-          />
-          <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-foreground/65">
-              {[
-                { key: settings.shortcuts?.mark?.[0] || 'Enter', label: t('editor.words.hintMark') },
-                { key: settings.shortcuts?.playPause?.[0] || 'Space', label: t('editor.shortcutHints.play') },
-              ].map((hint) => (
-                <span key={hint.label} className="inline-flex items-center gap-1.5">
-                  <Kbd>
-                    {keyCap(hint.key)}
-                  </Kbd>
-                  {hint.label}
-                </span>
-              ))}
-            </div>
-            <div className="flex items-center gap-2.5">
-              <Tip content={loopFocusLine ? t('editor.words.loopOn') : t('editor.words.loopOff')}>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-pressed={loopFocusLine}
-                  aria-label={t('editor.words.loop')}
-                  onClick={toggleLoopFocusLine}
-                  className={`size-10 lg:size-10 coarse:size-11 rounded-[calc(var(--radius)*1)] ${loopFocusLine ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
-                >
-                  <Icon name="repeat" size={18} />
-                </Button>
-              </Tip>
-            </div>
-          </div>
-        </div>
-      )}
       </section>
       {!wordsFocus && (
       <EditorSidePanel

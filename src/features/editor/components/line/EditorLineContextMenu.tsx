@@ -27,7 +27,7 @@ const KEY = 'h-[22px] min-w-[22px] text-[11px] text-subtle';
  * The key for a menu row, as the viewer has it bound. Mounted only while the menu is open, so the
  * hundreds of rows that carry this menu do not each re-render on every settings change.
  */
-function MenuShortcut({ shortcut, fallback, danger = false }: { shortcut: string; fallback: string; danger?: boolean }) {
+export function MenuShortcut({ shortcut, fallback, danger = false }: { shortcut: string; fallback: string; danger?: boolean }) {
   const { settings } = useSettings();
   const binding: string = settings.shortcuts?.[shortcut]?.[0] || fallback;
   return (
@@ -60,6 +60,8 @@ interface Props {
   handleToggleCounterpart?: (lineIndex: number) => void;
   /** Phone rows open the line sheet instead (see PhoneLineSheet). */
   disabled?: boolean;
+  /** Items shown first, above the usual ones (words focus puts the line's own toolbar actions here). */
+  leadingItems?: React.ReactNode;
 }
 
 export function EditorLineContextMenu({
@@ -80,6 +82,7 @@ export function EditorLineContextMenu({
   songArtists,
   handleToggleCounterpart,
   disabled = false,
+  leadingItems,
 }: Props) {
   const { t } = useTranslation();
 
@@ -194,6 +197,12 @@ export function EditorLineContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild disabled={disabled}>{children}</ContextMenuTrigger>
       <ContextMenuContent>
+        {leadingItems && (
+          <>
+            {leadingItems}
+            <ContextMenuSeparator />
+          </>
+        )}
         {handleAddLine && (
           <>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, null, { before: true })}>
