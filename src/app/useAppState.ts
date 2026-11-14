@@ -257,6 +257,9 @@ export function useAppState(user?: AuthUserType | null) {
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastServerSnapshotRef = useRef<any>(null);
+  // The snapshot is replaced on load and after every successful save, so its saveTime is
+  // "last saved". A getter, since the ref changes without a render of its own.
+  const getLastSaveTime = useCallback((): string | null => lastServerSnapshotRef.current?.state?.saveTime ?? null, []);
   // Guard: prevents two concurrent project.create() calls (manual + autosave race)
   const isCreatingProjectRef = useRef(false);
   // Mirror isProjectLoading in a ref so the beforeunload handler (a non-reactive
@@ -1163,6 +1166,7 @@ export function useAppState(user?: AuthUserType | null) {
     pendingSyncs,
     isSaving,
     saveFailed,
+    getLastSaveTime,
     isSharedProject,
     sharedReadOnly,
     setSharedReadOnly,

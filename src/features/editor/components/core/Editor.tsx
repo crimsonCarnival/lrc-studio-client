@@ -57,6 +57,7 @@ import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
+import { syncedCoverage } from '@features/editor/utils/sync-coverage';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
@@ -142,6 +143,8 @@ interface EditorProps {
   isSaving?: boolean;
   /** The last manual save was rejected by the server. */
   saveFailed?: boolean;
+  /** When the server last stored this project; read at render, after a save settles. */
+  getLastSaveTime?: () => string | null;
   compact?: boolean;
   onNewProject: () => void;
   onShowKeyboardHelp?: () => void;
@@ -208,6 +211,7 @@ export default function Editor({
   handleRemoveAllLyrics,
   isSaving,
   saveFailed,
+  getLastSaveTime,
   compact,
   onNewProject,
   onShowKeyboardHelp,
@@ -613,6 +617,8 @@ export default function Editor({
     const currentWordNum = activeWordIndex !== -1 ? Math.min(activeWordIndex + 1, totalWordsInLine) : 0;
     return { synced, total: lyricLines.length, wordCount, charCount, charCountNoSpaces, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
+
+  const coveredSeconds = useMemo(() => syncedCoverage(lines, duration ?? 0), [lines, duration]);
 
   // The phone layout draws its own header, so it leaves the app header's slots empty.
   const statusSlot = useHeaderSlot('status', !phone);
@@ -2050,6 +2056,12 @@ export default function Editor({
           charCountNoSpaces={syncProgress.charCountNoSpaces}
           selectedCount={selectedLines.size}
           format={isWordsMode ? t('editor.modeWords') : exportFormat}
+          coveredSeconds={coveredSeconds}
+          duration={hasMedia ? (duration ?? 0) : 0}
+          // Guest drafts are never on the server, so they have no "last saved".
+          lastSavedAt={user && !inSession ? (getLastSaveTime?.() ?? null) : null}
+          dirty={saveState !== 'saved'}
+          local={!user}
         />
       )}
 
