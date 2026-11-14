@@ -1,7 +1,7 @@
 import { EmptyState } from '@ui/EmptyState';
 import { Kbd } from '@ui/kbd';
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent, PointerEvent, ReactNode, WheelEvent } from 'react';
+import type { KeyboardEvent, MouseEvent as ReactMouseEvent, PointerEvent, ReactNode, WheelEvent } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import { needsSpaceAfter, rubyFitStyle, rubyRatioClass, splitOkurigana, toHiragana, toKatakana } from '@/shared/utils/furigana';
@@ -531,8 +531,12 @@ export function WordTimeline({
             const kana = showSyllables && seg.timed ? wordKana(w) : null;
             const morae = kana ? splitMorae(kana) : [];
             const highlight = isSelected || isPlayingWord;
+            const playable = seg.timed && !!onPlayFrom;
+            const BlockTag = playable ? 'button' : 'span';
             return (
               <ContextMenu key={i}>
+            const playable = seg.timed && !!onPlayFrom;
+            const BlockTag = playable ? 'button' : 'span';
                 <ContextMenuTrigger asChild>
                   <div
                     ref={(el) => { rowRefs.current[i] = el; }}
@@ -591,9 +595,16 @@ export function WordTimeline({
                             />
                           </Tip>
                         )}
-                        <span
+                        <BlockTag
+                          // The whole block plays the word from its start: a stamped block is a button,
+                          // an unstamped one has no time to play from and stays a plain shape.
+                          {...(playable ? {
+                            type: 'button' as const,
+                            'aria-label': t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) }),
+                            onClick: (e: ReactMouseEvent) => { e.stopPropagation(); onPlayFrom!(seg.from); },
+                          } : {})}
                           // @container: what the block shows depends on how wide it is.
-                          className={`@container absolute ${compact ? 'inset-y-[3px]' : 'inset-y-2'} flex items-center gap-2 overflow-hidden rounded-lg pl-3 pr-2 whitespace-nowrap ${isSelected
+                          className={`@container absolute ${compact ? 'inset-y-[3px]' : 'inset-y-2'} flex items-center gap-2 overflow-hidden rounded-lg pl-3 pr-2 text-left whitespace-nowrap ${playable ? 'cursor-pointer transition-colors hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus' : ''} ${isSelected
                             ? 'bg-foam/25 inset-ring-[1.5px] inset-ring-foam'
                             : tooShort
                               ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
@@ -618,25 +629,13 @@ export function WordTimeline({
                               ))}
                             </span>
                           ) : (
-                            <>
-                              {seg.timed && onPlayFrom && (
-                                <button
-                                  type="button"
-                                  aria-label={t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) })}
-                                  onClick={(e) => { e.stopPropagation(); onPlayFrom(seg.from); }}
-                                  className="relative hidden size-7 shrink-0 place-items-center rounded-md bg-background text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus hover:bg-overlay @[84px]:grid"
-                                >
-                                  <Icon name="play_arrow" size={14} filled />
-                                </button>
-                              )}
-                              {seg.timed && (
-                                <span className="relative hidden font-mono text-[11px] tabular-nums text-subtle @[120px]:inline">
-                                  {length.toFixed(2)} s
-                                </span>
-                              )}
-                            </>
+                            seg.timed && (
+                              <span className="relative hidden font-mono text-[11px] tabular-nums text-subtle @[84px]:inline">
+                                {length.toFixed(2)} s
+                              </span>
+                            )
                           )}
-                        </span>
+                        </BlockTag>
                         {seg.timed && (
                           <>
                             <span
