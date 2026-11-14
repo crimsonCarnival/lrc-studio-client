@@ -343,6 +343,12 @@ export default {
   clearWordTimestamp: "Clear timestamp for \"{{word}}\"",
   switchToSecondaryStamping: "Click to stamp secondary lyrics",
   switchToMainStamping: "Click to switch back to main lyrics",
+  sectionEditor: {
+    edit: "Edit section",
+    save: "Save (Enter)",
+    discard: "Discard changes (Esc)",
+  },
+  assignSingerHint: "Tick everyone who sings this line",
   secondaryBulk: {
     open: "Secondary lyrics",
     tip: "Add the secondary lyrics (romaji, translation…) for every line at once",

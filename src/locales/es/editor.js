@@ -346,6 +346,12 @@ export default {
   clearWordTimestamp: "Borrar marca de \"{{word}}\"",
   switchToSecondaryStamping: "Clic para marcar letras secundarias",
   switchToMainStamping: "Clic para volver a letras principales",
+  sectionEditor: {
+    edit: "Editar sección",
+    save: "Guardar (Enter)",
+    discard: "Descartar cambios (Esc)",
+  },
+  assignSingerHint: "Marca a todos los que cantan esta línea",
   secondaryBulk: {
     open: "Letras secundarias",
     tip: "Añade las letras secundarias (romaji, traducción…) de todas las líneas a la vez",
