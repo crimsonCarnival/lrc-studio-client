@@ -8,12 +8,15 @@ import type { EditorLine } from '@/features/editor/editor.types';
 import { useRemoteActiveLines } from '@/features/collab/collab-presence-context';
 import { collabColor } from '@/features/collab/collab-color';
 import { Tip } from '@ui/tip';
+import { Icon } from '@/shared/ui/Icon';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
 /** Smallest gap kept between two neighbouring word starts while dragging. */
 const MIN_WORD_GAP = 0.02;
 /** A timed word shorter than this (seconds) is flagged: nobody sings a word in under 80 ms. */
 const TOO_SHORT = 0.08;
+/** Spacing of the ruler ticks drawn along the bottom of each word block (seconds). */
+const RULER_TICK = 0.1;
 
 interface WordsLineNavProps {
   lines: EditorLine[];
@@ -102,6 +105,8 @@ interface WordTimelineProps {
   onSetWordTime: (wordIndex: number, time: number) => void;
   /** The mark shortcut as the user configured it, already turned into a key-cap label. */
   markKey: string;
+  /** Plays from a word's own stamped time. */
+  onPlayFrom?: (time: number) => void;
 }
 
 /**
@@ -110,7 +115,7 @@ interface WordTimelineProps {
  * line and its neighbours. Words with no time yet share what is left of the line evenly and
  * cannot be dragged.
  */
-export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex, onSetWordTime, markKey }: WordTimelineProps) {
+export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex, onSetWordTime, markKey, onPlayFrom }: WordTimelineProps) {
   const { t } = useTranslation();
   const trackRef = useRef<HTMLDivElement>(null);
   // Which edge is being dragged. The time itself is written to the line on every
@@ -196,6 +201,9 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
   };
 
   const playhead = (playbackPosition - start) / span;
+  // The word the playhead is inside, for the "where am I in this word" readout.
+  const playingIndex = segments.findIndex((seg) => seg.timed && seg.to > seg.from && playbackPosition >= seg.from && playbackPosition < seg.to);
+  const playing = playingIndex >= 0 ? segments[playingIndex] : null;
 
   return (
     <section aria-label={t('editor.words.timelineLabel')} className="rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-5 pt-5 pb-4 flex flex-col gap-3.5">
@@ -209,12 +217,13 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
           // A timed word this short is almost certainly a mis-stamp or an overlap with its
           // neighbour, so it is called out in gold (redesign sheet 14).
           const tooShort = seg.timed && seg.to - seg.from < TOO_SHORT;
+          const length = seg.to - seg.from;
+          const within = i === playingIndex ? (playbackPosition - seg.from) / length : null;
           return (
-            <Tip content={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: (seg.to - seg.from).toFixed(2) }) : undefined}>
+            <Tip key={i} content={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: (seg.to - seg.from).toFixed(2) }) : undefined}>
               <span
-                key={i}
                 // @container: the label hides itself once the block is narrower than 36px.
-                className={`@container absolute inset-y-0 flex items-center rounded-lg text-sm font-semibold overflow-hidden whitespace-nowrap ${isNow
+                className={`group/seg @container absolute inset-y-0 flex items-center rounded-lg text-sm font-semibold overflow-hidden whitespace-nowrap ${isNow
                   ? 'bg-primary text-primary-foreground'
                   : tooShort
                     ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
@@ -228,7 +237,34 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
                 {seg.timed && !tooShort && (
                   <span aria-hidden className={`absolute left-0 inset-y-1.5 w-[3px] rounded-sm ${isNow ? 'bg-primary-foreground/50' : 'bg-faint'}`} />
                 )}
-                <span className="hidden pl-2.5 @[36px]:inline">{seg.word}</span>
+                {/* How far playback is into this word. */}
+                {within != null && (
+                  <span aria-hidden className={`absolute inset-y-0 left-0 ${isNow ? 'bg-primary-foreground/25' : 'bg-foam/25'}`} style={{ width: `${within * 100}%` }} />
+                )}
+                {/* Ruler: one tick per 100 ms of this word, so its length reads at a glance. */}
+                {seg.timed && length > RULER_TICK && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-0 h-1.5 opacity-50"
+                    style={{
+                      backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px)',
+                      backgroundSize: `${(RULER_TICK / length) * 100}% 100%`,
+                    }}
+                  />
+                )}
+                <span className="relative hidden pl-2.5 @[36px]:inline">{seg.word}</span>
+                {seg.timed && onPlayFrom && (
+                  <button
+                    type="button"
+                    aria-label={t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) })}
+                    onClick={(e) => { e.stopPropagation(); onPlayFrom(seg.from); }}
+                    // Wide enough blocks only: a narrow one has no room, and the readout below plays it.
+                    className={`absolute right-1 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md px-1.5 py-1 font-mono text-[11px] leading-none tabular-nums opacity-0 transition-opacity group-hover/seg:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus @[96px]:flex ${isNow ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background text-foreground inset-ring inset-ring-hl'}`}
+                  >
+                    <Icon name="play_arrow" size={14} filled />
+                    {formatTime(seg.from)}
+                  </button>
+                )}
               </span>
             </Tip>
           );
@@ -269,7 +305,31 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
           <span aria-hidden className="absolute inset-y-[-4px] w-0.5 rounded-pill bg-foam pointer-events-none" style={{ left: `${playhead * 100}%` }} />
         )}
       </div>
-      <span className="text-[13px] text-subtle">{t('editor.words.dragHint')}</span>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 text-[13px] text-subtle">
+        <span>{t('editor.words.dragHint')}</span>
+        {/* Where playback is inside the word under the playhead, with that word's own start to replay it from. */}
+        {playing && (
+          <span className="inline-flex items-center gap-2 font-mono text-xs tabular-nums text-foreground">
+            {onPlayFrom && (
+              <Tip content={t('editor.words.playWord', { word: playing.word, time: formatTime(playing.from) })}>
+                <button
+                  type="button"
+                  aria-label={t('editor.words.playWord', { word: playing.word, time: formatTime(playing.from) })}
+                  onClick={() => onPlayFrom(playing.from)}
+                  className="grid size-6 place-items-center rounded-md bg-raised text-foreground inset-ring inset-ring-hl hover:bg-overlay focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
+                >
+                  <Icon name="play_arrow" size={14} filled />
+                </button>
+              </Tip>
+            )}
+            <span className="font-sans font-semibold">{playing.word}</span>
+            <span role="progressbar" aria-label={t('editor.words.wordProgress', { word: playing.word })} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((playbackPosition - playing.from) / (playing.to - playing.from)) * 100)} className="block h-1 w-20 overflow-hidden rounded-sm bg-hl">
+              <span className="block h-full bg-foam" style={{ width: `${((playbackPosition - playing.from) / (playing.to - playing.from)) * 100}%` }} />
+            </span>
+            <span className="text-subtle">{(playbackPosition - playing.from).toFixed(2)} / {(playing.to - playing.from).toFixed(2)} s</span>
+          </span>
+        )}
+      </div>
     </section>
   );
 }

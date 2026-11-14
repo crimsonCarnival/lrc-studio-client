@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
@@ -18,14 +18,15 @@ interface EditorToolbarProps {
   onAutoStamp?: () => void;
   onOpenFurigana?: () => void;
   onOpenSecondary?: () => void;
+  onOpenTranslations?: () => void;
   /** Replays the editor tour. Absent outside the app layout. */
   onStartTour?: () => void;
   // Collab: only the owner of a saved project gets Start / Manage session.
   sessionOwner?: SessionOwnerControl;
   collab?: CollabLockInput;
   onBeforeStartSession?: () => Promise<boolean>;
-  // Pinned to the far end of the row; also makes the toolbar take its own full-width row.
-  trailing?: ReactNode;
+  /** Takes its own full-width row, with the tour button pinned to the far end. */
+  fullRow?: boolean;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on
@@ -42,11 +43,12 @@ export default function EditorToolbar({
   onAutoStamp,
   onOpenFurigana,
   onOpenSecondary,
+  onOpenTranslations,
   onStartTour,
   sessionOwner,
   collab,
   onBeforeStartSession,
-  trailing,
+  fullRow,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
 
@@ -97,7 +99,7 @@ export default function EditorToolbar({
   const autoStampDisabled = autoStampBlockedReason !== null;
 
   return (
-    <div className={`flex items-center min-w-0 ${trailing ? 'basis-full' : ''}`}>
+    <div className={`flex items-center min-w-0 ${fullRow ? 'basis-full' : ''}`}>
       {onAutoStamp && (
         <Tip content={autoStampTip}>
           <Button
@@ -116,6 +118,19 @@ export default function EditorToolbar({
             <span className="hidden sm:inline whitespace-nowrap">
               {isWordsMode ? t('editor.autoStamp.buttonWords') : t('editor.autoStamp.button')}
             </span>
+          </Button>
+        </Tip>
+      )}
+      {onOpenTranslations && lines.some((l) => l.type !== 'section') && (
+        <Tip content={t('editor.translationBulk.tip')}>
+          <Button
+            variant="outline"
+            aria-label={t('editor.translationBulk.open')}
+            onClick={onOpenTranslations}
+            className="ml-2 h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold"
+          >
+            <Icon name="language" size={16} />
+            <span className="hidden sm:inline whitespace-nowrap">{t('editor.translationBulk.open')}</span>
           </Button>
         </Tip>
       )}
@@ -155,13 +170,12 @@ export default function EditorToolbar({
             size="icon"
             aria-label={t('editor.tour.take')}
             onClick={onStartTour}
-            className="ml-2 h-9 coarse:h-11 w-9 coarse:w-11 shrink-0 text-zinc-400 hover:text-zinc-200"
+            className={`${fullRow ? 'ml-auto' : 'ml-2'} h-9 coarse:h-11 w-9 coarse:w-11 shrink-0 text-zinc-400 hover:text-zinc-200`}
           >
             <Icon name="school" size={18} />
           </Button>
         </Tip>
       )}
-      {trailing}
     </div>
   );
 }

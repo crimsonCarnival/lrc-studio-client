@@ -2,6 +2,7 @@ import { EmptyState } from '@ui/EmptyState';
 import { lazy, Suspense, memo, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
 
@@ -501,25 +502,31 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   <span className="text-subtle"> / {formatTime(duration)}</span>
                 </div>
                 <div role="group" aria-label={t('player.jump')} className="flex gap-0.5 rounded-[var(--radius-control)] bg-card p-[3px] inset-ring inset-ring-hl">
-                  {[-seekStep, -0.1, 0.1, seekStep].map((delta) => (
-                    <Button
-                      key={delta}
-                      variant="ghost"
-                      size={null}
-                      onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
-                      aria-label={t(delta < 0 ? 'player.seekBack' : 'player.seekForward', { seconds: Math.abs(delta) })}
-                      className="h-[38px] rounded-[calc(var(--radius)*0.9)] px-2.5 font-mono text-[13px] font-medium text-subtle hover:bg-raised hover:text-foreground"
-                    >
-                      {delta < 0 ? '−' : '+'}{Math.abs(delta)}{Math.abs(delta) >= 1 ? 's' : ''}
-                    </Button>
-                  ))}
+                  {[-seekStep, -0.1, 0.1, seekStep].map((delta) => {
+                    const label = t(delta < 0 ? 'player.seekBack' : 'player.seekForward', { seconds: Math.abs(delta) });
+                    // Only the big steps have keys; the 0.1 s ones are pointer-only.
+                    const keyed = Math.abs(delta) === seekStep;
+                    return (
+                      <Tip key={delta} content={keyed ? <ShortcutHint label={label} shortcut={delta < 0 ? 'seekBackward' : 'seekForward'} fallback={delta < 0 ? 'ArrowLeft' : 'ArrowRight'} /> : label}>
+                        <Button
+                          variant="ghost"
+                          size={null}
+                          onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
+                          aria-label={label}
+                          className="h-[38px] rounded-[calc(var(--radius)*0.9)] px-2.5 font-mono text-[13px] font-medium text-subtle hover:bg-raised hover:text-foreground"
+                        >
+                          {delta < 0 ? '−' : '+'}{Math.abs(delta)}{Math.abs(delta) >= 1 ? 's' : ''}
+                        </Button>
+                      </Tip>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* ── Transport: the buttons either side of play step by lyric line; jumping by
                   time is the group beside the clock (redesign sheet 14). ── */}
               <div className="flex items-center gap-1.5 shrink-0">
-                <Tip content={t('projectView.previousLine')}>
+                <Tip content={variant === 'editor' ? <ShortcutHint label={t('projectView.previousLine')} shortcut="prevLine" fallback="ArrowUp" /> : t('projectView.previousLine')}>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -532,7 +539,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   </Button>
                 </Tip>
 
-                <Tip content={t('shortcuts.playPause')}>
+                <Tip content={<ShortcutHint label={t('shortcuts.playPause')} shortcut="playPause" fallback="Space" />}>
                   <Button
                     id="play-pause-btn"
                     size="icon"
@@ -557,7 +564,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   </Button>
                 </Tip>
 
-                <Tip content={t('projectView.nextLine')}>
+                <Tip content={variant === 'editor' ? <ShortcutHint label={t('projectView.nextLine')} shortcut="nextLine" fallback="ArrowDown" /> : t('projectView.nextLine')}>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -583,7 +590,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
 
                 {/* A-B Loop: repeat the active line, or clear an active loop */}
                 {!viewerMode && (
-                  <Tip content={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}>
+                  <Tip content={variant === 'editor' ? <ShortcutHint label={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')} shortcut="loopLine" fallback="L" /> : (loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop'))}>
                     <Button
                       // Ghost icon button: aria-pressed gives it the soft iris "on" state.
                       variant="ghost"
@@ -593,21 +600,9 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                           clearLoop();
                           return;
                         }
-                        if (!lines?.length) return;
-                        let activeIdx = -1;
-                        for (let i = 0; i < lines.length; i++) {
-                          if (lines[i].timestamp != null && lines[i].timestamp! <= currentTime) activeIdx = i;
-                        }
-                        if (activeIdx < 0) return;
-                        const a = lines[activeIdx].timestamp ?? null;
-                        let b: number | null = lines[activeIdx].endTime ?? null;
-                        if (b == null) {
-                          b = duration;
-                          for (let i = activeIdx + 1; i < lines.length; i++) {
-                            if (lines[i].timestamp != null) { b = lines[i].timestamp ?? null; break; }
-                          }
-                        }
-                        if (a != null && b != null) setLoop({ a, b });
+                        // Same bounds as the mobile bar and the editor's loop shortcut.
+                        const bounds = lineLoopAt(lines ?? [], currentTime, duration);
+                        if (bounds) setLoop(bounds);
                       }}
                       aria-pressed={loopA != null && loopB != null}
                       aria-label={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}

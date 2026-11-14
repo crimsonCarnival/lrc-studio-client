@@ -1134,11 +1134,15 @@ const EditorLineItem = React.memo(({
         )}
 
         {segmentProgress != null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[calc(var(--radius)*1.4)] overflow-hidden bg-hl/60 z-10 pointer-events-none animate-in fade-in duration-300">
-            <div
-              className="h-full bg-primary rounded-r-full"
-              style={{ width: `${segmentProgress * 100}%` }}
-            />
+          // Clipped by a box with the row's own radius: a 4px strip with that radius on its
+          // bottom corners cannot follow the curve, and stuck out past the row's ring.
+          <div className="absolute inset-0 z-10 rounded-[calc(var(--radius)*1.4)] overflow-hidden pointer-events-none animate-in fade-in duration-300">
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-hl/60">
+              <div
+                className="h-full bg-primary rounded-r-full"
+                style={{ width: `${segmentProgress * 100}%` }}
+              />
+            </div>
           </div>
         )}
       </div>
