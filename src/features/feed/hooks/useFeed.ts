@@ -23,8 +23,9 @@ const FEED_QUERY = /* GraphQL */ `
           accountName
           displayName
           avatarUrl staffRole
+          isFollowedByMe
         }
-        target { accountName displayName }
+        target { accountName displayName avatarUrl }
       }
       hasMore
     }

@@ -1,26 +1,36 @@
 import { profilePath } from '@/features/profile/profile-path';
-import { StaffRing } from '@/shared/ui/StaffRing';
-import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
-import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useSuggestedUsers } from '../hooks/useExplore';
-import { followUser, unfollowUser } from '@/features/profile/profile.service';
+import { useFollowToggle } from '../hooks/useFollowToggle';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { UserAvatar } from '@ui/UserAvatar';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
+import { cn } from '@/shared/utils/utils';
+import type { SuggestionReason as Reason } from '@/types/graphql';
+import { SuggestionReason } from './SuggestionReason';
+import { suggestionReasonText } from '../suggestion-reason';
 
 interface SuggestedUser {
   id: string;
   accountName: string;
-  displayName?: string;
-  avatarUrl?: string; staffRole?: string | null;
-  isFollowedByMe?: boolean;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  staffRole?: string | null;
+  isFollowedByMe?: boolean | null;
+  suggestionReason?: Reason | null;
 }
 
-export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
+type Variant = 'grid' | 'rail';
+
+/**
+ * People to follow, each with the reason they are suggested. `grid` is the Explore section;
+ * `rail` is the compact list in the feed's side column.
+ */
+export function SuggestedUsers({ limit = 8, variant = 'grid', className }: { limit?: number; variant?: Variant; className?: string }) {
   const { t } = useTranslation();
   const { user: me } = useAuthContext();
   const { users, loading, error } = useSuggestedUsers(limit) as {
@@ -28,121 +38,107 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
     loading: boolean;
     error: unknown;
   };
-  const [followState, setFollowState] = useState<Record<string, string>>({});
+  const follow = useFollowToggle();
+  const rail = variant === 'rail';
 
-  const handleFollow = useCallback(async (accountName: string) => {
-    setFollowState(s => ({ ...s, [accountName]: 'pending' }));
-    try {
-      await followUser(accountName);
-      setFollowState(s => ({ ...s, [accountName]: 'following' }));
-    } catch {
-      setFollowState(s => { const n = { ...s }; delete n[accountName]; return n; });
-    }
-  }, []);
+  const followButton = (u: SuggestedUser) => {
+    if (!me || me.isGuest || me.accountName === u.accountName) return null;
+    const following = follow.isFollowing(u.accountName, u.isFollowedByMe);
+    return (
+      <Button
+        type="button"
+        size="sm"
+        variant={following ? 'outline' : 'default'}
+        aria-pressed={following}
+        disabled={follow.isPending(u.accountName)}
+        onClick={() => void follow.toggle(u.accountName, following)}
+        className={cn('relative z-10 gap-1.5', !rail && 'w-full')}
+      >
+        {following && <Icon name="check" size={14} />}
+        {following ? t('explore.suggested.following') : t('explore.suggested.follow')}
+      </Button>
+    );
+  };
 
-  const handleUnfollow = useCallback(async (accountName: string) => {
-    setFollowState(s => ({ ...s, [accountName]: 'pending' }));
-    try {
-      await unfollowUser(accountName);
-      setFollowState(s => { const n = { ...s }; delete n[accountName]; return n; });
-    } catch {
-      setFollowState(s => { const n = { ...s }; delete n[accountName]; return n; });
-    }
-  }, []);
+  const heading = rail ? (
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="font-heading text-[15px] font-semibold text-foreground">{t('explore.suggested.shortTitle')}</h2>
+      <Link to="/explore" className="text-[13px] font-medium text-primary-ink hover:text-foreground">{t('feed.rail.explore')}</Link>
+    </div>
+  ) : (
+    <h2 className="font-heading text-xl font-semibold text-foreground">{t('explore.suggested.title')}</h2>
+  );
+
+  let body;
+  if (loading) {
+    body = <div className="flex justify-center py-8"><LogoLoader size={24} className="text-subtle" /></div>;
+  } else if (error || users.length === 0) {
+    body = <p className="py-6 text-center text-sm text-subtle">{t('explore.suggested.empty')}</p>;
+  } else if (rail) {
+    body = (
+      <ul className="flex flex-col gap-3">
+        {users.map((u) => (
+          <li key={u.id} className="flex items-center gap-2.5">
+            <div className="min-w-0 flex-1">
+            <UserHoverCard accountName={u.accountName} userId={u.id} className="block min-w-0">
+              <Link to={profilePath(u.accountName)} className="flex min-w-0 items-center gap-2.5">
+                <UserAvatar {...u} className="size-9 text-sm" />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-foreground">{u.displayName || u.accountName}</span>
+                  {u.suggestionReason && (
+                    <span className="block truncate text-xs text-subtle">{suggestionReasonText(u.suggestionReason, t)}</span>
+                  )}
+                </span>
+              </Link>
+            </UserHoverCard>
+            </div>
+            <span className="shrink-0">{followButton(u)}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  } else {
+    body = (
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+        {users.map((u) => (
+          // The whole card opens the profile through a stretched link; the follow button
+          // sits above it (z-10), so it is a sibling rather than nested interactive content.
+          <li
+            key={u.id}
+            className="relative flex flex-col gap-3.5 rounded-[var(--radius-card)] bg-raised p-[18px] inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint"
+          >
+            <Link
+              to={profilePath(u.accountName)}
+              aria-label={u.displayName || u.accountName}
+              className="absolute inset-0 rounded-[var(--radius-card)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            />
+            <UserHoverCard accountName={u.accountName} userId={u.id}>
+              {/* Only here so the hover card gets hover; the stretched link above is the row's real link. */}
+              <Link
+                to={profilePath(u.accountName)}
+                tabIndex={-1}
+                aria-hidden="true"
+                className="relative flex w-fit max-w-full min-w-0 items-center gap-3"
+              >
+                <UserAvatar {...u} className="size-12 text-lg" />
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-semibold text-foreground">{u.displayName || u.accountName}</p>
+                  <p className="truncate text-[13px] text-subtle">@{u.accountName}</p>
+                </div>
+              </Link>
+            </UserHoverCard>
+            <SuggestionReason reason={u.suggestionReason} className="min-h-8" />
+            <div className="mt-auto">{followButton(u)}</div>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-base font-semibold text-white">{t('explore.suggested.title')}</h2>
-
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <LogoLoader size={24} className="text-zinc-500" />
-        </div>
-      ) : error || users.length === 0 ? (
-        <p className="text-sm text-zinc-500 text-center py-10">
-          {t('explore.suggested.empty')}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-1">
-          {users.map(u => {
-            const isSelf = me?.accountName === u.accountName;
-            const state = followState[u.accountName];
-            const isFollowing = state === 'following' ? true : state === undefined ? u.isFollowedByMe : false;
-            const isPending = state === 'pending';
-
-            return (
-              // Whole row navigates via a stretched overlay link (the row's single accessible
-              // link); the follow button sits above it (relative z-10) so it is a sibling, not
-              // nested interactive content. The inner avatar/name link only exists so
-              // UserHoverCard still receives hover — it is hidden from AT and the tab order.
-              <div
-                key={u.id}
-                className="relative flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors"
-              >
-                <Link
-                  to={profilePath(u.accountName)}
-                  aria-label={u.displayName || u.accountName}
-                  className="absolute inset-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                />
-                <div className="relative flex-1 min-w-0 pointer-events-none">
-                  <UserHoverCard accountName={u.accountName} userId={u.id}>
-                    <Link
-                      to={profilePath(u.accountName)}
-                      tabIndex={-1}
-                      aria-hidden="true"
-                      className="flex items-center gap-3 min-w-0 pointer-events-auto"
-                    >
-                      <StaffRing role={u.staffRole}>
-                        {u.avatarUrl ? (
-                          <img
-                            src={u.avatarUrl}
-                            alt={u.displayName || u.accountName}
-                            referrerPolicy="no-referrer"
-                            className="size-9 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <InitialsAvatar name={(u.displayName || u.accountName || '?')} handle={u.accountName} className="size-9 rounded-full text-sm shrink-0" />
-                        )}
-                      </StaffRing>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
-                          {u.displayName || u.accountName}
-                        </p>
-                        <p className="text-xs text-zinc-500 truncate">{u.accountName}</p>
-                      </div>
-                    </Link>
-                  </UserHoverCard>
-                </div>
-
-                {me && !isSelf && (
-                  isFollowing ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); handleUnfollow(u.accountName); }}
-                      disabled={isPending}
-                      className="relative z-10 ml-auto"
-                    >
-                      {t('explore.suggested.following')}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); handleFollow(u.accountName); }}
-                      disabled={isPending}
-                      className="relative z-10 ml-auto"
-                    >
-                      {t('explore.suggested.follow')}
-                    </Button>
-                  )
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+    <section className={cn('flex flex-col', rail ? 'gap-3' : 'gap-4', className)}>
+      {heading}
+      {body}
     </section>
   );
 }

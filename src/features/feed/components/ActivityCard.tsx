@@ -3,15 +3,17 @@ import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { relativeTime } from '../relative-time';
 import { projectPath } from '@/features/projects/project-path';
 import { useIntersectionLoader } from '../hooks/useIntersectionLoader';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { useCardReactions } from '@features/reactions/hooks/useCardReactions';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { Button } from '@ui/button';
+import { useFollowToggle } from '@/features/explore/hooks/useFollowToggle';
 
 const TYPE_ICON_NAMES: Record<string, string> = {
   PROJECT_PUBLISHED: 'language',
@@ -34,9 +36,9 @@ const TYPE_I18N_KEY: Record<string, string> = {
 // Project-type activities that support reactions
 const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJECT_FORKED', 'PROJECT_SHARED']);
 
-type ActivityUser = { accountName: string; avatarUrl?: string | null; staffRole?: string | null; displayName?: string | null };
+type ActivityUser = { accountName: string; avatarUrl?: string | null; staffRole?: string | null; displayName?: string | null; isFollowedByMe?: boolean | null };
 
-interface Activity {
+export interface Activity {
   id: string;
   actor: ActivityUser;
   /** Who it was done to: the followed user, or the project's owner for a star, fork or share. */
@@ -58,18 +60,8 @@ function pick(arr: unknown, seed: string): string {
   return arr[hash % arr.length];
 }
 
-function relativeTime(isoString: string, t: TFunction): string {
-  const diff = Date.now() - new Date(isoString).getTime();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (mins < 1) return t('library.justNow');
-  if (mins < 60) return t('library.minutesAgo', { count: mins });
-  if (hours < 24) return t('library.hoursAgo', { count: hours });
-  return t('library.daysAgo', { count: days });
-}
 
-function ActivityReactions({ publicId }: { publicId: string }) {
+export function ActivityReactions({ publicId }: { publicId: string }) {
   const { user } = useAuthContext();
   const { reactions, myReaction, loaded, load, react } = useCardReactions(publicId);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -92,7 +84,7 @@ function ActivityReactions({ publicId }: { publicId: string }) {
   }, []);
 
   return (
-    <div ref={wrapRef} className="mt-1.5">
+    <div ref={wrapRef}>
       <ReactionBar
         reactions={loaded ? reactions : []}
         myReaction={myReaction}
@@ -104,6 +96,26 @@ function ActivityReactions({ publicId }: { publicId: string }) {
 }
 
 const sameUser = (a?: string | null, b?: string | null) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
+
+/** "Follow back" on a "followed you" card; gone once the viewer already follows them. */
+function FollowBack({ actor }: { actor: ActivityUser }) {
+  const { t } = useTranslation();
+  const follow = useFollowToggle();
+  const following = follow.isFollowing(actor.accountName, actor.isFollowedByMe);
+  if (actor.isFollowedByMe) return null;
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={following ? 'outline' : 'default'}
+      aria-pressed={following}
+      disabled={follow.isPending(actor.accountName)}
+      onClick={() => void follow.toggle(actor.accountName, following)}
+    >
+      {following ? t('explore.suggested.following') : t('feed.followBack')}
+    </Button>
+  );
+}
 
 export function ActivityCard({ activity }: { activity: Activity }) {
   const { t } = useTranslation();
@@ -134,18 +146,18 @@ export function ActivityCard({ activity }: { activity: Activity }) {
     || (type === 'PROJECT_PUBLISHED' && publicId ? projectPath({ publicId }, actor.accountName) : null);
   const canReact = REACTABLE_TYPES.has(type) && !!publicId;
 
-  const cardRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
   useIntersectionLoader(cardRef, id, 'activity');
 
   return (
-    <div ref={cardRef} className="flex gap-3 rounded-[var(--radius-card)] bg-background p-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
+    <article ref={cardRef} className="flex gap-3.5 rounded-[var(--radius-card)] bg-raised px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
       <UserHoverCard accountName={actor.accountName}>
         <Link to={profilePath(actor.accountName)} className="shrink-0 block">
           <StaffRing role={actor.staffRole}>
             {actor.avatarUrl ? (
-              <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
+              <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="size-10 rounded-full object-cover" />
             ) : (
-              <InitialsAvatar name={(actor.displayName || actor.accountName || '?')} handle={actor.accountName} className="w-9 h-9 rounded-full text-sm" />
+              <InitialsAvatar name={(actor.displayName || actor.accountName || '?')} handle={actor.accountName} className="size-10 rounded-full text-[15px]" />
             )}
           </StaffRing>
         </Link>
@@ -195,13 +207,20 @@ export function ActivityCard({ activity }: { activity: Activity }) {
         </p>
 
         {!isUserFollow && targetLink && (
-          <Link to={targetLink} className="mt-1.5 flex items-center gap-2 group">
-            {coverImage && (
-              <img src={coverImage} alt="" className="w-8 h-8 rounded-xs object-cover shrink-0" />
-            )}
-            <span className="text-sm font-medium text-foreground group-hover:text-primary-ink transition-colors truncate">
+          <Link to={targetLink} className="group mt-3 flex items-center gap-3 rounded-[var(--radius-control)] bg-background/60 p-2.5 inset-ring inset-ring-transparent transition-shadow hover:inset-ring-hl">
+            <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[calc(var(--radius)*0.8)] bg-primary-soft">
+              {coverImage
+                ? <img src={coverImage} alt="" className="size-full object-cover" />
+                : <Icon name={type === 'PLAYLIST_CREATED' ? 'queue_music' : 'music_note'} size={24} className="text-primary-ink/70" />}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground group-hover:text-primary-ink transition-colors">
               {projectTitle || t('feed.untitled')}
             </span>
+            {type !== 'PLAYLIST_CREATED' && (
+              <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                <Icon name="play_arrow" size={18} filled />
+              </span>
+            )}
           </Link>
         )}
 
@@ -223,14 +242,18 @@ export function ActivityCard({ activity }: { activity: Activity }) {
           </Link>
         )}
 
-        {canReact && <ActivityReactions publicId={publicId!} />}
-
-        <p className="text-xs text-subtle mt-1.5">
-          {relativeTime(createdAt, t)}
-        </p>
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-xs text-subtle">
+            <span className="inline-flex h-[22px] items-center gap-1 rounded-[calc(var(--radius)*0.8)] bg-hl px-2 text-[11px] font-semibold">
+              <Icon name={iconName} size={12} />
+              {t(followsViewer ? 'feed.type.followedYou' : (`feed.type.${i18nKey}` as 'feed.type.project_published'))}
+            </span>
+            <time dateTime={createdAt}>{relativeTime(createdAt, t)}</time>
+          </p>
+          {canReact && <ActivityReactions publicId={publicId!} />}
+          {followsViewer && !actorIsViewer && actor.accountName !== '[deleted]' && <FollowBack actor={actor} />}
+        </div>
       </div>
-
-      <Icon name={iconName} size={16} className="text-faint shrink-0 mt-0.5" />
-    </div>
+    </article>
   );
 }

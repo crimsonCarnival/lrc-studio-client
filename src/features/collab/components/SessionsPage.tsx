@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Button } from '@ui/button'
 import { LogoLoader } from '@ui/LogoLoader'
 import { Icon } from '@/shared/ui/Icon'
 import ResponsiveModal from '@/shared/ui/ResponsiveModal'
+import ConfirmModal from '@/shared/ui/ConfirmModal'
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar'
+import { cn } from '@/shared/utils/utils'
 import { useAuthContext } from '@/features/auth/useAuthContext'
 import { useSettings } from '@/features/settings/useSettings'
 import { formatTimeAgo } from '@/features/notifications/time-ago'
@@ -13,51 +16,220 @@ import { projectsService } from '@/features/projects/services/projects.service'
 import { projectDisplayName, sessionPath } from '@/features/projects/project-path'
 import { artistDisplay } from '@/features/artists/artist-credits'
 import type { Project } from '@/types'
-import { endSession, listMySessions, startSession } from '../collab.service'
-import type { CollabSessionSummary } from '../collab.types'
+import { createInvite, endSession, startSession } from '../collab.service'
+import type { CollabMemberPreview, CollabSessionSummary } from '../collab.types'
+import { useMySessions } from '../hooks/useMySessions'
 
 const PROJECT_LIMIT = 100
+const RECENT_COUNT = 4
+const inviteUrl = (token: string) => `${window.location.origin}/join/${token}`
 
 type Tk = (k: string, o?: Record<string, unknown>) => string
 
-function SessionRow({ session, onOpen, onEnded }: { session: CollabSessionSummary; onOpen: () => void; onEnded: () => void }) {
+function sessionName(session: Pick<CollabSessionSummary, 'title' | 'songName' | 'songArtist'>, fallback: string) {
+  return projectDisplayName({ title: session.title, metadata: { songName: session.songName, songArtist: session.songArtist } }) || fallback
+}
+
+/** Overlapping member avatars, coloured like their cursors in the session. */
+function MemberStack({ members }: { members: CollabMemberPreview[] }) {
+  return (
+    <span className="flex" aria-hidden="true">
+      {members.map((m, i) => (
+        <span
+          key={`${m.name}-${i}`}
+          title={m.name}
+          className={cn('size-[26px] shrink-0 overflow-hidden rounded-full ring-2 ring-raised', i > 0 && '-ml-2')}
+          style={{ backgroundColor: `var(--color-collab-${m.colorIndex})` }}
+        >
+          {m.avatarUrl
+            ? <img src={m.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-full object-cover" />
+            : <span className="grid size-full place-items-center font-heading text-[11px] font-bold text-white">{(m.name || '?')[0].toUpperCase()}</span>}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function SessionCover({ coverImage, className }: { coverImage: string | null; className?: string }) {
+  return (
+    <span className={cn('relative block shrink-0 overflow-hidden bg-primary-soft', className)}>
+      {coverImage
+        ? <img src={coverImage} alt="" className="absolute inset-0 size-full object-cover" />
+        : <Icon name="music_note" size={28} className="absolute inset-0 m-auto text-primary-ink/60" />}
+    </span>
+  )
+}
+
+function SessionRow({ session, onOpen, onAskEnd }: { session: CollabSessionSummary; onOpen: () => void; onAskEnd: () => void }) {
   const { t, i18n } = useTranslation()
   const tk = t as Tk
   const { settings } = useSettings()
-  const [ending, setEnding] = useState(false)
-  const name = projectDisplayName({ title: session.title, metadata: { songName: session.songName, songArtist: session.songArtist } }) || t('collab.sessions.untitled')
+  const [inviting, setInviting] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const name = sessionName(session, t('collab.sessions.untitled'))
+  const isOwner = session.role === 'owner'
 
-  async function onEnd() {
-    if (!window.confirm(t('collab.sessions.endConfirm'))) return
-    setEnding(true)
+  useEffect(() => {
+    if (!copied) return
+    const id = window.setTimeout(() => setCopied(false), 2500)
+    return () => window.clearTimeout(id)
+  }, [copied])
+
+  // A fresh editor link each time: the server keeps only a hash, so an old one can't be shown again.
+  async function onInvite() {
+    setInviting(true)
     try {
-      await endSession(session.publicId)
-      onEnded()
+      const token = await createInvite(session.publicId, 'editor')
+      await navigator.clipboard.writeText(inviteUrl(token))
+      setCopied(true)
+      toast.success(t('collab.sessions.inviteCopied'))
     } catch {
-      toast.error(t('collab.sessions.endFailed'))
-      setEnding(false)
+      toast.error(t('collab.sessions.inviteFailed'))
+    } finally {
+      setInviting(false)
     }
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/60">
-      <div className="flex flex-col gap-1 flex-[1_1_220px] min-w-0">
-        <span className="font-semibold text-zinc-100 truncate">{name}</span>
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-zinc-500">
-          <span className="px-2 py-0.5 rounded-pill bg-zinc-800 text-zinc-300 font-semibold">{tk(`collab.presence.role.${session.role}`)}</span>
+    <li className="flex flex-wrap items-center gap-4 rounded-[var(--radius-card)] bg-raised p-4 inset-ring inset-ring-hl">
+      <span className="relative">
+        <SessionCover coverImage={session.coverImage} className="size-[72px] rounded-[var(--radius-control)]" />
+        <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-[calc(var(--radius)*0.6)] bg-black/75 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+          <span className="size-1.5 rounded-full bg-love" />
+          {t('collab.sessions.liveBadge')}
+        </span>
+      </span>
+      <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="truncate font-heading text-lg font-semibold text-foreground">{name}</h3>
+          <span className={cn('rounded-[calc(var(--radius)*0.8)] px-2 py-0.5 text-[11px] font-semibold', isOwner ? 'bg-primary-soft text-primary-ink' : 'bg-hl text-foreground')}>
+            {tk(`collab.presence.role.${session.role}`)}
+          </span>
+        </div>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-subtle">
+          {session.members.length > 0 && <MemberStack members={session.members} />}
           <span>{tk('collab.sessions.members', { count: session.memberCount })}</span>
-          <span>{t('collab.sessions.active', { time: formatTimeAgo(session.lastActivityAt, t, settings.advanced?.timezone, i18n.language) })}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-love shadow-[0_0_0_4px_color-mix(in_srgb,var(--love)_22%,transparent)]" aria-hidden="true" />
+            {t('collab.sessions.active', { time: formatTimeAgo(session.lastActivityAt, t, settings.advanced?.timezone, i18n.language) })}
+          </span>
         </p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        {session.role === 'owner' && (
-          <Button type="button" variant="outline" size="sm" disabled={ending} onClick={() => void onEnd()}>
-            {ending ? t('collab.sessions.ending') : t('collab.sessions.end')}
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        {isOwner && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={inviting}
+            onClick={() => void onInvite()}
+            aria-label={t('collab.sessions.inviteLabel', { name })}
+            className="gap-1.5"
+          >
+            <Icon name={copied ? 'check' : 'link'} size={16} />
+            {copied ? t('collab.sessions.copied') : t('collab.sessions.invite')}
           </Button>
         )}
-        <Button type="button" size="sm" onClick={onOpen}>{t('collab.sessions.open')}</Button>
+        {isOwner && (
+          <Button type="button" variant="outline" size="sm" onClick={onAskEnd} className="text-love-ink">
+            {t('collab.sessions.end')}
+          </Button>
+        )}
+        <Button type="button" size="sm" onClick={onOpen} className="gap-1.5">
+          {t('collab.sessions.open')}
+          <Icon name="arrow_forward" size={16} />
+        </Button>
       </div>
     </li>
+  )
+}
+
+/** No live sessions: what a session is, and the user's recent projects to start one on. */
+function SessionsIntro({ onStart, starting }: { onStart: (publicId: string) => void; starting: string | null }) {
+  const { t, i18n } = useTranslation()
+  const { settings } = useSettings()
+  const [projects, setProjects] = useState<Project[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    projectsService.list(RECENT_COUNT * 3, 0)
+      .then((list) => { if (!cancelled) setProjects(list.filter((p) => !p.readOnly).slice(0, RECENT_COUNT)) })
+      .catch(() => { if (!cancelled) setProjects([]) })
+    return () => { cancelled = true }
+  }, [])
+
+  const steps = [
+    { title: t('collab.sessions.intro.step1Title'), body: t('collab.sessions.intro.step1Body') },
+    { title: t('collab.sessions.intro.step2Title'), body: t('collab.sessions.intro.step2Body') },
+    { title: t('collab.sessions.intro.step3Title'), body: t('collab.sessions.intro.step3Body') },
+  ]
+
+  return (
+    <>
+      <section aria-labelledby="sessions-intro" className="flex flex-col gap-6 rounded-[var(--radius-card)] bg-raised p-6 inset-ring inset-ring-hl sm:p-8">
+        <div className="flex flex-wrap items-center gap-5">
+          <span className="grid size-[52px] shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+            <Icon name="group" size={26} />
+          </span>
+          <div className="min-w-0 flex-[1_1_300px]">
+            <h2 id="sessions-intro" className="font-heading text-2xl font-bold text-foreground">{t('collab.sessions.intro.title')}</h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-subtle">{t('collab.sessions.intro.body')}</p>
+          </div>
+        </div>
+        <ol className="flex flex-wrap gap-5 border-t border-hl pt-5">
+          {steps.map((step, i) => (
+            <li key={step.title} className="flex min-w-0 flex-[1_1_200px] items-start gap-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary-ink">{i + 1}</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                <p className="mt-1 text-[13px] text-subtle">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {projects === null ? (
+        <div className="flex justify-center py-8"><LogoLoader size={24} /></div>
+      ) : projects.length > 0 && (
+        <section aria-labelledby="sessions-recent" className="flex flex-col gap-3.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="sessions-recent" className="font-heading text-xl font-semibold text-foreground">{t('collab.sessions.recent.title')}</h2>
+            <Link to="/library" className="text-[13px] font-medium text-primary-ink hover:text-foreground">{t('collab.sessions.recent.library')}</Link>
+          </div>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-4">
+            {projects.map((p) => {
+              const name = projectDisplayName({ title: p.title, metadata: { songName: p.metadata?.songName, songArtist: artistDisplay(p.metadata) } }) || t('collab.sessions.untitled')
+              const edited = p.contentUpdatedAt ?? p.updatedAt
+              return (
+                <li key={p.publicId} className="flex flex-col overflow-hidden rounded-[var(--radius-card)] bg-raised inset-ring inset-ring-hl">
+                  <SessionCover coverImage={p.coverImage ?? p.upload?.uploadUrl ?? null} className="aspect-[16/10] w-full" />
+                  <div className="flex flex-col gap-2.5 px-3.5 pb-3.5 pt-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-semibold text-foreground">{name}</p>
+                      {edited && (
+                        <p className="mt-0.5 text-xs text-subtle">
+                          {t('collab.sessions.recent.edited', { time: formatTimeAgo(edited, t, settings.advanced?.timezone, i18n.language) })}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={starting !== null}
+                      onClick={() => onStart(p.publicId)}
+                      aria-label={t('collab.sessions.recent.startLabel', { name })}
+                    >
+                      {starting === p.publicId ? <LogoLoader size={12} /> : t('collab.sessions.recent.start')}
+                    </Button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
+    </>
   )
 }
 
@@ -150,42 +322,53 @@ export default function SessionsPage() {
   const navigate = useNavigate()
   const { user, loading: authLoading } = useAuthContext()
   const signedIn = !!user && !user.isGuest
-  const [sessions, setSessions] = useState<CollabSessionSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const { sessions, loading, error, refresh } = useMySessions()
   const [picking, setPicking] = useState(false)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(false)
-    try {
-      setSessions(await listMySessions())
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (signedIn) void load()
-  }, [signedIn, load])
+  const [ending, setEnding] = useState<CollabSessionSummary | null>(null)
+  const [endBusy, setEndBusy] = useState(false)
+  const [starting, setStarting] = useState<string | null>(null)
 
   const liveIds = useMemo(() => new Set(sessions.filter((s) => s.role === 'owner').map((s) => s.publicId)), [sessions])
 
+  async function confirmEnd() {
+    if (!ending) return
+    setEndBusy(true)
+    try {
+      await endSession(ending.publicId)
+      setEnding(null)
+      void refresh()
+    } catch {
+      toast.error(t('collab.sessions.endFailed'))
+    } finally {
+      setEndBusy(false)
+    }
+  }
+
+  async function startOn(publicId: string) {
+    setStarting(publicId)
+    try {
+      await startSession(publicId)
+      void refresh()
+      navigate(sessionPath(publicId))
+    } catch {
+      toast.error(t('collab.settings.startFailed'))
+      setStarting(null)
+    }
+  }
+
   if (authLoading) return <div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>
-  if (!signedIn) return <Navigate to="/auth/login" replace />
+  // Same sign-in entry as the feed and the bottom bar.
+  if (!signedIn) return <Navigate to="/auth?action=signin" replace />
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0">
-      <div className="flex flex-col gap-4 max-w-2xl mx-auto w-full px-4 py-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-zinc-100">{t('collab.sessions.title')}</h1>
-            <p className="text-sm text-zinc-500">{t('collab.sessions.subtitle')}</p>
+      <div className="mx-auto flex w-full max-w-[880px] flex-col gap-7 px-4 py-8 sm:px-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex max-w-[560px] flex-col gap-1.5">
+            <h1 className="font-heading text-[32px] font-bold leading-tight text-foreground">{t('collab.sessions.title')}</h1>
+            {sessions.length > 0 && <p className="text-sm leading-relaxed text-subtle">{t('collab.sessions.subtitle')}</p>}
           </div>
-          <Button type="button" onClick={() => setPicking(true)} className="gap-2">
+          <Button type="button" variant={sessions.length > 0 ? 'default' : 'outline'} onClick={() => setPicking(true)} className="gap-2">
             <Icon name="add" size={16} />
             {t('collab.sessions.new')}
           </Button>
@@ -195,24 +378,43 @@ export default function SessionsPage() {
           <div className="flex items-center justify-center py-16"><LogoLoader size={32} /></div>
         ) : error ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
-            <p className="text-sm text-zinc-500">{t('collab.sessions.loadError')}</p>
-            <Button type="button" variant="outline" size="sm" onClick={() => void load()}>{t('collab.sessions.retry')}</Button>
+            <p className="text-sm text-subtle">{t('collab.sessions.loadError')}</p>
+            <Button type="button" variant="outline" size="sm" onClick={() => void refresh()}>{t('collab.sessions.retry')}</Button>
           </div>
         ) : sessions.length === 0 ? (
-          <p className="text-sm text-zinc-500 py-12 text-center">{t('collab.sessions.empty')}</p>
+          <SessionsIntro onStart={(id) => void startOn(id)} starting={starting} />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {sessions.map((s) => (
-              <SessionRow key={s.publicId} session={s} onOpen={() => navigate(sessionPath(s.publicId))} onEnded={() => void load()} />
-            ))}
-          </ul>
+          <>
+            <section aria-labelledby="sessions-live" className="flex flex-col gap-3">
+              <h2 id="sessions-live" className="text-[13px] font-semibold uppercase tracking-[0.06em] text-subtle">
+                {t('collab.sessions.liveNow', { count: sessions.length })}
+              </h2>
+              <ul className="flex flex-col gap-3">
+                {sessions.map((s) => (
+                  <SessionRow key={s.publicId} session={s} onOpen={() => navigate(sessionPath(s.publicId))} onAskEnd={() => setEnding(s)} />
+                ))}
+              </ul>
+            </section>
+            <p className="flex items-start gap-3 rounded-[var(--radius-card)] bg-hl/50 px-5 py-4 text-[13px] leading-relaxed text-subtle">
+              <Icon name="info" size={20} className="shrink-0 text-primary-ink" />
+              {t('collab.sessions.joinedHint')}
+            </p>
+          </>
         )}
       </div>
       <NewSessionModal
         open={picking}
         onOpenChange={setPicking}
         liveIds={liveIds}
-        onStarted={(publicId) => navigate(sessionPath(publicId))}
+        onStarted={(publicId) => { void refresh(); navigate(sessionPath(publicId)) }}
+      />
+      <ConfirmModal
+        isOpen={ending !== null}
+        title={ending ? t('collab.sessions.endTitle', { name: sessionName(ending, t('collab.sessions.untitled')) }) : undefined}
+        message={ending ? t('collab.sessions.endBody', { count: ending.memberCount }) : undefined}
+        confirmText={endBusy ? t('collab.sessions.ending') : t('collab.sessions.end')}
+        onConfirm={() => void confirmEnd()}
+        onCancel={() => { if (!endBusy) setEnding(null) }}
       />
     </div>
   )

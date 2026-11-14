@@ -23,7 +23,7 @@ export async function getSession(publicId: string): Promise<CollabSession | null
 /** Live sessions the caller owns or joined, newest activity first. */
 export async function listMySessions(): Promise<CollabSessionSummary[]> {
   const data = await gqlRequest<{ myCollabSessions: CollabSessionSummary[] }>(
-    'query MyCollabSessions { myCollabSessions { publicId title songName songArtist role memberCount createdAt lastActivityAt } }',
+    'query MyCollabSessions { myCollabSessions { publicId title songName songArtist role memberCount members { name avatarUrl colorIndex } coverImage createdAt lastActivityAt } }',
   )
   return data.myCollabSessions
 }

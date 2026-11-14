@@ -1,6 +1,47 @@
 export default {
   title: 'Feed',
-  loadMore: 'Load more',
+  loadMore: 'Load more activity',
+  filters: {
+    label: 'Filter activity',
+    all: 'All',
+    projects: 'Projects',
+    lists: 'Lists',
+    people: 'People',
+  },
+  emptyFilter: 'No activity of this type yet.',
+  followBack: 'Follow back',
+  showAll: 'Show all {{count}}',
+  showLess: 'Hide',
+  type: {
+    project_published: 'Published',
+    project_starred: 'Star',
+    project_forked: 'Fork',
+    project_shared: 'Shared',
+    playlist_created: 'List',
+    user_followed: 'Follow',
+    followedYou: 'New follower',
+  },
+  group: {
+    project_forked: { self: 'forked {{count}} projects', other: 'forked {{count}} projects', mine: 'forked {{count}} of your projects' },
+    project_starred: { self: 'starred {{count}} projects', other: 'starred {{count}} projects', mine: 'starred {{count}} of your projects' },
+    project_published: { self: 'published {{count}} projects', other: 'published {{count}} projects', mine: 'published {{count}} projects' },
+    project_shared: { self: 'shared {{count}} projects', other: 'shared {{count}} projects', mine: 'shared {{count}} of your projects' },
+    playlist_created: { self: 'created {{count}} lists', other: 'created {{count}} lists', mine: 'created {{count}} lists' },
+    user_followed: { self: 'started following {{count}} people', other: 'started following {{count}} people', mine: 'started following {{count}} people' },
+  },
+  names: {
+    two: '{{a}} and {{b}}',
+    many: '{{list}} and {{last}}',
+  },
+  rail: {
+    label: 'For you',
+    sessions: 'Live sessions',
+    seeAll: 'See all',
+    noSessions: 'No live sessions.',
+    startOne: 'Start one',
+    live: 'Live',
+    explore: 'Explore',
+  },
   error: 'Failed to load feed. Try again later.',
   empty: {
     title: [

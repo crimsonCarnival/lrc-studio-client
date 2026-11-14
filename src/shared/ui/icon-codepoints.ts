@@ -45,6 +45,7 @@ export const ICON_CODEPOINTS: Record<string, string> = {
   done_all: '\u{e877}',
   draft: '\u{e06f}',
   drag_indicator: '\u{e945}',
+  eco: '\u{ea35}',
   energy: '\u{e9a6}',
   error: '\u{e000}',
   explore: '\u{e87a}',
