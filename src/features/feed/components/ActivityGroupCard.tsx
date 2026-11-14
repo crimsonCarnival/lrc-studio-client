@@ -44,6 +44,11 @@ export function ActivityGroupCard({ activities }: { activities: Activity[] }) {
   const isFollows = type === 'USER_FOLLOWED';
   const listId = `${first.id}-items`;
 
+  // Rows repeat the footer's time when they all read the same ("56 d ago" eight times), so
+  // they only get their own once the group spans more than one label.
+  const rowTimes = activities.map((a) => relativeTime(a.createdAt, t));
+  const showRowTimes = new Set(rowTimes).size > 1;
+
   const followedNames = activities.map((a) => a.target?.displayName || a.target?.accountName || a.projectTitle || '');
 
   return (
@@ -88,7 +93,7 @@ export function ActivityGroupCard({ activities }: { activities: Activity[] }) {
 
         {(!isFollows || expanded) && (
           <ul id={listId} className="mt-3 flex flex-col gap-1.5">
-            {activities.map((a) => {
+            {activities.map((a, i) => {
               const name = isFollows ? (a.target?.displayName || a.target?.accountName || a.projectTitle) : (a.projectTitle || t('feed.untitled'));
               const body = (
                 <>
@@ -102,7 +107,7 @@ export function ActivityGroupCard({ activities }: { activities: Activity[] }) {
                     </span>
                   )}
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{name}</span>
-                  <time dateTime={a.createdAt} className="shrink-0 text-xs text-subtle">{relativeTime(a.createdAt, t)}</time>
+                  {showRowTimes && <time dateTime={a.createdAt} className="shrink-0 text-xs text-subtle">{rowTimes[i]}</time>}
                 </>
               );
               const cls = 'flex items-center gap-2.5 rounded-[var(--radius-control)] bg-background/60 px-2.5 py-2';
