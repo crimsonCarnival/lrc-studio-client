@@ -300,18 +300,12 @@ describe('Phone Words view', () => {
 });
 
 describe('Phone Words view with Japanese text', () => {
-  it('tokenizes a CJK line into the same words the desktop makes, and offers the layer choice', () => {
+  it('tokenizes a CJK line into the same words the desktop makes, with no layer choice', () => {
     const text = '高みを目指して';
     render(<Harness initialLines={[{ id: 'j', text, secondary: 'takami wo mezashite', timestamp: 1 }]} />);
     expect(chips()).toHaveLength(groupMorphemes(text).length);
     expect(latest.lines[0].words?.map((w) => w.word)).toEqual(groupMorphemes(text).map((t) => t.text));
-    expect(screen.getByRole('group', { name: 'Layer to stamp' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Romaji' })).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('a Latin line has no layer choice', () => {
-    render(<Harness initialLines={makeLines()} />);
-    expect(screen.queryByRole('group', { name: 'Layer to stamp' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Romaji' })).toBeNull();
   });
 });
 

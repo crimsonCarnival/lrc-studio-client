@@ -5,7 +5,6 @@ import { useEditor } from '@features/editor/hooks/useEditor';
 import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
 import { useAutoStamp, type AutoStampPhase, type TabPlayback } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
-import { WordsModeLayerControl } from '../modes/WordsModeColumn';
 import EditorSidePanel from './EditorSidePanel';
 import EditorStatusBar from './EditorStatusBar';
 import { CounterpartStrip } from '../counterparts/CounterpartStrip';
@@ -1516,7 +1515,6 @@ export default function Editor({
       setFocusedTimestamp(null);
       setActiveLineIndex(index);
     };
-    const secondaryAvailable = cursorIsLyric && hasCJK(cursorLine.text ?? '');
     // The line -/+ move: the cursor line when it already has a time (the user tapped a stamped row),
     // otherwise the line stamped just before the cursor (Mark advances, so that is the one to fix).
     let nudgeTarget: number | null = null;
@@ -1638,9 +1636,6 @@ export default function Editor({
             onNextLine: () => goToLine(nextLyric),
             canPrev: prevLyric != null,
             canNext: nextLyric != null,
-            layer: secondaryAvailable && !readOnly
-              ? { value: stampTarget as 'main' | 'secondary' | 'both', onChange: handleSetStampTarget }
-              : undefined,
             mark: readOnly ? undefined : {
               onMark: () => handleMarkWithConfidence(),
               onUndo: undo,
@@ -1977,13 +1972,6 @@ export default function Editor({
                 {focusLength != null && ` · ${focusLength.toFixed(2)} s`}
               </span>
             </div>
-            {focusLine && (
-              <WordsModeLayerControl
-                line={focusLine as ComponentProps<typeof WordsModeLayerControl>['line']}
-                stampTarget={stampTarget}
-                handleSetStampTarget={handleSetStampTarget}
-              />
-            )}
             <Tip content={focusLength == null ? t('editor.words.distributeUnavailable') : t('editor.words.distributeTip')}>
               <Button
                 variant="outline"
