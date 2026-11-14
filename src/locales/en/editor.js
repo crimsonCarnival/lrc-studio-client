@@ -376,12 +376,15 @@ export default {
   },
   translationBulk: {
     open: "Translations",
-    tip: "Add or edit a translation for every line at once, one language at a time",
+    tip: "Add or edit the translations of every line at once, in as many languages as you need",
     title: "Translations",
     description: "One line per lyric line, in order. A blank line leaves that lyric without a translation in this language.",
     secondaryColumn: "Translation",
-    language: "Language",
-    languageHint: "Switching language loads that language's lines.",
+    languages: "Translation languages",
+    addLanguage: "Add language",
+    removeLanguage: "Remove {{language}} (its translations are cleared on Apply)",
+    unlabelled: "No language",
+    empty: "Add a language to start translating",
   },
   secondaryBulk: {
     open: "Secondary lyrics",

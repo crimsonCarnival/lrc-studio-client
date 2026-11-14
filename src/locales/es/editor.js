@@ -379,12 +379,15 @@ export default {
   },
   translationBulk: {
     open: "Traducciones",
-    tip: "Añade o edita la traducción de todas las líneas a la vez, un idioma cada vez",
+    tip: "Añade o edita las traducciones de todas las líneas a la vez, en tantos idiomas como necesites",
     title: "Traducciones",
     description: "Una línea por cada línea de la letra, en orden. Una línea en blanco deja esa letra sin traducción en este idioma.",
     secondaryColumn: "Traducción",
-    language: "Idioma",
-    languageHint: "Al cambiar de idioma se cargan las líneas de ese idioma.",
+    languages: "Idiomas de traducción",
+    addLanguage: "Añadir idioma",
+    removeLanguage: "Quitar {{language}} (sus traducciones se borran al aplicar)",
+    unlabelled: "Sin idioma",
+    empty: "Añade un idioma para empezar a traducir",
   },
   secondaryBulk: {
     open: "Letras secundarias",
