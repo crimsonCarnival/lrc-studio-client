@@ -5,12 +5,13 @@
  */
 
 /** The brand mark in fixed dark-theme colours: the favicon switches palette with the OS theme, a QR tile must not. */
-const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-<rect width="32" height="32" rx="6" fill="#232136"/>
-<g fill="#c4a7e7"><rect x="3" y="6" width="12" height="4" rx="2"/><rect x="3" y="13" width="12" height="4" rx="2"/><rect x="3" y="20" width="12" height="4" rx="2"/></g>
-<g fill="#c4a7e7" opacity="0.3"><rect x="18" y="6" width="7" height="4" rx="2"/><rect x="18" y="13" width="11" height="4" rx="2"/><rect x="18" y="20" width="4" height="4" rx="2"/></g>
-<rect x="15.5" y="4.5" width="1.75" height="24" rx="0.875" fill="#f6c177"/>
-<circle cx="16.375" cy="2.5" r="2" fill="#f6c177"/>
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="12" fill="#232136"/>
+<g transform="translate(5 5) scale(0.84375)">
+<g fill="#c4a7e7"><rect x="4" y="13" width="24" height="5.5" rx="2.75"/><rect x="7" y="21" width="21" height="5.5" rx="2.75"/><rect x="12" y="29" width="16" height="5.5" rx="2.75"/></g>
+<g fill="none" stroke="#c4a7e7" stroke-width="1.8"><rect x="36.9" y="13.9" width="22.2" height="3.7" rx="1.85"/><rect x="36.9" y="21.9" width="14.2" height="3.7" rx="1.85"/><rect x="36.9" y="29.9" width="7.2" height="3.7" rx="1.85"/></g>
+<g fill="#f6c177"><circle cx="32" cy="7" r="4.5"/><rect x="30.25" y="12" width="3.5" height="24.5" rx="1.75"/><circle cx="32" cy="40.5" r="2"/><circle cx="32" cy="46.5" r="1.8"/><circle cx="32" cy="52" r="1.6"/><circle cx="32" cy="57" r="1.4"/><circle cx="32" cy="61.5" r="1.2"/></g>
+</g>
 </svg>`;
 
 export const LOGO_DATA_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(LOGO_SVG)}`;
