@@ -1611,12 +1611,12 @@ export default function Editor({
           )}
           {syncMode && lines.length > 0 && (
             <div data-tour="editor-undo-redo" className="flex items-center gap-2">
-              <Tip content={t('editor.undoTitle')}>
+              <Tip content={<ShortcutHint label={t('editor.undo')} shortcut="undo" fallback="Ctrl+Z" />}>
                 <Button variant="outline" size="icon" onClick={undo} disabled={!canUndo} aria-label={t('editor.undo')} className={HEADER_ICON_BTN}>
                   <Icon name="undo" size={18} />
                 </Button>
               </Tip>
-              <Tip content={t('editor.redoTitle')}>
+              <Tip content={<ShortcutHint label={t('editor.redo')} shortcut="redo" fallback="Ctrl+Y" />}>
                 <Button variant="outline" size="icon" onClick={redo} disabled={!canRedo} aria-label={t('editor.redo')} className={HEADER_ICON_BTN}>
                   <Icon name="redo" size={18} />
                 </Button>

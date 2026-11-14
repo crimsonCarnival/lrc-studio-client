@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from '@ui/popover';
 import { Tip } from '@ui/tip';
+import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import { cn } from '@/shared/utils/utils';
 
 interface SpeedControlProps {
@@ -57,7 +58,7 @@ const SpeedControl = memo(function SpeedControl({
       aria-label={t('player.speed')}
       className="flex shrink-0 items-center gap-0.5 rounded-[var(--radius-control)] bg-card p-[3px] inset-ring inset-ring-hl"
     >
-      <Tip content={t('player.decreaseSpeed')}>
+      <Tip content={<ShortcutHint label={t('player.decreaseSpeed')} shortcut="speedDown" fallback="-" />}>
         <Button
           variant="ghost"
           size={null}
@@ -128,7 +129,7 @@ const SpeedControl = memo(function SpeedControl({
         </PopoverContent>
       </Popover>
 
-      <Tip content={t('player.increaseSpeed')}>
+      <Tip content={<ShortcutHint label={t('player.increaseSpeed')} shortcut="speedUp" fallback="+" />}>
         <Button
           variant="ghost"
           size={null}
