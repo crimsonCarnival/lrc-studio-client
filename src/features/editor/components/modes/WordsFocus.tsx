@@ -201,17 +201,63 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
   };
 
   const playhead = (playbackPosition - start) / span;
+  const end = start + span;
   // The word the playhead is inside, for the "where am I in this word" readout.
   const playingIndex = segments.findIndex((seg) => seg.timed && seg.to > seg.from && playbackPosition >= seg.from && playbackPosition < seg.to);
   const playing = playingIndex >= 0 ? segments[playingIndex] : null;
 
+  // Ruler ticks sit on absolute song time (multiples of the step), so two lines line up the same way.
+  const tickStep = span <= 20 ? RULER_TICK : 0.5;
+  const labelStep = span <= 8 ? 0.5 : span <= 20 ? 1 : 5;
+  const ticks: { pct: number; label: string | null }[] = [];
+  for (let k = Math.ceil(start / tickStep - 1e-9); k * tickStep <= end + 1e-9; k++) {
+    const time = Math.round(k * tickStep * 1000) / 1000;
+    const rem = time / labelStep;
+    ticks.push({ pct: ((time - start) / span) * 100, label: Math.abs(rem - Math.round(rem)) < 1e-6 ? time.toFixed(1) : null });
+  }
+  // Boundaries drawn down through every row: each timed word's start, and the line's end.
+  const boundaries = [...segments.filter((s) => s.timed).map((s) => s.from), end];
+  const timedSegments = segments.map((seg, i) => ({ seg, i })).filter(({ seg }) => seg.timed);
+
   return (
-    <section aria-label={t('editor.words.timelineLabel')} className="rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-5 pt-5 pb-4 flex flex-col gap-3.5">
-      <div ref={trackRef} className="relative h-10 touch-none select-none">
-        {/* Blocks are clipped to the track: a word squeezed against either end
-            narrows instead of spilling out. Edges and the playhead sit outside
-            this layer because they are meant to overhang. */}
-        <div className="absolute inset-0 overflow-hidden rounded-lg">
+    <section
+      aria-label={t('editor.words.timelineLabel')}
+      // The label column is narrower on small screens; the track overlay reads the same variable.
+      className="[--label-w:132px] lg:[--label-w:200px] flex-1 flex flex-col rounded-[var(--radius-card)] bg-card inset-ring inset-ring-hl px-4 pt-3 pb-4"
+    >
+      <div className="relative flex flex-1 flex-col">
+        {/* Header: the per-word timestamps, then the 100 ms ruler. */}
+        <div className="flex h-16 shrink-0">
+          <div className="flex w-[var(--label-w)] shrink-0 items-end px-3 pb-2">
+            <span className={CAPTION}>{t('editor.words.colWord')}</span>
+          </div>
+          <div ref={trackRef} className="relative min-w-0 flex-1 touch-none select-none">
+            <div className="absolute inset-x-0 top-0 h-9 font-mono" aria-label={t('editor.words.timelineLabel')}>
+              {timedSegments.map(({ seg, i }) => (
+                <div
+                  key={i}
+                  className={`@container absolute inset-y-0 flex items-center justify-between gap-2 overflow-hidden border-l-2 px-2 whitespace-nowrap ${i === activeWordIndex ? 'border-foam' : 'border-subtle'}`}
+                  style={{ left: `${((seg.from - start) / span) * 100}%`, width: `${((seg.to - seg.from) / span) * 100}%` }}
+                >
+                  <span className={`text-xs font-semibold tabular-nums ${i === activeWordIndex ? 'text-foam' : 'text-foreground'}`}>{formatTime(seg.from)}</span>
+                  <span className="hidden text-[11px] tabular-nums text-subtle @[120px]:inline">{(seg.to - seg.from).toFixed(2)} s</span>
+                </div>
+              ))}
+              <span className="absolute inset-y-0 right-0 flex items-center border-r-2 border-subtle pr-2 text-xs font-semibold tabular-nums text-foreground">{formatTime(end)}</span>
+            </div>
+            <div aria-hidden className="absolute inset-x-0 bottom-0 h-7 font-mono text-[10px] text-subtle">
+              {ticks.map((tick, k) => (
+                <span key={k} className="absolute bottom-0" style={{ left: `${tick.pct}%` }}>
+                  <span className={`absolute bottom-0 w-px -translate-x-1/2 ${tick.label ? 'h-[11px] bg-subtle' : 'h-1.5 bg-faint'}`} />
+                  {tick.label && <span className="absolute bottom-3 -translate-x-1/2 tabular-nums">{tick.label}</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* One row per word, stretched to share the height the editor has: the player open or
+            hidden only changes how tall they are. Rows keep a minimum and scroll past it. */}
         {segments.map((seg, i) => {
           const isNow = i === activeWordIndex;
           // A timed word this short is almost certainly a mis-stamp or an overlap with its
@@ -220,108 +266,108 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
           const length = seg.to - seg.from;
           const within = i === playingIndex ? (playbackPosition - seg.from) / length : null;
           return (
-            <Tip key={i} content={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: (seg.to - seg.from).toFixed(2) }) : undefined}>
-              <span
-                // @container: the label hides itself once the block is narrower than 36px.
-                className={`group/seg @container absolute inset-y-0 flex items-center rounded-lg text-sm font-semibold overflow-hidden whitespace-nowrap ${isNow
-                  ? 'bg-primary text-primary-foreground'
-                  : tooShort
-                    ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
-                    : seg.timed ? 'bg-raised text-foreground inset-ring inset-ring-hl' : 'bg-card text-faint inset-ring inset-ring-hl'}`}
-                style={{
-                  left: `calc(${((seg.from - start) / span) * 100}% + 2px)`,
-                  width: `max(0px, calc(${((seg.to - seg.from) / span) * 100}% - 4px))`,
-                }}
-              >
-                {/* Left grip: the edge you drag to move where the word starts. */}
-                {seg.timed && !tooShort && (
-                  <span aria-hidden className={`absolute left-0 inset-y-1.5 w-[3px] rounded-sm ${isNow ? 'bg-primary-foreground/50' : 'bg-faint'}`} />
-                )}
-                {/* How far playback is into this word. */}
-                {within != null && (
-                  <span aria-hidden className={`absolute inset-y-0 left-0 ${isNow ? 'bg-primary-foreground/25' : 'bg-foam/25'}`} style={{ width: `${within * 100}%` }} />
-                )}
-                {/* Ruler: one tick per 100 ms of this word, so its length reads at a glance. */}
-                {seg.timed && length > RULER_TICK && (
+            <div
+              key={i}
+              className={`flex min-h-[52px] max-h-24 flex-1 border-t border-hl/60 ${isNow ? 'bg-foam/[0.06]' : ''}`}
+            >
+              <div className="flex w-[var(--label-w)] shrink-0 items-center gap-3 px-3">
+                <span className={`font-mono text-xs tabular-nums ${isNow ? 'text-foam' : 'text-subtle'}`}>{i + 1}</span>
+                <span className={`min-w-0 truncate font-heading text-xl lg:text-[28px] font-semibold ${isNow ? 'text-foam' : seg.timed ? 'text-foreground' : 'text-faint'}`}>{seg.word}</span>
+              </div>
+              <div className="relative min-w-0 flex-1">
+                <Tip content={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: length.toFixed(2) }) : undefined}>
                   <span
-                    aria-hidden
-                    className="absolute inset-x-0 bottom-0 h-1.5 opacity-50"
+                    // @container: the readout hides itself once the block is too narrow for it.
+                    className={`@container absolute inset-y-3 flex items-center gap-2.5 overflow-hidden rounded-xl pl-4 pr-2 whitespace-nowrap ${isNow
+                      ? 'bg-raised inset-ring-[1.5px] inset-ring-foam'
+                      : tooShort
+                        ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
+                        : seg.timed ? 'bg-raised inset-ring inset-ring-hl' : 'bg-card text-faint inset-ring inset-ring-hl [border:1px_dashed_var(--faint)]'}`}
                     style={{
-                      backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px)',
-                      backgroundSize: `${(RULER_TICK / length) * 100}% 100%`,
+                      left: `calc(${((seg.from - start) / span) * 100}% + 2px)`,
+                      width: `max(0px, calc(${(length / span) * 100}% - 4px))`,
                     }}
-                  />
-                )}
-                <span className="relative hidden pl-2.5 @[36px]:inline">{seg.word}</span>
-                {seg.timed && onPlayFrom && (
-                  <button
-                    type="button"
-                    aria-label={t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) })}
-                    onClick={(e) => { e.stopPropagation(); onPlayFrom(seg.from); }}
-                    // Wide enough blocks only: a narrow one has no room, and the readout below plays it.
-                    className={`absolute right-1 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md px-1.5 py-1 font-mono text-[11px] leading-none tabular-nums opacity-0 transition-opacity group-hover/seg:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus @[96px]:flex ${isNow ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background text-foreground inset-ring inset-ring-hl'}`}
                   >
-                    <Icon name="play_arrow" size={14} filled />
-                    {formatTime(seg.from)}
-                  </button>
+                    {seg.timed && !tooShort && (
+                      <span aria-hidden className={`absolute left-0 inset-y-2.5 w-1 rounded-sm ${isNow ? 'bg-foam' : 'bg-faint'}`} />
+                    )}
+                    {/* How far playback is into this word. */}
+                    {within != null && (
+                      <span aria-hidden className="absolute inset-y-0 left-0 bg-foam/20" style={{ width: `${within * 100}%` }} />
+                    )}
+                    {seg.timed && onPlayFrom && (
+                      <button
+                        type="button"
+                        aria-label={t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) })}
+                        onClick={(e) => { e.stopPropagation(); onPlayFrom(seg.from); }}
+                        className="relative hidden size-8 shrink-0 place-items-center rounded-lg bg-background text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus hover:bg-overlay @[84px]:grid"
+                      >
+                        <Icon name="play_arrow" size={16} filled />
+                      </button>
+                    )}
+                    {seg.timed && (
+                      <span className="relative hidden flex-col gap-0.5 font-mono tabular-nums @[150px]:flex">
+                        <span className="text-[13px] font-semibold leading-none">{formatTime(seg.from)}</span>
+                        <span className="text-[11px] leading-none text-subtle">{length.toFixed(2)} s</span>
+                      </span>
+                    )}
+                  </span>
+                </Tip>
+                {/* The edge: at the word's own start. The first word's is the left side of its block;
+                    every other one is also the right side of the block above in time. */}
+                {seg.timed && (
+                  <span
+                    role="slider"
+                    tabIndex={0}
+                    aria-label={t('editor.words.boundaryLabel', { word: seg.word })}
+                    aria-valuemin={Number(start.toFixed(2))}
+                    aria-valuemax={Number(end.toFixed(2))}
+                    aria-valuenow={Number(seg.from.toFixed(2))}
+                    onPointerDown={handlePointerDown(i)}
+                    onPointerMove={handlePointerMove(i)}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); nudge(i, -0.05); }
+                      else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); nudge(i, 0.05); }
+                    }}
+                    className="group absolute inset-y-0 z-10 w-3 coarse:w-11 -translate-x-1/2 grid place-items-center cursor-ew-resize touch-none focus-visible:outline-none"
+                    style={{ left: `${((seg.from - start) / span) * 100}%` }}
+                  >
+                    <span className={`w-0.5 h-3/4 rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragIndex === i ? 'bg-foreground' : 'bg-transparent'}`} />
+                    {dragIndex === i && (
+                      <span className="absolute bottom-full mb-1 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background whitespace-nowrap pointer-events-none">
+                        {formatTime(seg.from)}
+                      </span>
+                    )}
+                  </span>
                 )}
-              </span>
-            </Tip>
+              </div>
+            </div>
           );
         })}
-        </div>
-        {/* Edges: one per timed word, at the word's own start. The first word's
-            is the left side of its block; every other one is also the right
-            side of the block before it. */}
-        {segments.map((seg, i) => (seg.timed ? (
-          <span
-            key={`edge-${i}`}
-            role="slider"
-            tabIndex={0}
-            aria-label={t('editor.words.boundaryLabel', { word: seg.word })}
-            aria-valuemin={Number(start.toFixed(2))}
-            aria-valuemax={Number((start + span).toFixed(2))}
-            aria-valuenow={Number(seg.from.toFixed(2))}
-            onPointerDown={handlePointerDown(i)}
-            onPointerMove={handlePointerMove(i)}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); nudge(i, -0.05); }
-              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); nudge(i, 0.05); }
-            }}
-            className="group absolute inset-y-0 w-3 coarse:w-11 -translate-x-1/2 grid place-items-center cursor-ew-resize touch-none focus-visible:outline-none"
-            style={{ left: `${((seg.from - start) / span) * 100}%` }}
-          >
-            <span className={`w-0.5 h-full rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragIndex === i ? 'bg-foreground' : 'bg-transparent'}`} />
-            {dragIndex === i && (
-              <span className="absolute bottom-full mb-1.5 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background whitespace-nowrap pointer-events-none">
-                {formatTime(seg.from)}
+
+        {/* Guides and playhead cross every row; they ignore the pointer so the edges stay draggable. */}
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-[var(--label-w)] right-0">
+          {boundaries.map((time, k) => (
+            <span key={k} className="absolute bottom-0 top-16 border-l border-dashed border-faint/70" style={{ left: `${((time - start) / span) * 100}%` }} />
+          ))}
+          {playhead >= 0 && playhead <= 1 && (
+            <>
+              <span className="absolute bottom-0 top-9 w-0.5 -translate-x-1/2 rounded-pill bg-foam" style={{ left: `${playhead * 100}%` }} />
+              <span className="absolute top-10 -translate-x-1/2 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background" style={{ left: `${playhead * 100}%` }}>
+                {formatTime(playbackPosition)}
               </span>
-            )}
-          </span>
-        ) : null))}
-        {playhead >= 0 && playhead <= 1 && (
-          <span aria-hidden className="absolute inset-y-[-4px] w-0.5 rounded-pill bg-foam pointer-events-none" style={{ left: `${playhead * 100}%` }} />
-        )}
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 text-[13px] text-subtle">
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 text-[13px] text-subtle">
         <span>{t('editor.words.dragHint')}</span>
         {/* Where playback is inside the word under the playhead, with that word's own start to replay it from. */}
         {playing && (
           <span className="inline-flex items-center gap-2 font-mono text-xs tabular-nums text-foreground">
-            {onPlayFrom && (
-              <Tip content={t('editor.words.playWord', { word: playing.word, time: formatTime(playing.from) })}>
-                <button
-                  type="button"
-                  aria-label={t('editor.words.playWord', { word: playing.word, time: formatTime(playing.from) })}
-                  onClick={() => onPlayFrom(playing.from)}
-                  className="grid size-6 place-items-center rounded-md bg-raised text-foreground inset-ring inset-ring-hl hover:bg-overlay focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus"
-                >
-                  <Icon name="play_arrow" size={14} filled />
-                </button>
-              </Tip>
-            )}
             <span className="font-sans font-semibold">{playing.word}</span>
             <span role="progressbar" aria-label={t('editor.words.wordProgress', { word: playing.word })} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(((playbackPosition - playing.from) / (playing.to - playing.from)) * 100)} className="block h-1 w-20 overflow-hidden rounded-sm bg-hl">
               <span className="block h-full bg-foam" style={{ width: `${((playbackPosition - playing.from) / (playing.to - playing.from)) * 100}%` }} />
