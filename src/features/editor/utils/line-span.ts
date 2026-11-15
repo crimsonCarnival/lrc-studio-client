@@ -31,6 +31,13 @@ export function naturalLineEnd(lines: EditorLine[], index: number, duration?: nu
   return next >= 0 ? (lines[next].timestamp as number) : duration ?? null;
 }
 
+/** What the checks on a line's last word read: enough for the editor's lines and the viewers' alike. */
+interface TailLine {
+  timestamp?: number | null;
+  adLibOf?: number | null;
+  words?: { time?: number | null; end?: number | null }[];
+}
+
 /** The end of the line's last word when that word is timed and was given one, else null. */
 export function tailWordEnd(line: EditorLine | undefined): number | null {
 /** What the checks on a line's last word read: enough for the editor's lines and the viewers' alike. */
