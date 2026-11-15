@@ -15,6 +15,11 @@ interface HistoryEntry<T> {
 
 type HistoryUpdater<T> = T | ((prev: T) => T);
 
+/** `step`: the change gets an undo step of its own, however close in time its neighbours are. */
+export interface HistoryWriteOptions {
+  step?: boolean;
+}
+
 /**
  * Custom hook for undo/redo history management.
  * Wraps a state value with a history stack (capped at `options.limit`).
@@ -24,7 +29,7 @@ type HistoryUpdater<T> = T | ((prev: T) => T);
 export default function useHistory<T>(
   initial: T,
   options: HistoryOptions<T> = {},
-): [T, (updater: HistoryUpdater<T>) => void, () => void, () => void, boolean, boolean, () => void] {
+): [T, (updater: HistoryUpdater<T>, write?: HistoryWriteOptions) => void, () => void, () => void, boolean, boolean, () => void] {
   const limit = options.limit || 50;
   const groupingThresholdMs = options.groupingThresholdMs || 500;
 
@@ -48,13 +53,13 @@ export default function useHistory<T>(
   const [canRedo, setCanRedo] = useState(false);
   const pendingRestoreRef = useRef<unknown>(null);
 
-  const setState = useCallback((updater: HistoryUpdater<T>) => {
+  const setState = useCallback((updater: HistoryUpdater<T>, write?: HistoryWriteOptions) => {
     setStateRaw((prev) => {
       const next = typeof updater === 'function' ? (updater as (p: T) => T)(prev) : updater;
       if (next === prev) return prev;
 
       const now = Date.now();
-      if (now - lastUpdateRef.current > groupingThresholdMs) {
+      if (write?.step || now - lastUpdateRef.current > groupingThresholdMs) {
         const companion = getCompanionRef.current?.();
         pastRef.current!.pushBack({ value: prev, companion });
 
@@ -64,7 +69,8 @@ export default function useHistory<T>(
         }
       }
 
-      lastUpdateRef.current = now;
+      // A step of its own also keeps the next change out of it.
+      lastUpdateRef.current = write?.step ? 0 : now;
       futureRef.current!.clear();
 
       setCanUndo(!pastRef.current!.isEmpty());

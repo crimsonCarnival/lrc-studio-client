@@ -1065,7 +1065,7 @@ export function useAppState(user?: AuthUserType | null) {
 
   // ——— Drag & Drop ———
   const { isDraggingFile } = useDragAndDrop({
-    setLines: setLinesForEditing,
+    setLines: setLinesForEditing as (lines: unknown[]) => void,
     setEditorMode: setEditorModeRaw,
     linesLength: lines.length,
     settings,
