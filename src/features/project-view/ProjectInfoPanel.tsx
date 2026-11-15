@@ -165,8 +165,9 @@ export default function ProjectInfoPanel({
     facts.push({
       label: t('projectView.syncedBy'),
       value: (
-        <UserHoverCard accountName={accountName}>
-          <span className="flex min-w-0 items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
+          <UserHoverCard accountName={accountName} className="block min-w-0">
+            <span className="flex min-w-0 items-center gap-2">
             <StaffRing role={project.user?.staffRole} outset={2.5}>
               {project.user?.avatarUrl ? (
                 <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
@@ -183,14 +184,15 @@ export default function ProjectInfoPanel({
                 <span className="truncate font-mono text-xs text-subtle">@{accountName}</span>
               )}
             </Link>
-            <NameTag tag={project.user?.nameTag} />
-            {authorLevel > 0 && (
+            </span>
+          </UserHoverCard>
+          <NameTag tag={project.user?.nameTag} />
+          {authorLevel > 0 && (
               <span className="inline-flex h-5 shrink-0 items-center rounded-pill bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
                 {t('settings.levelShort', { level: authorLevel })}
               </span>
-            )}
-          </span>
-        </UserHoverCard>
+          )}
+        </span>
       ),
     });
   }

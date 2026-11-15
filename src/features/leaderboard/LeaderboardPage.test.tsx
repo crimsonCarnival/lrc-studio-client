@@ -9,7 +9,7 @@ import { getLeaderboard } from './leaderboard.service';
 
 vi.mock('./leaderboard.service', () => ({ getLeaderboard: vi.fn() }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: null }) }));
-vi.mock('@ui/UserHoverCard', () => ({ UserHoverCard: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+vi.mock('@ui/UserHoverCard', () => ({ UserHoverCard: ({ children }: { children: React.ReactNode }) => <span data-testid="hover-trigger">{children}</span> }));
 
 const nameTag = {
   id: 'og',
@@ -37,6 +37,13 @@ describe('LeaderboardPage name tag', () => {
   it('shows the pill beside the name in both layouts when nameTag is provided', async () => {
     renderPage({ nameTag });
     expect((await screen.findAllByText('Founder')).length).toBe(2);
+  });
+
+  it('renders the pill outside the hover-card trigger in both layouts', async () => {
+    renderPage({ nameTag });
+    const pills = await screen.findAllByText('Founder');
+    for (const pill of pills) expect(pill.closest('[data-testid="hover-trigger"]')).toBeNull();
+    for (const name of screen.getAllByText('Ana')) expect(name.closest('[data-testid="hover-trigger"]')).not.toBeNull();
   });
 
   it('shows no pill when nameTag is null', async () => {

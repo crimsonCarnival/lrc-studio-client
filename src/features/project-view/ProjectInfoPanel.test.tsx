@@ -7,7 +7,7 @@ import '@/app/i18n';
 import ProjectInfoPanel from './ProjectInfoPanel';
 
 vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { advanced: {} } }) }));
-vi.mock('@ui/UserHoverCard', () => ({ UserHoverCard: ({ children }: { children: ReactNode }) => children }));
+vi.mock('@ui/UserHoverCard', () => ({ UserHoverCard: ({ children }: { children: ReactNode }) => <span data-testid="hover-trigger">{children}</span> }));
 vi.mock('./ProjectViewActions', () => ({ ProjectViewActions: () => null }));
 vi.mock('./ShareToProfileButton', () => ({ ShareToProfileButton: () => null }));
 vi.mock('./ShareOgButton', () => ({ ShareOgButton: () => null }));
@@ -37,6 +37,12 @@ describe('ProjectInfoPanel name tag', () => {
   it('shows the pill beside the author name when nameTag is provided', () => {
     setup(nameTag);
     expect(screen.getByText('Founder')).toBeInTheDocument();
+  });
+
+  it('renders the pill outside the hover-card trigger', () => {
+    setup(nameTag);
+    expect(screen.getByText('Founder').closest('[data-testid="hover-trigger"]')).toBeNull();
+    expect(screen.getByText('Ana').closest('[data-testid="hover-trigger"]')).not.toBeNull();
   });
 
   it('shows no pill when nameTag is null', () => {
