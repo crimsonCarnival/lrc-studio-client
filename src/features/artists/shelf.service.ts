@@ -1,0 +1,80 @@
+import { gqlRequest } from '@/app/graphql.client';
+import { shelfChanged } from '@/app/cache-sync';
+import type { ShelfAlbum as GqlShelfAlbum, ShelfArtist as GqlShelfArtist } from '@/types/graphql';
+
+/** The slice of a track's project the shelf screens read. */
+export type ShelfProject = {
+  id: string;
+  publicId: string;
+  slug?: string | null;
+  title?: string | null;
+  kind?: 'song' | 'subtitles' | null;
+  public?: boolean | null;
+  hasWordSync?: boolean | null;
+  lineCount?: number | null;
+  syncedLineCount?: number | null;
+  coverImage?: string | null;
+  user?: { accountName?: string | null } | null;
+  metadata?: { songName?: string | null; songArtist?: string | null } | null;
+  upload?: { source?: string | null; uploadUrl?: string | null; coverImage?: string | null; duration?: number | null } | null;
+};
+
+export type ShelfTrack = { project: ShelfProject; trackNumber?: number | null };
+export type ShelfAlbum = Omit<GqlShelfAlbum, 'tracks'> & { tracks: ShelfTrack[] };
+export type ShelfArtist = Omit<GqlShelfArtist, 'albums'> & { albums: ShelfAlbum[] };
+
+// A real fragment appended by concatenation (not interpolation), like playlist.service.ts.
+const SHELF_ARTIST_FIELDS = /* GraphQL */ `
+  fragment ShelfArtistFields on ShelfArtist {
+    id name isPublic songCount albumCount coverImage latestEditAt
+    albums {
+      key title year isPublic trackCount coverImage
+      tracks {
+        trackNumber
+        project {
+          id publicId slug title kind public hasWordSync lineCount syncedLineCount coverImage
+          user { accountName }
+          metadata { songName songArtist }
+          upload { source uploadUrl coverImage duration }
+        }
+      }
+    }
+  }
+`;
+
+const GET_SHELF = /* GraphQL */ `
+  query ArtistShelf($accountName: String!, $asVisitor: Boolean, $withTracks: Boolean) {
+    artistShelf(accountName: $accountName, asVisitor: $asVisitor, withTracks: $withTracks) { ...ShelfArtistFields }
+  }
+` + SHELF_ARTIST_FIELDS;
+
+const GET_SHELF_ARTIST = /* GraphQL */ `
+  query ArtistShelfArtist($accountName: String!, $artistId: ID!, $asVisitor: Boolean) {
+    artistShelfArtist(accountName: $accountName, artistId: $artistId, asVisitor: $asVisitor) { ...ShelfArtistFields }
+  }
+` + SHELF_ARTIST_FIELDS;
+
+const SET_SHELF_VISIBILITY = /* GraphQL */ `
+  mutation SetShelfVisibility($artistId: ID!, $albumKey: String, $isPublic: Boolean!) {
+    setShelfVisibility(artistId: $artistId, albumKey: $albumKey, isPublic: $isPublic)
+  }
+`;
+
+type ShelfOptions = { asVisitor?: boolean; withTracks?: boolean };
+
+/** `asVisitor` asks for the visitor projection (the owner's "view as others" preview). */
+export async function getArtistShelf(accountName: string, { asVisitor = false, withTracks = false }: ShelfOptions = {}): Promise<ShelfArtist[]> {
+  const data = await gqlRequest<{ artistShelf: ShelfArtist[] }>(GET_SHELF, { accountName, asVisitor, withTracks });
+  return data.artistShelf;
+}
+
+export async function getShelfArtist(accountName: string, artistId: string, asVisitor = false): Promise<ShelfArtist | null> {
+  const data = await gqlRequest<{ artistShelfArtist: ShelfArtist | null }>(GET_SHELF_ARTIST, { accountName, artistId, asVisitor });
+  return data.artistShelfArtist ?? null;
+}
+
+/** `albumKey` null changes the artist row; a key changes that album (`''` is the singles bucket). Throws on failure. */
+export async function setShelfVisibility(artistId: string, albumKey: string | null, isPublic: boolean): Promise<void> {
+  await gqlRequest<{ setShelfVisibility: boolean }>(SET_SHELF_VISIBILITY, { artistId, albumKey, isPublic });
+  shelfChanged();
+}

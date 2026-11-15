@@ -23,7 +23,13 @@ const invalidate = (...queryKey: string[]) => { void queryClient.invalidateQueri
 export function projectsChanged(): void {
   invalidate('projects');
   invalidate('profile');
+  invalidate('shelf');
   invalidate('explore', 'trending');
+}
+
+/** An artist's or album's shelf visibility changed. */
+export function shelfChanged(): void {
+  invalidate('shelf');
 }
 
 /** The viewer edited their own profile (avatar, cover, bio, names): cached public profiles are stale. */

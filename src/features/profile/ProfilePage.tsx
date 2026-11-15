@@ -25,6 +25,8 @@ import WallSection from './wall/WallSection';
 import type { FollowNotifyLevel } from './FollowNotifyMenu';
 import { useProfile } from './profile.queries';
 import { SharedProjectsTab } from './SharedProjectsTab';
+import { ArtistsTab } from '@/features/artists/components/ArtistsTab';
+import { useArtistShelf } from '@/features/artists/shelf.queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
@@ -258,13 +260,14 @@ export default function ProfilePage() {
   const { accountName } = useParams();
   const { user } = useAuthContext();
 
-  const [activeTab, setActiveTab] = useState('projects');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // The artist page's back link lands here with ?tab=artists.
+  const [activeTab, setActiveTab] = useState(() => (searchParams.get('tab') === 'artists' ? 'artists' : 'projects'));
   const [projectPage, setProjectPage] = useState(0);
 
   const [followLoading, setFollowLoading] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
   const [followModal, setFollowModal] = useState<'FOLLOWERS' | 'FOLLOWING' | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [requestConfirm, confirmModal] = useConfirm();
 
@@ -279,6 +282,10 @@ export default function ProfilePage() {
   // Toggling the preview switches cache key, so each mode keeps its own copy.
   const { profile, loading, notFound, setProfile, refetch } = useProfile(accountName, viewAsOthers);
   const queryClient = useQueryClient();
+  // The shelf's size labels the Artists tab and decides whether a visitor sees it at all.
+  const { data: shelf } = useArtistShelf(accountName, { asVisitor: viewAsOthers, enabled: !!profile });
+  const artistCount = shelf?.length ?? 0;
+  const showArtistsTab = isOwner || artistCount > 0;
   // Follow/block state lives on the cached profile, so it cannot drift from it.
   const isFollowing = profile?.isFollowedByMe ?? false;
   const isBlocked = profile?.isBlockedByMe ?? false;
@@ -627,11 +634,12 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             {/* Tabs */}
             <div className="flex gap-1 mb-6 border-b border-border">
-              {['projects', 'playlists', 'shared', 'activity'].map((tab) => {
+              {['projects', 'playlists', 'artists', 'shared', 'activity'].filter((tab) => tab !== 'artists' || showArtistsTab).map((tab) => {
                 const tAny = t as (k: string, opts?: object) => string;
                 let label = tAny(`profile.publicTabs.${tab}`);
                 if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { count: projectCount });
                 if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { count: profile.playlistCount });
+                if (tab === 'artists' && shelf) label = tAny('profile.publicTabs.artistsWithCount', { count: artistCount });
                 
                 return (
                   <button
@@ -698,6 +706,10 @@ export default function ProfilePage() {
 
             {activeTab === 'playlists' && (
               <ProfileLists accountName={profile.accountName} isOwner={isOwner} />
+            )}
+
+            {activeTab === 'artists' && showArtistsTab && accountName && (
+              <ArtistsTab accountName={accountName} isOwner={isOwner} asVisitor={viewAsOthers} />
             )}
 
             {activeTab === 'shared' && (

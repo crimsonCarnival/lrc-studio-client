@@ -60,6 +60,7 @@ const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylis
 const ProjectViewPage = lazy(() => import('@features/project-view/ProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const AllListsPage = lazy(() => import('@features/playlists/AllListsPage'));
+const ArtistPage = lazy(() => import('@features/artists/components/ArtistPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
@@ -725,6 +726,11 @@ export function AppRouter({
       <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<RouteFallback />}>
           <ListPage />
+        </Suspense>
+      } />
+      <Route path=":accountName/artists/:artistId" element={
+        <Suspense fallback={<RouteFallback />}>
+          <ArtistPage />
         </Suspense>
       } />
       <Route path=":accountName" element={
