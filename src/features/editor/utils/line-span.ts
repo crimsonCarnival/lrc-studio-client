@@ -1,3 +1,4 @@
+
 import type { EditorLine } from '@/features/editor/editor.types';
 
 /** Two edges closer than this count as the same instant. */
@@ -31,15 +32,6 @@ export function naturalLineEnd(lines: EditorLine[], index: number, duration?: nu
   return next >= 0 ? (lines[next].timestamp as number) : duration ?? null;
 }
 
-/** What the checks on a line's last word read: enough for the editor's lines and the viewers' alike. */
-interface TailLine {
-  timestamp?: number | null;
-  adLibOf?: number | null;
-  words?: { time?: number | null; end?: number | null }[];
-}
-
-/** The end of the line's last word when that word is timed and was given one, else null. */
-export function tailWordEnd(line: EditorLine | undefined): number | null {
 /** What the checks on a line's last word read: enough for the editor's lines and the viewers' alike. */
 interface TailLine {
   timestamp?: number | null;
@@ -108,16 +100,30 @@ export function lineBands(lines: EditorLine[], duration?: number | null): LineBa
   const bands: LineBand[] = [];
   const laneEnd = [-Infinity, -Infinity];
   let number = 0;
+
   lines.forEach((line, index) => {
     if (line.type === 'section') return;
     number++;
+
     if (line.timestamp == null || !line.text?.trim()) return;
+
     const from = line.timestamp;
     const to = lineSpanEnd(lines, index, duration) ?? from;
+
     if (to <= from) return;
-    const lane: 0 | 1 = from >= laneEnd[0] - SAME ? 0 : from >= laneEnd[1] - SAME ? 1 : laneEnd[0] <= laneEnd[1] ? 0 : 1;
+
+    const lane: 0 | 1 =
+      from >= laneEnd[0] - SAME
+        ? 0
+        : from >= laneEnd[1] - SAME
+          ? 1
+          : laneEnd[0] <= laneEnd[1]
+            ? 0
+            : 1;
+
     laneEnd[lane] = to;
     bands.push({ index, number, text: line.text, from, to, lane });
   });
+
   return bands;
 }
