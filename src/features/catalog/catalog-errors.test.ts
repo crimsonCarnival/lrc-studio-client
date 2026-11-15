@@ -12,6 +12,10 @@ describe('catalogErrorKey', () => {
     ['catalog_parent_not_approved', 'catalog.errors.parentNotApproved'],
     ['catalog_not_found', 'catalog.errors.notFound'],
     ['unauthorized', 'catalog.errors.unauthorized'],
+    ['catalog_already_reviewed', 'catalog.errors.alreadyReviewed'],
+    ['catalog_self_review', 'catalog.errors.selfReview'],
+    ['catalog_disambiguation_required', 'catalog.errors.disambiguationRequired'],
+    ['forbidden', 'catalog.errors.forbidden'],
   ])('maps %s', (code, key) => {
     expect(catalogErrorKey(Object.assign(new Error('raw server text'), { code }))).toBe(key);
   });

@@ -1,0 +1,208 @@
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+
+const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, withSudo, toast, auth } = vi.hoisted(() => ({
+  getReviewQueue: vi.fn(),
+  reviewEntry: vi.fn(),
+  adminListArtists: vi.fn(),
+  adminListAlbums: vi.fn(),
+  adminDelete: vi.fn(),
+  withSudo: vi.fn(),
+  toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
+  auth: { permissions: ['catalog.review', 'catalog.manage'] as string[] },
+}));
+vi.mock('@/features/catalog/catalog.service', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  getReviewQueue,
+  reviewEntry,
+  adminListArtists,
+  adminListAlbums,
+  adminDelete,
+}));
+vi.mock('./services/sudo', async (importOriginal) => ({ ...(await importOriginal<object>()), withSudo }));
+vi.mock('react-hot-toast', () => ({ default: toast }));
+vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: { permissions: auth.permissions } }) }));
+
+import AdminCatalogTab from './AdminCatalogTab';
+
+class ResizeObserverStub { observe() {} unobserve() {} disconnect() {} }
+vi.stubGlobal('ResizeObserver', ResizeObserverStub);
+
+const submitter = (name: string) => ({ id: `u-${name}`, accountName: name, displayName: null, avatarUrl: null });
+const base = { slug: null, source: 'community', reviewNote: null, imageUrl: null, bio: '', disambiguation: '', status: 'pending' };
+const artist = (id: string, name: string, createdAt: string, extra = {}) => ({
+  ...base, id, name, createdAt, updatedAt: `${createdAt}-u`, submittedBy: submitter('sam'), ...extra,
+});
+const queue = {
+  artists: [
+    artist('a2', 'Newer Act', '2026-02-01'),
+    artist('a1', 'Older Act', '2026-01-01'),
+  ],
+  albums: [],
+};
+
+function show(path = '/admin/catalog/queue') {
+  return render(<MemoryRouter initialEntries={[path]}><AdminCatalogTab /></MemoryRouter>);
+}
+
+const rowOf = (name: string) => screen.getByText(name).closest('li') as HTMLElement;
+
+describe('AdminCatalogTab review queue', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    auth.permissions = ['catalog.review', 'catalog.manage'];
+    getReviewQueue.mockResolvedValue(queue);
+    reviewEntry.mockResolvedValue(true);
+    adminListArtists.mockResolvedValue([]);
+    withSudo.mockImplementation((fn: () => unknown) => fn());
+  });
+
+  it('lists pending entries oldest first with the submitter', async () => {
+    show();
+    await screen.findByText('Older Act');
+    const names = screen.getAllByRole('listitem').map((li) => li.textContent ?? '');
+    expect(names[0]).toContain('Older Act');
+    expect(names[1]).toContain('Newer Act');
+    expect(within(rowOf('Older Act')).getByText(/sam/)).toBeInTheDocument();
+  });
+
+  it('approves with the loaded updatedAt and removes the row', async () => {
+    show();
+    await screen.findByText('Older Act');
+    fireEvent.click(within(rowOf('Older Act')).getByRole('button', { name: /^Approve/ }));
+    await waitFor(() => expect(screen.queryByText('Older Act')).not.toBeInTheDocument());
+    expect(reviewEntry).toHaveBeenCalledWith({ kind: 'artist', id: 'a1', decision: 'approve', note: undefined, expectedUpdatedAt: '2026-01-01-u' });
+  });
+
+  it('sends the optional note when rejecting', async () => {
+    show();
+    await screen.findByText('Older Act');
+    const row = rowOf('Older Act');
+    fireEvent.change(within(row).getByRole('textbox'), { target: { value: '  not a real artist ' } });
+    fireEvent.click(within(row).getByRole('button', { name: /^Reject/ }));
+    await waitFor(() => expect(reviewEntry).toHaveBeenCalledWith(expect.objectContaining({ decision: 'reject', note: 'not a real artist', id: 'a1' })));
+  });
+
+  it('removes the row and toasts when it was already reviewed', async () => {
+    reviewEntry.mockRejectedValueOnce(Object.assign(new Error('raw server text'), { code: 'catalog_already_reviewed' }));
+    show();
+    await screen.findByText('Older Act');
+    fireEvent.click(within(rowOf('Older Act')).getByRole('button', { name: /^Approve/ }));
+    await waitFor(() => expect(screen.queryByText('Older Act')).not.toBeInTheDocument());
+    expect(toast.error).toHaveBeenCalledWith('Someone else already reviewed this entry.');
+  });
+
+  it('refetches the queue when the submitter edited the entry meanwhile', async () => {
+    reviewEntry.mockRejectedValueOnce(Object.assign(new Error('raw'), { code: 'catalog_changed' }));
+    show();
+    await screen.findByText('Older Act');
+    fireEvent.click(within(rowOf('Older Act')).getByRole('button', { name: /^Approve/ }));
+    await waitFor(() => expect(getReviewQueue).toHaveBeenCalledTimes(2));
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('changed'));
+    expect(toast.error).not.toHaveBeenCalledWith('raw');
+  });
+
+  it('keeps the row and shows a generic message for unknown failures', async () => {
+    reviewEntry.mockRejectedValueOnce(new Error('internal stack trace'));
+    show();
+    await screen.findByText('Older Act');
+    fireEvent.click(within(rowOf('Older Act')).getByRole('button', { name: /^Approve/ }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Something went wrong. Please try again.'));
+    expect(screen.getByText('Older Act')).toBeInTheDocument();
+  });
+
+  it('hints when another loaded entry shares the normalised name', async () => {
+    getReviewQueue.mockResolvedValue({
+      artists: [artist('a1', 'Cafe Tacvba', '2026-01-01'), artist('a2', '  cafe tacvba ', '2026-01-02'), artist('a3', 'Other', '2026-01-03')],
+      albums: [],
+    });
+    show();
+    await screen.findByText('Other');
+    expect(screen.getAllByText('Another entry with this name already exists')).toHaveLength(2);
+    expect(within(rowOf('Other')).queryByText(/same name/)).not.toBeInTheDocument();
+  });
+
+  it('previews only Cloudinary images', async () => {
+    getReviewQueue.mockResolvedValue({
+      artists: [
+        artist('a1', 'Safe', '2026-01-01', { imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/catalog/a.jpg' }),
+        artist('a2', 'Sneaky', '2026-01-02', { imageUrl: 'https://evil.example/track.png' }),
+      ],
+      albums: [],
+    });
+    show();
+    await screen.findByText('Safe');
+    expect(within(rowOf('Safe')).getByRole('img')).toHaveAttribute('src', expect.stringContaining('res.cloudinary.com'));
+    expect(within(rowOf('Sneaky')).queryByRole('img')).not.toBeInTheDocument();
+  });
+});
+
+describe('AdminCatalogTab browse', () => {
+  const approved = artist('a9', 'Approved Ann', '2026-01-01', { status: 'approved' });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    auth.permissions = ['catalog.review', 'catalog.manage'];
+    getReviewQueue.mockResolvedValue({ artists: [], albums: [] });
+    adminListArtists.mockResolvedValue([approved]);
+    adminListAlbums.mockResolvedValue([]);
+    adminDelete.mockResolvedValue(true);
+    withSudo.mockImplementation((fn: () => unknown) => fn());
+  });
+
+  it('deletes behind sudo and passes revokeCredit', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Approved Ann');
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Approved Ann/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(adminDelete).toHaveBeenCalledWith('artist', 'a9', true));
+    expect(withSudo).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByText('Approved Ann')).not.toBeInTheDocument());
+  });
+
+  it('does not revoke credit unless asked', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Approved Ann');
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Approved Ann/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(adminDelete).toHaveBeenCalledWith('artist', 'a9', false));
+  });
+
+  it('leaves the entry alone when the sudo prompt is cancelled', async () => {
+    withSudo.mockRejectedValueOnce(Object.assign(new Error('sudo_cancelled'), { code: 'sudo_cancelled' }));
+    show('/admin/catalog/browse');
+    await screen.findByText('Approved Ann');
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Approved Ann/ }));
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(withSudo).toHaveBeenCalled());
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(screen.getByText('Approved Ann')).toBeInTheDocument();
+  });
+});
+
+describe('AdminCatalogTab permissions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getReviewQueue.mockResolvedValue(queue);
+    adminListArtists.mockResolvedValue([]);
+  });
+
+  it('shows only the queue to a reviewer without catalog.manage', async () => {
+    auth.permissions = ['catalog.review'];
+    show('/admin/catalog/browse');
+    await screen.findByText('Older Act');
+    expect(adminListArtists).not.toHaveBeenCalled();
+    expect(screen.queryByRole('tab', { name: 'Browse' })).not.toBeInTheDocument();
+  });
+
+  it('shows only browse to a manager without catalog.review', async () => {
+    auth.permissions = ['catalog.manage'];
+    show('/admin/catalog/queue');
+    await waitFor(() => expect(adminListArtists).toHaveBeenCalled());
+    expect(getReviewQueue).not.toHaveBeenCalled();
+  });
+});

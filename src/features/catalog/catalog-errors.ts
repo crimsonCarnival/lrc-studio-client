@@ -11,6 +11,10 @@ const KEYS = {
   catalog_not_found: 'catalog.errors.notFound',
   catalog_changed: 'catalog.errors.changed',
   unauthorized: 'catalog.errors.unauthorized',
+  catalog_already_reviewed: 'catalog.errors.alreadyReviewed',
+  catalog_self_review: 'catalog.errors.selfReview',
+  catalog_disambiguation_required: 'catalog.errors.disambiguationRequired',
+  forbidden: 'catalog.errors.forbidden',
 } as const;
 
 export type CatalogErrorKey = (typeof KEYS)[keyof typeof KEYS] | 'catalog.errors.generic';

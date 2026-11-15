@@ -47,6 +47,7 @@ export function useAdminTabs(): AdminTab[] {
       { id: 'levels', icon: 'bolt', label: t('admin.dashboard.tabs.levels'), perm: 'levels.manage' },
       { id: 'xp', icon: 'auto_awesome', label: t('admin.dashboard.tabs.xp'), perm: 'xp.adjust' },
       { id: 'permissions', icon: 'admin_panel_settings', label: t('admin.dashboard.tabs.permissions') },
+      { id: 'catalog', icon: 'library_music', label: t('admin.dashboard.tabs.catalog'), perm: 'catalog.review' },
     ];
     const canProposeBadges = submittable.some(ty => ty.startsWith('badge_'));
     const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
@@ -56,6 +57,7 @@ export function useAdminTabs(): AdminTab[] {
       if (tab.id === 'moderation') return userHasPermission(currentUser?.permissions, 'users.view') || userHasPermission(currentUser?.permissions, 'network.block');
       if (tab.id === 'staff') return !isNetworkOnly; // all staff except network-only roles
       if (tab.id === 'permissions') return isSuperadmin;
+      if (tab.id === 'catalog') return userHasPermission(currentUser?.permissions, 'catalog.review') || userHasPermission(currentUser?.permissions, 'catalog.manage');
       if (tab.perm && userHasPermission(currentUser?.permissions, tab.perm)) return true;
       if (tab.id === 'badges' && canProposeBadges) return true;
       if (tab.id === 'levels' && canProposeLevels) return true;
