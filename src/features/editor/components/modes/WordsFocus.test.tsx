@@ -80,16 +80,79 @@ describe('WordTimeline', () => {
   });
 });
 
-describe('WordTimeline zoom', () => {
-  it('gets a scrollbar once zoomed in, so every part of the line stays reachable', () => {
-    renderTimeline();
-    expect(screen.queryByRole('scrollbar')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'editor.words.zoomIn' }));
+describe('WordTimeline scrolling', () => {
+  it('always has a song-wide scrollbar, so the lines around this one stay reachable', () => {
+    renderTimeline({ duration: 60 });
     const bar = screen.getByRole('scrollbar');
     fireEvent.keyDown(bar, { key: 'End' });
     expect(bar.getAttribute('aria-valuenow')).toBe('100');
     fireEvent.keyDown(bar, { key: 'Home' });
     expect(bar.getAttribute('aria-valuenow')).toBe('0');
+  });
+
+  it('zooms in and goes back to fitting the line', () => {
+    renderTimeline({ duration: 60 });
+    const fit = screen.getByRole('button', { name: 'editor.words.zoomFit' });
+    expect(fit.textContent).toBe('100%');
+    fireEvent.click(screen.getByRole('button', { name: 'editor.words.zoomIn' }));
+    expect(fit.textContent).toBe('150%');
+    fireEvent.click(fit);
+    expect(fit.textContent).toBe('100%');
+  });
+});
+
+describe('WordTimeline overlap with the next line', () => {
+  const sung = { ...line, words: line.words.map((w, i) => (i === 4 ? { ...w, time: 12.4 } : w)) };
+  const next = { id: 'l2', text: 'right here', timestamp: 13.04, words: [{ word: 'right', time: 13.04 }, { word: 'here', time: 13.5 }] };
+  const around = {
+    duration: 60,
+    naturalEnd: 13.04,
+    lineIndex: 0,
+    nextLine: { index: 1, number: 2, line: next, end: 14.2 },
+    bands: [
+      { index: 0, number: 1, text: sung.text, from: 8.88, to: 13.04, lane: 0 as const },
+      { index: 1, number: 2, text: next.text, from: 13.04, to: 14.2, lane: 0 as const },
+    ],
+  };
+
+  it('lets the last word run on past the start of the next line', () => {
+    const props = renderTimeline({ line: sung, ...around });
+    const end = screen.getByRole('slider', { name: 'editor.words.endLabel:目指して' });
+    expect(end.getAttribute('aria-valuenow')).toBe('13.04');
+    fireEvent.keyDown(end, { key: 'ArrowRight' });
+    expect(props.onSetWordEnd).toHaveBeenLastCalledWith(4, 13.09);
+  });
+
+  it('shows the overlap, and drops it once the end is back on the next line', () => {
+    const held = { ...sung, words: sung.words.map((w, i) => (i === 4 ? { ...w, end: 13.05 } : w)) };
+    const props = renderTimeline({ line: held, lineEnd: 13.05, ...around });
+    expect(document.querySelector('[data-overlap]')).toBeTruthy();
+    const end = screen.getByRole('slider', { name: 'editor.words.endLabel:目指して' });
+    expect(end.getAttribute('aria-valuenow')).toBe('13.05');
+    fireEvent.keyDown(end, { key: 'ArrowLeft', shiftKey: true });
+    expect(props.onSetWordEnd).toHaveBeenLastCalledWith(4, null);
+  });
+
+  it('keeps a word in the middle of the line inside it', () => {
+    const props = renderTimeline({ line: sung, ...around });
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.endLabel:を' }), { key: 'ArrowRight' });
+    expect(props.onSetWordEnd).not.toHaveBeenCalled();
+  });
+
+  it('draws the next line under the words and gives it the focus on click', () => {
+    const onSelectLine = vi.fn();
+    renderTimeline({ line: sung, ...around, onSelectLine });
+    expect(document.querySelector('[data-ghost="next"]')?.textContent).toContain('right here');
+    fireEvent.click(screen.getAllByRole('button', { name: 'editor.words.goToLine' })[1]);
+    expect(onSelectLine).toHaveBeenCalledWith(1);
+  });
+
+  it('ends the previous line from its row while it still sounds', () => {
+    const onEndPrevious = vi.fn();
+    const before = { id: 'l0', text: 'my way', timestamp: 6, words: [{ word: 'my', time: 6 }, { word: 'way', time: 7, end: 9.3 }] };
+    renderTimeline({ line: sung, ...around, prevLine: { index: 5, number: 9, line: before, end: 9.3 }, onEndPrevious });
+    fireEvent.click(screen.getByRole('button', { name: 'editor.words.endPrevious' }));
+    expect(onEndPrevious).toHaveBeenCalledTimes(1);
   });
 });
 

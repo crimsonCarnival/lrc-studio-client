@@ -61,6 +61,7 @@ import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { syncedCoverage } from '@features/editor/utils/sync-coverage';
+import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from '@features/editor/utils/line-span';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
@@ -844,21 +845,43 @@ export default function Editor({
   const focusInfo = useMemo(() => {
     let lyricNumber = 0;
     let sectionLabel = '';
-    let end: number | null = null;
     lines.forEach((l, i) => {
       if (l.type === 'section') {
         if (i < activeLineIndex) sectionLabel = l.label ?? '';
       } else if (i <= activeLineIndex) {
         lyricNumber++;
-      } else if (end == null && l.timestamp != null) {
-        end = l.timestamp;
       }
     });
-    const line = lines[activeLineIndex];
-    return { lyricNumber, sectionLabel, end: line?.endTime ?? end ?? duration ?? null };
+    // `naturalEnd` is where the line stops by itself (its end time, the next line, the track's
+    // end); `end` is later than that when its last word is held over the next line.
+    return {
+      lyricNumber,
+      sectionLabel,
+      naturalEnd: naturalLineEnd(lines, activeLineIndex, duration),
+      end: lineSpanEnd(lines, activeLineIndex, duration),
+    };
   }, [lines, activeLineIndex, duration]);
   const focusStart = focusLine?.timestamp ?? null;
   const focusLength = focusStart != null && focusInfo.end != null && focusInfo.end > focusStart ? focusInfo.end - focusStart : null;
+  // What "spread evenly" fills: the line up to its natural end, not the held tail of its last word.
+  const spreadLength = focusStart != null && focusInfo.naturalEnd != null && focusInfo.naturalEnd > focusStart ? focusInfo.naturalEnd - focusStart : null;
+  // The lines around the focused one, for the words timeline: every timed line as a band, the
+  // next timed line, and the one before it when that one still sounds over this line.
+  const focusOverlap = useMemo(() => (wordsFocus ? lineOverlap(lines, activeLineIndex) : null), [wordsFocus, lines, activeLineIndex]);
+  const wordBands = useMemo(() => (wordsFocus ? lineBands(lines, duration) : []), [wordsFocus, lines, duration]);
+  const focusNeighbours = useMemo(() => {
+    if (!wordsFocus) return { next: null, prev: null };
+    const numberOf = (index: number) => lines.slice(0, index + 1).filter((l) => l.type !== 'section').length;
+    const ghost = (index: number) => ({ index, number: numberOf(index), line: lines[index], end: lineSpanEnd(lines, index, duration) });
+    const nextIndex = nextTimedIndex(lines, activeLineIndex);
+    const prevIndex = prevTimedIndex(lines, activeLineIndex);
+    const start = lines[activeLineIndex]?.timestamp;
+    const prev = prevIndex >= 0 && start != null ? ghost(prevIndex) : null;
+    return {
+      next: nextIndex >= 0 ? ghost(nextIndex) : null,
+      prev: prev && prev.end != null && prev.end - start! > 0.005 ? prev : null,
+    };
+  }, [wordsFocus, lines, activeLineIndex, duration]);
 
   // While the focused line plays, the highlight follows the word being sung
   // (chips and timeline alike) instead of sitting on the stamping cursor.
@@ -901,11 +924,11 @@ export default function Editor({
 
   // Spreads the line's words evenly between its start and where it ends.
   const distributeWords = () => {
-    if (focusStart == null || focusLength == null) return;
+    if (focusStart == null || spreadLength == null) return;
     setLines((prev) => {
       const line = prev[activeLineIndex];
       if (!line?.words?.length) return prev;
-      const step = focusLength / line.words.length;
+      const step = spreadLength / line.words.length;
       const next = [...prev];
       next[activeLineIndex] = { ...line, words: line.words.map((w, i) => ({ ...w, time: Number((focusStart + i * step).toFixed(3)) })) };
       return next;
@@ -960,17 +983,40 @@ export default function Editor({
     const { min, max } = wordStartBounds(wordIndex);
     handleSetWordTime(wordIndex, Number(Math.min(max, Math.max(min, time + delta)).toFixed(3)));
   }, [focusWords, wordStartBounds, handleSetWordTime]);
+  // Ends the last word of the line before the focused one at the playhead. Past the focused
+  // line's start that makes the two overlap: the singer was still on that word when this line began.
+  const handleEndPreviousLine = useCallback(() => {
+    const time = Number(playbackPosition.toFixed(3));
+    setLines((prev) => {
+      const index = prevTimedIndex(prev, activeLineIndex);
+      const line = prev[index];
+      const last = line?.words?.[line.words.length - 1];
+      if (!line?.words || !last || last.time == null || time <= last.time + 0.02) return prev;
+      const natural = naturalLineEnd(prev, index, duration);
+      // Right on the next line's start there is nothing to say: the word simply runs up to it.
+      const end = natural != null && Math.abs(time - natural) <= 0.005 ? null : time;
+      const next = [...prev];
+      next[index] = { ...line, words: line.words.map((w, i) => (i === line.words!.length - 1 ? { ...w, end } : w)) };
+      return next;
+    });
+  }, [playbackPosition, setLines, activeLineIndex, duration]);
   // Sets the end of the word the playhead is in (or just left) at the playhead: the singer paused.
+  // The last word of a line may end after the next line has started (the two then overlap), and
+  // while nothing of the focused line has been sung yet, the key ends the previous line's last word.
   const handleEndWordHere = useCallback((wordIndex?: number) => {
     const words = focusWords ?? [];
     let index = wordIndex ?? -1;
     if (index < 0) words.forEach((w, i) => { if (w.time != null && w.time < playbackPosition) index = i; });
+    if (index < 0 && wordIndex == null) { handleEndPreviousLine(); return; }
     const word = words[index];
     if (!word || word.time == null || playbackPosition <= word.time + 0.02) return;
-    const next = words.slice(index + 1).find((w) => w.time != null)?.time ?? focusInfo.end ?? Infinity;
-    if (playbackPosition >= next) return;
-    handleSetWordEnd(index, Number(playbackPosition.toFixed(3)));
-  }, [focusWords, playbackPosition, focusInfo.end, handleSetWordEnd]);
+    const nextWord = words.slice(index + 1).find((w) => w.time != null)?.time;
+    const holdsOver = index === words.length - 1 && focusNeighbours.next != null;
+    if (playbackPosition >= (nextWord ?? (holdsOver ? Infinity : focusInfo.naturalEnd ?? Infinity))) return;
+    const time = Number(playbackPosition.toFixed(3));
+    const joins = holdsOver && focusInfo.naturalEnd != null && Math.abs(time - focusInfo.naturalEnd) <= 0.005;
+    handleSetWordEnd(index, joins ? null : time);
+  }, [focusWords, playbackPosition, focusInfo.naturalEnd, focusNeighbours.next, handleSetWordEnd, handleEndPreviousLine]);
   // Puts the stamping cursor back on a word and rewinds a little before it, to stamp again from there.
   const handleRestampFrom = useCallback((wordIndex: number) => {
     const words = focusWords ?? [];
@@ -986,7 +1032,7 @@ export default function Editor({
   const handleDistributeFrom = useCallback((wordIndex: number) => {
     const words = focusWords ?? [];
     const from = words[wordIndex]?.time ?? words.slice(0, wordIndex).reverse().find((w) => w.time != null)?.time ?? focusStart;
-    const to = focusInfo.end;
+    const to = focusInfo.naturalEnd;
     if (from == null || to == null || to <= from) return;
     const step = (to - from) / (words.length - wordIndex);
     setLines((prev) => {
@@ -999,7 +1045,7 @@ export default function Editor({
       };
       return next;
     });
-  }, [focusWords, focusStart, focusInfo.end, setLines, activeLineIndex]);
+  }, [focusWords, focusStart, focusInfo.naturalEnd, setLines, activeLineIndex]);
   // Clearing a word's time says what went and offers it back.
   const handleClearWordWithUndo = useCallback((wordIndex: number) => {
     const word = focusWords?.[wordIndex];
@@ -1031,8 +1077,8 @@ export default function Editor({
 
   // Words-focus keys, ahead of the editor-wide ones (capture phase): Backspace takes back the
   // last stamp instead of the whole line's time, and K ends the word being sung (a pause).
-  const wordKeysRef = useRef({ handleUnstampLast, handleEndWordHere });
-  useLayoutEffect(() => { wordKeysRef.current = { handleUnstampLast, handleEndWordHere }; });
+  const wordKeysRef = useRef({ handleUnstampLast, handleEndWordHere, handleEndPreviousLine });
+  useLayoutEffect(() => { wordKeysRef.current = { handleUnstampLast, handleEndWordHere, handleEndPreviousLine }; });
   const clearTimestampKey = settings.shortcuts?.clearTimestamp?.[0] || 'Backspace';
   useEffect(() => {
     if (!wordsFocus || stampTarget === 'secondary') return;
@@ -1044,6 +1090,11 @@ export default function Editor({
       if (selectedLines.size > 0) return;
       if (matchKey(e, clearTimestampKey)) {
         if (wordKeysRef.current.handleUnstampLast()) { e.preventDefault(); e.stopPropagation(); }
+      } else if (matchKey(e, 'Shift+k')) {
+        // The previous line's last word, whatever has been marked on this one since.
+        e.preventDefault();
+        e.stopPropagation();
+        wordKeysRef.current.handleEndPreviousLine();
       } else if (matchKey(e, 'k')) {
         e.preventDefault();
         e.stopPropagation();
@@ -1959,6 +2010,12 @@ export default function Editor({
                 {focusLength != null && ` · ${focusLength.toFixed(2)} s`}
               </span>
             </div>
+            {focusOverlap && (
+              <span className="inline-flex shrink-0 items-center gap-2 rounded-pill bg-primary/15 px-3 py-1.5 text-xs font-semibold text-foreground inset-ring inset-ring-primary/60">
+                <span aria-hidden className="size-2 rounded-full bg-primary" />
+                {t('editor.words.overlapsLine', { number: focusNeighbours.next?.number ?? '', seconds: focusOverlap.seconds.toFixed(2) })}
+              </span>
+            )}
             <Tip content={focusLength == null ? t('editor.words.distributeUnavailable') : t('editor.words.distributeTip')}>
               <Button
                 variant="outline"
@@ -2100,6 +2157,15 @@ export default function Editor({
               <WordTimeline
                 line={focusLine as EditorLine}
                 lineEnd={focusInfo.end}
+                naturalEnd={focusInfo.naturalEnd}
+                duration={duration}
+                lineKey={focusLine?.id ?? activeLineIndex}
+                lineIndex={activeLineIndex}
+                bands={wordBands}
+                nextLine={focusNeighbours.next}
+                prevLine={focusNeighbours.prev}
+                onSelectLine={setActiveLineIndex}
+                onEndPrevious={hasMedia ? handleEndPreviousLine : undefined}
                 playbackPosition={playbackPosition}
                 isPlaying={playerIsPlaying}
                 activeWordIndex={activeWordIndex}
@@ -2142,6 +2208,7 @@ export default function Editor({
                   { key: keyCap(markKey), label: t('editor.words.hintMark') },
                   { key: keyCap(clearTimestampKey), label: t('editor.words.hintUndoStamp') },
                   { key: 'K', label: t('editor.words.hintEnd') },
+                  { key: '⇧K', label: t('editor.words.hintEndPrevious') },
                   { key: keyCap(settings.shortcuts?.playPause?.[0] || 'Space'), label: t('editor.shortcutHints.play') },
                 ].map((hint) => (
                   <Tip key={hint.label} content={hint.label}>
