@@ -2448,6 +2448,7 @@ export type User = {
   lastOnlineVisibility: Scalars['String']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
+  nameTagBadgeId?: Maybe<Scalars['String']['output']>;
   onlineVisibility: Scalars['String']['output'];
   passwordChangedAt?: Maybe<Scalars['String']['output']>;
   pendingEmail?: Maybe<Scalars['String']['output']>;

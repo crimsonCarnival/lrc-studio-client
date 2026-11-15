@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
+import { NameTagPicker } from '@/features/badges/NameTagPicker';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import toast from 'react-hot-toast';
@@ -28,6 +29,7 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
 
   const matches = blockMatches(searchTerm, [
     tk('badges.showcase.editorTitle'),
+    tk('badges.nameTag.title'),
     'badges', 'showcase', 'achievements'
   ]);
 
@@ -53,6 +55,12 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
 
   return (
     <>
+      <NameTagPicker
+        earned={user?.badges ?? []}
+        value={user?.nameTagBadgeId ?? null}
+        staff={(user?.permissions?.length ?? 0) > 0}
+        onChange={(nameTagBadgeId) => setUser(prev => prev ? ({ ...prev, nameTagBadgeId }) : prev)}
+      />
       <ShowcaseEditor
         userBadges={earnedBadges}
         initialShowcase={user?.showcasedBadges ?? []}

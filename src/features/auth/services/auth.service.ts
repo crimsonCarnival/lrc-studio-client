@@ -142,6 +142,7 @@ export const authService = {
           google { connected googleId email name pictureUrl }
           badges { id grantedAt grantedBy }
           showcasedBadges
+          nameTagBadgeId
           showcasePublic
           progression { xp level }
           streak { current longest lastActiveDate }
@@ -228,6 +229,7 @@ export const authService = {
           miniProfileBadgeIds
           badges { id grantedAt grantedBy }
           showcasedBadges
+          nameTagBadgeId
           showcasePublic
           stats { minutesSynced wordsSynced karaokeLines }
           streak { current longest lastActiveDate }

@@ -100,6 +100,13 @@ export default {
 
   nameTag: {
     ariaLabel: 'Name tag: {{label}}',
+    title: 'Name tag',
+    desc: 'Choose one earned badge to show next to your name.',
+    none: 'None',
+    saveError: 'Could not save your name tag',
+    staffLabel: 'Staff',
+    staffDesc: 'Part of the LRC Studio team',
+    staffDefault: 'Staff members show this tag by default.',
   },
 
   // ─── Builtin badge labels (keyed by badge id: badges.<id>.label) ──────────────
