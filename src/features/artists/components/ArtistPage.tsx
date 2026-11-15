@@ -1,21 +1,50 @@
 import { lazy, Suspense } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { cn } from '@/shared/utils/utils';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { profilePath } from '@/features/profile/profile-path';
+import { ToastBody } from '@/shared/ui/app-toast';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@ui/dropdown-menu';
+import { listPath, profilePath } from '@/features/profile/profile-path';
+import { createPlaylist } from '@/features/playlists/playlist.service';
 import { projectPath } from '@/features/projects/project-path';
 import { formatTrackLength } from '@/features/playlists/playlist-stats';
-import { useShelfArtist } from '../shelf.queries';
+import { useSetShelfVisibility, useShelfArtist } from '../shelf.queries';
 import type { ShelfAlbum, ShelfProject, ShelfTrack } from '../shelf.service';
 import { VisibilityChip } from './VisibilityChip';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 
 const GRID = 'grid grid-cols-[1.75rem_minmax(0,1fr)_3.5rem] md:grid-cols-[2rem_minmax(0,1fr)_9rem_6rem_3.5rem] items-center gap-3';
+
+/** Saves tracks as a private snapshot playlist and offers a link to it. Failures toast; they never throw. */
+function useSaveAsPlaylist(accountName: string) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  return async (name: string, tracks: ShelfTrack[]) => {
+    const publicIds = tracks.map((tr) => tr.project.publicId);
+    if (publicIds.length === 0) return;
+    try {
+      const playlist = await createPlaylist({ name, publicIds, isPublic: false });
+      if (!playlist) throw new Error('no playlist returned');
+      const id = `shelf-playlist-${playlist.id}`;
+      toast.success(
+        <ToastBody
+          title={t('profile.artists.savedAsPlaylist')}
+          action={{ label: t('profile.artists.viewPlaylist'), onClick: () => navigate(listPath(accountName, playlist.id)) }}
+          toastId={id}
+        />,
+        { id },
+      );
+    } catch {
+      toast.error(t('profile.artists.saveAsPlaylistFailed'));
+    }
+  };
+}
 
 const isSynced = (p: ShelfProject) => (p.lineCount ?? 0) > 0 && (p.syncedLineCount ?? 0) >= (p.lineCount ?? 0);
 
@@ -43,7 +72,15 @@ function TrackRow({ track, ownerAccountName }: { track: ShelfTrack; ownerAccount
   );
 }
 
-function AlbumSection({ album, isOwner, ownerAccountName }: { album: ShelfAlbum; isOwner: boolean; ownerAccountName: string }) {
+type AlbumSectionProps = {
+  album: ShelfAlbum;
+  isOwner: boolean;
+  ownerAccountName: string;
+  onVisibility: (isPublic: boolean) => void;
+  onSave: () => void;
+};
+
+function AlbumSection({ album, isOwner, ownerAccountName, onVisibility, onSave }: AlbumSectionProps) {
   const { t } = useTranslation();
   const isSingles = album.key === '';
   const cover = album.coverImage || resolveCoverImage(album.tracks[0]?.project);
@@ -66,6 +103,29 @@ function AlbumSection({ album, isOwner, ownerAccountName }: { album: ShelfAlbum;
           <span className="text-sm text-muted-foreground">{meta}</span>
         </div>
         {isOwner && <VisibilityChip isPublic={album.isPublic} />}
+        {isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={t('common.moreActions')}
+                className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Icon name="more_vert" size={18} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onVisibility(!album.isPublic)} className="max-lg:min-h-11">
+                <Icon name={album.isPublic ? 'lock' : 'public'} />
+                {album.isPublic ? t('profile.artists.makeAlbumPrivate') : t('profile.artists.makeAlbumPublic')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onSave} className="max-lg:min-h-11">
+                <Icon name="playlist_add" />
+                {t('profile.artists.saveAlbumAsPlaylist')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
       <ol className="flex flex-col">
         {album.tracks.map((track) => (
@@ -73,6 +133,30 @@ function AlbumSection({ album, isOwner, ownerAccountName }: { album: ShelfAlbum;
         ))}
       </ol>
     </section>
+  );
+}
+
+/** Private/Public as two real radios; the checked state is the cached (optimistic) value. */
+function VisibilitySegment({ isPublic, onChange }: { isPublic: boolean; onChange: (isPublic: boolean) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div role="radiogroup" aria-label={t('profile.artists.visibilityLabel')} className="flex rounded-pill border border-border bg-card p-0.5">
+      {([false, true] as const).map((value) => (
+        <label
+          key={String(value)}
+          className="cursor-pointer rounded-pill px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+        >
+          <input
+            type="radio"
+            name="artist-visibility"
+            className="sr-only"
+            checked={isPublic === value}
+            onChange={() => onChange(value)}
+          />
+          {value ? t('profile.artists.public') : t('profile.artists.private')}
+        </label>
+      ))}
+    </div>
   );
 }
 
@@ -89,6 +173,8 @@ export default function ArtistPage() {
   const isOwner = isSelf && !viewAsOthers;
 
   const { data: artist, isPending, isError } = useShelfArtist(accountName, artistId, viewAsOthers);
+  const setVisibility = useSetShelfVisibility(accountName ?? '');
+  const saveAsPlaylist = useSaveAsPlaylist(accountName ?? '');
 
   if (isPending) {
     return <div className="flex justify-center py-24"><LoadingSpinner size="lg" /></div>;
@@ -126,12 +212,34 @@ export default function ArtistPage() {
           <h1 className="break-words font-heading text-4xl font-bold text-foreground">{artist.name}</h1>
           <span className="text-sm text-muted-foreground">{summary}</span>
         </div>
-        {isOwner && <VisibilityChip isPublic={artist.isPublic} />}
+        {isOwner && (
+          <div className="flex flex-wrap items-center gap-3">
+            <VisibilitySegment isPublic={artist.isPublic} onChange={(v) => setVisibility(artist.id, null, v)} />
+            <button
+              type="button"
+              onClick={() => saveAsPlaylist(artist.name, artist.albums.flatMap((a) => a.tracks))}
+              className="flex items-center gap-1.5 rounded-pill border border-border px-3.5 py-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+            >
+              <Icon name="playlist_add" size={16} />
+              {t('profile.artists.saveAsPlaylist')}
+            </button>
+          </div>
+        )}
       </header>
 
       <div className="flex flex-col gap-5">
         {artist.albums.map((album) => (
-          <AlbumSection key={album.key} album={album} isOwner={isOwner} ownerAccountName={accountName} />
+          <AlbumSection
+            key={album.key}
+            album={album}
+            isOwner={isOwner}
+            ownerAccountName={accountName}
+            onVisibility={(v) => setVisibility(artist.id, album.key, v)}
+            onSave={() => saveAsPlaylist(
+              `${artist.name} — ${album.key === '' ? t('profile.artists.singles') : album.title}`,
+              album.tracks,
+            )}
+          />
         ))}
       </div>
     </div>
