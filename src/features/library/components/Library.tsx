@@ -167,7 +167,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   // The artist view shows shelf tracks plus credit-less projects, so its badges are counted from those.
   let tabCounts: Record<LibraryFilterTab, number> = { all: searchMatched.length, inProgress: 0, completed: 0, notStarted: 0 };
   if (sortBy === 'artist') {
-    tabCounts = artistViewCounts(shelf.data ?? [], searchMatched as unknown as ShelfProject[], searchQuery);
+    tabCounts = artistViewCounts(shelf.data ?? [], searchMatched as ShelfProject[], searchQuery);
   } else {
     for (const p of searchMatched) tabCounts[statusOf(p)]++;
   }
@@ -305,11 +305,12 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             <LibraryByArtist
               shelf={shelf.data}
               // The loaded list is only used for its credit-less projects; the shelf itself is uncapped.
-              items={searchMatched as unknown as ShelfProject[]}
+              items={searchMatched as ShelfProject[]}
               query={searchQuery}
               filterTab={filterTab}
-              // Library rows and shelf tracks are the same Project; the shelf selection is typed more loosely.
-              renderCard={(p) => renderCard(p as unknown as ProjectItem)}
+              // Shelf tracks select the same ProjectListFields as the Library list (so the edit modal sees every
+              // field); the two types differ only in null vs undefined.
+              renderCard={(p) => renderCard(p as ProjectItem)}
             />
           )
         ) : inputMethod === 'touch' ? (

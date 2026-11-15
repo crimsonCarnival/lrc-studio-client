@@ -1,8 +1,9 @@
 import { gqlRequest } from '@/app/graphql.client';
 import { shelfChanged } from '@/app/cache-sync';
+import { PROJECT_LIST_FIELDS } from '@/features/projects/services/projects.service';
 import type { ShelfAlbum as GqlShelfAlbum, ShelfArtist as GqlShelfArtist } from '@/types/graphql';
 
-/** The slice of a track's project the shelf screens read. */
+/** A shelf track's project: the Library list's `ProjectListFields` plus what the shelf screens add. */
 export type ShelfProject = {
   id: string;
   publicId: string;
@@ -29,7 +30,19 @@ export type ShelfProject = {
     genre?: string | null;
     tags?: string[] | null;
     artists?: Array<{ name: string; role: 'primary' | 'featured'; order: number }> | null;
+    // The rest of ProjectListFields: the Library metadata editor saves `metadata` wholesale from these.
+    description?: string | null;
+    singers?: string[] | null;
+    singerColors?: string[] | null;
+    songYear?: string | number | null;
+    songLanguage?: string | null;
+    trackNumber?: number | null;
+    trackCount?: number | null;
   } | null;
+  type?: string | null;
+  readOnly?: boolean | null;
+  listed?: boolean | null;
+  forkedFrom?: { publicId?: string | null; userId?: string | null; accountName?: string | null; sourceDeleted?: boolean | null } | null;
   upload?: { id?: string | null; fileName?: string | null; title?: string | null; source?: string | null; uploadUrl?: string | null; coverImage?: string | null; duration?: number | null } | null;
 };
 
@@ -45,17 +58,11 @@ const SHELF_ARTIST_FIELDS = /* GraphQL */ `
       key title year isPublic trackCount coverImage
       tracks {
         trackNumber
-        project {
-          id publicId slug title kind public hasWordSync lineCount syncedLineCount coverImage
-          createdAt updatedAt contentUpdatedAt starCount forkCount viewCount shareCount
-          user { accountName }
-          metadata { songName songArtist songAlbum genre tags artists { name role order } }
-          upload { id fileName title source uploadUrl coverImage duration }
-        }
+        project { ...ProjectListFields hasWordSync user { accountName } }
       }
     }
   }
-`;
+` + PROJECT_LIST_FIELDS;
 
 const GET_SHELF = /* GraphQL */ `
   query ArtistShelf($accountName: String!, $asVisitor: Boolean, $withTracks: Boolean) {
