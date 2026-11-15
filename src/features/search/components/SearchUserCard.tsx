@@ -12,6 +12,7 @@ import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import type { FollowUser } from '@/types';
 import { Highlight } from './Highlight';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { NameTag } from '@/features/badges/NameTag';
 
 type SearchUserCardProps = {
   user: FollowUser;
@@ -59,6 +60,7 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
               <Link to={profilePath(accountName)} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
                 <Highlight text={name} query={query} />
               </Link>
+              <NameTag tag={user.nameTag} />
               {level > 0 && (
                 <span className="inline-flex h-[22px] shrink-0 items-center rounded-pill bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
                   {t('settings.levelShort', { level })}

@@ -13,6 +13,7 @@ const SEARCH_USERS_QUERY = /* GraphQL */ `
       accountName
       displayName
       avatarUrl staffRole
+      nameTag { id label { en es } description { en es } icon color }
       isFollowedByMe
       level
       projectCount
