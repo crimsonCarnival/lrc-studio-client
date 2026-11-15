@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -25,9 +25,13 @@ const GRID = 'grid grid-cols-[1.75rem_minmax(0,1fr)_3.5rem] md:grid-cols-[2rem_m
 function useSaveAsPlaylist(accountName: string) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  return async (name: string, tracks: ShelfTrack[]) => {
+  const inFlight = useRef(false);
+  const [pending, setPending] = useState(false);
+  const save = async (name: string, tracks: ShelfTrack[]) => {
     const publicIds = tracks.map((tr) => tr.project.publicId);
-    if (publicIds.length === 0) return;
+    if (publicIds.length === 0 || inFlight.current) return;
+    inFlight.current = true;
+    setPending(true);
     try {
       const playlist = await createPlaylist({ name, publicIds, isPublic: false });
       if (!playlist) throw new Error('no playlist returned');
@@ -42,8 +46,24 @@ function useSaveAsPlaylist(accountName: string) {
       );
     } catch {
       toast.error(t('profile.artists.saveAsPlaylistFailed'));
+    } finally {
+      inFlight.current = false;
+      setPending(false);
     }
   };
+  return { save, pending };
+}
+
+// The server rejects playlist names over 100 characters (playlist.model.ts).
+const PLAYLIST_NAME_MAX = 100;
+
+/** "<Artist> — <part>" capped at 100 chars: the artist is kept, the part is cut with an ellipsis. */
+function playlistName(artist: string, part?: string): string {
+  if (!part) return artist.slice(0, PLAYLIST_NAME_MAX);
+  const full = `${artist} — ${part}`;
+  if (full.length <= PLAYLIST_NAME_MAX) return full;
+  const room = PLAYLIST_NAME_MAX - artist.length - 3 - 1;
+  return room > 0 ? `${artist} — ${part.slice(0, room)}…` : artist.slice(0, PLAYLIST_NAME_MAX);
 }
 
 const isSynced = (p: ShelfProject) => (p.lineCount ?? 0) > 0 && (p.syncedLineCount ?? 0) >= (p.lineCount ?? 0);
@@ -78,9 +98,10 @@ type AlbumSectionProps = {
   ownerAccountName: string;
   onVisibility: (isPublic: boolean) => void;
   onSave: () => void;
+  savePending: boolean;
 };
 
-function AlbumSection({ album, isOwner, ownerAccountName, onVisibility, onSave }: AlbumSectionProps) {
+function AlbumSection({ album, isOwner, ownerAccountName, onVisibility, onSave, savePending }: AlbumSectionProps) {
   const { t } = useTranslation();
   const isSingles = album.key === '';
   const cover = album.coverImage || resolveCoverImage(album.tracks[0]?.project);
@@ -119,7 +140,7 @@ function AlbumSection({ album, isOwner, ownerAccountName, onVisibility, onSave }
                 <Icon name={album.isPublic ? 'lock' : 'public'} />
                 {album.isPublic ? t('profile.artists.makeAlbumPrivate') : t('profile.artists.makeAlbumPublic')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSave} className="max-lg:min-h-11">
+              <DropdownMenuItem onClick={onSave} disabled={savePending} className="max-lg:min-h-11">
                 <Icon name="playlist_add" />
                 {t('profile.artists.saveAlbumAsPlaylist')}
               </DropdownMenuItem>
@@ -174,7 +195,7 @@ export default function ArtistPage() {
 
   const { data: artist, isPending, isError } = useShelfArtist(accountName, artistId, viewAsOthers);
   const setVisibility = useSetShelfVisibility(accountName ?? '');
-  const saveAsPlaylist = useSaveAsPlaylist(accountName ?? '');
+  const { save: saveAsPlaylist, pending: savePending } = useSaveAsPlaylist(accountName ?? '');
 
   if (isPending) {
     return <div className="flex justify-center py-24"><LoadingSpinner size="lg" /></div>;
@@ -217,8 +238,9 @@ export default function ArtistPage() {
             <VisibilitySegment isPublic={artist.isPublic} onChange={(v) => setVisibility(artist.id, null, v)} />
             <button
               type="button"
-              onClick={() => saveAsPlaylist(artist.name, artist.albums.flatMap((a) => a.tracks))}
-              className="flex items-center gap-1.5 rounded-pill border border-border px-3.5 py-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+              disabled={savePending}
+              onClick={() => saveAsPlaylist(playlistName(artist.name), artist.albums.flatMap((a) => a.tracks))}
+              className="flex items-center gap-1.5 rounded-pill border border-border px-3.5 py-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
             >
               <Icon name="playlist_add" size={16} />
               {t('profile.artists.saveAsPlaylist')}
@@ -235,8 +257,9 @@ export default function ArtistPage() {
             isOwner={isOwner}
             ownerAccountName={accountName}
             onVisibility={(v) => setVisibility(artist.id, album.key, v)}
+            savePending={savePending}
             onSave={() => saveAsPlaylist(
-              `${artist.name} — ${album.key === '' ? t('profile.artists.singles') : album.title}`,
+              playlistName(artist.name, album.key === '' ? t('profile.artists.singles') : album.title ?? ''),
               album.tracks,
             )}
           />

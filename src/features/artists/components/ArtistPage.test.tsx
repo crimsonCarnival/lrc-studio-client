@@ -114,4 +114,34 @@ describe('ArtistPage owner controls', () => {
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
   });
+
+  it('long artist + album names produce a name of at most 100 chars', async () => {
+    const long = artist();
+    long.name = 'A'.repeat(60);
+    long.albums[0].title = 'B'.repeat(80);
+    getShelfArtist.mockResolvedValue(long);
+    wrap();
+    await screen.findByRole('heading', { level: 1 });
+    fireEvent.keyDown(screen.getAllByRole('button', { name: 'More actions' })[0], { key: 'Enter' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: /Save album as playlist/ }));
+    await waitFor(() => expect(createPlaylist).toHaveBeenCalled());
+    const name: string = createPlaylist.mock.calls[0][0].name;
+    expect(name.length).toBeLessThanOrEqual(100);
+    expect(name.startsWith('A'.repeat(60) + ' — B')).toBe(true);
+    expect(name.endsWith('…')).toBe(true);
+  });
+
+  it('a second click while saving does not call createPlaylist twice', async () => {
+    let resolve: (v: { id: string }) => void = () => {};
+    createPlaylist.mockReturnValue(new Promise((r) => { resolve = r; }));
+    wrap();
+    await screen.findByRole('heading', { level: 1, name: 'Luna Vale' });
+    const btn = screen.getByRole('button', { name: /^\W*Save as playlist$/ });
+    fireEvent.click(btn);
+    fireEvent.click(btn);
+    expect(createPlaylist).toHaveBeenCalledTimes(1);
+    expect(btn).toBeDisabled();
+    resolve({ id: 'pl1' });
+    await waitFor(() => expect(btn).not.toBeDisabled());
+  });
 });
