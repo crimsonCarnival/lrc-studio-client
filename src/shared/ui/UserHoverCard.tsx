@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { BadgeList } from '@/features/badges/BadgeList';
+import { NameTag } from '@/features/badges/NameTag';
+import type { NameTagData } from '@/features/badges/badges.types';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { cn } from '@/shared/utils/utils';
@@ -29,6 +31,7 @@ interface MiniProfile {
   avatarUrl: string | null;
   coverImageUrl: string | null;
   staffRole?: string | null;
+  nameTag?: NameTagData | null;
   bio: string | null;
   isVerified: boolean;
   followerCount: number;
@@ -47,7 +50,7 @@ async function fetchMiniProfile(accountName: string): Promise<MiniProfile | null
   const data = await gqlRequest<{ publicProfile: MiniProfile | null }>(/* GraphQL */ `
     query MiniProfile($accountName: String!) {
       publicProfile(accountName: $accountName) {
-        id accountName displayName avatarUrl coverImageUrl staffRole bio isVerified
+        id accountName displayName avatarUrl coverImageUrl staffRole nameTag { id label { en es } description { en es } icon color } bio isVerified
         followerCount followingCount projectCount totalStarsReceived
         isFollowedByMe isFollowingMe miniProfileBadgeIds
         country
@@ -249,6 +252,7 @@ export function UserHoverCard({ accountName, userId, children, className }: User
                     <Link to={profilePath(accountName)} onClick={() => setOpen(false)} className="text-[17px] font-bold leading-tight text-zinc-100 truncate hover:underline">
                       {displayName}
                     </Link>
+                    <NameTag tag={profile.nameTag} />
                     {profile.isVerified && <Icon name="verified" size={16} className="text-primary shrink-0" aria-label={t('profile.verified')} />}
                   </div>
                   <Tip content={lastSeen ?? undefined}>

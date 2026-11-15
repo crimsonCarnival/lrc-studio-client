@@ -95,6 +95,17 @@ export default {
     sortDescending:    'Descendente',
   },
 
+  nameTag: {
+    ariaLabel: 'Etiqueta: {{label}}',
+    title: 'Etiqueta de nombre',
+    desc: 'Elige una insignia obtenida para mostrarla junto a tu nombre.',
+    none: 'Ninguna',
+    saveError: 'No se pudo guardar tu etiqueta de nombre',
+    staffLabel: 'Staff',
+    staffDesc: 'Parte del equipo de LRC Studio',
+    staffDefault: 'Los miembros del staff muestran esta etiqueta por defecto.',
+  },
+
   // ─── Etiquetas de insignias integradas (clave: badges.<id>.label) ─────────────
   og:           { label: 'OG', tip: 'Se unió durante la fase alfa' },
   pioneer:      { label: 'Pionero', tip: 'Uno de los primeros en crear un proyecto' },

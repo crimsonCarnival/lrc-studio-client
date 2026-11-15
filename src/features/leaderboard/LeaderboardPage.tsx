@@ -17,6 +17,8 @@ import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { SelectField } from '@ui/select-field';
 import { Tip } from '@ui/tip';
+import { NameTag } from '@/features/badges/NameTag';
+import type { NameTagData } from '@/features/badges/badges.types';
 
 interface LeaderEntry {
   id?: string;
@@ -24,6 +26,7 @@ interface LeaderEntry {
   displayName?: string;
   avatarUrl?: string;
   staffRole?: string | null;
+  nameTag?: NameTagData | null;
   badges?: { id: string }[];
   progression?: { level?: number; xp?: number };
   streak?: { current?: number };
@@ -401,20 +404,27 @@ export default function LeaderboardPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="shrink-0"><RankBadge pos={i + 1} podium={isRanking} /></div>
-                        <UserHoverCard accountName={entry.accountName} userId={entry.id}>
-                          <span className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="flex items-center gap-3 min-w-0 flex-1">
+                          <UserHoverCard accountName={entry.accountName} userId={entry.id}>
                             <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
-                            <span className="flex flex-col min-w-0 flex-1">
-                              <span className="truncate text-[15px] font-semibold text-foreground">
-                                {entry.displayName || entry.accountName}
-                              </span>
-                              <span className="truncate font-mono text-xs font-medium text-subtle">
+                          </UserHoverCard>
+                          <span className="flex flex-col min-w-0 flex-1">
+                            <span className="flex min-w-0 items-center">
+                              <UserHoverCard accountName={entry.accountName} userId={entry.id} className="block min-w-0">
+                                <span className="block truncate text-[15px] font-semibold text-foreground">
+                                  {entry.displayName || entry.accountName}
+                                </span>
+                              </UserHoverCard>
+                              <NameTag tag={entry.nameTag} className="ml-1.5" />
+                            </span>
+                            <UserHoverCard accountName={entry.accountName} userId={entry.id} className="block min-w-0">
+                              <span className="block truncate font-mono text-xs font-medium text-subtle">
                                 {entry.accountName}
                                 {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
                               </span>
-                            </span>
+                            </UserHoverCard>
                           </span>
-                        </UserHoverCard>
+                        </span>
                       </div>
                       <dl className="mt-2.5 grid grid-cols-3 gap-y-2 gap-x-2 pl-1">
                         {stats.map(([label, value]) => (
@@ -457,20 +467,27 @@ export default function LeaderboardPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-4">
-                            <UserHoverCard accountName={entry.accountName} userId={entry.id}>
-                              <span className="flex items-center gap-4">
+                            <span className="flex items-center gap-4">
+                              <UserHoverCard accountName={entry.accountName} userId={entry.id}>
                                 <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
-                                <span className="flex flex-col">
-                                  <span className="text-[17px] font-semibold leading-tight text-foreground">
-                                    {entry.displayName || entry.accountName}
-                                  </span>
+                              </UserHoverCard>
+                              <span className="flex flex-col">
+                                <span className="flex items-center">
+                                  <UserHoverCard accountName={entry.accountName} userId={entry.id}>
+                                    <span className="text-[17px] font-semibold leading-tight text-foreground">
+                                      {entry.displayName || entry.accountName}
+                                    </span>
+                                  </UserHoverCard>
+                                  <NameTag tag={entry.nameTag} className="ml-1.5" />
+                                </span>
+                                <UserHoverCard accountName={entry.accountName} userId={entry.id}>
                                   <span className="mt-0.5 font-mono text-xs font-medium text-subtle">
                                     {entry.accountName}
                                     {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
                                   </span>
-                                </span>
+                                </UserHoverCard>
                               </span>
-                            </UserHoverCard>
+                            </span>
                           </div>
                         </td>
                         <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-subtle">

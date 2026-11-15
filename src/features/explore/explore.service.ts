@@ -16,7 +16,7 @@ const TRENDING_PROJECTS = /* GraphQL */ `
         starCount
         forkCount
         metadata { songName songArtist }
-        user { id accountName displayName avatarUrl staffRole }
+        user { id accountName displayName avatarUrl staffRole nameTag { id label { en es } description { en es } icon color } }
       }
       total
       hasMore

@@ -12,6 +12,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
+import { NameTag } from '@/features/badges/NameTag';
+import type { NameTagData } from '@/features/badges/badges.types';
 import { ProjectViewActions } from './ProjectViewActions';
 import { ShareToProfileButton } from './ShareToProfileButton';
 import { ShareOgButton } from './ShareOgButton';
@@ -42,7 +44,7 @@ interface ProjectData {
   title?: string;
   kind?: ProjectKind;
   metadata?: ProjectMeta;
-  user?: { accountName?: string; displayName?: string; avatarUrl?: string | null; staffRole?: string | null; progression?: { level?: number | null } | null };
+  user?: { accountName?: string; displayName?: string; avatarUrl?: string | null; staffRole?: string | null; nameTag?: NameTagData | null; progression?: { level?: number | null } | null };
   upload?: { duration?: number | null };
   createdAt?: string | number;
   forksEnabled?: boolean;
@@ -163,8 +165,9 @@ export default function ProjectInfoPanel({
     facts.push({
       label: t('projectView.syncedBy'),
       value: (
-        <UserHoverCard accountName={accountName}>
-          <span className="flex min-w-0 items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2">
+          <UserHoverCard accountName={accountName} className="block min-w-0">
+            <span className="flex min-w-0 items-center gap-2">
             <StaffRing role={project.user?.staffRole} outset={2.5}>
               {project.user?.avatarUrl ? (
                 <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
@@ -181,13 +184,15 @@ export default function ProjectInfoPanel({
                 <span className="truncate font-mono text-xs text-subtle">@{accountName}</span>
               )}
             </Link>
-            {authorLevel > 0 && (
+            </span>
+          </UserHoverCard>
+          <NameTag tag={project.user?.nameTag} />
+          {authorLevel > 0 && (
               <span className="inline-flex h-5 shrink-0 items-center rounded-pill bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
                 {t('settings.levelShort', { level: authorLevel })}
               </span>
-            )}
-          </span>
-        </UserHoverCard>
+          )}
+        </span>
       ),
     });
   }

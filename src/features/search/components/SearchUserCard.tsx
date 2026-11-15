@@ -12,6 +12,7 @@ import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import type { FollowUser } from '@/types';
 import { Highlight } from './Highlight';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { NameTag } from '@/features/badges/NameTag';
 
 type SearchUserCardProps = {
   user: FollowUser;
@@ -47,24 +48,30 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
 
   return (
     <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[calc(var(--radius)*1.8)] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
-      <UserHoverCard accountName={accountName} userId={user.id} className="block min-w-0 flex-1">
-        <span className="flex w-full min-w-0 items-center gap-x-4 gap-y-3">
+      <span className="flex min-w-0 flex-1 items-center gap-x-4 gap-y-3">
+        <UserHoverCard accountName={accountName} userId={user.id} className="shrink-0">
           <StaffRing role={user.staffRole}>
             <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
               {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}
             </span>
           </StaffRing>
+        </UserHoverCard>
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="flex min-w-0 items-center gap-2">
-              <Link to={profilePath(accountName)} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
-                <Highlight text={name} query={query} />
-              </Link>
+              <UserHoverCard accountName={accountName} userId={user.id} className="block min-w-0">
+                <Link to={profilePath(accountName)} className="block truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
+                  <Highlight text={name} query={query} />
+                </Link>
+              </UserHoverCard>
+              <NameTag tag={user.nameTag} />
               {level > 0 && (
                 <span className="inline-flex h-[22px] shrink-0 items-center rounded-pill bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
                   {t('settings.levelShort', { level })}
                 </span>
               )}
             </span>
+            <UserHoverCard accountName={accountName} userId={user.id} className="block min-w-0">
+            <span className="flex min-w-0 flex-col gap-1">
             <span className="flex min-w-0 items-center gap-2 text-sm text-subtle">
               <span className="truncate font-mono text-xs">@<Highlight text={accountName} query={query} /></span>
               {/* Only present when the user chose to show their country. */}
@@ -77,9 +84,10 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
               {' · '}
               {t('search.statFollowers', { count: Math.max(0, (user.followerCount ?? 0) + followerDelta) })}
             </span>
+            </span>
+            </UserHoverCard>
           </span>
-        </span>
-      </UserHoverCard>
+      </span>
       <div className="flex shrink-0 items-center gap-2 max-sm:w-full">
         <Button asChild variant="outline" className="h-10 px-3.5 text-[15px] max-sm:flex-1 lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11">
           <Link to={profilePath(accountName)}>{t('search.viewProfile')}</Link>

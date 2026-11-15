@@ -57,7 +57,7 @@ const RETROACTIVE = /* GraphQL */ `
   }
 `;
 const GRANT_BADGE = /* GraphQL */ `
-  mutation Grant($userIdentifier: String!, $badgeId: String!) { adminGrantBadge(userIdentifier: $userIdentifier, badgeId: $badgeId) }
+  mutation Grant($userIdentifier: String!, $badgeId: String!, $expiresAt: String) { adminGrantBadge(userIdentifier: $userIdentifier, badgeId: $badgeId, expiresAt: $expiresAt) }
 `;
 
 const CONDITION_TYPES = [
@@ -566,19 +566,31 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
 function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const [identifier, setIdentifier] = useState('');
+  const [expires, setExpires] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // <input type="date"> min is a local YYYY-MM-DD, so build it from local parts (toISOString would be UTC).
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const grant = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await gqlRequest(GRANT_BADGE, { userIdentifier: identifier.trim(), badgeId: badge.id });
+      // Blank = permanent: omit the variable. A chosen date means the end of that local day.
+      await gqlRequest(GRANT_BADGE, {
+        userIdentifier: identifier.trim(),
+        badgeId: badge.id,
+        ...(expires && { expiresAt: new Date(`${expires}T23:59:59`).toISOString() }),
+      });
       const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
       const labelText = badge.label?.[lang] || badge.label?.en || badge.id;
       toast.success(t('admin.badges.grantSuccess', { label: labelText }));
       onClose();
     } catch (e) {
-      toast.error((e as Error)?.message || t('admin.badges.grantError'));
+      // A past expiry is the one failure the admin can act on; say so instead of echoing the server text.
+      if ((e as { code?: string })?.code === 'invalid_input') toast.error(t('admin.badges.grantExpiresInvalid'));
+      else toast.error((e as Error)?.message || t('admin.badges.grantError'));
     } finally {
       setLoading(false);
     }
@@ -607,6 +619,18 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
               required
             />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.grantExpires')}</span>
+            <input
+              type="date"
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+              min={today}
+              value={expires}
+              onChange={e => setExpires(e.target.value)}
+              aria-describedby="grant-expires-hint"
+            />
+          </label>
+          <p id="grant-expires-hint" className="-mt-2 text-[11px] text-zinc-500">{t('admin.badges.grantExpiresHint')}</p>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
               {t('admin.badges.cancel')}
