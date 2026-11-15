@@ -147,23 +147,6 @@ describe('WordTimeline overlap with the next line', () => {
     expect(onSelectLine).toHaveBeenCalledWith(1);
   });
 
-  it('drags the next line\'s words from its own row, on both sides', () => {
-    const onSetNeighbourWordTime = vi.fn();
-    const onSetNeighbourWordEnd = vi.fn();
-    renderTimeline({ line: sung, ...around, onSetNeighbourWordTime, onSetNeighbourWordEnd });
-    // The next line's first word: its start is the line's start.
-    fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.boundaryLabel:right' }), { key: 'ArrowRight' });
-    expect(onSetNeighbourWordTime).toHaveBeenLastCalledWith(1, 0, 13.09);
-    fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.endLabel:right' }), { key: 'ArrowLeft' });
-    expect(onSetNeighbourWordEnd).toHaveBeenLastCalledWith(1, 0, 13.45);
-  });
-
-  it('lets the first word start earlier than the line, back to the line before', () => {
-    const props = renderTimeline({ line: { ...sung, words: sung.words.map((w, i) => (i === 0 ? { ...w, time: 8.88 } : w)) }, ...around, startFloor: 8.5 });
-    fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.boundaryLabel:fighting' }), { key: 'ArrowLeft' });
-    expect(props.onSetWordTime).toHaveBeenLastCalledWith(0, 8.83);
-  });
-
   it('ends the previous line from its row while it still sounds', () => {
     const onEndPrevious = vi.fn();
     const before = { id: 'l0', text: 'my way', timestamp: 6, words: [{ word: 'my', time: 6 }, { word: 'way', time: 7, end: 9.3 }] };

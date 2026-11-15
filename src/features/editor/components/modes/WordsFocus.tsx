@@ -290,8 +290,6 @@ export interface GhostLine {
   line: EditorLine;
   /** Where that line stops sounding. */
   end: number | null;
-  /** The start of the line after it, when there is one: what its last word may run on past. */
-  holdLimit?: number | null;
 }
 
 interface View {
@@ -364,56 +362,21 @@ function fitView(start: number, end: number): View {
   return { from: start - before, span: length + before + after };
 }
 
-/**
- * One dimmed row for a neighbouring line: its words where they sound. The start of each word
- * can be dragged from here, without giving that line the focus first; its first word carries
- * the line's own start, which is the other way to open or close an overlap.
- */
-function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, timeAt, onSetWordTime, onSetWordEnd }: {
+/** One dimmed row for a neighbouring line: its words where they sound, read-only. */
+function GhostRow({ ghost, tone, caption, view, onSelect, action }: {
   ghost: GhostLine;
   tone: 'next' | 'prev';
   caption: string;
   view: View;
   onSelect?: () => void;
   action?: ReactNode;
-  /** The earliest this line's first word may start (the line before it has to start first). */
-  floor: number;
-  /** The song time under a pointer, snapped the way the footer says. */
-  timeAt: (clientX: number) => number;
-  /** The end of the track. */
-  cap: number;
-  onSetWordTime?: (wordIndex: number, time: number) => void;
-  onSetWordEnd?: (wordIndex: number, end: number | null) => void;
 }) {
-  const { t } = useTranslation();
-  const [dragging, setDragging] = useState<number | null>(null);
-  const [draggingEnd, setDraggingEnd] = useState<number | null>(null);
   const start = ghost.line.timestamp;
   const words = ghost.line.words ?? [];
   const segments = start != null && ghost.end != null && ghost.end > start && words.length
     ? layoutWords(words, start, ghost.end)
     : [];
   const pct = (time: number) => ((time - view.from) / view.span) * 100;
-  // A word stays between the timed words around it, and the first one after the line before.
-  const clamp = (index: number, time: number) => {
-    const before = words.slice(0, index).reverse().find((w) => w.time != null)?.time;
-    const after = words.slice(index + 1).find((w) => w.time != null)?.time;
-    const min = (before ?? floor) + MIN_WORD_GAP;
-    const max = Math.min(after ?? Infinity, ghost.end ?? Infinity) - MIN_WORD_GAP;
-    return Number(Math.max(min, Math.min(Math.max(min, max), time)).toFixed(3));
-  };
-  const move = (index: number, time: number) => {
-    const next = clamp(index, time);
-    if (next !== words[index].time) onSetWordTime?.(index, next);
-  };
-  // The right edge: a pause before the next word, or, for the line's last word, on past the
-  // start of the line after it.
-  const moveEnd = (index: number, raw: number) => {
-    const hold = index === words.length - 1 ? ghost.holdLimit ?? null : null;
-    const next = wordEndAt(segments[index], raw, hold, cap);
-    if (next !== (words[index].end ?? null)) onSetWordEnd?.(index, next);
-  };
-  const edgeTag = 'pointer-events-none absolute top-0 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums whitespace-nowrap text-background';
   const block = tone === 'next'
     ? 'border-primary/60 bg-primary/10 text-foreground/80'
     : 'border-foam/60 bg-foam/10 text-foreground/80';
@@ -430,74 +393,11 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
         </button>
         {action}
       </div>
-      <div className="relative min-w-0 flex-1 overflow-hidden">
-        {onSetWordTime && segments.map((seg, k) => (seg.timed && (
-          <span
-            key={`edge-${k}`}
-            role="slider"
-            tabIndex={0}
-            aria-label={t('editor.words.boundaryLabel', { word: seg.word })}
-            aria-valuemin={Number(floor.toFixed(2))}
-            aria-valuemax={Number((ghost.end ?? seg.to).toFixed(2))}
-            aria-valuenow={Number(seg.from.toFixed(2))}
-            onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setDragging(k); }}
-            onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) move(k, timeAt(e.clientX)); }}
-            onPointerUp={() => setDragging(null)}
-            onPointerCancel={() => setDragging(null)}
-            onKeyDown={(e) => {
-              const step = e.shiftKey ? 0.01 : 0.05;
-              const delta = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
-              if (!delta) return;
-              e.preventDefault();
-              e.stopPropagation();
-              move(k, seg.from + delta);
-            }}
-            className="group absolute inset-y-0 z-10 grid w-3 -translate-x-1/2 cursor-ew-resize touch-none place-items-center focus-visible:outline-none coarse:w-11"
-            style={{ left: `${pct(seg.from)}%` }}
-          >
-            <span className={`h-3/5 w-1 rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragging === k ? 'bg-foreground' : tone === 'next' ? 'bg-primary/70' : 'bg-foam/70'}`} />
-            {dragging === k && (
-              <span className="pointer-events-none absolute top-0 left-2 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums whitespace-nowrap text-background">
-                {formatTime(seg.from)}
-              </span>
-            )}
-          </span>
-        )))}
-        {onSetWordEnd && segments.map((seg, k) => (seg.timed && (
-          <span
-            key={`end-${k}`}
-            role="slider"
-            tabIndex={0}
-            aria-label={t('editor.words.endLabel', { word: seg.word })}
-            aria-valuemin={Number(seg.from.toFixed(2))}
-            aria-valuemax={Number((k === words.length - 1 && ghost.holdLimit != null ? cap : seg.gapTo).toFixed(2))}
-            aria-valuenow={Number(seg.to.toFixed(2))}
-            onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setDraggingEnd(k); }}
-            onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) moveEnd(k, timeAt(e.clientX)); }}
-            onPointerUp={() => setDraggingEnd(null)}
-            onPointerCancel={() => setDraggingEnd(null)}
-            onKeyDown={(e) => {
-              const step = e.shiftKey ? 0.01 : 0.05;
-              const delta = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
-              if (!delta) return;
-              e.preventDefault();
-              e.stopPropagation();
-              moveEnd(k, Number((seg.to + delta).toFixed(3)));
-            }}
-            // Narrower than the start handle and set just inside the chip, so where two chips
-            // meet each edge can still be picked.
-            className="group absolute inset-y-0 z-10 grid w-2 -translate-x-full cursor-ew-resize touch-none place-items-center focus-visible:outline-none coarse:w-8"
-            style={{ left: `${pct(seg.to)}%` }}
-          >
-            <span className={`h-2/5 w-[3px] rounded-pill transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${draggingEnd === k ? 'bg-foreground' : seg.hasEnd ? (tone === 'next' ? 'bg-primary/70' : 'bg-foam/70') : 'bg-transparent'}`} />
-            {draggingEnd === k && <span className={`${edgeTag} right-2`}>{formatTime(seg.to)}</span>}
-          </span>
-        )))}
+      <div aria-hidden className="relative min-w-0 flex-1 overflow-hidden">
         {segments.length > 0
           ? segments.map((seg, k) => (seg.to - seg.from > 0 && (
             <span
               key={k}
-              aria-hidden
               // The previous line is cut off on the left, so its words read from their right end.
               className={`absolute inset-y-2.5 flex items-center overflow-hidden rounded-md border border-dashed px-1.5 text-xs font-semibold whitespace-nowrap ${tone === 'prev' ? 'justify-end' : ''} ${block}`}
               style={{ left: `calc(${pct(seg.from)}% + 1px)`, width: `max(0px, calc(${pct(seg.to) - pct(seg.from)}% - 2px))` }}
@@ -507,7 +407,6 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
           )))
           : start != null && ghost.end != null && ghost.end > start && (
             <span
-              aria-hidden
               className={`absolute inset-y-2.5 flex items-center overflow-hidden rounded-md border border-dashed px-2 text-xs font-semibold whitespace-nowrap ${block}`}
               style={{ left: `calc(${pct(start)}% + 1px)`, width: `max(0px, calc(${pct(ghost.end) - pct(start)}% - 2px))` }}
             >
@@ -533,7 +432,7 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
 export function WordTimeline({
   line, lineEnd, naturalEnd: naturalEndProp, duration, lineKey, lineIndex, bands, nextLine, prevLine, onSelectLine, onEndPrevious,
   playbackPosition, isPlaying, activeWordIndex, selectedWordIndex, playingWordIndex,
-  onSetWordTime, onSetWordEnd, onSetNeighbourWordTime, onSetNeighbourWordEnd, startFloor = 0, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
+  onSetWordTime, onSetWordEnd, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
 }: WordTimelineProps) {
   const { t } = useTranslation();
   const { settings } = useSettings();
@@ -706,8 +605,20 @@ export function WordTimeline({
   // Where a word's end goes when it is put at `raw`. Up against the word after it the end goes
   // away (the word runs into it again); the last word may go on past the next line's start.
   const applyEnd = (index: number, raw: number) => {
-    const next = wordEndAt(segments[index], raw, index === tailIndex ? (naturalEnd as number) : null, total);
-    if (next !== (words[index].end ?? null)) onSetWordEnd(index, next);
+    const seg = segments[index];
+    const tail = index === tailIndex;
+    const limit = tail ? (naturalEnd as number) : seg.gapTo;
+    if (tail && raw > limit + 0.005) {
+      const time = Number(Math.min(raw, total).toFixed(3));
+      if (time !== words[index].end) onSetWordEnd(index, time);
+      return;
+    }
+    if (raw >= limit - 0.005) {
+      if (words[index].end != null) onSetWordEnd(index, null);
+      return;
+    }
+    const time = Number(Math.max(seg.from + MIN_WORD_GAP, raw).toFixed(3));
+    if (time !== words[index].end) onSetWordEnd(index, time);
   };
 
   // A neighbouring line's word catches on this line's words and on where this line stops, so
@@ -950,11 +861,6 @@ export function WordTimeline({
               tone="prev"
               caption={t('editor.words.ghostPrev', { number: prevLine.number })}
               view={view}
-              floor={0}
-              cap={total}
-              timeAt={neighbourTimeAt}
-              onSetWordTime={onSetNeighbourWordTime && ((wi, time) => onSetNeighbourWordTime(prevLine.index, wi, time))}
-              onSetWordEnd={onSetNeighbourWordEnd && ((wi, to) => onSetNeighbourWordEnd(prevLine.index, wi, to))}
               onSelect={() => onSelectLine?.(prevLine.index)}
               action={onEndPrevious && (
                 <Tip content={t('editor.words.endPreviousTip')}>
@@ -1156,11 +1062,6 @@ export function WordTimeline({
               tone="next"
               caption={t('editor.words.ghostNext', { number: nextLine.number })}
               view={view}
-              floor={start}
-              cap={total}
-              timeAt={neighbourTimeAt}
-              onSetWordTime={onSetNeighbourWordTime && ((wi, time) => onSetNeighbourWordTime(nextLine.index, wi, time))}
-              onSetWordEnd={onSetNeighbourWordEnd && ((wi, to) => onSetNeighbourWordEnd(nextLine.index, wi, to))}
               onSelect={() => onSelectLine?.(nextLine.index)}
             />
           )}

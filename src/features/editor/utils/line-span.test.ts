@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { heldUntil, isHeldAt, lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from './line-span';
+import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from './line-span';
 
 const lines = [
   { type: 'section', label: 'Chorus' },
