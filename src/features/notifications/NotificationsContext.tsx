@@ -11,6 +11,7 @@ import { NotificationText, NotificationAvatar, notificationDestination, type Not
 import { appNavigate } from '@/app/navigation';
 import { Icon } from '@/shared/ui/Icon';
 import type { AppNotification } from '@/features/notifications/notifications.types';
+import { syncAppBadge } from './app-badge';
 
 // Push events that warrant an on-screen toast. Sticky/system notifications
 // (verify_email, set_password, etc.) arrive on the same channel but should not
@@ -100,6 +101,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {});
   }, [user, t, refreshTick]);
+
+  // The installed app's icon mirrors the unread count (and clears on sign-out, when it drops to 0).
+  useEffect(() => { syncAppBadge(unreadCount); }, [unreadCount]);
 
   useEffect(() => {
     if (!user) {
