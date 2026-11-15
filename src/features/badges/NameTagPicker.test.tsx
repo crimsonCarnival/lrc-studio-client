@@ -20,9 +20,9 @@ import { NameTagPicker } from './NameTagPicker';
 
 const earned = [{ id: 'og' }, { id: 'pioneer' }, { id: 'ghost-without-definition' }];
 
-function Harness({ initial = null, staff = false, spy }: { initial?: string | null; staff?: boolean; spy?: (v: string | null) => void }) {
+function Harness({ initial = null, staff = false, spy, onSaved }: { initial?: string | null; staff?: boolean; spy?: (v: string | null) => void; onSaved?: () => void }) {
   const [value, setValue] = useState<string | null>(initial);
-  return <NameTagPicker earned={earned} value={value} staff={staff} onChange={v => { spy?.(v); setValue(v); }} />;
+  return <NameTagPicker earned={earned} value={value} staff={staff} onChange={v => { spy?.(v); setValue(v); }} onSaved={onSaved} />;
 }
 
 beforeEach(() => { setNameTag.mockReset(); toastError.mockReset(); setNameTag.mockResolvedValue(undefined); });
@@ -63,6 +63,18 @@ describe('NameTagPicker', () => {
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(spy).toHaveBeenLastCalledWith('og');
     expect(screen.getByRole('radio', { name: /Founder/ })).toBeChecked();
+  });
+
+  it('calls onSaved only after a successful save', async () => {
+    const onSaved = vi.fn();
+    render(<Harness onSaved={onSaved} />);
+    await userEvent.click(screen.getByRole('radio', { name: /Founder/ }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+
+    setNameTag.mockRejectedValueOnce(new Error('boom'));
+    await userEvent.click(screen.getByRole('radio', { name: /Trailblazer/ }));
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(onSaved).toHaveBeenCalledTimes(1);
   });
 
   it('shows the Staff pill and default hint for staff with no equipped tag', () => {

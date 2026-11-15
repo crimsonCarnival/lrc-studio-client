@@ -13,9 +13,11 @@ type NameTagPickerProps = {
   /** Staff with no equipped tag get the built-in Staff pill by default. */
   staff?: boolean;
   onChange: (badgeId: string | null) => void;
+  /** Called once the server has accepted the change (not for the optimistic update). */
+  onSaved?: () => void;
 };
 
-export function NameTagPicker({ earned, value, staff = false, onChange }: NameTagPickerProps) {
+export function NameTagPicker({ earned, value, staff = false, onChange, onSaved }: NameTagPickerProps) {
   const { t, i18n } = useTranslation();
   const defs = useBadgeDefs();
   const [saving, setSaving] = useState(false);
@@ -41,6 +43,7 @@ export function NameTagPicker({ earned, value, staff = false, onChange }: NameTa
     setSaving(true);
     try {
       await setNameTag(next);
+      onSaved?.();
     } catch {
       onChange(prev);
       toast.error(t('badges.nameTag.saveError'));
