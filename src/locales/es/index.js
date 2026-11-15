@@ -34,6 +34,7 @@ import guide from './guide.js';
 import artists from './artists.js';
 import reports from './reports.js';
 import collab from './collab.js';
+import catalog from './catalog.js';
 
 export default {
   translation: {
@@ -73,5 +74,6 @@ export default {
     artists,
     reports,
     collab,
+    catalog,
   }
 };

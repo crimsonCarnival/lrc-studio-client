@@ -711,7 +711,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'artists' && showArtistsTab && accountName && (
-              <ArtistsTab accountName={accountName} isOwner={isOwner} asVisitor={viewAsOthers} />
+              <ArtistsTab accountName={accountName} isOwner={isOwner} asVisitor={viewAsOthers} isVerified={!!user?.isVerified} />
             )}
 
             {activeTab === 'shared' && (
