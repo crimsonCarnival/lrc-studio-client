@@ -45,7 +45,7 @@ export function ArtistsTab({ accountName, isOwner, asVisitor, isVerified }: Arti
   const [sort, setSort] = useState<ArtistSort>('songs');
   const [submitTarget, setSubmitTarget] = useState<SubmitTarget | null>(null);
   const hintId = useId();
-  const { data, isPending } = useArtistShelf(accountName, { asVisitor });
+  const { data, isPending, isError, refetch } = useArtistShelf(accountName, { asVisitor });
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -99,8 +99,13 @@ export function ArtistsTab({ accountName, isOwner, asVisitor, isVerified }: Arti
       </div>
 
       {isPending ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))] gap-4">
-          {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-64 rounded-2xl" />)}
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,11rem))] gap-3.5">
+          {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
+          <Button variant="link" size={null} onClick={() => void refetch()} className="text-xs">{t('common.retry')}</Button>
         </div>
       ) : shown.length === 0 ? (
         <EmptyState
@@ -109,21 +114,21 @@ export function ArtistsTab({ accountName, isOwner, asVisitor, isVerified }: Arti
           className="py-12"
         />
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))] gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,11rem))] gap-3.5">
           {shown.map((artist) => (
             <Link
               key={artist.id}
               to={artistPath(accountName, artist.id)}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3.5 transition-colors hover:bg-accent/40"
+              className="flex flex-col gap-2.5 rounded-2xl border border-border bg-card p-2.5 transition-colors hover:bg-accent/40"
             >
-              <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-4xl font-bold text-muted-foreground">
+              <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-3xl font-bold text-muted-foreground">
                 {artist.coverImage
                   ? <img src={artist.coverImage} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
                   : <span aria-hidden="true">{Array.from(artist.name)[0]?.toUpperCase()}</span>}
               </div>
               <div className="flex min-w-0 flex-col gap-1">
-                <h3 className="truncate font-heading text-base font-semibold text-foreground">{artist.name}</h3>
-                <span className="text-sm text-muted-foreground">{t('profile.artists.songs', { count: artist.songCount })}</span>
+                <h3 className="truncate font-heading text-sm font-semibold text-foreground">{artist.name}</h3>
+                <span className="text-xs text-muted-foreground">{t('profile.artists.songs', { count: artist.songCount })}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
                 {isOwner ? <VisibilityChip isPublic={artist.isPublic} /> : <span />}

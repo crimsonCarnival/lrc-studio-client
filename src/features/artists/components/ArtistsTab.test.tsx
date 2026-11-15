@@ -104,4 +104,15 @@ describe('ArtistsTab', () => {
       expect(screen.queryByRole('button', { name: /My submissions/ })).not.toBeInTheDocument();
     });
   });
+
+  it('shows a retryable error instead of the empty state when the query fails', async () => {
+    getArtistShelf.mockRejectedValueOnce(new Error('boom'));
+    wrap(true);
+    expect(await screen.findByText('Failed to load. Please try again.')).toBeInTheDocument();
+    expect(screen.queryByText(/Artists appear here/)).not.toBeInTheDocument();
+
+    getArtistShelf.mockResolvedValue([artist({})]);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByText('Luna Vale')).toBeInTheDocument();
+  });
 });
