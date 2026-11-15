@@ -126,6 +126,7 @@ describe('route coverage', () => {
     '/': 'guest landing page, reached through the logo',
     '/project/local': 'the local editor, reached through the bar Draft item and the editor itself',
     '/verify-email': 'email-link flow',
+    '/library/playlists': 'a Library tab, reached through the Library switch; the Library menu item covers it',
     '/dashboard': 'admin-host alias of the dashboard, which Admin already covers',
   };
 

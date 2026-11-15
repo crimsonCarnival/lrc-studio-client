@@ -14,5 +14,22 @@ export default {
   daysAgo: "{{count}}d ago",
   tabProjects: "Projects",
   tabUploads: "Uploads",
-  switchLabel: "Library sections"
+  switchLabel: "Library sections",
+  tabPlaylists: "Playlists",
+  sortArtist: "Artist → album",
+  noArtist: "No artist set",
+  singles: "Singles & loose tracks",
+  noMatches: "No songs match.",
+  playlists: {
+    title: "Playlists",
+    newPlaylist: "New playlist",
+    filterLabel: "Playlist visibility",
+    all: "All",
+    private: "Private",
+    unlisted: "Unlisted",
+    public: "Public",
+    saved: "Saved from others",
+    empty: "No playlists here yet.",
+    emptySaved: "You haven't saved anyone else's playlists yet."
+  }
 };

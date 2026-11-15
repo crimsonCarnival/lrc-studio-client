@@ -15,8 +15,22 @@ export type ShelfProject = {
   syncedLineCount?: number | null;
   coverImage?: string | null;
   user?: { accountName?: string | null } | null;
-  metadata?: { songName?: string | null; songArtist?: string | null } | null;
-  upload?: { source?: string | null; uploadUrl?: string | null; coverImage?: string | null; duration?: number | null } | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  contentUpdatedAt?: string | null;
+  starCount?: number | null;
+  forkCount?: number | null;
+  viewCount?: number | null;
+  shareCount?: number | null;
+  metadata?: {
+    songName?: string | null;
+    songArtist?: string | null;
+    songAlbum?: string | null;
+    genre?: string | null;
+    tags?: string[] | null;
+    artists?: Array<{ name: string; role: 'primary' | 'featured'; order: number }> | null;
+  } | null;
+  upload?: { id?: string | null; fileName?: string | null; title?: string | null; source?: string | null; uploadUrl?: string | null; coverImage?: string | null; duration?: number | null } | null;
 };
 
 export type ShelfTrack = { project: ShelfProject; trackNumber?: number | null };
@@ -33,9 +47,10 @@ const SHELF_ARTIST_FIELDS = /* GraphQL */ `
         trackNumber
         project {
           id publicId slug title kind public hasWordSync lineCount syncedLineCount coverImage
+          createdAt updatedAt contentUpdatedAt starCount forkCount viewCount shareCount
           user { accountName }
-          metadata { songName songArtist }
-          upload { source uploadUrl coverImage duration }
+          metadata { songName songArtist songAlbum genre tags artists { name role order } }
+          upload { id fileName title source uploadUrl coverImage duration }
         }
       }
     }

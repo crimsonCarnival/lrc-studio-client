@@ -2,12 +2,13 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/shared/utils/utils';
 
-/** Segmented control that switches between the Projects and Uploads libraries. */
-export function LibrarySwitch({ active }: { active: 'projects' | 'uploads' }) {
+/** Segmented control that switches between the Projects, Uploads and Playlists libraries. */
+export function LibrarySwitch({ active }: { active: 'projects' | 'uploads' | 'playlists' }) {
   const { t } = useTranslation();
   const items = [
     { id: 'projects', to: '/library', label: t('library.tabProjects') },
     { id: 'uploads', to: '/uploads', label: t('library.tabUploads') },
+    { id: 'playlists', to: '/library/playlists', label: t('library.tabPlaylists') },
   ] as const;
 
   return (

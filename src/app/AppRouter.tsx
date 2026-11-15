@@ -41,6 +41,7 @@ import type { SubtitleStudioProps } from '@features/subtitles/components/Subtitl
 const Editor = memo(EditorLazy);
 const Preview = memo(PreviewLazy);
 const Library = lazy(() => import('@features/library/components/Library'));
+const LibraryPlaylists = lazy(() => import('@features/library/components/LibraryPlaylists'));
 const UploadsLibrary = lazy(() => import('@features/library/components/UploadsLibrary'));
 const UploadDetailView = lazy(() => import('@features/uploads/UploadDetailView'));
 const SetupScreen = lazy(() => import('@features/editor/components/setup/SetupScreen'));
@@ -654,6 +655,11 @@ export function AppRouter({
               navigate(editPath);
             }}
           />
+        </Suspense>
+      } />
+      <Route path="library/playlists" element={
+        <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
+          <LibraryPlaylists />
         </Suspense>
       } />
       {isAdminHost() ? (

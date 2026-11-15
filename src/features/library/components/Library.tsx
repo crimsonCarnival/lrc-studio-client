@@ -16,10 +16,14 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Button } from '@ui/button';
 import { CountTabs } from '@ui/count-tabs';
 import { Link } from 'react-router-dom';
-import { projectStatus as statusOf, type ProjectStatus } from '@/features/projects/project-status';
+import { projectStatus as statusOf } from '@/features/projects/project-status';
+import { useArtistShelf } from '@/features/artists/shelf.queries';
+import type { ShelfProject } from '@/features/artists/shelf.service';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectListRaw from './ProjectList';
 import { LibrarySwitch } from './LibrarySwitch';
+import { LibraryByArtist } from './LibraryByArtist';
+import { artistViewCounts, type LibraryFilterTab } from './library-artist-view';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
 // ProjectSetupModal is still untyped JS; cast until it is migrated.
@@ -34,7 +38,6 @@ import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/a
 import { projectEditedAt } from '@/features/projects/project-edited-at';
 import { SelectField } from '@ui/select-field';
 
-type LibraryFilterTab = 'all' | ProjectStatus;
 const FILTER_TABS: LibraryFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
 
 interface ProjectMeta {
@@ -99,7 +102,9 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<LibraryFilterTab>('all');
-  const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
+  const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title' | 'artist'>('edited');
+  // The artist view reads the owner's full shelf, not the (100-capped) loaded list, so it only fetches when chosen.
+  const shelf = useArtistShelf(user?.accountName ?? undefined, { asVisitor: false, withTracks: true, enabled: sortBy === 'artist' });
 
   const handleDelete = useCallback(async (publicId: string) => {
     setDeletingId(publicId);
@@ -124,6 +129,26 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
     setEditingProject(project);
   }, []);
 
+  const renderCard = (project: ProjectItem) => (
+    <ProjectCard
+      key={project.publicId}
+      project={project}
+      onDelete={handleDelete}
+      onFavorite={handleFavorite}
+      onSelect={onOpenProject}
+      ownerAccountName={user?.accountName}
+      onEdit={handleEdit}
+      isListView={false}
+      isDeleting={deletingId === project.publicId}
+      i18n={i18n}
+      timezone={timezone}
+      // projects.list() returns only the signed-in user's own projects —
+      // there's no per-item owner field to check, so this list-level
+      // guarantee is the ownership signal.
+      isOwner
+    />
+  );
+
   const totalProjects = items.length;
   const completedProjects = items.filter(p => (p.lineCount as number) && (p.syncedLineCount as number) === (p.lineCount as number) && (p.lineCount as number) > 0).length;
   const totalSyncedLines = items.reduce((acc, p) => acc + ((p.syncedLineCount as number) || 0), 0);
@@ -131,12 +156,21 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const searchMatched = items.filter(p => {
     const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase())) || false;
-    return titleMatch || tagsMatch;
+    const needle = searchQuery.toLowerCase();
+    const artistMatch = creditsOf(p.metadata).some(c => c.name.toLowerCase().includes(needle))
+      || (p.metadata?.songArtist || '').toLowerCase().includes(needle);
+    const albumMatch = (p.metadata?.songAlbum || '').toLowerCase().includes(needle);
+    return titleMatch || tagsMatch || artistMatch || albumMatch;
   });
 
   // Counted from the search-filtered list, so a badge always equals the cards its tab shows.
-  const tabCounts: Record<LibraryFilterTab, number> = { all: searchMatched.length, inProgress: 0, completed: 0, notStarted: 0 };
-  for (const p of searchMatched) tabCounts[statusOf(p)]++;
+  // The artist view shows shelf tracks plus credit-less projects, so its badges are counted from those.
+  let tabCounts: Record<LibraryFilterTab, number> = { all: searchMatched.length, inProgress: 0, completed: 0, notStarted: 0 };
+  if (sortBy === 'artist') {
+    tabCounts = artistViewCounts(shelf.data ?? [], searchMatched as unknown as ShelfProject[], searchQuery);
+  } else {
+    for (const p of searchMatched) tabCounts[statusOf(p)]++;
+  }
 
   const filteredProjects = searchMatched.filter(p => filterTab === 'all' || statusOf(p) === filterTab).sort((a, b) => {
     if (sortBy === 'edited') {
@@ -214,11 +248,12 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
                     aria-label={t('home.sortBy')}
                     className="pl-8"
                     value={sortBy}
-                    onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title')}
+                    onValueChange={v => setSortBy(v as 'edited' | 'created' | 'title' | 'artist')}
                     options={[
                       { value: 'edited', label: `${t('home.sortBy')} ${t('home.recentlyEdited')}` },
                       { value: 'created', label: `${t('home.sortBy')} ${t('home.recentlyCreated')}` },
                       { value: 'title', label: `${t('home.sortBy')} ${t('home.titleAZ')}` },
+                      { value: 'artist', label: `${t('home.sortBy')} ${t('library.sortArtist')}` },
                     ]}
                   />
               </div>
@@ -254,6 +289,29 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             <p className="text-sm text-zinc-400 font-medium">{t('library.empty')}</p>
             <p className="text-xs text-zinc-500">{t('library.emptyHint')}</p>
           </motion.div>
+        ) : sortBy === 'artist' ? (
+          shelf.isError ? (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+              <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
+              <Button variant="link" size={null} onClick={() => void shelf.refetch()} className="text-xs">
+                {t('common.retry')}
+              </Button>
+            </div>
+          ) : shelf.isPending ? (
+            <div className="flex-1 flex items-center justify-center">
+              <LoadingSpinner size="md" />
+            </div>
+          ) : (
+            <LibraryByArtist
+              shelf={shelf.data}
+              // The loaded list is only used for its credit-less projects; the shelf itself is uncapped.
+              items={searchMatched as unknown as ShelfProject[]}
+              query={searchQuery}
+              filterTab={filterTab}
+              // Library rows and shelf tracks are the same Project; the shelf selection is typed more loosely.
+              renderCard={(p) => renderCard(p as unknown as ProjectItem)}
+            />
+          )
         ) : inputMethod === 'touch' ? (
           // Mobile: List view with swipe gestures
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 settings-scroll">
@@ -269,25 +327,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
           // Desktop: Grid view (original layout)
           <div className="flex-1 px-4 lg:px-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
-              {filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.publicId}
-                project={project}
-                onDelete={handleDelete}
-                onFavorite={handleFavorite}
-                onSelect={onOpenProject}
-                ownerAccountName={user?.accountName}
-                onEdit={handleEdit}
-                isListView={false}
-                isDeleting={deletingId === project.publicId}
-                i18n={i18n}
-                timezone={timezone}
-                // projects.list() returns only the signed-in user's own projects —
-                // there's no per-item owner field to check, so this list-level
-                // guarantee is the ownership signal.
-                isOwner
-              />
-            ))}
+              {filteredProjects.map(renderCard)}
             </div>
           </div>
         )}
