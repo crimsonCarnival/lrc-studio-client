@@ -272,6 +272,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Unread count, or 0 outside the provider (screens like the auth page that may render without it). */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useUnreadNotificationCount(): number {
+  return use(NotificationsContext)?.unreadCount ?? 0;
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function useNotificationsContext(): NotificationsContextValue {
   const ctx = use(NotificationsContext);

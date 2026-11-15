@@ -2,15 +2,24 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { matchPath, useLocation, useParams } from 'react-router-dom';
 import { isAdminPathname } from '@/features/admin/admin-nav';
+import { useUnreadNotificationCount } from '@/features/notifications/NotificationsContext';
+
+/** `(3) ` / `(99+) ` before the title while notifications are unread; nothing at 0. */
+export function unreadTitlePrefix(count: number): string {
+  if (count <= 0) return '';
+  return count > 99 ? '(99+) ' : `(${count}) `;
+}
 
 /**
  * Custom hook to dynamically update the document title based on the current route.
- * It uses translations and syncs with the app name.
+ * It uses translations and syncs with the app name. The unread notification count
+ * comes from the live notifications context, so the prefix follows socket pushes and mark-read.
  */
 export function usePageTitle(projectName: string | null = null) {
   const { t } = useTranslation();
   const location = useLocation();
   const { id, accountName, publicId } = useParams();
+  const unread = useUnreadNotificationCount();
 
   useEffect(() => {
     const appName = t('app.name');
@@ -91,10 +100,7 @@ export function usePageTitle(projectName: string | null = null) {
       pageTitle = t('app.titles.notFound');
     }
 
-    if (pageTitle) {
-      document.title = `${pageTitle} - ${appName}`;
-    } else {
-      document.title = appName;
-    }
-  }, [location.pathname, id, accountName, publicId, projectName, t]);
+    const prefix = unreadTitlePrefix(unread);
+    document.title = pageTitle ? `${prefix}${pageTitle} - ${appName}` : `${prefix}${appName}`;
+  }, [location.pathname, id, accountName, publicId, projectName, t, unread]);
 }

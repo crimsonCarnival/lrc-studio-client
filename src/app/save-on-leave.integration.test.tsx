@@ -44,6 +44,7 @@ vi.mock('@/features/collab/hooks/useMySessions', () => ({
 }));
 vi.mock('@/features/notifications/NotificationsContext', () => ({
   useNotificationsContext: () => ({ notifications: [], unreadCount: 0, markRead: vi.fn(), markAllRead: vi.fn(), dismiss: vi.fn() }),
+  useUnreadNotificationCount: () => 0,
   NotificationsProvider: ({ children }: { children: unknown }) => children,
 }));
 vi.mock('@/app/socket.client', () => ({
