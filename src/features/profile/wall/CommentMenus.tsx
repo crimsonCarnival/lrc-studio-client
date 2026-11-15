@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger 
 import { cn } from '@/shared/utils/utils';
 import { ReportDialog } from '@/features/reports/ReportDialog';
 import { profilePath } from '../profile-path';
+import { NameTag } from '@/features/badges/NameTag';
 import { getWallLikers } from './wall.service';
 import type { WallAuthor } from './wall.service';
 
@@ -143,7 +144,8 @@ export function LikersPopover({ commentId, count }: { commentId: string; count: 
                   {u.avatarUrl
                     ? <img src={u.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-6 rounded-full object-cover" />
                     : <InitialsAvatar name={u.displayName || u.accountName} handle={u.accountName} className="size-6 rounded-full text-[10px]" />}
-                  <span className="min-w-0 flex-1 truncate">{u.displayName || u.accountName}</span>
+                  <span className="min-w-0 truncate">{u.displayName || u.accountName}</span>
+                  <NameTag tag={u.nameTag} />
                 </Link>
               </li>
             ))}

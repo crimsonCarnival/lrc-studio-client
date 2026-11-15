@@ -1,4 +1,5 @@
 import { gqlRequest } from '@/app/graphql.client';
+import type { NameTagData } from '@/features/badges/badges.types';
 
 export interface WallAuthor {
   id: string;
@@ -6,6 +7,7 @@ export interface WallAuthor {
   displayName: string | null;
   avatarUrl: string | null;
   staffRole: string | null;
+  nameTag?: NameTagData | null;
   /** False when this author switched tagging off. */
   allowsTags: boolean;
   /** Title of their Melomaniac Level (addiction level), per language. */
@@ -79,7 +81,7 @@ export const WALL_MAX_LENGTH = 500;
 
 const COMMENT_FIELDS = `id body createdAt editedAt depth canDelete canEdit pinned likeCount likedByMe
   replyToId replyToMissing replyCount descendantCount deleted
-  author { id accountName displayName avatarUrl staffRole allowsTags addictionTitle { en es } }
+  author { id accountName displayName avatarUrl staffRole nameTag { id label { en es } description { en es } icon color } allowsTags addictionTitle { en es } }
   mentions { id accountName displayName }
   projectRefs { publicId title slug coverImage ownerAccountName }`;
 
@@ -127,7 +129,7 @@ export async function getWallComment(id: string): Promise<WallComment | null> {
 export async function getWallLikers(id: string): Promise<{ users: WallAuthor[]; total: number }> {
   const data = await gqlRequest<{ wallCommentLikers: { users: WallAuthor[]; total: number } }>(/* GraphQL */ `
     query WallCommentLikers($id: ID!) {
-      wallCommentLikers(id: $id, limit: 20) { total users { id accountName displayName avatarUrl staffRole allowsTags } }
+      wallCommentLikers(id: $id, limit: 20) { total users { id accountName displayName avatarUrl staffRole nameTag { id label { en es } description { en es } icon color } allowsTags } }
     }
   `, { id });
   return data.wallCommentLikers;
