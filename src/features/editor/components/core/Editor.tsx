@@ -61,6 +61,7 @@ import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { syncedCoverage } from '@features/editor/utils/sync-coverage';
+import { alignLineStart } from '@/features/editor/services/editor.service';
 import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from '@features/editor/utils/line-span';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
@@ -887,7 +888,13 @@ export default function Editor({
     const prevIndex = prevTimedIndex(lines, activeLineIndex);
     const start = lines[activeLineIndex]?.timestamp;
     const prev = prevIndex >= 0 && start != null ? ghost(prevIndex) : null;
+    // The focused line's first word cannot start before the last word of the line before it.
+    const before = prevIndex >= 0 ? lines[prevIndex] : null;
+    const floor = before
+      ? before.words?.reduce<number | null>((last, w) => (w.time != null ? w.time : last), null) ?? (before.timestamp as number)
+      : 0;
     return {
+      floor,
       next: nextIndex >= 0 ? ghost(nextIndex) : null,
       prev: prev && prev.end != null && prev.end - start! > 0.005 ? prev : null,
     };
@@ -1021,7 +1028,7 @@ export default function Editor({
       const next = [...prev];
       next[index] = { ...line, words: line.words.map((w, i) => (i === line.words!.length - 1 ? { ...w, end } : w)) };
       return next;
-    });
+    }, { step: true });
   }, [playbackPosition, setLines, activeLineIndex, duration]);
   // Sets the end of the word the playhead is in (or just left) at the playhead: the singer paused.
   // The last word of a line may end after the next line has started (the two then overlap), and
@@ -1038,7 +1045,7 @@ export default function Editor({
     if (playbackPosition >= (nextWord ?? (holdsOver ? Infinity : focusInfo.naturalEnd ?? Infinity))) return;
     const time = Number(playbackPosition.toFixed(3));
     const joins = holdsOver && focusInfo.naturalEnd != null && Math.abs(time - focusInfo.naturalEnd) <= 0.005;
-    handleSetWordEnd(index, joins ? null : time);
+    handleSetWordEnd(index, joins ? null : time, true);
   }, [focusWords, playbackPosition, focusInfo.naturalEnd, focusNeighbours.next, handleSetWordEnd, handleEndPreviousLine]);
   // Puts the stamping cursor back on a word and rewinds a little before it, to stamp again from there.
   const handleRestampFrom = useCallback((wordIndex: number) => {
