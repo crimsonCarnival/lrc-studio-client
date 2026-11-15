@@ -15,6 +15,7 @@ import { projectPath } from '@/features/projects/project-path';
 import { formatTrackLength } from '@/features/playlists/playlist-stats';
 import { useSetShelfVisibility, useShelfArtist } from '../shelf.queries';
 import type { ShelfAlbum, ShelfProject, ShelfTrack } from '../shelf.service';
+import { SongConnections } from '@/features/project-view/SongConnections';
 import { VisibilityChip } from './VisibilityChip';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -68,8 +69,9 @@ function playlistName(artist: string, part?: string): string {
 
 const isSynced = (p: ShelfProject) => (p.lineCount ?? 0) > 0 && (p.syncedLineCount ?? 0) >= (p.lineCount ?? 0);
 
-function TrackRow({ track, ownerAccountName }: { track: ShelfTrack; ownerAccountName: string }) {
+function TrackRow({ track, ownerAccountName, artistName }: { track: ShelfTrack; ownerAccountName: string; artistName: string }) {
   const { t } = useTranslation();
+  const [showConnections, setShowConnections] = useState(false);
   const { project } = track;
   const href = projectPath(project, ownerAccountName);
   const title = project.metadata?.songName || project.title || t('playlists.detail.untitled');
@@ -78,16 +80,35 @@ function TrackRow({ track, ownerAccountName }: { track: ShelfTrack; ownerAccount
     : project.hasWordSync ? t('playlists.detail.wordSync') : t('playlists.detail.lineSync');
   const synced = isSynced(project);
   return (
-    <li className={cn(GRID, 'border-t border-border px-2 py-2.5 text-sm')}>
+    <li className="border-t border-border px-2 py-2.5 text-sm">
+    <div className={GRID}>
       <span className="text-right font-mono text-muted-foreground">{track.trackNumber ?? '·'}</span>
-      {href
-        ? <Link to={href} className="truncate font-medium text-foreground hover:underline">{title}</Link>
-        : <span className="truncate font-medium text-foreground">{title}</span>}
+      <span className="flex min-w-0 items-center gap-2">
+        {href
+          ? <Link to={href} className="truncate font-medium text-foreground hover:underline">{title}</Link>
+          : <span className="truncate font-medium text-foreground">{title}</span>}
+        {project.kind !== 'subtitles' && (
+          <button
+            type="button"
+            aria-expanded={showConnections}
+            onClick={() => setShowConnections((v) => !v)}
+            className="shrink-0 rounded-pill border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t('projectView.connections.toggle')}
+          </button>
+        )}
+      </span>
       <span className="hidden text-xs text-muted-foreground md:block">{mode}</span>
       <span className={cn('hidden text-xs md:block', synced ? 'text-foam' : 'text-gold')}>
         {synced ? t('profile.artists.synced') : t('profile.artists.inProgress')}
       </span>
       <span className="text-right font-mono text-sm text-muted-foreground">{formatTrackLength(project.upload?.duration) ?? '—'}</span>
+    </div>
+    {showConnections && (
+      <div className="mt-3 pl-11">
+        <SongConnections track={title} artist={artistName} />
+      </div>
+    )}
     </li>
   );
 }
@@ -96,12 +117,13 @@ type AlbumSectionProps = {
   album: ShelfAlbum;
   isOwner: boolean;
   ownerAccountName: string;
+  artistName: string;
   onVisibility: (isPublic: boolean) => void;
   onSave: () => void;
   savePending: boolean;
 };
 
-function AlbumSection({ album, isOwner, ownerAccountName, onVisibility, onSave, savePending }: AlbumSectionProps) {
+function AlbumSection({ album, isOwner, ownerAccountName, artistName, onVisibility, onSave, savePending }: AlbumSectionProps) {
   const { t } = useTranslation();
   const isSingles = album.key === '';
   const cover = album.coverImage || resolveCoverImage(album.tracks[0]?.project);
@@ -150,7 +172,7 @@ function AlbumSection({ album, isOwner, ownerAccountName, onVisibility, onSave, 
       </div>
       <ol className="flex flex-col">
         {album.tracks.map((track) => (
-          <TrackRow key={track.project.id} track={track} ownerAccountName={ownerAccountName} />
+          <TrackRow key={track.project.id} track={track} ownerAccountName={ownerAccountName} artistName={artistName} />
         ))}
       </ol>
     </section>
@@ -256,6 +278,7 @@ export default function ArtistPage() {
             album={album}
             isOwner={isOwner}
             ownerAccountName={accountName}
+            artistName={artist.name}
             onVisibility={(v) => setVisibility(artist.id, album.key, v)}
             savePending={savePending}
             onSave={() => saveAsPlaylist(
