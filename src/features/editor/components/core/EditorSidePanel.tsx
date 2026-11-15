@@ -11,6 +11,8 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Kbd, KbdGroup } from '@ui/kbd';
 import { Icon } from '@/shared/ui/Icon';
+import { PanelResizeHandle } from '@ui/panel-resize-handle';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { cn } from '@/shared/utils/utils';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -19,6 +21,9 @@ import type { AppSettings } from '@/features/settings/settings.types';
 // translucent strip read as loose, not as part of the workspace.
 const SECTION = 'border-b border-hl px-5 py-4';
 const COLLAPSED_KEY = 'lrc_editor_side_panel_collapsed';
+const WIDTH_KEY = 'lrc_editor_side_panel_width';
+// Wide enough for the inspector's two-column fields, narrow enough to leave the lyrics a usable column.
+const WIDTH = { defaultWidth: 380, min: 300, max: 560 };
 const CAPTION = 'font-mono text-xs font-semibold uppercase tracking-[0.14em] text-subtle';
 const LABEL = 'text-sm font-semibold text-subtle';
 const FIELD = 'flex h-10 items-center rounded-[var(--radius-control)] bg-background inset-ring inset-ring-hl';
@@ -335,6 +340,7 @@ function EditorSidePanel(props: EditorSidePanelProps) {
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(COLLAPSED_KEY) === '1'; } catch { return false; }
   });
+  const resize = useResizablePanel({ storageKey: WIDTH_KEY, edge: 'left', ...WIDTH });
   const toggle = () => {
     setCollapsed((was) => {
       try { localStorage.setItem(COLLAPSED_KEY, was ? '0' : '1'); } catch { /* still applies for this session */ }
@@ -363,8 +369,11 @@ function EditorSidePanel(props: EditorSidePanelProps) {
   return (
     <aside
       aria-label={t('editor.sidePanel')}
-      className="max-lg:hidden shrink-0 min-h-0 w-[380px] xl:w-[420px] flex flex-col border-l border-hl bg-card animate-in slide-in-from-right-4 fade-in duration-200"
+      // The stored width is a wish, not a claim on the window: half of it always stays with the lyrics.
+      style={{ width: resize.width }}
+      className="relative max-lg:hidden shrink-0 min-h-0 max-w-[50vw] flex flex-col border-l border-hl bg-card animate-in slide-in-from-right-4 fade-in duration-200"
     >
+      <PanelResizeHandle label={t('editor.sidePanelResize')} {...resize.handleProps} />
       <div className="flex h-11 shrink-0 items-center justify-between border-b border-hl pl-5 pr-1.5">
         <span className={CAPTION}>{t('editor.sidePanel')}</span>
         <Tip side="left" content={t('editor.sidePanelCollapse')}>
