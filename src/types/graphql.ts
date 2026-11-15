@@ -468,6 +468,7 @@ export type FollowUser = {
   id: Scalars['ID']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
   level?: Maybe<Scalars['Int']['output']>;
+  nameTag?: Maybe<NameTag>;
   projectCount?: Maybe<Scalars['Int']['output']>;
   staffRole?: Maybe<Scalars['String']['output']>;
   suggestionReason?: Maybe<SuggestionReason>;
@@ -586,6 +587,7 @@ export type LeaderboardUser = {
   badges: Array<UserBadge>;
   displayName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  nameTag?: Maybe<NameTag>;
   periodXp?: Maybe<Scalars['Int']['output']>;
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
@@ -737,6 +739,7 @@ export type Mutation = {
   /** What you hear about a followed user's projects: off, uploads or all. */
   setFollowNotify: Scalars['Boolean']['output'];
   setForksEnabled: Project;
+  setNameTag: Scalars['Boolean']['output'];
   setShelfVisibility: Scalars['Boolean']['output'];
   /** The IANA timezone (e.g. America/Bogota) whose calendar days the user's streak and heatmap count. */
   setTimezone: Scalars['Boolean']['output'];
@@ -815,6 +818,7 @@ export type MutationAdminDeleteBadgeArgs = {
 
 export type MutationAdminGrantBadgeArgs = {
   badgeId: Scalars['String']['input'];
+  expiresAt?: InputMaybe<Scalars['String']['input']>;
   userIdentifier: Scalars['String']['input'];
 };
 
@@ -1073,6 +1077,11 @@ export type MutationSetForksEnabledArgs = {
 };
 
 
+export type MutationSetNameTagArgs = {
+  badgeId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationSetShelfVisibilityArgs = {
   albumKey?: InputMaybe<Scalars['String']['input']>;
   artistId: Scalars['ID']['input'];
@@ -1239,6 +1248,14 @@ export type NameChange = {
   changedAt: Scalars['String']['output'];
   from: Scalars['String']['output'];
   to: Scalars['String']['output'];
+};
+
+export type NameTag = {
+  color: Scalars['String']['output'];
+  description: LocalizedString;
+  icon: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  label: LocalizedString;
 };
 
 export type NotificationPreferences = {
@@ -1611,6 +1628,7 @@ export type PublicUser = {
   isVerified: Scalars['Boolean']['output'];
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  nameTag?: Maybe<NameTag>;
   playlistCount: Scalars['Int']['output'];
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
@@ -2448,6 +2466,7 @@ export type User = {
   lastOnlineVisibility: Scalars['String']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
+  nameTag?: Maybe<NameTag>;
   nameTagBadgeId?: Maybe<Scalars['String']['output']>;
   onlineVisibility: Scalars['String']['output'];
   passwordChangedAt?: Maybe<Scalars['String']['output']>;
@@ -2566,6 +2585,7 @@ export type WallAuthor = {
   avatarUrl?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  nameTag?: Maybe<NameTag>;
   staffRole?: Maybe<Scalars['String']['output']>;
 };
 
