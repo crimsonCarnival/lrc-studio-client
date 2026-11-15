@@ -39,6 +39,15 @@ interface TailLine {
 }
 
 /** The end of the line's last word when that word is timed and was given one, else null. */
+export function tailWordEnd(line: EditorLine | undefined): number | null {
+/** What the checks on a line's last word read: enough for the editor's lines and the viewers' alike. */
+interface TailLine {
+  timestamp?: number | null;
+  adLibOf?: number | null;
+  words?: { time?: number | null; end?: number | null }[];
+}
+
+/** The end of the line's last word when that word is timed and was given one, else null. */
 export function tailWordEnd(line: TailLine | undefined): number | null {
   const last = line?.words?.[line.words.length - 1];
   return last && last.time != null && last.end != null && last.end > last.time ? last.end : null;
