@@ -3,60 +3,71 @@ import { projectsChanged, projectRemoved } from '@/app/cache-sync';
 import type { Project, CreateProjectInput, UpdateProjectInput, ProfileShareInput } from '@/types';
 import { toArtistInput, type ArtistCredit } from '@/features/artists/artist-credits';
 
-const GET_PROJECTS = /* GraphQL */ `
-  query GetProjects($limit: Int, $offset: Int) {
-    projects(limit: $limit, offset: $offset) {
-      id
+/**
+ * What a Library card and its metadata editor read from a project. The Library list and the
+ * artist-shelf tracks both select this fragment, so a card opened from either carries the same
+ * fields (the editor saves `metadata` wholesale, so a missing field would be wiped on save).
+ * Appended by concatenation, not interpolation, so graphql-tag-pluck can still parse each operation.
+ */
+export const PROJECT_LIST_FIELDS = /* GraphQL */ `
+  fragment ProjectListFields on Project {
+    id
+    publicId
+    slug
+    title
+    type
+    kind
+    readOnly
+    public
+    listed
+    createdAt
+    updatedAt
+    contentUpdatedAt
+    forkedFrom {
       publicId
-      slug
+      userId
+      accountName
+      sourceDeleted
+    }
+    forkCount
+    starCount
+    viewCount
+    shareCount
+    lineCount
+    syncedLineCount
+    coverImage
+    metadata {
+      description
+      genre
+      tags
+      singerColors
+      singers
+      songName
+      songArtist
+      artists { name role order }
+      songAlbum
+      songYear
+      songLanguage
+      trackNumber
+      trackCount
+    }
+    upload {
+      id
+      fileName
       title
-      type
-      kind
-      readOnly
-      public
-      listed
-      createdAt
-      updatedAt
-      contentUpdatedAt
-      forkedFrom {
-        publicId
-        userId
-        accountName
-        sourceDeleted
-      }
-      forkCount
-      starCount
-      viewCount
-      shareCount
-      lineCount
-      syncedLineCount
+      source
+      duration
+      uploadUrl
       coverImage
-      metadata {
-        description
-        genre
-        tags
-        singerColors
-        singers
-        songName
-        songArtist
-        artists { name role order }
-        songAlbum
-        songYear
-        songLanguage
-        trackNumber
-        trackCount
-      }
-      upload {
-        id
-        fileName
-        title
-        source
-        duration
-        uploadUrl
-      }
     }
   }
 `;
+
+const GET_PROJECTS = /* GraphQL */ `
+  query GetProjects($limit: Int, $offset: Int) {
+    projects(limit: $limit, offset: $offset) { ...ProjectListFields }
+  }
+` + PROJECT_LIST_FIELDS;
 
 // NOT tagged for codegen validation: this query is stale (pre-sections
 // refactor). It selects `lyrics { lines }` and `state { timezone utcOffset }`,

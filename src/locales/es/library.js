@@ -14,5 +14,22 @@ export default {
   daysAgo: "hace {{count}}d",
   tabProjects: "Proyectos",
   tabUploads: "Subidas",
-  switchLabel: "Secciones de la biblioteca"
+  switchLabel: "Secciones de la biblioteca",
+  tabPlaylists: "Listas",
+  sortArtist: "Artista → álbum",
+  noArtist: "Sin artista",
+  singles: "Sencillos y pistas sueltas",
+  noMatches: "Ninguna canción coincide.",
+  playlists: {
+    title: "Listas",
+    newPlaylist: "Nueva lista",
+    filterLabel: "Visibilidad de la lista",
+    all: "Todas",
+    private: "Privadas",
+    unlisted: "No listadas",
+    public: "Públicas",
+    saved: "Guardadas de otros",
+    empty: "Aún no hay listas aquí.",
+    emptySaved: "Aún no has guardado listas de otras personas."
+  }
 };

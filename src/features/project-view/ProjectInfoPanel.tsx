@@ -1,6 +1,6 @@
 import { profilePath } from '@/features/profile/profile-path';
 import { ArtistText } from '@/features/artists/ArtistText';
-import { artistDisplay, type ArtistCredit } from '@/features/artists/artist-credits';
+import { artistDisplay, creditsOf, primaryArtistText, type ArtistCredit } from '@/features/artists/artist-credits';
 import { localizeSongLanguage } from '@features/editor/utils/song-language';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useMemo, useState } from 'react';
@@ -22,6 +22,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { ProjectKind } from '@/types';
+import { SongConnections } from './SongConnections';
 import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
 
 interface ProjectMeta {
@@ -458,6 +459,10 @@ export default function ProjectInfoPanel({
               })}
             </div>
           </div>
+        )}
+
+        {project.kind !== 'subtitles' && (meta.songName || project.title) && (
+          <SongConnections track={meta.songName || project.title || ''} artist={primaryArtistText(creditsOf(meta))} />
         )}
 
       </>)}

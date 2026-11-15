@@ -737,6 +737,7 @@ export type Mutation = {
   /** What you hear about a followed user's projects: off, uploads or all. */
   setFollowNotify: Scalars['Boolean']['output'];
   setForksEnabled: Project;
+  setShelfVisibility: Scalars['Boolean']['output'];
   /** The IANA timezone (e.g. America/Bogota) whose calendar days the user's streak and heatmap count. */
   setTimezone: Scalars['Boolean']['output'];
   /** Like (liked: true) or unlike a wall comment. Idempotent. */
@@ -1069,6 +1070,13 @@ export type MutationSetFollowNotifyArgs = {
 export type MutationSetForksEnabledArgs = {
   enabled: Scalars['Boolean']['input'];
   publicId: Scalars['ID']['input'];
+};
+
+
+export type MutationSetShelfVisibilityArgs = {
+  albumKey?: InputMaybe<Scalars['String']['input']>;
+  artistId: Scalars['ID']['input'];
+  isPublic: Scalars['Boolean']['input'];
 };
 
 
@@ -1621,6 +1629,8 @@ export type PublicUser = {
 export type Query = {
   addictionLevels: Array<AddictionLevel>;
   adminAddictionLevels: Array<AddictionLevel>;
+  artistShelf: Array<ShelfArtist>;
+  artistShelfArtist?: Maybe<ShelfArtist>;
   badgeDefinitions: Array<BadgeDef>;
   blockedUsers: Array<BlockedUser>;
   /** The live session, for its owner or a signed-in member; null otherwise. */
@@ -1696,6 +1706,20 @@ export type Query = {
   /** Reported wall comments, for moderators (users.ban). */
   wallReports: Array<WallReport>;
   xpLevelCurve: Array<XpLevelThreshold>;
+};
+
+
+export type QueryArtistShelfArgs = {
+  accountName: Scalars['String']['input'];
+  asVisitor?: InputMaybe<Scalars['Boolean']['input']>;
+  withTracks?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryArtistShelfArtistArgs = {
+  accountName: Scalars['String']['input'];
+  artistId: Scalars['ID']['input'];
+  asVisitor?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -2111,6 +2135,32 @@ export type Settings = {
   interface?: Maybe<InterfaceSettings>;
   playback?: Maybe<PlaybackSettings>;
   shortcuts?: Maybe<ShortcutsSettings>;
+};
+
+export type ShelfAlbum = {
+  coverImage?: Maybe<Scalars['String']['output']>;
+  isPublic: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  title?: Maybe<Scalars['String']['output']>;
+  trackCount: Scalars['Int']['output'];
+  tracks: Array<ShelfTrack>;
+  year?: Maybe<Scalars['String']['output']>;
+};
+
+export type ShelfArtist = {
+  albumCount: Scalars['Int']['output'];
+  albums: Array<ShelfAlbum>;
+  coverImage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isPublic: Scalars['Boolean']['output'];
+  latestEditAt: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  songCount: Scalars['Int']['output'];
+};
+
+export type ShelfTrack = {
+  project: Project;
+  trackNumber?: Maybe<Scalars['Int']['output']>;
 };
 
 export type ShortcutsSettings = {

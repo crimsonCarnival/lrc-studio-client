@@ -41,6 +41,7 @@ import type { SubtitleStudioProps } from '@features/subtitles/components/Subtitl
 const Editor = memo(EditorLazy);
 const Preview = memo(PreviewLazy);
 const Library = lazy(() => import('@features/library/components/Library'));
+const LibraryPlaylists = lazy(() => import('@features/library/components/LibraryPlaylists'));
 const UploadsLibrary = lazy(() => import('@features/library/components/UploadsLibrary'));
 const UploadDetailView = lazy(() => import('@features/uploads/UploadDetailView'));
 const SetupScreen = lazy(() => import('@features/editor/components/setup/SetupScreen'));
@@ -60,6 +61,7 @@ const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylis
 const ProjectViewPage = lazy(() => import('@features/project-view/ProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const AllListsPage = lazy(() => import('@features/playlists/AllListsPage'));
+const ArtistPage = lazy(() => import('@features/artists/components/ArtistPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
@@ -655,6 +657,11 @@ export function AppRouter({
           />
         </Suspense>
       } />
+      <Route path="library/playlists" element={
+        <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
+          <LibraryPlaylists />
+        </Suspense>
+      } />
       {isAdminHost() ? (
         <>
           <Route index element={adminPage} />
@@ -725,6 +732,11 @@ export function AppRouter({
       <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<RouteFallback />}>
           <ListPage />
+        </Suspense>
+      } />
+      <Route path=":accountName/artists/:artistId" element={
+        <Suspense fallback={<RouteFallback />}>
+          <ArtistPage />
         </Suspense>
       } />
       <Route path=":accountName" element={

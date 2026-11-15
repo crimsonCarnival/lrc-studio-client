@@ -25,6 +25,9 @@ import WallSection from './wall/WallSection';
 import type { FollowNotifyLevel } from './FollowNotifyMenu';
 import { useProfile } from './profile.queries';
 import { SharedProjectsTab } from './SharedProjectsTab';
+import { ArtistsTab } from '@/features/artists/components/ArtistsTab';
+import { useArtistShelf } from '@/features/artists/shelf.queries';
+import { tabFromParams, withTab, type ProfileTab } from './profile-tab';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
@@ -258,13 +261,12 @@ export default function ProfilePage() {
   const { accountName } = useParams();
   const { user } = useAuthContext();
 
-  const [activeTab, setActiveTab] = useState('projects');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [projectPage, setProjectPage] = useState(0);
 
   const [followLoading, setFollowLoading] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
   const [followModal, setFollowModal] = useState<'FOLLOWERS' | 'FOLLOWING' | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [requestConfirm, confirmModal] = useConfirm();
 
@@ -279,6 +281,13 @@ export default function ProfilePage() {
   // Toggling the preview switches cache key, so each mode keeps its own copy.
   const { profile, loading, notFound, setProfile, refetch } = useProfile(accountName, viewAsOthers);
   const queryClient = useQueryClient();
+  // The shelf's size labels the Artists tab and decides whether a visitor sees it at all.
+  const { data: shelf } = useArtistShelf(accountName, { asVisitor: viewAsOthers, enabled: !!profile });
+  const artistCount = shelf?.length ?? 0;
+  const showArtistsTab = isOwner || artistCount > 0;
+  // The tab lives in the URL so Back from an artist page returns to it.
+  const activeTab = tabFromParams(searchParams, showArtistsTab);
+  const setActiveTab = (tab: ProfileTab) => setSearchParams((prev) => withTab(prev, tab), { replace: true });
   // Follow/block state lives on the cached profile, so it cannot drift from it.
   const isFollowing = profile?.isFollowedByMe ?? false;
   const isBlocked = profile?.isBlockedByMe ?? false;
@@ -627,16 +636,17 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             {/* Tabs */}
             <div className="flex gap-1 mb-6 border-b border-border">
-              {['projects', 'playlists', 'shared', 'activity'].map((tab) => {
+              {['projects', 'playlists', 'artists', 'shared', 'activity'].filter((tab) => tab !== 'artists' || showArtistsTab).map((tab) => {
                 const tAny = t as (k: string, opts?: object) => string;
                 let label = tAny(`profile.publicTabs.${tab}`);
                 if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { count: projectCount });
                 if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { count: profile.playlistCount });
+                if (tab === 'artists' && shelf) label = tAny('profile.publicTabs.artistsWithCount', { count: artistCount });
                 
                 return (
                   <button
                     key={tab}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => setActiveTab(tab as ProfileTab)}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === tab
                       ? 'border-primary text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -698,6 +708,10 @@ export default function ProfilePage() {
 
             {activeTab === 'playlists' && (
               <ProfileLists accountName={profile.accountName} isOwner={isOwner} />
+            )}
+
+            {activeTab === 'artists' && showArtistsTab && accountName && (
+              <ArtistsTab accountName={accountName} isOwner={isOwner} asVisitor={viewAsOthers} />
             )}
 
             {activeTab === 'shared' && (
