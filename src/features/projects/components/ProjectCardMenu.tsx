@@ -138,7 +138,18 @@ export function ProjectCardMenuButton({ className, ...actions }: ProjectCardMenu
           </button>
         </DropdownMenuTrigger>
       </Tip>
-      <DropdownMenuContent align="end">{renderItems(dropdownMenuComponents)}</DropdownMenuContent>
+      {/*
+        The menu is portaled to <body> but stays a React child of the card, so a
+        click or Enter/Space on an item bubbles through the React tree to the
+        card's own onClick/onKeyDown and opens the editor. Stop both here.
+      */}
+      <DropdownMenuContent
+        align="end"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        {renderItems(dropdownMenuComponents)}
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 }
