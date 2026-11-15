@@ -537,8 +537,6 @@ export function WordTimeline({
             const BlockTag = playable ? 'button' : 'span';
             return (
               <ContextMenu key={i}>
-            const playable = seg.timed && !!onPlayFrom;
-            const BlockTag = playable ? 'button' : 'span';
                 <ContextMenuTrigger asChild>
                   <div
                     // The tour points at the first word's row to explain a row: name, start, menu, block.
