@@ -116,6 +116,8 @@ function PlayerEngineInner(
   const loopB = loop.b;
   const loopARef = useRef<number | null>(null);
   const loopBRef = useRef<number | null>(null);
+  // The YouTube player's seek, read from updateTime (which is memoised before `yt` exists).
+  const ytSeekRef = useRef<((time: number) => void) | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const localBlobRef = useRef<Blob | null>(null);
@@ -147,7 +149,7 @@ function PlayerEngineInner(
         if (sourceRef.current === 'local' && audioRef.current) {
           audioRef.current.currentTime = a;
         }
-        // YouTube loop is handled via yt.seek in the effect below
+        if (sourceRef.current === 'youtube') ytSeekRef.current?.(a);
         setCurrentTime(a);
         onTimeUpdate?.(a);
         return;
@@ -268,6 +270,7 @@ function PlayerEngineInner(
     onYtUrlChange,
     onTrackLoad: pushPlaybackEntry,
   });
+  useLayoutEffect(() => { ytSeekRef.current = yt.seek; });
 
   // The YouTube iframe normally sits off-screen (audio only). A page that wants the
   // picture registers an element and the iframe's box is laid over it. The box is moved

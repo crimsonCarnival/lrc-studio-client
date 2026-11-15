@@ -3,6 +3,7 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import { usePlayer } from '@/features/player/PlayerContext';
+import { lineLoopAt } from '@/features/player/line-loop';
 import { formatClock } from '../subtitle-clock';
 import type { Cue } from '../subtitles.types';
 
@@ -25,7 +26,8 @@ export function PlayerBar({ cues, full, onToggleFull }: PlayerBarProps) {
   const { t } = useTranslation();
   const tx = t as (key: string, options?: Record<string, unknown>) => string;
   const { settings, updateSetting } = useSettings();
-  const { isPlaying, currentTime, duration, hasMedia, playbackSpeed, speedPresets, togglePlay, seek, applySpeed } = usePlayer();
+  const { isPlaying, currentTime, duration, hasMedia, playbackSpeed, speedPresets, togglePlay, seek, applySpeed, lines, loopA, loopB, setLoop, clearLoop } = usePlayer();
+  const looping = loopA != null && loopB != null;
   const muted = !!settings.playback?.muted;
   const volume = settings.playback?.volume ?? 1;
 
@@ -75,6 +77,22 @@ export function PlayerBar({ cues, full, onToggleFull }: PlayerBarProps) {
         className="h-11 shrink-0 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent px-3 font-mono text-[13px] font-medium text-foreground"
       >
         {playbackSpeed}×
+      </Button>
+      {/* Repeats the subtitle under the playhead, or clears the loop; same bounds as the editor player's loop button. */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => {
+          if (looping) { clearLoop(); return; }
+          const bounds = lineLoopAt(lines ?? [], currentTime, duration);
+          if (bounds) setLoop(bounds);
+        }}
+        disabled={!hasMedia}
+        aria-label={looping ? tx('player.clearLoop') : tx('player.setLoop')}
+        aria-pressed={looping}
+        className={SQUARE}
+      >
+        <Icon name="repeat" size={18} />
       </Button>
       <Button
         variant="outline"
