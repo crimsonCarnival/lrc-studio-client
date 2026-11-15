@@ -187,6 +187,7 @@ export default {
   sidePanel: "Panel lateral",
   sidePanelCollapse: "Contraer panel lateral",
   sidePanelExpand: "Expandir panel lateral",
+  sidePanelResize: "Redimensionar panel lateral",
   lineReview: {
     title: "Revisión de línea",
     waiting: "La línea que suena aparecerá aquí.",
@@ -219,6 +220,10 @@ export default {
   },
   words: {
     navTitle: "Líneas · Palabras",
+    navCollapse: "Contraer lista de líneas",
+    navExpand: "Expandir lista de líneas",
+    navResize: "Redimensionar lista de líneas",
+    navLine: "Línea {{number}}: {{timed}} de {{total}} palabras con tiempo",
     distribute: "Repartir uniforme",
     distributeTip: "Reparte las palabras de esta línea de forma uniforme entre su inicio y su final",
     distributeUnavailable: "La línea necesita un tiempo de inicio y un final para repartir sus palabras",

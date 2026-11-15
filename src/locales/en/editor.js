@@ -184,6 +184,7 @@ export default {
   sidePanel: "Side panel",
   sidePanelCollapse: "Collapse side panel",
   sidePanelExpand: "Expand side panel",
+  sidePanelResize: "Resize side panel",
   lineReview: {
     title: "Line review",
     waiting: "The line being sung will show here.",
@@ -216,6 +217,10 @@ export default {
   },
   words: {
     navTitle: "Lines · Words",
+    navCollapse: "Collapse line list",
+    navExpand: "Expand line list",
+    navResize: "Resize line list",
+    navLine: "Line {{number}}: {{timed}} of {{total}} words timed",
     distribute: "Spread evenly",
     distributeTip: "Spreads this line's words evenly between its start and its end",
     distributeUnavailable: "The line needs a start time and an end before its words can be spread",

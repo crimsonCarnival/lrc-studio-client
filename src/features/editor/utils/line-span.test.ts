@@ -37,6 +37,15 @@ describe('line spans', () => {
     expect(lineOverlap(paused, 1)).toBeNull();
   });
 
+  it('knows while a line is still sounding over the next one', () => {
+    expect(heldUntil(lines[1], 24.42)).toBe(25.04);
+    expect(heldUntil(lines[3], 27)).toBeNull();
+    expect(isHeldAt(lines[1], 24.42, 24.3)).toBe(false);
+    expect(isHeldAt(lines[1], 24.42, 24.7)).toBe(true);
+    expect(isHeldAt(lines[1], 24.42, 25.04)).toBe(false);
+    expect(isHeldAt(lines[1], 24.42, null)).toBe(false);
+  });
+
   it('puts a line that starts under the one before it on the second lane', () => {
     const bands = lineBands(lines, 240);
     expect(bands.map((b) => [b.index, b.number, b.lane])).toEqual([[1, 1, 0], [3, 3, 1], [4, 4, 0]]);

@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
+import { isHeldAt, tailWordEnd } from '@/features/editor/utils/line-span';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -200,7 +201,10 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   const effectiveTimestamp = line.timestamp ?? line.adLibOf;
   const counterpartEndTime = isCounterpart ? counterpartEnd(line, effectiveNextTs) : null;
   const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition >= effectiveTimestamp && (counterpartEndTime == null || playbackPosition < counterpartEndTime);
-  const isActive = dist === 0 || isCounterpartActive;
+  // The singer is still on this line's last word although the next line has begun: the line
+  // stays lit, and its last word goes on filling, until that word ends.
+  const isHeldActive = isHeldAt(line, effectiveNextTs, playbackPosition);
+  const isActive = dist === 0 || isCounterpartActive || isHeldActive;
 
   // The viewer's own activeHighlight preference (same setting PreviewLine
   // reads) — this component used to ignore it entirely, so a public project
@@ -272,7 +276,11 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     const timedWordsList = words.filter(w2 => w2.time != null);
     if (timedWordsList.length > 0) {
       const lastTW = timedWordsList[timedWordsList.length - 1];
-      if (segmentEnd != null && segmentEnd > lastTW.time!) {
+      // Where the last word was said to stop comes first; the rest are estimates.
+      const tailEnd = tailWordEnd(line);
+      if (tailEnd != null) {
+        lastWordFillEnd = tailEnd;
+      } else if (segmentEnd != null && segmentEnd > lastTW.time!) {
         lastWordFillEnd = segmentEnd;
       } else if (timedWordsList.length >= 2) {
         const avgDur = (lastTW.time! - timedWordsList[0].time!) / (timedWordsList.length - 1);
