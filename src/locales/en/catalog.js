@@ -28,7 +28,7 @@ export default {
   },
   errors: {
     duplicate: "This is already in the catalog.",
-    duplicateLink: "View {{name}}",
+    duplicateExisting: "Existing entry: {{name}}",
     unverified: "Verify your email before suggesting catalog entries.",
     rateLimited: "You have reached today's suggestion limit. Try again tomorrow.",
     pendingCap: "You already have 5 suggestions waiting for review. Wait for a decision or withdraw one.",

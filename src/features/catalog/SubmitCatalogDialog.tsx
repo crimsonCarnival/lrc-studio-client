@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
@@ -30,7 +29,7 @@ type SubmitCatalogDialogProps = {
   target: SubmitTarget;
 };
 
-type FormError = { key: CatalogErrorKey | 'catalog.errors.imageNotImage' | 'catalog.errors.imageTooLarge' | 'catalog.errors.uploadFailed'; duplicate?: { name: string; slug: string } };
+type FormError = { key: CatalogErrorKey | 'catalog.errors.imageNotImage' | 'catalog.errors.imageTooLarge' | 'catalog.errors.uploadFailed'; duplicate?: { name: string } };
 
 /** The artist / album submission form. Both end up in the review queue; nothing is public until a reviewer approves. */
 export function SubmitCatalogDialog({ open, onOpenChange, target }: SubmitCatalogDialogProps) {
@@ -108,7 +107,7 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
       onClose();
     } catch (err) {
       const existing = catalogDuplicateOf(err);
-      setError({ key: catalogErrorKey(err), duplicate: !isAlbum && existing ? { name: existing.name, slug: existing.slug } : undefined });
+      setError({ key: catalogErrorKey(err), duplicate: !isAlbum && existing ? { name: existing.name } : undefined });
     } finally {
       setBusy(false);
     }
@@ -171,12 +170,8 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
         <p role="alert" className="text-sm text-love">
           {t(error.key)}
           {error.duplicate && (
-            <>
-              {' '}
-              <Link to={`/artists/${encodeURIComponent(error.duplicate.slug)}`} className="underline underline-offset-2" onClick={onClose}>
-                {t('catalog.errors.duplicateLink', { name: error.duplicate.name })}
-              </Link>
-            </>
+            // Plain text on purpose: there is no public artist page to link to until catalog step 2.
+            <> {t('catalog.errors.duplicateExisting', { name: error.duplicate.name })}</>
           )}
         </p>
       )}

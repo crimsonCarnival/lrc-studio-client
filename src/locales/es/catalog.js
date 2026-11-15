@@ -28,7 +28,7 @@ export default {
   },
   errors: {
     duplicate: "Esto ya está en el catálogo.",
-    duplicateLink: "Ver {{name}}",
+    duplicateExisting: "Entrada existente: {{name}}",
     unverified: "Verifica tu correo antes de sugerir entradas del catálogo.",
     rateLimited: "Has alcanzado el límite de sugerencias de hoy. Inténtalo de nuevo mañana.",
     pendingCap: "Ya tienes 5 sugerencias esperando revisión. Espera una decisión o retira alguna.",

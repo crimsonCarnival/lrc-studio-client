@@ -66,23 +66,24 @@ describe('SubmitCatalogDialog (artist)', () => {
     expect(success).toHaveBeenCalled();
   });
 
-  it('shows catalog_duplicate as already in the catalog, linking only when a slug came back', async () => {
+  it('shows catalog_duplicate as already in the catalog, naming the existing entry as plain text', async () => {
     submitCatalogArtist.mockRejectedValue(apiError('catalog_duplicate', { existing: { id: 'e1', name: 'Luna Vale', slug: 'luna-vale' } }));
     open();
     typeName('Luna Vale');
     fireEvent.click(submitBtn());
-    expect(await screen.findByText('This is already in the catalog.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'View Luna Vale' })).toHaveAttribute('href', '/artists/luna-vale');
+    expect(await screen.findByText(/This is already in the catalog\./)).toHaveTextContent('Existing entry: Luna Vale');
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(screen.queryByText('RAW SERVER TEXT')).not.toBeInTheDocument();
   });
 
-  it('renders no link when the duplicate came back without a slug', async () => {
-    submitCatalogArtist.mockRejectedValue(apiError('catalog_duplicate', { existing: { id: 'e1', name: 'Luna Vale' } }));
+  it('shows only the generic duplicate message when the existing entry is not revealed', async () => {
+    submitCatalogArtist.mockRejectedValue(apiError('catalog_duplicate'));
     open();
     typeName('Luna Vale');
     fireEvent.click(submitBtn());
-    expect(await screen.findByText('This is already in the catalog.')).toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('This is already in the catalog.');
+    expect(alert).not.toHaveTextContent('Existing entry');
   });
 
   it('shows the verify-email message for catalog_unverified', async () => {
