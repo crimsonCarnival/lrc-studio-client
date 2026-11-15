@@ -31,8 +31,15 @@ export function naturalLineEnd(lines: EditorLine[], index: number, duration?: nu
   return next >= 0 ? (lines[next].timestamp as number) : duration ?? null;
 }
 
+/** What the checks on a line's last word read: enough for the editor's lines and the viewers' alike. */
+interface TailLine {
+  timestamp?: number | null;
+  adLibOf?: number | null;
+  words?: { time?: number | null; end?: number | null }[];
+}
+
 /** The end of the line's last word when that word is timed and was given one, else null. */
-export function tailWordEnd(line: EditorLine | undefined): number | null {
+export function tailWordEnd(line: TailLine | undefined): number | null {
   const last = line?.words?.[line.words.length - 1];
   return last && last.time != null && last.end != null && last.end > last.time ? last.end : null;
 }
@@ -56,6 +63,23 @@ export function lineOverlap(lines: EditorLine[], index: number): { nextIndex: nu
   if (nextIndex < 0) return null;
   const seconds = tail - (lines[nextIndex].timestamp as number);
   return seconds > SAME ? { nextIndex, seconds } : null;
+}
+
+/**
+ * Until when a line goes on sounding after the next one has started, because its last word is
+ * held over it; null when it stops where the next line starts. Counterparts have their own rule.
+ */
+export function heldUntil(line: TailLine | undefined, nextStart: number | null | undefined): number | null {
+  if (!line || nextStart == null || line.adLibOf != null) return null;
+  const tail = tailWordEnd(line);
+  return tail != null && tail - nextStart > SAME ? tail : null;
+}
+
+/** Whether the line is still sounding at `position` although the next one has already started. */
+export function isHeldAt(line: TailLine | undefined, nextStart: number | null | undefined, position: number | null | undefined): boolean {
+  if (position == null || nextStart == null || position < nextStart) return false;
+  const until = heldUntil(line, nextStart);
+  return until != null && position < until;
 }
 
 export interface LineBand {

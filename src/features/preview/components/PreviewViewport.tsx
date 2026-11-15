@@ -7,6 +7,7 @@ import PreviewLineRaw from './PreviewLine';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { hasKanji } from '@/shared/utils/furigana';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
+import { isHeldAt } from '@/features/editor/utils/line-span';
 
 // PreviewLine is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,7 +20,7 @@ interface PreviewLineData {
   timestamp?: number | null;
   endTime?: number | null;
   adLibOf?: number | null;
-  words?: { time?: number | null }[];
+  words?: { time?: number | null; end?: number | null }[];
   singers?: string[];
   [key: string]: unknown;
 }
@@ -408,7 +409,8 @@ export default function PreviewViewport({
                   lockedLineIndex={null}
                   isDualLine={false}
                   displayLines={null}
-                  playbackPosition={i === currentIndex || isSoundingCounterpart(line, nextTimestamps[i] ?? null, playbackPosition) ? playbackPosition : null}
+                  // A line whose last word is held over the next one is still being sung, so it keeps the position too.
+                  playbackPosition={i === currentIndex || isSoundingCounterpart(line, nextTimestamps[i] ?? null, playbackPosition) || isHeldAt(line, nextTimestamps[i], playbackPosition) ? playbackPosition : null}
                   activeRef={i === currentIndex ? activeRef : null}
                   handleLineClick={handleLineClick}
                   handleLineHover={() => { }}
