@@ -13,12 +13,18 @@ import { getCachedPeaks, PEAKS_EVENT } from '@/features/player/waveform-peaks';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@ui/context-menu';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
+import { PanelResizeHandle } from '@ui/panel-resize-handle';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { MIN_WORD_GAP, TOO_SHORT, layoutWords, snapTime, splitMorae, wordEndAt, wordKana } from '@/features/editor/utils/word-timing';
 import type { SnapMode } from '@/features/editor/utils/word-timing';
 import { lineOverlap } from '@/features/editor/utils/line-span';
 import type { LineBand } from '@/features/editor/utils/line-span';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
+const NAV_COLLAPSED_KEY = 'lrc.words.navCollapsed';
+const NAV_WIDTH_KEY = 'lrc.words.navWidth';
+// Narrow enough to stay out of the timeline's way, wide enough that a furigana line still reads.
+const NAV_WIDTH = { defaultWidth: 300, min: 220, max: 480 };
 /** Spacing of the ruler ticks (seconds). */
 const RULER_TICK = 0.1;
 /** How much one press of a zoom button narrows or widens the view. */
@@ -119,6 +125,10 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
   const { settings } = useSettings();
   const format = settings.editor?.display?.readingFormat;
   const activeRef = useRef<HTMLButtonElement>(null);
+  // Collapsed, the list becomes a rail of line numbers: the timeline gets the width, and the
+  // lines stay one click away. Both are per-browser layout choices.
+  const [collapsed, setCollapsed] = usePersisted(NAV_COLLAPSED_KEY, false);
+  const resize = useResizablePanel({ storageKey: NAV_WIDTH_KEY, edge: 'right', ...NAV_WIDTH });
   // Lines other participants are on (null outside a session).
   const remoteActive = useRemoteActiveLines();
 
@@ -137,15 +147,77 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [activeLineIndex]);
+  }, [activeLineIndex, collapsed]);
+
+  if (collapsed) {
+    return (
+      <nav
+        data-tour="words-nav"
+        aria-label={t('editor.words.navTitle')}
+        className="max-lg:hidden w-12 shrink-0 min-h-0 flex flex-col border-r border-zinc-800 bg-zinc-950/40"
+      >
+        <Tip side="right" content={t('editor.words.navExpand')}>
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            aria-expanded={false}
+            aria-label={t('editor.words.navExpand')}
+            className="grid h-11 shrink-0 place-items-center border-b border-zinc-800 text-subtle transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+          >
+            <Icon name="chevron_right" size={18} />
+          </button>
+        </Tip>
+        <div className="lrc-scroll min-h-0 flex-1 overflow-y-auto flex flex-col gap-0.5 py-2">
+          {items.map((item, n) => {
+            const active = item.index === activeLineIndex;
+            const done = item.total > 0 && item.timed === item.total;
+            const label = t('editor.words.navLine', { number: n + 1, timed: item.timed, total: item.total });
+            return (
+              <Tip key={item.index} side="right" content={item.text}>
+                <button
+                  ref={active ? activeRef : undefined}
+                  type="button"
+                  aria-current={active ? 'true' : undefined}
+                  aria-label={label}
+                  onClick={() => onSelect(item.index)}
+                  className={`mx-1 grid h-7 shrink-0 place-items-center rounded-[calc(var(--radius)*0.6)] font-mono text-[11px] tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${active
+                    ? 'bg-zinc-800 font-semibold text-primary-ink ring-1 ring-inset ring-primary/40'
+                    : `${done ? 'text-success' : 'text-subtle'} hover:bg-zinc-800/50`}`}
+                >
+                  {n + 1}
+                </button>
+              </Tip>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav
       data-tour="words-nav"
       aria-label={t('editor.words.navTitle')}
-      className="lrc-scroll max-lg:hidden w-[300px] xl:w-[320px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-1 p-4 border-r border-zinc-800 bg-zinc-950/40"
+      // The stored width is a wish: the timeline always keeps at least half the window.
+      style={{ width: resize.width }}
+      className="relative max-lg:hidden max-w-[50vw] shrink-0 min-h-0 flex flex-col border-r border-zinc-800 bg-zinc-950/40"
     >
-      <span className={`${CAPTION} px-2 pb-2`}>{t('editor.words.navTitle')}</span>
+      <PanelResizeHandle label={t('editor.words.navResize')} {...resize.handleProps} />
+      <div className="flex h-11 shrink-0 items-center justify-between border-b border-zinc-800 pl-6 pr-1.5">
+        <span className={CAPTION}>{t('editor.words.navTitle')}</span>
+        <Tip side="right" content={t('editor.words.navCollapse')}>
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            aria-expanded
+            aria-label={t('editor.words.navCollapse')}
+            className="grid size-8 place-items-center rounded-lg text-subtle transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+          >
+            <Icon name="chevron_left" size={18} />
+          </button>
+        </Tip>
+      </div>
+      <div className="lrc-scroll min-h-0 flex-1 overflow-y-auto flex flex-col gap-1 p-4">
       {items.map((item) => {
         const active = item.index === activeLineIndex;
         const remote = item.id != null ? remoteActive?.[item.id] : undefined;
@@ -204,6 +276,7 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
           </button>
         );
       })}
+      </div>
     </nav>
   );
 });
