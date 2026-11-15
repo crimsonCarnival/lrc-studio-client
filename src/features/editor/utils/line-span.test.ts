@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from './line-span';
+import { heldUntil, isHeldAt, lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from './line-span';
 
 const lines = [
   { type: 'section', label: 'Chorus' },
@@ -35,6 +35,15 @@ describe('line spans', () => {
     const paused = lines.map((l, i) => (i === 1 ? { ...l, words: [{ word: 'just', time: 20.36 }, { word: 'way', time: 23.8, end: 24.1 }] } : l));
     expect(lineSpanEnd(paused, 1, 240)).toBe(24.42);
     expect(lineOverlap(paused, 1)).toBeNull();
+  });
+
+  it('knows while a line is still sounding over the next one', () => {
+    expect(heldUntil(lines[1], 24.42)).toBe(25.04);
+    expect(heldUntil(lines[3], 27)).toBeNull();
+    expect(isHeldAt(lines[1], 24.42, 24.3)).toBe(false);
+    expect(isHeldAt(lines[1], 24.42, 24.7)).toBe(true);
+    expect(isHeldAt(lines[1], 24.42, 25.04)).toBe(false);
+    expect(isHeldAt(lines[1], 24.42, null)).toBe(false);
   });
 
   it('puts a line that starts under the one before it on the second lane', () => {

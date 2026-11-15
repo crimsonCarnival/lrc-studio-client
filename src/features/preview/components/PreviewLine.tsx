@@ -6,6 +6,7 @@ import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
+import { isHeldAt, tailWordEnd } from '@/features/editor/utils/line-span';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
@@ -201,8 +202,12 @@ export default function PreviewLine({
   const counterpartEndTime = isCounterpart ? counterpartEnd(line, nextTimestamp ?? null) : null;
   const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition != null && playbackPosition >= effectiveTimestamp && (counterpartEndTime == null || playbackPosition < counterpartEndTime);
 
-  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isCounterpartActive;
-  const isPast = effectiveTimestamp != null && i < displayedActiveIndex;
+  // The singer is still on this line's last word although the next line has begun: the line
+  // stays lit, and its last word goes on filling, until that word ends.
+  const isHeldActive = isHeldAt(line, nextTimestamp, playbackPosition);
+
+  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isCounterpartActive || isHeldActive;
+  const isPast = effectiveTimestamp != null && i < displayedActiveIndex && !isHeldActive;
   const isLocked = lockedLineIndex === i;
 
   const focusContrast = settings.interface?.focusContrast ?? 'medium';
@@ -503,7 +508,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
     const timedWordsList = words.filter((w2) => w2.time != null);
     if (timedWordsList.length > 0) {
       const lastTW = timedWordsList[timedWordsList.length - 1];
-      if (line.endTime != null && line.endTime > lastTW.time!) {
+      // Where the last word was said to stop comes first; the rest are estimates.
+      const tailEnd = tailWordEnd(line);
+      if (tailEnd != null) {
+        lastWordFillEnd = tailEnd;
+      } else if (line.endTime != null && line.endTime > lastTW.time!) {
         lastWordFillEnd = line.endTime;
       } else if (timedWordsList.length >= 2) {
         const avgDur = (lastTW.time! - timedWordsList[0].time!) / (timedWordsList.length - 1);
