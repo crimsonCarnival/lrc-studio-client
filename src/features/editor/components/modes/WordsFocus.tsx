@@ -19,6 +19,7 @@ import { MIN_WORD_GAP, TOO_SHORT, layoutWords, snapTime, splitMorae, wordEndAt, 
 import type { SnapMode } from '@/features/editor/utils/word-timing';
 import { lineOverlap } from '@/features/editor/utils/line-span';
 import type { LineBand } from '@/features/editor/utils/line-span';
+import type { LineTimingEdit } from '@/features/editor/utils/line-timing';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
 const NAV_COLLAPSED_KEY = 'lrc.words.navCollapsed';
@@ -322,6 +323,8 @@ interface WordTimelineProps {
   prevLine?: GhostLine | null;
   /** Gives another line the focus. */
   onSelectLine?: (lineIndex: number) => void;
+  /** Changes when a whole line sounds, from its chip in the lines lane: its start, its end, or all of it. */
+  onChangeLineTiming?: (lineIndex: number, edit: LineTimingEdit) => void;
   /** Ends the previous line's last word at the playhead. */
   onEndPrevious?: () => void;
   playbackPosition: number;
@@ -339,7 +342,7 @@ interface WordTimelineProps {
   onSetNeighbourWordTime?: (lineIndex: number, wordIndex: number, time: number) => void;
   /** Sets where a word of a neighbouring line stops, dragged from that line's own row. */
   onSetNeighbourWordEnd?: (lineIndex: number, wordIndex: number, end: number | null) => void;
-  /** The earliest the line's first word may start: after the last word of the line before. */
+  /** The earliest the line's first word may start: once the line before it has started. */
   startFloor?: number;
   /** Picks a word: seeks to it and makes it the one the keys act on. */
   onSelectWord: (wordIndex: number) => void;
@@ -531,7 +534,7 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
  * a singer who is still on it when the next line begins.
  */
 export function WordTimeline({
-  line, lineEnd, naturalEnd: naturalEndProp, duration, lineKey, lineIndex, bands, nextLine, prevLine, onSelectLine, onEndPrevious,
+  line, lineEnd, naturalEnd: naturalEndProp, duration, lineKey, lineIndex, bands, nextLine, prevLine, onSelectLine, onChangeLineTiming, onEndPrevious,
   playbackPosition, isPlaying, activeWordIndex, selectedWordIndex, playingWordIndex,
   onSetWordTime, onSetWordEnd, onSetNeighbourWordTime, onSetNeighbourWordEnd, startFloor = 0, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
 }: WordTimelineProps) {
@@ -547,6 +550,9 @@ export function WordTimeline({
   // Which edge is being dragged. The time is written to the line on every move; the undo history
   // groups changes that arrive in quick succession, so a drag is still one step back.
   const [drag, setDrag] = useState<{ index: number; edge: 'start' | 'end' } | null>(null);
+  // A line chip in the lines lane being dragged: by one edge, or by its body to move the whole line.
+  const [laneDrag, setLaneDrag] = useState<{ index: number; part: 'start' | 'end' | 'move' } | null>(null);
+  const laneRef = useRef<{ part: 'start' | 'end' | 'move'; index: number; grab: number; from: number; to: number; x: number; moved: boolean } | null>(null);
   const [snap, setSnap] = usePersisted<SnapMode>('lrc.words.snap', 'edges');
   const [showSyllables, setShowSyllables] = usePersisted('lrc.words.syllables', true);
   const [peaksVersion, setPeaksVersion] = useState(0);
@@ -716,6 +722,58 @@ export function WordTimeline({
     timeAt(clientX), snap, snapReach(), playbackPosition,
     segments.flatMap((s) => (s.timed ? [s.from, s.to] : [])).concat(end),
   );
+  // ── The lines lane: a line's chip moves the whole line, its edges change where it starts or ends ──
+  const laneEdges = (except: number) => (bands ?? []).filter((b) => b.index !== except).flatMap((b) => [b.from, b.to]);
+  const laneDown = (band: LineBand, part: 'start' | 'end' | 'move') => (e: PointerEvent<HTMLElement>) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setGlide(null);
+    laneRef.current = { part, index: band.index, grab: timeAt(e.clientX), from: band.from, to: band.to, x: e.clientX, moved: false };
+    setLaneDrag({ index: band.index, part });
+  };
+  const laneMove = (band: LineBand, part: 'start' | 'end' | 'move') => (e: PointerEvent<HTMLElement>) => {
+    const d = laneRef.current;
+    if (!d || d.index !== band.index || d.part !== part) return;
+    if (e.currentTarget.hasPointerCapture && !e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    // A press that barely moves is a click, which gives the line the focus on release.
+    if (Math.abs(e.clientX - d.x) > 3) d.moved = true;
+    if (!d.moved) return;
+    const at = timeAt(e.clientX);
+    const edges = laneEdges(band.index);
+    const reach = snapReach();
+    if (part === 'move') {
+      const raw = d.from + (at - d.grab);
+      const length = d.to - d.from;
+      // Either end of the chip may catch on something; whichever did moves the line.
+      const a = snapTime(raw, snap, reach, playbackPosition, edges);
+      const b = snapTime(raw + length, snap, reach, playbackPosition, edges) - length;
+      const da = Math.abs(a - raw);
+      const db = Math.abs(b - raw);
+      const start = da > 1e-9 && (db <= 1e-9 || da <= db) ? a : db > 1e-9 ? b : raw;
+      onChangeLineTiming?.(band.index, { kind: 'move', start });
+    } else {
+      onChangeLineTiming?.(band.index, { kind: part, time: snapTime(at, snap, reach, playbackPosition, edges) });
+    }
+  };
+  const laneUp = (band: LineBand, part: 'start' | 'end' | 'move') => () => {
+    const d = laneRef.current;
+    laneRef.current = null;
+    setLaneDrag(null);
+    if (part === 'move' && d && !d.moved && band.index !== lineIndex) onSelectLine?.(band.index);
+  };
+  const laneKeys = (band: LineBand, part: 'start' | 'end') => (e: KeyboardEvent) => {
+    const step = e.shiftKey ? 0.01 : 0.05;
+    const delta = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+    if (!delta) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onChangeLineTiming?.(band.index, { kind: part, time: Number(((part === 'start' ? band.from : band.to) + delta).toFixed(3)) });
+  };
+  // The time of the edge being dragged, shown on the ruler.
+  const draggedBand = laneDrag ? (bands ?? []).find((b) => b.index === laneDrag.index) : undefined;
+  const laneTagTime = draggedBand && laneDrag ? (laneDrag.part === 'end' ? draggedBand.to : draggedBand.from) : null;
+
   const handlePointerDown = (index: number, edge: 'start' | 'end') => (e: PointerEvent<HTMLSpanElement>) => {
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -872,6 +930,11 @@ export function WordTimeline({
                 {formatTime(playbackPosition)}
               </span>
             )}
+            {laneTagTime != null && laneTagTime >= view.from && laneTagTime <= viewTo && (
+              <span className="pointer-events-none absolute top-1 z-10 -translate-x-1/2 rounded-md bg-primary px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-primary-foreground" style={{ left: `${pct(laneTagTime)}%` }}>
+                {formatTime(laneTagTime)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -886,23 +949,55 @@ export function WordTimeline({
               {visibleBands.map((band) => {
                 const focused = band.index === lineIndex;
                 const isNext = band.index === nextLine?.index;
+                // Drag the chip to move the line, its edges to change where it starts or ends.
+                const editable = !!onChangeLineTiming && !band.counterpart;
+                const grip = (part: 'start' | 'end') => (
+                  <span
+                    role="slider"
+                    tabIndex={0}
+                    aria-label={t(part === 'start' ? 'editor.words.lineStartLabel' : 'editor.words.lineEndLabel', { number: band.number })}
+                    aria-valuemin={0}
+                    aria-valuemax={Number(total.toFixed(2))}
+                    aria-valuenow={Number((part === 'start' ? band.from : band.to).toFixed(2))}
+                    onPointerDown={laneDown(band, part)}
+                    onPointerMove={laneMove(band, part)}
+                    onPointerUp={laneUp(band, part)}
+                    onPointerCancel={laneUp(band, part)}
+                    onKeyDown={laneKeys(band, part)}
+                    className={`group/grip absolute inset-y-0 z-10 grid w-2 cursor-ew-resize touch-none place-items-center focus-visible:outline-none coarse:w-6 ${part === 'start' ? 'left-0' : 'right-0'}`}
+                  >
+                    <span className={`h-3/5 w-[3px] rounded-pill transition-colors group-hover/band:bg-foreground/40 group-focus-visible/grip:bg-foreground group-hover/grip:bg-foreground ${laneDrag?.index === band.index && laneDrag.part === part ? 'bg-foreground' : 'bg-transparent'}`} />
+                  </span>
+                );
                 return (
-                  <button
+                  <div
                     key={band.index}
-                    type="button"
-                    aria-current={focused ? 'true' : undefined}
-                    aria-label={t('editor.words.goToLine', { number: band.number, text: band.text })}
-                    onClick={() => { if (!focused) onSelectLine?.(band.index); }}
-                    className={`absolute flex h-5 items-center gap-1.5 overflow-hidden rounded-md px-1.5 text-left text-[11px] font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus ${band.lane ? 'top-[27px]' : 'top-[5px]'} ${focused
-                      ? 'bg-foam/20 text-foreground inset-ring-[1.5px] inset-ring-foam'
-                      : isNext && overlap != null
-                        ? 'bg-primary/15 text-foreground inset-ring inset-ring-primary/70 hover:brightness-125'
-                        : 'bg-raised text-foreground/80 inset-ring inset-ring-hl hover:brightness-125'}`}
+                    data-band={band.index}
+                    className={`group/band absolute h-5 ${band.lane ? 'top-[27px]' : 'top-[5px]'}`}
                     style={{ left: `calc(${pct(band.from)}% + 1px)`, width: `max(0px, calc(${pct(band.to) - pct(band.from)}% - 2px))` }}
                   >
-                    <span className="font-mono text-[10px] font-normal tabular-nums text-foreground/65">{band.number}</span>
-                    <span className="truncate">{band.text}</span>
-                  </button>
+                    <button
+                      type="button"
+                      aria-current={focused ? 'true' : undefined}
+                      aria-label={t('editor.words.goToLine', { number: band.number, text: band.text })}
+                      // A pointer click is told apart from a drag on release; this is the keyboard's way in.
+                      onClick={(e) => { if (e.detail === 0 && !focused) onSelectLine?.(band.index); }}
+                      onPointerDown={editable ? laneDown(band, 'move') : undefined}
+                      onPointerMove={editable ? laneMove(band, 'move') : undefined}
+                      onPointerUp={editable ? laneUp(band, 'move') : () => { if (!focused) onSelectLine?.(band.index); }}
+                      onPointerCancel={editable ? laneUp(band, 'move') : undefined}
+                      className={`absolute inset-0 flex items-center gap-1.5 overflow-hidden rounded-md text-left text-[11px] font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus ${editable ? 'cursor-grab touch-none px-2.5 active:cursor-grabbing' : 'px-1.5'} ${focused
+                        ? 'bg-foam/20 text-foreground inset-ring-[1.5px] inset-ring-foam'
+                        : isNext && overlap != null
+                          ? 'bg-primary/15 text-foreground inset-ring inset-ring-primary/70 hover:brightness-125'
+                          : 'bg-raised text-foreground/80 inset-ring inset-ring-hl hover:brightness-125'}`}
+                    >
+                      <span className="font-mono text-[10px] font-normal tabular-nums text-foreground/65">{band.number}</span>
+                      <span className="truncate">{band.text}</span>
+                    </button>
+                    {editable && grip('start')}
+                    {editable && grip('end')}
+                  </div>
                 );
               })}
             </div>

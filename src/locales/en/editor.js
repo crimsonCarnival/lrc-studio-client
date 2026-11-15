@@ -267,6 +267,8 @@ export default {
     overlapsLine: "Overlaps line {{number}} by {{seconds}} s",
     overlapEdge: "{{time}} · +{{seconds}} s over the next line",
     lineStarts: "Line {{number}} starts · {{time}}",
+    lineStartLabel: "Start of line {{number}}",
+    lineEndLabel: "End of line {{number}}",
     linesLane: "Lines",
     goToLine: "Go to line {{number}}: {{text}}",
     ghostNext: "Next · line {{number}}",

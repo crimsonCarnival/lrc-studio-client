@@ -270,6 +270,8 @@ export default {
     overlapsLine: "Se solapa {{seconds}} s con la línea {{number}}",
     overlapEdge: "{{time}} · +{{seconds}} s sobre la línea siguiente",
     lineStarts: "La línea {{number}} empieza · {{time}}",
+    lineStartLabel: "Inicio de la línea {{number}}",
+    lineEndLabel: "Fin de la línea {{number}}",
     linesLane: "Líneas",
     goToLine: "Ir a la línea {{number}}: {{text}}",
     ghostNext: "Siguiente · línea {{number}}",
