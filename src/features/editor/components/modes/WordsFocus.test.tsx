@@ -110,8 +110,8 @@ describe('WordTimeline overlap with the next line', () => {
     lineIndex: 0,
     nextLine: { index: 1, number: 2, line: next, end: 14.2 },
     bands: [
-      { index: 0, number: 1, text: sung.text, from: 8.88, to: 13.04, lane: 0 as const },
-      { index: 1, number: 2, text: next.text, from: 13.04, to: 14.2, lane: 0 as const },
+      { index: 0, number: 1, text: sung.text, from: 8.88, to: 13.04, counterpart: false, lane: 0 as const },
+      { index: 1, number: 2, text: next.text, from: 13.04, to: 14.2, counterpart: false, lane: 0 as const },
     ],
   };
 
@@ -162,6 +162,47 @@ describe('WordTimeline overlap with the next line', () => {
     const props = renderTimeline({ line: { ...sung, words: sung.words.map((w, i) => (i === 0 ? { ...w, time: 8.88 } : w)) }, ...around, startFloor: 8.5 });
     fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.boundaryLabel:fighting' }), { key: 'ArrowLeft' });
     expect(props.onSetWordTime).toHaveBeenLastCalledWith(0, 8.83);
+  });
+
+  it('changes where a line starts or ends from its own chip in the lines lane', () => {
+    const onChangeLineTiming = vi.fn();
+    renderTimeline({ line: sung, ...around, onChangeLineTiming });
+    fireEvent.keyDown(screen.getAllByRole('slider', { name: 'editor.words.lineEndLabel' })[1], { key: 'ArrowRight' });
+    expect(onChangeLineTiming).toHaveBeenLastCalledWith(1, { kind: 'end', time: 14.25 });
+    fireEvent.keyDown(screen.getAllByRole('slider', { name: 'editor.words.lineStartLabel' })[0], { key: 'ArrowLeft', shiftKey: true });
+    expect(onChangeLineTiming).toHaveBeenLastCalledWith(0, { kind: 'start', time: 8.87 });
+  });
+
+  it('moves a whole line by dragging its chip, and focuses it on a plain click', () => {
+    const onChangeLineTiming = vi.fn();
+    const onSelectLine = vi.fn();
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 1000, right: 1000, top: 0, bottom: 0, height: 0, x: 0, y: 0, toJSON: () => ({}) });
+    renderTimeline({ line: sung, ...around, onChangeLineTiming, onSelectLine, playbackPosition: 0 });
+    const chip = screen.getAllByRole('button', { name: 'editor.words.goToLine' })[1];
+    // Pressed and released in the same place: a click.
+    fireEvent.pointerDown(chip, { clientX: 500, button: 0 });
+    fireEvent.pointerUp(chip, { clientX: 500 });
+    expect(onSelectLine).toHaveBeenCalledWith(1);
+    expect(onChangeLineTiming).not.toHaveBeenCalled();
+    // Dragged: the line moves and is not selected.
+    onSelectLine.mockClear();
+    fireEvent.pointerDown(chip, { clientX: 500, button: 0 });
+    fireEvent.pointerMove(chip, { clientX: 540 });
+    fireEvent.pointerUp(chip, { clientX: 540 });
+    expect(onSelectLine).not.toHaveBeenCalled();
+    expect(onChangeLineTiming).toHaveBeenCalled();
+    expect(onChangeLineTiming.mock.calls.at(-1)).toEqual([1, { kind: 'move', start: expect.any(Number) }]);
+    rect.mockRestore();
+  });
+
+  it('does not offer to drag a counterpart', () => {
+    const counterpart = { ...next, adLibOf: 13.04 };
+    renderTimeline({
+      line: sung, ...around, onChangeLineTiming: vi.fn(),
+      bands: [around.bands[0], { ...around.bands[1], counterpart: true }],
+      nextLine: { index: 1, number: 2, line: counterpart, end: 14.2 },
+    });
+    expect(screen.getAllByRole('slider', { name: 'editor.words.lineEndLabel' })).toHaveLength(1);
   });
 
   it('ends the previous line from its row while it still sounds', () => {

@@ -62,6 +62,8 @@ import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { syncedCoverage } from '@features/editor/utils/sync-coverage';
 import { alignLineStart } from '@/features/editor/services/editor.service';
+import { applyLineTiming } from '@/features/editor/utils/line-timing';
+import type { LineTimingEdit } from '@/features/editor/utils/line-timing';
 import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from '@features/editor/utils/line-span';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
@@ -888,11 +890,9 @@ export default function Editor({
     const prevIndex = prevTimedIndex(lines, activeLineIndex);
     const start = lines[activeLineIndex]?.timestamp;
     const prev = prevIndex >= 0 && start != null ? ghost(prevIndex) : null;
-    // The focused line's first word cannot start before the last word of the line before it.
+    // The focused line's first word cannot start before the line before it has started.
     const before = prevIndex >= 0 ? lines[prevIndex] : null;
-    const floor = before
-      ? before.words?.reduce<number | null>((last, w) => (w.time != null ? w.time : last), null) ?? (before.timestamp as number)
-      : 0;
+    const floor = before ? (before.timestamp as number) : 0;
     return {
       floor,
       next: nextIndex >= 0 ? ghost(nextIndex) : null,
@@ -929,6 +929,11 @@ export default function Editor({
       return next;
     });
   }, [setLines, activeLineIndex]);
+  // A line's own chip in the lines lane: where the line starts, where it ends, or all of it.
+  // Only that line is written; the lines around it keep their times.
+  const handleChangeLineTiming = useCallback((lineIndex: number, edit: LineTimingEdit) => {
+    setLines((prev) => applyLineTiming(prev, lineIndex, edit, duration));
+  }, [setLines, duration]);
   const handleSetNeighbourWordTime = useCallback(
     (lineIndex: number, wordIndex: number, time: number) => handleSetWordTime(wordIndex, time, lineIndex),
     [handleSetWordTime],
@@ -2195,6 +2200,7 @@ export default function Editor({
                 nextLine={focusNeighbours.next}
                 prevLine={focusNeighbours.prev}
                 onSelectLine={setActiveLineIndex}
+                onChangeLineTiming={handleChangeLineTiming}
                 onEndPrevious={hasMedia ? handleEndPreviousLine : undefined}
                 playbackPosition={playbackPosition}
                 isPlaying={playerIsPlaying}

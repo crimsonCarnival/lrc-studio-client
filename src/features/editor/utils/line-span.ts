@@ -90,6 +90,8 @@ export interface LineBand {
   text: string;
   from: number;
   to: number;
+  /** A counterpart is placed against its parent line, so its chip is not dragged. */
+  counterpart: boolean;
   /** 0 or 1: a band that starts while the one before it still sounds drops to the other lane. */
   lane: 0 | 1;
 }
@@ -108,7 +110,7 @@ export function lineBands(lines: EditorLine[], duration?: number | null): LineBa
     if (to <= from) return;
     const lane: 0 | 1 = from >= laneEnd[0] - SAME ? 0 : from >= laneEnd[1] - SAME ? 1 : laneEnd[0] <= laneEnd[1] ? 0 : 1;
     laneEnd[lane] = to;
-    bands.push({ index, number, text: line.text, from, to, lane });
+    bands.push({ index, number, text: line.text, from, to, counterpart: line.adLibOf != null, lane });
   });
   return bands;
 }
