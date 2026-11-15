@@ -54,6 +54,19 @@ export function layoutWords(words: EditorWord[], start: number, end: number): Wo
   });
 }
 
+/**
+ * Where a word's end is stored when its right edge is put at `raw`: a time, or null when the
+ * edge is back against what follows (the word then simply runs up to it). `holdLimit` is given
+ * for a line's last word when another line follows: the start of that line, which the word may
+ * run on past (the two lines then overlap). `cap` is the end of the track.
+ */
+export function wordEndAt(seg: WordSegment, raw: number, holdLimit: number | null, cap: number): number | null {
+  const limit = holdLimit ?? seg.gapTo;
+  if (holdLimit != null && raw > limit + 0.005) return Number(Math.min(raw, cap).toFixed(3));
+  if (raw >= limit - 0.005) return null;
+  return Number(Math.max(seg.from + MIN_WORD_GAP, raw).toFixed(3));
+}
+
 const SMALL_KANA = /[ゃゅょぁぃぅぇぉゎャュョァィゥェォヮ]/;
 
 /** The kana a word is sung as: its reading around the okurigana, or the word itself when it is kana. */

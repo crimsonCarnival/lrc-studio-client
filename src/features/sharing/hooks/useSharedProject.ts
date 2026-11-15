@@ -153,10 +153,10 @@ export function useSharedProject({
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
   }, []);
 
-  const setLinesGuarded = useCallback((updater) => {
+  const setLinesGuarded = useCallback((updater, write) => {
     if (isSharedProjectRef.current && sharedReadOnlyRef.current) return;
     if (isSharedProjectRef.current && !sharedReadOnlyRef.current) forkFromShared();
-    setLines(updater);
+    setLines(updater, write);
   }, [setLines, forkFromShared]);
 
   // ── Show the share link ───────────────────────────────────────────────────

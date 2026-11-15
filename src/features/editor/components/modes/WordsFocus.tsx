@@ -13,7 +13,7 @@ import { getCachedPeaks, PEAKS_EVENT } from '@/features/player/waveform-peaks';
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@ui/context-menu';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
-import { MIN_WORD_GAP, TOO_SHORT, layoutWords, snapTime, splitMorae, wordKana } from '@/features/editor/utils/word-timing';
+import { MIN_WORD_GAP, TOO_SHORT, layoutWords, snapTime, splitMorae, wordEndAt, wordKana } from '@/features/editor/utils/word-timing';
 import type { SnapMode } from '@/features/editor/utils/word-timing';
 import { lineOverlap } from '@/features/editor/utils/line-span';
 import type { LineBand } from '@/features/editor/utils/line-span';
@@ -260,6 +260,12 @@ interface WordTimelineProps {
   onSetWordTime: (wordIndex: number, time: number) => void;
   /** Sets where a word stops; null joins it back up with the word after it. */
   onSetWordEnd: (wordIndex: number, end: number | null) => void;
+  /** Moves where a word of a neighbouring line starts, dragged from that line's own row. */
+  onSetNeighbourWordTime?: (lineIndex: number, wordIndex: number, time: number) => void;
+  /** Sets where a word of a neighbouring line stops, dragged from that line's own row. */
+  onSetNeighbourWordEnd?: (lineIndex: number, wordIndex: number, end: number | null) => void;
+  /** The earliest the line's first word may start: after the last word of the line before. */
+  startFloor?: number;
   /** Picks a word: seeks to it and makes it the one the keys act on. */
   onSelectWord: (wordIndex: number) => void;
   onEditLine?: () => void;
@@ -509,7 +515,9 @@ export function WordTimeline({
   const clampStart = (index: number, time: number) => {
     const before = words.slice(0, index).reverse().find((w) => w.time != null)?.time;
     const after = words.slice(index + 1).find((w) => w.time != null)?.time;
-    const min = before != null ? Math.max(start, before + MIN_WORD_GAP) : start;
+    // The first word carries the line's start with it, so it may go earlier than the line does
+    // now: as far back as the last word of the line before.
+    const min = before != null ? Math.max(start, before + MIN_WORD_GAP) : index === 0 ? Math.min(start, startFloor + MIN_WORD_GAP) : start;
     const ownEnd = segments[index]?.hasEnd ? segments[index].to : Infinity;
     const max = Math.min(end, after ?? Infinity, ownEnd) - MIN_WORD_GAP;
     return Math.max(min, Math.min(Math.max(min, max), time));
@@ -540,6 +548,12 @@ export function WordTimeline({
     if (time !== words[index].end) onSetWordEnd(index, time);
   };
 
+  // A neighbouring line's word catches on this line's words and on where this line stops, so
+  // the next line's start can be dropped right on the end of the last word to close an overlap.
+  const neighbourTimeAt = (clientX: number) => snapTime(
+    timeAt(clientX), snap, snapReach(), playbackPosition,
+    segments.flatMap((s) => (s.timed ? [s.from, s.to] : [])).concat(end),
+  );
   const handlePointerDown = (index: number, edge: 'start' | 'end') => (e: PointerEvent<HTMLSpanElement>) => {
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
