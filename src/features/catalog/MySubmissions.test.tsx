@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const { getMySubmissions, updateMyEntry, withdrawMyEntry } = vi.hoisted(() => ({
@@ -14,6 +14,7 @@ vi.mock('./catalog.service', async (importOriginal) => ({
   updateMyEntry,
   withdrawMyEntry,
 }));
+vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { advanced: { confirmDestructive: true } } }) }));
 vi.mock('react-hot-toast', () => ({ default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
 
 import { MySubmissions } from './MySubmissions';
@@ -69,11 +70,22 @@ describe('MySubmissions', () => {
     expect(screen.queryByRole('button', { name: 'Edit Rejected Rex' })).not.toBeInTheDocument();
   });
 
-  it('withdraws a pending entry', async () => {
+  it('asks before withdrawing and does nothing on cancel', async () => {
+    show();
+    await expand();
+    fireEvent.click(screen.getByRole('button', { name: 'Withdraw Pending Pal' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(withdrawMyEntry).not.toHaveBeenCalled();
+  });
+
+  it('withdraws a pending entry once confirmed', async () => {
     withdrawMyEntry.mockResolvedValue(true);
     show();
     await expand();
     fireEvent.click(screen.getByRole('button', { name: 'Withdraw Pending Pal' }));
+    expect(withdrawMyEntry).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
     await waitFor(() => expect(withdrawMyEntry).toHaveBeenCalledWith('artist', 'a1'));
   });
 
@@ -100,8 +112,8 @@ describe('MySubmissions', () => {
     show();
     await expand();
     fireEvent.click(screen.getByRole('button', { name: 'Withdraw Pending Pal' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
     expect(await screen.findByText('That entry no longer exists.')).toBeInTheDocument();
     expect(screen.queryByText('RAW SERVER TEXT')).not.toBeInTheDocument();
   });
 });
-void within;

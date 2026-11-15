@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import useConfirm from '@/shared/hooks/useConfirm';
 import { Button } from '@ui/button';
 import { CollapsibleSection } from '@ui/collapsible-section';
 import { Input } from '@ui/input';
@@ -24,6 +25,7 @@ type MySubmissionsProps = {
 
 const STATUS_TONE = { pending: 'gold', approved: 'foam', rejected: 'love' } as const;
 type Status = keyof typeof STATUS_TONE;
+const isStatus = (s: string): s is Status => s in STATUS_TONE;
 
 type Row =
   | { kind: 'artist'; id: string; label: string; status: string; reviewNote?: string | null; entry: CatalogArtist }
@@ -62,10 +64,11 @@ function SubmissionsList({ onAddAlbum }: MySubmissionsProps) {
 function SubmissionRow({ row, onAddAlbum }: { row: Row; onAddAlbum: MySubmissionsProps['onAddAlbum'] }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [requestConfirm, confirmModal] = useConfirm();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<ReturnType<typeof catalogErrorKey> | null>(null);
   const pending = row.status === 'pending';
-  const tone = STATUS_TONE[row.status as Status] ?? 'neutral';
+  const tone = isStatus(row.status) ? STATUS_TONE[row.status] : 'neutral';
 
   const withdraw = useMutation({
     mutationFn: () => withdrawMyEntry(row.kind, row.id),
@@ -81,7 +84,7 @@ function SubmissionRow({ row, onAddAlbum }: { row: Row; onAddAlbum: MySubmission
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground">{t(`catalog.submissions.kind.${row.kind}`)}</span>
         <span className="min-w-0 flex-1 truncate font-medium text-foreground">{row.label}</span>
-        <StatusChip tone={tone}>{t(`catalog.submissions.status.${row.status as Status}`)}</StatusChip>
+        <StatusChip tone={tone}>{isStatus(row.status) ? t(`catalog.submissions.status.${row.status}`) : t('catalog.submissions.status.unknown')}</StatusChip>
       </div>
 
       {row.status === 'rejected' && row.reviewNote && (
@@ -97,7 +100,7 @@ function SubmissionRow({ row, onAddAlbum }: { row: Row; onAddAlbum: MySubmission
               <Button type="button" variant="outline" size="sm" aria-label={t('catalog.submissions.editLabel', { name: row.label })} onClick={() => { setError(null); setEditing(true); }}>
                 {t('catalog.submissions.edit')}
               </Button>
-              <Button type="button" variant="destructive" size="sm" loading={withdraw.isPending} aria-label={t('catalog.submissions.withdrawLabel', { name: row.label })} onClick={() => { setError(null); withdraw.mutate(); }}>
+              <Button type="button" variant="destructive" size="sm" loading={withdraw.isPending} aria-label={t('catalog.submissions.withdrawLabel', { name: row.label })} onClick={() => requestConfirm(t('catalog.submissions.withdrawConfirmBody'), () => { setError(null); withdraw.mutate(); }, { variant: 'danger', title: t('catalog.submissions.withdrawConfirmTitle') })}>
                 {t('catalog.submissions.withdraw')}
               </Button>
             </>
@@ -111,6 +114,7 @@ function SubmissionRow({ row, onAddAlbum }: { row: Row; onAddAlbum: MySubmission
       )}
 
       {error && <p role="alert" className="text-sm text-love">{t(error)}</p>}
+      {confirmModal}
     </li>
   );
 }

@@ -66,8 +66,11 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
 
   function pickFile(next: File | undefined) {
     if (!next) return;
-    if (!next.type.startsWith('image/')) return setError({ key: 'catalog.errors.imageNotImage' });
-    if (next.size > MAX_IMAGE_BYTES) return setError({ key: 'catalog.errors.imageTooLarge' });
+    const invalid = !next.type.startsWith('image/') ? 'catalog.errors.imageNotImage' : next.size > MAX_IMAGE_BYTES ? 'catalog.errors.imageTooLarge' : null;
+    if (invalid) {
+      clearFile();
+      return setError({ key: invalid });
+    }
     setError(null);
     setFile(next);
   }
@@ -148,6 +151,7 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
             type="file"
             accept="image/*"
             className="sr-only"
+            tabIndex={-1}
             aria-label={isAlbum ? t('catalog.dialog.coverChoose') : t('catalog.dialog.imageChoose')}
             onChange={(e) => pickFile(e.target.files?.[0])}
           />
@@ -169,7 +173,7 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
           {error.duplicate && (
             <>
               {' '}
-              <Link to={`/artists/${error.duplicate.slug}`} className="underline underline-offset-2" onClick={onClose}>
+              <Link to={`/artists/${encodeURIComponent(error.duplicate.slug)}`} className="underline underline-offset-2" onClick={onClose}>
                 {t('catalog.errors.duplicateLink', { name: error.duplicate.name })}
               </Link>
             </>

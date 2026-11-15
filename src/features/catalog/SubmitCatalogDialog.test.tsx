@@ -120,6 +120,19 @@ describe('SubmitCatalogDialog (artist)', () => {
     expect(uploadCatalogImage).not.toHaveBeenCalled();
   });
 
+  it('drops a previously chosen file when a new pick is invalid', async () => {
+    submitCatalogArtist.mockResolvedValue({ id: 'c1' });
+    open();
+    typeName('Luna Vale');
+    const input = screen.getByLabelText('Choose a photo');
+    fireEvent.change(input, { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    fireEvent.change(input, { target: { files: [new File(['x'], 'a.txt', { type: 'text/plain' })] } });
+    expect(await screen.findByText('Choose an image file.')).toBeInTheDocument();
+    fireEvent.click(submitBtn());
+    await waitFor(() => expect(submitCatalogArtist).toHaveBeenCalled());
+    expect(uploadCatalogImage).not.toHaveBeenCalled();
+  });
+
   it('uploads a valid image on submit and sends its URL', async () => {
     uploadCatalogImage.mockResolvedValue('https://res.cloudinary.com/x/image/upload/catalog/a.png');
     submitCatalogArtist.mockResolvedValue({ id: 'c1' });
