@@ -24,7 +24,12 @@ export type CatalogEntryEdit = {
   coverUrl?: string;
 };
 
-export type AdminCatalogEntryEdit = CatalogEntryEdit & { disambiguation?: string };
+/** For admin edits `undefined` leaves a field alone and `null` on an image clears it. */
+export type AdminCatalogEntryEdit = Omit<CatalogEntryEdit, 'imageUrl' | 'coverUrl'> & {
+  disambiguation?: string;
+  imageUrl?: string | null;
+  coverUrl?: string | null;
+};
 
 export type ReviewInput = {
   kind: CatalogKind;

@@ -279,6 +279,7 @@ export default {
   catalogTab: {
     views: { queue: 'Review queue', browse: 'Browse' },
     refresh: 'Refresh',
+    retry: 'Try again',
     kind: { artist: 'Artist', album: 'Album' },
     queue: {
       loadError: 'Could not load the review queue.',
@@ -330,11 +331,14 @@ export default {
       cancel: 'Cancel',
       created: 'Entry created.',
       saved: 'Changes saved.',
+      removeImage: 'Remove the current photo',
+      removeCover: 'Remove the current cover',
     },
     delete: {
       title: 'Delete {{name}}',
       body: 'This permanently removes the entry from the catalog. It cannot be undone.',
       revokeCredit: 'Also revoke the submitter’s credit (XP and approved count)',
+      revokeCreditHint: 'Only applies to community-submitted entries, including this artist’s albums.',
       confirm: 'Delete',
       cancel: 'Cancel',
       done: 'Entry deleted.',

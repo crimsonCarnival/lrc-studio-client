@@ -94,6 +94,16 @@ export default function AdminCatalogTab() {
   );
 }
 
+function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div role="alert" className="flex flex-wrap items-center justify-center gap-3 py-6 text-sm text-love">
+      <span>{message}</span>
+      <Button type="button" variant="outline" size="sm" onClick={onRetry}>{t('admin.catalogTab.retry')}</Button>
+    </div>
+  );
+}
+
 function CatalogImage({ url, alt }: { url: string | null | undefined; alt: string }) {
   if (!isCloudinaryUrl(url)) return null;
   return <img src={url} alt={alt} loading="lazy" referrerPolicy="no-referrer" className="size-16 shrink-0 rounded-md object-cover" />;
@@ -105,18 +115,20 @@ function QueueView({ knownArtists }: { knownArtists: CatalogArtist[] }) {
   const { t } = useTranslation();
   const [queue, setQueue] = useState<CatalogQueue | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     try {
       setQueue(await getReviewQueue());
-    } catch (err) {
-      toast.error(t(catalogErrorKey(err)));
+    } catch {
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -175,6 +187,7 @@ function QueueView({ knownArtists }: { knownArtists: CatalogArtist[] }) {
   }
 
   if (loading && !queue) return <div className="flex items-center justify-center py-16"><LogoLoader size={32} /></div>;
+  if (loadFailed && !queue) return <LoadError message={t('admin.catalogTab.queue.loadError')} onRetry={() => void load()} />;
 
   return (
     <section className="flex flex-col gap-2">
@@ -183,8 +196,9 @@ function QueueView({ knownArtists }: { knownArtists: CatalogArtist[] }) {
           <Icon name="refresh" size={14} />
         </Button>
       </div>
+      {loadFailed && <LoadError message={t('admin.catalogTab.queue.loadError')} onRetry={() => void load()} />}
       {rows.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-500">{t('admin.catalogTab.queue.empty')}</p>
+        !loadFailed && <p className="py-6 text-center text-sm text-zinc-500">{t('admin.catalogTab.queue.empty')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {rows.map((row) => (
@@ -281,13 +295,16 @@ type FormTarget =
   | { mode: 'edit'; kind: 'artist'; entry: CatalogArtist }
   | { mode: 'edit'; kind: 'album'; entry: CatalogAlbum };
 
-type DeleteTarget = { kind: CatalogKind; id: string; name: string; community: boolean };
+/** `community` shows the revoke-credit option; `credit` says whether it is known to apply (false: it only covers community entries). */
+type DeleteTarget = { kind: CatalogKind; id: string; name: string; community: boolean; creditKnown: boolean };
 
 function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => void }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [artists, setArtists] = useState<CatalogArtist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [albumsFailed, setAlbumsFailed] = useState<Record<string, boolean>>({});
   const [albums, setAlbums] = useState<Record<string, CatalogAlbum[]>>({});
   const [open, setOpen] = useState<string | null>(null);
   const [form, setForm] = useState<FormTarget | null>(null);
@@ -298,16 +315,17 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
 
   const loadArtists = useCallback(async (q: string) => {
     setLoading(true);
+    setLoadFailed(false);
     try {
       const list = await adminListArtists({ query: q.trim() || undefined });
       setArtists(list);
       onArtists(list);
-    } catch (err) {
-      toast.error(t(catalogErrorKey(err)));
+    } catch {
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [t, onArtists]);
+  }, [onArtists]);
 
   useEffect(() => {
     const timer = setTimeout(() => void loadArtists(query), query ? 300 : 0);
@@ -315,13 +333,14 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
   }, [query, loadArtists]);
 
   const loadAlbums = useCallback(async (artistId: string) => {
+    setAlbumsFailed((prev) => ({ ...prev, [artistId]: false }));
     try {
       const list = await adminListAlbums(artistId);
       setAlbums((prev) => ({ ...prev, [artistId]: list }));
-    } catch (err) {
-      toast.error(t(catalogErrorKey(err)));
+    } catch {
+      setAlbumsFailed((prev) => ({ ...prev, [artistId]: true }));
     }
-  }, [t]);
+  }, []);
 
   function toggleAlbums(artistId: string) {
     const next = open === artistId ? null : artistId;
@@ -358,6 +377,14 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
     }
   }
 
+  // Deleting an artist cascades to its albums, so their credit matters too. Albums that were
+  // never opened are unknown: offer the option anyway and say it only covers community entries.
+  function artistDeleteTarget(artist: CatalogArtist): DeleteTarget {
+    const loaded = albums[artist.id];
+    const community = artist.source === 'community' || !loaded || loaded.some((a) => a.source === 'community');
+    return { kind: 'artist', id: artist.id, name: artist.name, community, creditKnown: artist.source === 'community' || !!loaded };
+  }
+
   function askDelete(target: DeleteTarget) {
     setRevokeCredit(false);
     setDeleting(target);
@@ -382,6 +409,8 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
 
       {loading && artists.length === 0 ? (
         <div className="flex items-center justify-center py-16"><LogoLoader size={32} /></div>
+      ) : loadFailed ? (
+        <LoadError message={t('admin.catalogTab.browse.loadError')} onRetry={() => void loadArtists(query)} />
       ) : artists.length === 0 ? (
         <p className="py-6 text-center text-sm text-zinc-500">{t('admin.catalogTab.browse.empty')}</p>
       ) : (
@@ -403,7 +432,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
                 <Button type="button" variant="outline" size="sm" aria-label={t('admin.catalogTab.browse.editLabel', { name: artist.name })} onClick={() => setForm({ mode: 'edit', kind: 'artist', entry: artist })}>
                   {t('admin.catalogTab.browse.edit')}
                 </Button>
-                <Button type="button" variant="destructive" size="sm" aria-label={t('admin.catalogTab.browse.deleteLabel', { name: artist.name })} onClick={() => askDelete({ kind: 'artist', id: artist.id, name: artist.name, community: artist.source === 'community' })}>
+                <Button type="button" variant="destructive" size="sm" aria-label={t('admin.catalogTab.browse.deleteLabel', { name: artist.name })} onClick={() => askDelete(artistDeleteTarget(artist))}>
                   {t('admin.catalogTab.browse.delete')}
                 </Button>
               </div>
@@ -414,6 +443,9 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
 
               {open === artist.id && (
                 <div className="flex flex-col gap-2 border-t border-zinc-800/60 pt-2">
+                  {albumsFailed[artist.id] && (
+                    <LoadError message={t('admin.catalogTab.browse.albumsLoadError')} onRetry={() => void loadAlbums(artist.id)} />
+                  )}
                   {(albums[artist.id] ?? []).length === 0 && albums[artist.id] && (
                     <p className="text-xs text-zinc-500">{t('admin.catalogTab.browse.noAlbums')}</p>
                   )}
@@ -428,7 +460,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
                           <Button type="button" variant="outline" size="sm" aria-label={t('admin.catalogTab.browse.editLabel', { name: album.title })} onClick={() => setForm({ mode: 'edit', kind: 'album', entry: album })}>
                             {t('admin.catalogTab.browse.edit')}
                           </Button>
-                          <Button type="button" variant="destructive" size="sm" aria-label={t('admin.catalogTab.browse.deleteLabel', { name: album.title })} onClick={() => askDelete({ kind: 'album', id: album.id, name: album.title, community: album.source === 'community' })}>
+                          <Button type="button" variant="destructive" size="sm" aria-label={t('admin.catalogTab.browse.deleteLabel', { name: album.title })} onClick={() => askDelete({ kind: 'album', id: album.id, name: album.title, community: album.source === 'community', creditKnown: true })}>
                             {t('admin.catalogTab.browse.delete')}
                           </Button>
                         </div>
@@ -459,9 +491,12 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
             <AlertDialogDescription>{t('admin.catalogTab.delete.body')}</AlertDialogDescription>
           </AlertDialogHeader>
           {deleting?.community && (
-            <div className="flex items-center gap-2">
-              <Checkbox id="catalog-revoke-credit" checked={revokeCredit} onCheckedChange={(v) => setRevokeCredit(v === true)} />
-              <Label htmlFor="catalog-revoke-credit">{t('admin.catalogTab.delete.revokeCredit')}</Label>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Checkbox id="catalog-revoke-credit" checked={revokeCredit} onCheckedChange={(v) => setRevokeCredit(v === true)} />
+                <Label htmlFor="catalog-revoke-credit">{t('admin.catalogTab.delete.revokeCredit')}</Label>
+              </div>
+              {!deleting.creditKnown && <p className="text-xs text-zinc-500">{t('admin.catalogTab.delete.revokeCreditHint')}</p>}
             </div>
           )}
           <AlertDialogFooter>
@@ -494,7 +529,9 @@ function EntryForm({ target, onDone, onCancel }: { target: FormTarget; onDone: (
   const [bio, setBio] = useState(initialArtist?.bio ?? '');
   const [year, setYear] = useState(initialAlbum?.year ?? '');
   const [file, setFile] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
   const [busy, setBusy] = useState(false);
+  const currentImage = initialArtist?.imageUrl ?? initialAlbum?.coverUrl ?? null;
   const idPrefix = `catalog-form-${target.mode}-${target.kind}`;
 
   async function submit(e: FormEvent) {
@@ -503,19 +540,36 @@ function EntryForm({ target, onDone, onCancel }: { target: FormTarget; onDone: (
     if (!trimmed || busy) return;
     setBusy(true);
     try {
-      let imageUrl: string | undefined;
+      // undefined leaves the image alone, null removes it.
+      let imageUrl: string | null | undefined;
       if (file) {
         const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_catalog_image');
         imageUrl = await uploadCatalogImage(file, token);
+      } else if (removeImage) {
+        imageUrl = null;
       }
       if (target.mode === 'create' && target.kind === 'artist') {
-        await adminCreateArtist({ name: trimmed, disambiguation: disambiguation.trim() || undefined, bio: bio.trim() || undefined, imageUrl });
+        await adminCreateArtist({ name: trimmed, disambiguation: disambiguation.trim() || undefined, bio: bio.trim() || undefined, imageUrl: imageUrl ?? undefined });
       } else if (target.mode === 'create') {
-        await adminCreateAlbum({ artistId: target.artistId, title: trimmed, year: year.trim() || undefined, coverUrl: imageUrl });
+        await adminCreateAlbum({ artistId: target.artistId, title: trimmed, year: year.trim() || undefined, coverUrl: imageUrl ?? undefined });
       } else if (target.kind === 'artist') {
-        await adminUpdate({ kind: 'artist', id: target.entry.id, name: trimmed, disambiguation: disambiguation.trim(), bio: bio.trim(), imageUrl });
+        // Only changed fields go out, so an unrelated edit cannot trip server rules on untouched ones.
+        await adminUpdate({
+          kind: 'artist',
+          id: target.entry.id,
+          ...(trimmed !== target.entry.name && { name: trimmed }),
+          ...(disambiguation.trim() !== (target.entry.disambiguation ?? '') && { disambiguation: disambiguation.trim() }),
+          ...(bio.trim() !== (target.entry.bio ?? '') && { bio: bio.trim() }),
+          ...(imageUrl !== undefined && { imageUrl }),
+        });
       } else {
-        await adminUpdate({ kind: 'album', id: target.entry.id, title: trimmed, year: year.trim(), coverUrl: imageUrl });
+        await adminUpdate({
+          kind: 'album',
+          id: target.entry.id,
+          ...(trimmed !== target.entry.title && { title: trimmed }),
+          ...(year.trim() !== (target.entry.year ?? '') && { year: year.trim() }),
+          ...(imageUrl !== undefined && { coverUrl: imageUrl }),
+        });
       }
       await onDone(target);
     } catch (err) {
@@ -561,6 +615,12 @@ function EntryForm({ target, onDone, onCancel }: { target: FormTarget; onDone: (
         />
         <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>{t('admin.catalogTab.form.imageChoose')}</Button>
         {file && <span className="max-w-48 truncate text-xs text-zinc-500">{t('admin.catalogTab.form.imageChosen', { name: file.name })}</span>}
+        {target.mode === 'edit' && currentImage && !file && (
+          <div className="flex items-center gap-2">
+            <Checkbox id={`${idPrefix}-remove-image`} checked={removeImage} onCheckedChange={(v) => setRemoveImage(v === true)} />
+            <Label htmlFor={`${idPrefix}-remove-image`}>{isAlbum ? t('admin.catalogTab.form.removeCover') : t('admin.catalogTab.form.removeImage')}</Label>
+          </div>
+        )}
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>{t('admin.catalogTab.form.cancel')}</Button>

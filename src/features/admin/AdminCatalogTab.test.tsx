@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, withSudo, toast, auth } = vi.hoisted(() => ({
+const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, adminUpdate, withSudo, toast, auth } = vi.hoisted(() => ({
   getReviewQueue: vi.fn(),
   reviewEntry: vi.fn(),
   adminListArtists: vi.fn(),
   adminListAlbums: vi.fn(),
   adminDelete: vi.fn(),
+  adminUpdate: vi.fn(),
   withSudo: vi.fn(),
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
   auth: { permissions: ['catalog.review', 'catalog.manage'] as string[] },
@@ -20,6 +21,7 @@ vi.mock('@/features/catalog/catalog.service', async (importOriginal) => ({
   adminListArtists,
   adminListAlbums,
   adminDelete,
+  adminUpdate,
 }));
 vi.mock('./services/sudo', async (importOriginal) => ({ ...(await importOriginal<object>()), withSudo }));
 vi.mock('react-hot-toast', () => ({ default: toast }));
@@ -181,6 +183,112 @@ describe('AdminCatalogTab browse', () => {
     await waitFor(() => expect(withSudo).toHaveBeenCalled());
     expect(toast.error).not.toHaveBeenCalled();
     expect(screen.getByText('Approved Ann')).toBeInTheDocument();
+  });
+});
+
+describe('AdminCatalogTab load failures', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    auth.permissions = ['catalog.review', 'catalog.manage'];
+    getReviewQueue.mockResolvedValue({ artists: [], albums: [] });
+    adminListArtists.mockResolvedValue([]);
+    adminListAlbums.mockResolvedValue([]);
+  });
+
+  it('shows an error with retry for the queue, not the empty state', async () => {
+    getReviewQueue.mockRejectedValueOnce(new Error('boom'));
+    show('/admin/catalog/queue');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the review queue.');
+    expect(screen.queryByText('Nothing is waiting for review.')).not.toBeInTheDocument();
+    getReviewQueue.mockResolvedValueOnce(queue);
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await screen.findByText('Older Act');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows an error with retry for the artist list', async () => {
+    adminListArtists.mockRejectedValueOnce(new Error('boom'));
+    show('/admin/catalog/browse');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the catalog.');
+    expect(screen.queryByText('No artists found.')).not.toBeInTheDocument();
+    adminListArtists.mockResolvedValueOnce([artist('a9', 'Approved Ann', '2026-01-01', { status: 'approved' })]);
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await screen.findByText('Approved Ann');
+  });
+
+  it('shows an error with retry for an artist’s albums, not "no albums"', async () => {
+    adminListArtists.mockResolvedValue([artist('a9', 'Approved Ann', '2026-01-01', { status: 'approved' })]);
+    adminListAlbums.mockRejectedValueOnce(new Error('boom'));
+    show('/admin/catalog/browse');
+    await screen.findByText('Approved Ann');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the albums.');
+    expect(screen.queryByText('No albums yet.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await screen.findByText('No albums yet.');
+  });
+});
+
+describe('AdminCatalogTab edit and delete options', () => {
+  const adminArtist = artist('a7', 'Admin Act', '2026-01-01', { status: 'approved', source: 'admin', bio: 'old bio', disambiguation: '', imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/catalog/a.jpg' });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    auth.permissions = ['catalog.review', 'catalog.manage'];
+    getReviewQueue.mockResolvedValue({ artists: [], albums: [] });
+    adminListArtists.mockResolvedValue([adminArtist]);
+    adminListAlbums.mockResolvedValue([]);
+    adminUpdate.mockResolvedValue(true);
+    adminDelete.mockResolvedValue(true);
+    withSudo.mockImplementation((fn: () => unknown) => fn());
+  });
+
+  it('sends only the changed fields when editing', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Edit Admin Act/ }));
+    fireEvent.change(screen.getByLabelText('Bio'), { target: { value: 'new bio' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(adminUpdate).toHaveBeenCalledWith({ kind: 'artist', id: 'a7', bio: 'new bio' }));
+  });
+
+  it('sends null to remove the current image', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Edit Admin Act/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Remove the current photo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(adminUpdate).toHaveBeenCalledWith({ kind: 'artist', id: 'a7', imageUrl: null }));
+  });
+
+  it('offers the revoke option with a hint for an artist whose albums are not loaded', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByRole('checkbox')).toBeInTheDocument();
+    expect(within(dialog).getByText(/Only applies to community-submitted/)).toBeInTheDocument();
+  });
+
+  it('offers the revoke option for an admin artist that has a community album', async () => {
+    adminListAlbums.mockResolvedValue([{ id: 'al1', artistId: 'a7', title: 'Fan Album', year: null, coverUrl: null, source: 'community', status: 'approved' }]);
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    await screen.findByText('Fan Album');
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByRole('checkbox')).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Only applies to community-submitted/)).not.toBeInTheDocument();
+  });
+
+  it('hides the revoke option when the artist and all its albums are admin-made', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    await screen.findByText('No albums yet.');
+    fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
   });
 });
 

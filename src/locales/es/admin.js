@@ -279,6 +279,7 @@ export default {
   catalogTab: {
     views: { queue: 'Cola de revisión', browse: 'Explorar' },
     refresh: 'Actualizar',
+    retry: 'Reintentar',
     kind: { artist: 'Artista', album: 'Álbum' },
     queue: {
       loadError: 'No se pudo cargar la cola de revisión.',
@@ -330,11 +331,14 @@ export default {
       cancel: 'Cancelar',
       created: 'Entrada creada.',
       saved: 'Cambios guardados.',
+      removeImage: 'Quitar la foto actual',
+      removeCover: 'Quitar la portada actual',
     },
     delete: {
       title: 'Eliminar {{name}}',
       body: 'Esto elimina la entrada del catálogo de forma permanente. No se puede deshacer.',
       revokeCredit: 'Revocar también el crédito de quien la envió (XP y recuento de aprobadas)',
+      revokeCreditHint: 'Solo se aplica a entradas enviadas por la comunidad, incluidos los álbumes de este artista.',
       confirm: 'Eliminar',
       cancel: 'Cancelar',
       done: 'Entrada eliminada.',
