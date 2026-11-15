@@ -134,3 +134,28 @@ describe('projects privatized notification text', () => {
     expect(text(privatized(null))).toBe('English body from the server');
   });
 });
+
+describe('catalog review notifications', () => {
+  const note = (type: string, meta: Record<string, unknown> | null, body = 'Björk') => ({ _id: 'c1', type, body, meta } as NotificationData);
+
+  it('names the kind and the entry', () => {
+    expect(text(note('catalog_approved', { kind: 'artist' }))).toBe('Your artist Björk was approved');
+    expect(text(note('catalog_approved', { kind: 'album' }, 'Homogenic'))).toBe('Your album Homogenic was approved');
+    expect(text(note('catalog_rejected', { kind: 'artist' }))).toBe('Your artist Björk was rejected');
+  });
+
+  it('adds the rejection note, never on an approval', () => {
+    expect(text(note('catalog_rejected', { kind: 'album', note: 'Duplicate of another act' }))).toBe('Your album Björk was rejected Note: Duplicate of another act');
+    expect(text(note('catalog_approved', { kind: 'album', note: 'ignored' }))).toBe('Your album Björk was approved');
+  });
+
+  it('falls back to neutral wording when the kind is missing', () => {
+    expect(text(note('catalog_approved', null))).toBe('Your catalog entry Björk was approved');
+  });
+
+  it('opens the owner’s Artists tab', () => {
+    expect(notificationDestination(note('catalog_approved', { kind: 'artist' }), 'ann')).toBe('/ann?tab=artists');
+    expect(notificationDestination(note('catalog_rejected', null), 'ann')).toBe('/ann?tab=artists');
+    expect(notificationDestination(note('catalog_approved', null))).toBeNull();
+  });
+});

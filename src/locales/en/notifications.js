@@ -74,6 +74,17 @@ export default {
   newDevice: 'New sign-in from a device we haven’t seen on your account. If it wasn’t you, change your password.',
   appealRejected: 'Your ban appeal was reviewed and rejected.',
   badgeUnlocked: 'Badge unlocked:',
+  catalogApproved: {
+    artist: 'Your artist <0>{{name}}</0> was approved',
+    album: 'Your album <0>{{name}}</0> was approved',
+    entry: 'Your catalog entry <0>{{name}}</0> was approved',
+  },
+  catalogRejected: {
+    artist: 'Your artist <0>{{name}}</0> was rejected',
+    album: 'Your album <0>{{name}}</0> was rejected',
+    entry: 'Your catalog entry <0>{{name}}</0> was rejected',
+  },
+  catalogNote: 'Note: {{note}}',
   verifyEmail: 'Verify your email to unlock all features.',
   verifyEmailCta: 'Verify now',
   setPassword: 'Set a password or passkey to secure your account.',

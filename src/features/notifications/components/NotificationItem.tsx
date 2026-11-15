@@ -33,7 +33,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated' | 'projects_privatized'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated' | 'projects_privatized' | 'artist' | 'album'; note?: string; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean } | null;
 }
 
 /** The target types a `report` / `report_reviewed` notification can name. */
@@ -50,6 +50,8 @@ const TYPE_ICON_NAME: Record<string, string> = {
   verify_email: 'key',
   ban: 'block',
   badge_awarded: 'military_tech',
+  catalog_approved: 'done_all',
+  catalog_rejected: 'block',
   request_submitted: 'inbox',
   request_reviewed: 'done_all',
   xp_changed: 'bolt',
@@ -105,6 +107,8 @@ export function notificationDestination(
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
   if (type === 'badge_awarded') return '/settings/badges';
+  // The submitter's own Artists tab, where their catalog entries and submissions live.
+  if ((type === 'catalog_approved' || type === 'catalog_rejected') && recipientAccountName) return `${profilePath(recipientAccountName)}?tab=artists`;
   // The author is the project's owner, so the actor supplies the account name the URL needs.
   if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
   // Straight to the comment when the notification knows it (older ones only know the wall).
@@ -348,6 +352,18 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     const def = body ? BADGE_REGISTRY[body] : null;
     const label = def ? tk(`badges.${body}.label`, def.label) : (body ?? '');
     return <span>{t('notifications.badgeUnlocked')} <strong>{label}</strong></span>;
+  }
+  if (type === 'catalog_approved' || type === 'catalog_rejected') {
+    // Older rows carry no kind: they fall back to the neutral "entry" wording.
+    const kind = notification.meta?.kind === 'artist' || notification.meta?.kind === 'album' ? notification.meta.kind : 'entry';
+    const key = `notifications.${type === 'catalog_approved' ? 'catalogApproved' : 'catalogRejected'}.${kind}`;
+    const note = type === 'catalog_rejected' ? notification.meta?.note : undefined;
+    return (
+      <span>
+        <Trans i18nKey={key as 'notifications.catalogApproved.artist'} values={{ name: body ?? '' }} components={[<strong key="0" />]} />
+        {note && <> {t('notifications.catalogNote', { note })}</>}
+      </span>
+    );
   }
   if (type === 'request_submitted') return <span><strong>{t('notifications.requestSubmitted')}</strong> {body}</span>;
   if (type === 'request_reviewed') return <span><strong>{t('notifications.requestReviewed')}</strong> {body}</span>;
