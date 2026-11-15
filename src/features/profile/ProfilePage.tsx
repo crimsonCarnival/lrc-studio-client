@@ -27,6 +27,7 @@ import { useProfile } from './profile.queries';
 import { SharedProjectsTab } from './SharedProjectsTab';
 import { ArtistsTab } from '@/features/artists/components/ArtistsTab';
 import { useArtistShelf } from '@/features/artists/shelf.queries';
+import { tabFromParams, withTab, type ProfileTab } from './profile-tab';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
@@ -261,8 +262,6 @@ export default function ProfilePage() {
   const { user } = useAuthContext();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  // The artist page's back link lands here with ?tab=artists.
-  const [activeTab, setActiveTab] = useState(() => (searchParams.get('tab') === 'artists' ? 'artists' : 'projects'));
   const [projectPage, setProjectPage] = useState(0);
 
   const [followLoading, setFollowLoading] = useState(false);
@@ -286,6 +285,9 @@ export default function ProfilePage() {
   const { data: shelf } = useArtistShelf(accountName, { asVisitor: viewAsOthers, enabled: !!profile });
   const artistCount = shelf?.length ?? 0;
   const showArtistsTab = isOwner || artistCount > 0;
+  // The tab lives in the URL so Back from an artist page returns to it.
+  const activeTab = tabFromParams(searchParams, showArtistsTab);
+  const setActiveTab = (tab: ProfileTab) => setSearchParams((prev) => withTab(prev, tab), { replace: true });
   // Follow/block state lives on the cached profile, so it cannot drift from it.
   const isFollowing = profile?.isFollowedByMe ?? false;
   const isBlocked = profile?.isBlockedByMe ?? false;
@@ -644,7 +646,7 @@ export default function ProfilePage() {
                 return (
                   <button
                     key={tab}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => setActiveTab(tab as ProfileTab)}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === tab
                       ? 'border-primary text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'

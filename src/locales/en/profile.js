@@ -295,7 +295,7 @@ export default {
     searchPlaceholder: "Search artists",
     clearSearch: "Clear search",
     sortLabel: "Sort artists",
-    sort: { songs: "Most songs", az: "A–Z", recent: "Recently added" },
+    sort: { songs: "Most songs", az: "A–Z", recent: "Recently edited" },
     ownerNote: "Only you see private artists. Built from each song's artist and album.",
     private: "Private",
     public: "Public",
