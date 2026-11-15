@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { ShelfArtist } from '../shelf.service';
 
-const { getShelfArtist, setShelfVisibility, createPlaylist, toast, auth } = vi.hoisted(() => ({
+const { getShelfArtist, setShelfVisibility, createPlaylist, toast, auth, songConnections } = vi.hoisted(() => ({
+  songConnections: vi.fn(),
   getShelfArtist: vi.fn(),
   setShelfVisibility: vi.fn(),
   createPlaylist: vi.fn(),
@@ -16,6 +17,9 @@ vi.mock('../shelf.service', async (importOriginal) => ({ ...(await importOrigina
 vi.mock('@/features/playlists/playlist.service', async (importOriginal) => ({ ...(await importOriginal<object>()), createPlaylist }));
 vi.mock('react-hot-toast', () => ({ default: toast, toast }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => auth }));
+vi.mock('@/features/project-view/SongConnections', () => ({
+  SongConnections: (props: { track: string; artist: string }) => { songConnections(props); return <div data-testid="song-connections" />; },
+}));
 
 import ArtistPage from './ArtistPage';
 
@@ -52,6 +56,7 @@ describe('ArtistPage owner controls', () => {
     createPlaylist.mockReset().mockResolvedValue({ id: 'pl1' });
     toast.success.mockReset();
     toast.error.mockReset();
+    songConnections.mockReset();
     auth.user = { accountName: 'mika' };
   });
 
@@ -75,6 +80,7 @@ describe('ArtistPage owner controls', () => {
   });
 
   it('album menu sends the album key as received, including the singles bucket', async () => {
+    getShelfArtist.mockResolvedValue({ ...artist(), isPublic: true });
     wrap();
     await screen.findByRole('heading', { level: 1, name: 'Luna Vale' });
     const menus = screen.getAllByRole('button', { name: 'More actions' });
@@ -143,5 +149,58 @@ describe('ArtistPage owner controls', () => {
     expect(btn).toBeDisabled();
     resolve({ id: 'pl1' });
     await waitFor(() => expect(btn).not.toBeDisabled());
+  });
+
+  it('under a private artist the album visibility item is disabled and explains why', async () => {
+    wrap();
+    await screen.findByRole('heading', { level: 1, name: 'Luna Vale' });
+    fireEvent.keyDown(screen.getAllByRole('button', { name: 'More actions' })[0], { key: 'Enter' });
+    const item = await screen.findByRole('menuitem', { name: /Make public/ });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    expect(item).toHaveTextContent('Make the artist public first');
+    fireEvent.click(item);
+    expect(setShelfVisibility).not.toHaveBeenCalled();
+  });
+
+  it('under a public artist the album visibility item is enabled and has no hint', async () => {
+    getShelfArtist.mockResolvedValue({ ...artist(), isPublic: true });
+    wrap();
+    await screen.findByRole('heading', { level: 1, name: 'Luna Vale' });
+    fireEvent.keyDown(screen.getAllByRole('button', { name: 'More actions' })[0], { key: 'Enter' });
+    const item = await screen.findByRole('menuitem', { name: /Make public/ });
+    expect(item).not.toHaveAttribute('aria-disabled', 'true');
+    expect(item).not.toHaveTextContent('Make the artist public first');
+  });
+
+  it('a name cut at an emoji never leaves a lone surrogate', async () => {
+    const long = artist();
+    long.name = 'A'.repeat(60);
+    // Room for the part is 36 units: 35 letters, then an emoji (2 units) would straddle the limit.
+    long.albums[0].title = 'B'.repeat(35) + String.fromCodePoint(0x1f600) + 'tail';
+    getShelfArtist.mockResolvedValue(long);
+    wrap();
+    await screen.findByRole('heading', { level: 1 });
+    fireEvent.keyDown(screen.getAllByRole('button', { name: 'More actions' })[0], { key: 'Enter' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: /Save album as playlist/ }));
+    await waitFor(() => expect(createPlaylist).toHaveBeenCalled());
+    const name: string = createPlaylist.mock.calls[0][0].name;
+    expect(name.length).toBeLessThanOrEqual(100);
+    expect(name.isWellFormed()).toBe(true);
+    expect(name.endsWith('B…')).toBe(true);
+  });
+
+  it('the Connections toggle mounts SongConnections and flips aria-expanded', async () => {
+    getShelfArtist.mockResolvedValue({ ...artist(), isPublic: true });
+    wrap();
+    await screen.findByRole('heading', { level: 1, name: 'Luna Vale' });
+    const toggle = screen.getAllByRole('button', { name: 'Connections' })[0];
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(songConnections).not.toHaveBeenCalled();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(songConnections).toHaveBeenCalledWith({ track: 'p2', artist: 'Luna Vale' });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('song-connections')).not.toBeInTheDocument();
   });
 });

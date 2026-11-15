@@ -60,11 +60,21 @@ const PLAYLIST_NAME_MAX = 100;
 
 /** "<Artist> — <part>" capped at 100 chars: the artist is kept, the part is cut with an ellipsis. */
 function playlistName(artist: string, part?: string): string {
-  if (!part) return artist.slice(0, PLAYLIST_NAME_MAX);
+  // Cut by code point, never mid-pair: a lone surrogate would be stored as-is. The server limit counts
+  // UTF-16 units, so the budget is spent in units.
+  const cut = (text: string, max: number) => {
+    let out = '';
+    for (const ch of text) {
+      if (out.length + ch.length > max) break;
+      out += ch;
+    }
+    return out;
+  };
+  if (!part) return cut(artist, PLAYLIST_NAME_MAX);
   const full = `${artist} — ${part}`;
   if (full.length <= PLAYLIST_NAME_MAX) return full;
   const room = PLAYLIST_NAME_MAX - artist.length - 3 - 1;
-  return room > 0 ? `${artist} — ${part.slice(0, room)}…` : artist.slice(0, PLAYLIST_NAME_MAX);
+  return room > 0 ? `${artist} — ${cut(part, room)}…` : cut(artist, PLAYLIST_NAME_MAX);
 }
 
 const isSynced = (p: ShelfProject) => (p.lineCount ?? 0) > 0 && (p.syncedLineCount ?? 0) >= (p.lineCount ?? 0);
@@ -116,6 +126,8 @@ function TrackRow({ track, ownerAccountName, artistName }: { track: ShelfTrack; 
 type AlbumSectionProps = {
   album: ShelfAlbum;
   isOwner: boolean;
+  /** A private artist hides all of its albums, so an album's own visibility has no effect until the artist is public. */
+  artistPublic: boolean;
   ownerAccountName: string;
   artistName: string;
   onVisibility: (isPublic: boolean) => void;
@@ -123,7 +135,7 @@ type AlbumSectionProps = {
   savePending: boolean;
 };
 
-function AlbumSection({ album, isOwner, ownerAccountName, artistName, onVisibility, onSave, savePending }: AlbumSectionProps) {
+function AlbumSection({ album, isOwner, artistPublic, ownerAccountName, artistName, onVisibility, onSave, savePending }: AlbumSectionProps) {
   const { t } = useTranslation();
   const isSingles = album.key === '';
   const cover = album.coverImage || resolveCoverImage(album.tracks[0]?.project);
@@ -158,9 +170,12 @@ function AlbumSection({ album, isOwner, ownerAccountName, artistName, onVisibili
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onVisibility(!album.isPublic)} className="max-lg:min-h-11">
+              <DropdownMenuItem onSelect={() => { if (artistPublic) onVisibility(!album.isPublic); }} disabled={!artistPublic} className="max-lg:min-h-11">
                 <Icon name={album.isPublic ? 'lock' : 'public'} />
-                {album.isPublic ? t('profile.artists.makeAlbumPrivate') : t('profile.artists.makeAlbumPublic')}
+                <span className="flex flex-col">
+                  {album.isPublic ? t('profile.artists.makeAlbumPrivate') : t('profile.artists.makeAlbumPublic')}
+                  {!artistPublic && <span className="text-xs text-muted-foreground">{t('profile.artists.albumNeedsPublicArtist')}</span>}
+                </span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onSave} disabled={savePending} className="max-lg:min-h-11">
                 <Icon name="playlist_add" />
@@ -277,6 +292,7 @@ export default function ArtistPage() {
             key={album.key}
             album={album}
             isOwner={isOwner}
+            artistPublic={artist.isPublic}
             ownerAccountName={accountName}
             artistName={artist.name}
             onVisibility={(v) => setVisibility(artist.id, album.key, v)}

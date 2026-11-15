@@ -319,6 +319,7 @@ export default {
     visibilityLabel: "Visibility",
     makeAlbumPublic: "Make public",
     makeAlbumPrivate: "Make private",
+    albumNeedsPublicArtist: "Make the artist public first",
     saveAsPlaylist: "Save as playlist",
     saveAlbumAsPlaylist: "Save album as playlist",
     savedAsPlaylist: "Saved as a private playlist. It is a snapshot and won't update when you add songs.",

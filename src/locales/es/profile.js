@@ -318,6 +318,7 @@ export default {
     visibilityLabel: "Visibilidad",
     makeAlbumPublic: "Hacer público",
     makeAlbumPrivate: "Hacer privado",
+    albumNeedsPublicArtist: "Primero haz público al artista",
     saveAsPlaylist: "Guardar como playlist",
     saveAlbumAsPlaylist: "Guardar álbum como playlist",
     savedAsPlaylist: "Guardado como playlist privada. Es una copia y no se actualizará cuando añadas canciones.",
