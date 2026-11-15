@@ -61,6 +61,7 @@ import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { syncedCoverage } from '@features/editor/utils/sync-coverage';
+import { alignLineStart } from '@/features/editor/services/editor.service';
 import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from '@features/editor/utils/line-span';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
@@ -120,7 +121,8 @@ const AUTO_STAMP_RUNNING_PHASES: ReadonlySet<AutoStampPhase> = new Set(['startin
 interface EditorProps {
   user?: AuthUser | null;
   lines: EditorLine[];
-  setLines: React.Dispatch<React.SetStateAction<EditorLine[]>>;
+  /** `step` gives the change an undo step of its own instead of merging it with a mark made just before. */
+  setLines: (update: React.SetStateAction<EditorLine[]>, write?: { step?: boolean }) => void;
   syncMode: boolean;
   setSyncMode: (v: boolean) => void;
   activeLineIndex: number;
@@ -870,14 +872,29 @@ export default function Editor({
   const focusOverlap = useMemo(() => (wordsFocus ? lineOverlap(lines, activeLineIndex) : null), [wordsFocus, lines, activeLineIndex]);
   const wordBands = useMemo(() => (wordsFocus ? lineBands(lines, duration) : []), [wordsFocus, lines, duration]);
   const focusNeighbours = useMemo(() => {
-    if (!wordsFocus) return { next: null, prev: null };
+    if (!wordsFocus) return { floor: 0, next: null, prev: null };
     const numberOf = (index: number) => lines.slice(0, index + 1).filter((l) => l.type !== 'section').length;
-    const ghost = (index: number) => ({ index, number: numberOf(index), line: lines[index], end: lineSpanEnd(lines, index, duration) });
+    const ghost = (index: number) => {
+      const after = nextTimedIndex(lines, index);
+      return {
+        index,
+        number: numberOf(index),
+        line: lines[index],
+        end: lineSpanEnd(lines, index, duration),
+        holdLimit: after >= 0 && lines[index].endTime == null ? (lines[after].timestamp as number) : null,
+      };
+    };
     const nextIndex = nextTimedIndex(lines, activeLineIndex);
     const prevIndex = prevTimedIndex(lines, activeLineIndex);
     const start = lines[activeLineIndex]?.timestamp;
     const prev = prevIndex >= 0 && start != null ? ghost(prevIndex) : null;
+    // The focused line's first word cannot start before the last word of the line before it.
+    const before = prevIndex >= 0 ? lines[prevIndex] : null;
+    const floor = before
+      ? before.words?.reduce<number | null>((last, w) => (w.time != null ? w.time : last), null) ?? (before.timestamp as number)
+      : 0;
     return {
+      floor,
       next: nextIndex >= 0 ? ghost(nextIndex) : null,
       prev: prev && prev.end != null && prev.end - start! > 0.005 ? prev : null,
     };
@@ -892,12 +909,13 @@ export default function Editor({
     return index;
   }, [wordsFocus, playerIsPlaying, focusLine, playbackPosition]);
 
-  const handleSetWordTime = useCallback((wordIndex: number, time: number) => {
+  // Moves where a word starts. `lineIndex` is the focused line unless a neighbouring line's word
+  // is dragged from its own row. A line's first word carries the line's start with it.
+  const handleSetWordTime = useCallback((wordIndex: number, time: number, lineIndex: number = activeLineIndex) => {
     setLines((prev) => {
-      const line = prev[activeLineIndex];
+      const line = prev[lineIndex];
       if (!line?.words?.[wordIndex]) return prev;
-      const next = [...prev];
-      next[activeLineIndex] = {
+      const moved: EditorLine = {
         ...line,
         words: line.words.map((w, i) => {
           // An end the new start has passed no longer means anything: the word runs on again.
@@ -906,21 +924,33 @@ export default function Editor({
           return w;
         }),
       };
+      const next = [...prev];
+      next[lineIndex] = wordIndex === 0 ? alignLineStart(moved, time) : moved;
       return next;
     });
   }, [setLines, activeLineIndex]);
+  const handleSetNeighbourWordTime = useCallback(
+    (lineIndex: number, wordIndex: number, time: number) => handleSetWordTime(wordIndex, time, lineIndex),
+    [handleSetWordTime],
+  );
 
   // Where a word stops when the singer pauses before the next one; null joins them up again.
-  const handleSetWordEnd = useCallback((wordIndex: number, end: number | null) => {
+  // `step`: one press of a key, which Ctrl+Z takes back by itself (a drag instead arrives as many
+  // small changes that are meant to merge into one step).
+  const handleSetWordEnd = useCallback((wordIndex: number, end: number | null, step = false, lineIndex: number = activeLineIndex) => {
     setLines((prev) => {
-      const line = prev[activeLineIndex];
+      const line = prev[lineIndex];
       const word = line?.words?.[wordIndex];
       if (!word || word.time == null || (end != null && end <= word.time)) return prev;
       const next = [...prev];
-      next[activeLineIndex] = { ...line, words: line.words!.map((w, i) => (i === wordIndex ? { ...w, end } : w)) };
+      next[lineIndex] = { ...line, words: line.words!.map((w, i) => (i === wordIndex ? { ...w, end } : w)) };
       return next;
-    });
+    }, { step });
   }, [setLines, activeLineIndex]);
+  const handleSetNeighbourWordEnd = useCallback(
+    (lineIndex: number, wordIndex: number, end: number | null) => handleSetWordEnd(wordIndex, end, false, lineIndex),
+    [handleSetWordEnd],
+  );
 
   // Spreads the line's words evenly between its start and where it ends.
   const distributeWords = () => {
@@ -998,7 +1028,7 @@ export default function Editor({
       const next = [...prev];
       next[index] = { ...line, words: line.words.map((w, i) => (i === line.words!.length - 1 ? { ...w, end } : w)) };
       return next;
-    });
+    }, { step: true });
   }, [playbackPosition, setLines, activeLineIndex, duration]);
   // Sets the end of the word the playhead is in (or just left) at the playhead: the singer paused.
   // The last word of a line may end after the next line has started (the two then overlap), and
@@ -1015,7 +1045,7 @@ export default function Editor({
     if (playbackPosition >= (nextWord ?? (holdsOver ? Infinity : focusInfo.naturalEnd ?? Infinity))) return;
     const time = Number(playbackPosition.toFixed(3));
     const joins = holdsOver && focusInfo.naturalEnd != null && Math.abs(time - focusInfo.naturalEnd) <= 0.005;
-    handleSetWordEnd(index, joins ? null : time);
+    handleSetWordEnd(index, joins ? null : time, true);
   }, [focusWords, playbackPosition, focusInfo.naturalEnd, focusNeighbours.next, handleSetWordEnd, handleEndPreviousLine]);
   // Puts the stamping cursor back on a word and rewinds a little before it, to stamp again from there.
   const handleRestampFrom = useCallback((wordIndex: number) => {
@@ -2173,6 +2203,9 @@ export default function Editor({
                 playingWordIndex={playingWordIndex}
                 onSetWordTime={handleSetWordTime}
                 onSetWordEnd={handleSetWordEnd}
+                onSetNeighbourWordTime={handleSetNeighbourWordTime}
+                onSetNeighbourWordEnd={handleSetNeighbourWordEnd}
+                startFloor={focusNeighbours.floor}
                 onSelectWord={handleSelectWord}
                 onEditLine={lineApi.editLine}
                 markKey={keyCap(markKey)}

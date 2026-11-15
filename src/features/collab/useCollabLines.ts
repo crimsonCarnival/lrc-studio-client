@@ -34,7 +34,7 @@ const sameLines = (a: EditorLine[], b: EditorLine[]): boolean =>
 export function useCollabLines(
   doc: Y.Doc | null,
   canWrite = true,
-): [EditorLine[], (u: LinesUpdater) => void, () => void, () => void, boolean, boolean, () => void] {
+): [EditorLine[], (u: LinesUpdater, write?: { step?: boolean }) => void, () => void, () => void, boolean, boolean, () => void] {
   const [state, setState] = useState<Tagged>({ doc: null, lines: EMPTY })
   // A counter bumped whenever the doc changed under us, or undo/redo was queued.
   const [tick, setTick] = useState(0)
@@ -45,6 +45,8 @@ export function useCollabLines(
   const writtenRef = useRef<EditorLine[]>(EMPTY)
   const remoteDirtyRef = useRef(false)
   const opsRef = useRef<('undo' | 'redo')[]>([])
+  // The pending local write asked for an undo step of its own.
+  const stepRef = useRef(false)
   const undoManagerRef = useRef<Y.UndoManager | null>(null)
   const canWriteRef = useRef(canWrite)
 
@@ -103,11 +105,15 @@ export function useCollabLines(
     if (!doc || state.doc !== doc) return
     const { applyLinesToDoc, docToLines } = requireCollabRuntime()
     const current = state.lines
+    const um = undoManagerRef.current
     if (current !== writtenRef.current) {
+      const step = stepRef.current
+      stepRef.current = false
+      if (step) um?.stopCapturing()
       applyLinesToDoc(doc, writtenRef.current, current)
+      if (step) um?.stopCapturing()
       writtenRef.current = current
     }
-    const um = undoManagerRef.current
     for (const op of opsRef.current.splice(0)) {
       if (!um) break
       if (op === 'undo') um.undo()
@@ -122,10 +128,12 @@ export function useCollabLines(
     if (!sameLines(fromDoc, current)) setState({ doc, lines: fromDoc })
   }, [doc, state, tick])
 
-  const setLines = useCallback((u: LinesUpdater) => {
+  const setLines = useCallback((u: LinesUpdater, write?: { step?: boolean }) => {
     setState((prev) => {
       const next = typeof u === 'function' ? u(prev.lines) : u
       if (next === prev.lines) return prev
+      // An undo step of its own: the write below must not merge with the ones around it.
+      if (write?.step) stepRef.current = true
       // No doc means nothing is rendered from this state, and no runtime may be loaded yet.
       return { doc: prev.doc, lines: prev.doc ? requireCollabRuntime().ensureLineIds(next) : next }
     })
