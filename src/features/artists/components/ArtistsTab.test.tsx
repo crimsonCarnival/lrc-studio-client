@@ -34,6 +34,16 @@ describe('ArtistsTab', () => {
     Element.prototype.hasPointerCapture = vi.fn(() => false);
   });
 
+  it('reads Singles only when the artist has no real albums, and counts albums otherwise', async () => {
+    getArtistShelf.mockResolvedValue([
+      artist({ id: 's', name: 'Solo', albumCount: 0 }),
+      artist({ id: 'm', name: 'Many', albumCount: 2 }),
+    ]);
+    wrap(true);
+    expect(await screen.findByText('Singles only')).toBeInTheDocument();
+    expect(screen.getByText('2 albums')).toBeInTheDocument();
+  });
+
   it('shows a Private chip only to the owner', async () => {
     getArtistShelf.mockResolvedValue([artist({}), artist({ id: 'a2', name: 'Kaito', isPublic: true })]);
     const owner = wrap(true);

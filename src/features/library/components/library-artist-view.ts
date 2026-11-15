@@ -10,9 +10,9 @@ const statusOf = (p: ShelfProject): ProjectStatus =>
 /** The Library's tab test, shared by the groups and the counts so a badge always equals the cards under it. */
 const inTab = (p: ShelfProject, tab: LibraryFilterTab): boolean => tab === 'all' || statusOf(p) === tab;
 
-/** A project the Library's own list can't place under an artist: no primary credit. */
-const hasNoPrimary = (p: ShelfProject): boolean =>
-  !creditsOf(p.metadata).some((c) => c.role === 'primary');
+/** A project the shelf can't place under an artist: no primary credit, or a subtitles project (the shelf leaves those out). */
+const isUnplaced = (p: ShelfProject): boolean =>
+  p.kind === 'subtitles' || !creditsOf(p.metadata).some((c) => c.role === 'primary');
 
 const includes = (text: string | null | undefined, needle: string): boolean => !!text && text.toLowerCase().includes(needle);
 
@@ -40,9 +40,9 @@ export function filterShelf(shelf: ShelfArtist[], query: string, tab: LibraryFil
   return groups;
 }
 
-/** Credit-less projects, status-filtered. `items` arrive already search-filtered by the Library. */
+/** Projects the shelf doesn't place (credit-less or subtitles), status-filtered. `items` arrive already search-filtered by the Library. */
 export const noArtistOf = (items: ShelfProject[], tab: LibraryFilterTab): ShelfProject[] =>
-  items.filter((p) => hasNoPrimary(p) && inTab(p, tab));
+  items.filter((p) => isUnplaced(p) && inTab(p, tab));
 
 /**
  * Per-tab counts for this view. A song credited to two primaries sits under both

@@ -67,6 +67,14 @@ describe('LibraryByArtist', () => {
     expect(cards()).not.toContain('credited');
   });
 
+  it('a credited subtitles project (left out of the shelf) lands in No artist set', () => {
+    const subs = project('subs', { kind: 'subtitles', metadata: { artists: [{ name: 'Daft Punk', role: 'primary', order: 0 }] } });
+    view({ items: [subs] });
+    expect(headings(2)).toEqual(['Daft Punk', 'Justice', 'No artist set']);
+    expect(cards().slice(-1)).toEqual(['subs']);
+    expect(artistViewCounts(SHELF, [subs], '').all).toBe(5);
+  });
+
   it('search matches an album name', () => {
     view({ query: 'discovery' });
     expect(headings(3)).toEqual(['Discovery']);
