@@ -8,6 +8,8 @@ import { UserAvatar } from '@ui/UserAvatar';
 import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
 import { cn } from '@/shared/utils/utils';
 import type { ProjectKind } from '@/types';
+import { NameTag } from '@/features/badges/NameTag';
+import type { NameTagData } from '@/features/badges/badges.types';
 
 export interface ExploreProject {
   id: string;
@@ -18,7 +20,7 @@ export interface ExploreProject {
   coverImage?: string | null;
   upload?: { uploadUrl?: string | null } | null;
   accountName?: string;
-  user?: { accountName?: string; displayName?: string | null; avatarUrl?: string | null; staffRole?: string | null } | null;
+  user?: { accountName?: string; displayName?: string | null; avatarUrl?: string | null; staffRole?: string | null; nameTag?: NameTagData | null } | null;
   owner?: { accountName?: string } | null;
   metadata?: { songName?: string | null; songArtist?: string | null } | null;
   starCount?: number | null;
@@ -89,6 +91,7 @@ function Owner({ project, size = 'sm' }: { project: ExploreProject; size?: 'sm' 
       <span className={cn('truncate', size === 'md' ? 'text-sm font-medium text-foreground' : 'text-[13px] text-subtle')}>
         {project.user?.displayName || owner}
       </span>
+      <NameTag tag={project.user?.nameTag} />
     </div>
   );
 }
