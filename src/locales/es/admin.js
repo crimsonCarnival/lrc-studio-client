@@ -370,6 +370,8 @@ export default {
     accountNamePlaceholder: 'nombredecuenta',
     grant: 'Otorgar',
     granting: 'Otorgando…',
+    grantExpires: 'Expira (opcional)',
+    grantExpiresHint: 'Déjalo vacío para una insignia permanente. Termina al final del día elegido.',
     cancel: 'Cancelar',
     retroSuccess: 'Escaneo completo: otorgado a {{granted}} / {{scanned}} usuarios',
     scanFailed: 'Error en el escaneo retroactivo',

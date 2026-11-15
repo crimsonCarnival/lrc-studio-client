@@ -370,6 +370,8 @@ export default {
     accountNamePlaceholder: 'accountname',
     grant: 'Grant',
     granting: 'Granting…',
+    grantExpires: 'Expires (optional)',
+    grantExpiresHint: 'Leave blank for a permanent badge. Ends at the end of the chosen day.',
     cancel: 'Cancel',
     retroSuccess: 'Scan complete: granted to {{granted}} / {{scanned}} users',
     scanFailed: 'Retroactive scan failed',
