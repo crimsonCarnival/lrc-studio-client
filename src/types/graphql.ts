@@ -221,6 +221,49 @@ export type BlockedUser = {
   id: Scalars['ID']['output'];
 };
 
+export type CatalogAlbum = {
+  artistId: Scalars['ID']['output'];
+  coverUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  reviewNote?: Maybe<Scalars['String']['output']>;
+  slug?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  submittedBy?: Maybe<FollowUser>;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['String']['output'];
+  year?: Maybe<Scalars['String']['output']>;
+};
+
+export type CatalogArtist = {
+  bio: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  disambiguation: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  imageUrl?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  reviewNote?: Maybe<Scalars['String']['output']>;
+  slug?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  submittedBy?: Maybe<FollowUser>;
+  updatedAt: Scalars['String']['output'];
+};
+
+export type CatalogDecision =
+  | 'approve'
+  | 'reject';
+
+export type CatalogKind =
+  | 'album'
+  | 'artist';
+
+export type CatalogQueue = {
+  albums: Array<CatalogAlbum>;
+  artists: Array<CatalogArtist>;
+};
+
 export type CollabInvite = {
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
@@ -677,8 +720,11 @@ export type Mutation = {
   addWallComment: WallComment;
   adminCreateAddictionLevel: AddictionLevel;
   adminCreateBadge: BadgeDef;
+  adminCreateCatalogAlbum: CatalogAlbum;
+  adminCreateCatalogArtist: CatalogArtist;
   adminDeleteAddictionLevel: Scalars['Boolean']['output'];
   adminDeleteBadge: Scalars['Boolean']['output'];
+  adminDeleteCatalogEntry: Scalars['Boolean']['output'];
   adminGrantBadge: Scalars['Boolean']['output'];
   adminRetroactiveScan: RetroactiveResult;
   adminRevokeBadge: Scalars['Boolean']['output'];
@@ -686,6 +732,7 @@ export type Mutation = {
   adminUnshadowBan: Scalars['Boolean']['output'];
   adminUpdateAddictionLevel: AddictionLevel;
   adminUpdateBadge: BadgeDef;
+  adminUpdateCatalogEntry: Scalars['Boolean']['output'];
   blockUser: Scalars['Boolean']['output'];
   /** The wall's owner blocks a commenter and removes everything they wrote on the wall. Returns how many. */
   blockWallCommenter: Scalars['Int']['output'];
@@ -729,6 +776,7 @@ export type Mutation = {
   resolveWallReport: Scalars['Boolean']['output'];
   /** wall.restrict: stop someone commenting on walls for hours (1, 24, 168 or 720; null until lifted). Returns the end, or 'forever'. */
   restrictWallCommenter?: Maybe<Scalars['String']['output']>;
+  reviewCatalogEntry: Scalars['Boolean']['output'];
   reviewRequest: StaffRequest;
   revokeCollabInvite: Scalars['Boolean']['output'];
   saveMedia: Upload;
@@ -757,6 +805,8 @@ export type Mutation = {
   starProject: Project;
   /** Idempotent: returns the live session if one exists. */
   startCollabSession: CollabSession;
+  submitCatalogAlbum: CatalogAlbum;
+  submitCatalogArtist: CatalogArtist;
   submitRequest: StaffRequest;
   /** Anonymous feed telemetry (no user/device stored). At most 50 events per call; unknown or non-public projects are ignored. */
   trackExploreEvents: Scalars['Boolean']['output'];
@@ -767,12 +817,14 @@ export type Mutation = {
   unshareFromProfile: Scalars['Boolean']['output'];
   unstarProject: Project;
   updateLyrics: Lyrics;
+  updateMyCatalogEntry: Scalars['Boolean']['output'];
   updatePlaylist: Playlist;
   updatePreferences: UserPreferences;
   updateProfile: User;
   updateProject: Project;
   updateSettings: Settings;
   updateShowcase: UpdateShowcaseResult;
+  withdrawMyCatalogEntry: Scalars['Boolean']['output'];
 };
 
 
@@ -806,6 +858,22 @@ export type MutationAdminCreateBadgeArgs = {
 };
 
 
+export type MutationAdminCreateCatalogAlbumArgs = {
+  artistId: Scalars['ID']['input'];
+  coverUrl?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  year?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationAdminCreateCatalogArtistArgs = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  disambiguation?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationAdminDeleteAddictionLevelArgs = {
   id: Scalars['String']['input'];
 };
@@ -813,6 +881,13 @@ export type MutationAdminDeleteAddictionLevelArgs = {
 
 export type MutationAdminDeleteBadgeArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationAdminDeleteCatalogEntryArgs = {
+  id: Scalars['ID']['input'];
+  kind: CatalogKind;
+  revokeCredit?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -856,6 +931,19 @@ export type MutationAdminUpdateAddictionLevelArgs = {
 export type MutationAdminUpdateBadgeArgs = {
   id: Scalars['String']['input'];
   input: BadgeDefInput;
+};
+
+
+export type MutationAdminUpdateCatalogEntryArgs = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  coverUrl?: InputMaybe<Scalars['String']['input']>;
+  disambiguation?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  kind: CatalogKind;
+  name?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  year?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1029,6 +1117,15 @@ export type MutationRestrictWallCommenterArgs = {
 };
 
 
+export type MutationReviewCatalogEntryArgs = {
+  decision: CatalogDecision;
+  expectedUpdatedAt?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  kind: CatalogKind;
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationReviewRequestArgs = {
   decision: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -1141,6 +1238,21 @@ export type MutationStartCollabSessionArgs = {
 };
 
 
+export type MutationSubmitCatalogAlbumArgs = {
+  artistId: Scalars['ID']['input'];
+  coverUrl?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  year?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSubmitCatalogArtistArgs = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationSubmitRequestArgs = {
   payload: Scalars['String']['input'];
   type: Scalars['String']['input'];
@@ -1183,6 +1295,18 @@ export type MutationUpdateLyricsArgs = {
 };
 
 
+export type MutationUpdateMyCatalogEntryArgs = {
+  bio?: InputMaybe<Scalars['String']['input']>;
+  coverUrl?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  kind: CatalogKind;
+  name?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  year?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationUpdatePlaylistArgs = {
   id: Scalars['ID']['input'];
   input: UpdatePlaylistInput;
@@ -1213,6 +1337,17 @@ export type MutationUpdateSettingsArgs = {
 export type MutationUpdateShowcaseArgs = {
   badgeIds: Array<Scalars['String']['input']>;
   showcasePublic?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type MutationWithdrawMyCatalogEntryArgs = {
+  id: Scalars['ID']['input'];
+  kind: CatalogKind;
+};
+
+export type MyCatalogSubmissions = {
+  albums: Array<CatalogAlbum>;
+  artists: Array<CatalogArtist>;
 };
 
 /** One of the viewer's own reports. The preview is null once the target is gone or no longer visible to them. */
@@ -1651,6 +1786,9 @@ export type Query = {
   artistShelfArtist?: Maybe<ShelfArtist>;
   badgeDefinitions: Array<BadgeDef>;
   blockedUsers: Array<BlockedUser>;
+  catalogAdminAlbums: Array<CatalogAlbum>;
+  catalogAdminArtists: Array<CatalogArtist>;
+  catalogReviewQueue: CatalogQueue;
   /** The live session, for its owner or a signed-in member; null otherwise. */
   collabSession?: Maybe<CollabSession>;
   exploreStats: ExploreStats;
@@ -1661,6 +1799,7 @@ export type Query = {
   leaderboard: LeaderboardResult;
   me?: Maybe<User>;
   myArtistSuggestions: ArtistSuggestionPage;
+  myCatalogSubmissions: MyCatalogSubmissions;
   /** Live sessions the caller owns or is a signed-in member of. */
   myCollabSessions: Array<CollabSessionSummary>;
   myMusicLibrary: Array<MusicLibraryEntry>;
@@ -1738,6 +1877,18 @@ export type QueryArtistShelfArtistArgs = {
   accountName: Scalars['String']['input'];
   artistId: Scalars['ID']['input'];
   asVisitor?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryCatalogAdminAlbumsArgs = {
+  artistId: Scalars['ID']['input'];
+};
+
+
+export type QueryCatalogAdminArtistsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 
