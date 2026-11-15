@@ -39,9 +39,17 @@ describe('NameTag', () => {
 
   it('the tint is a var(--color-*) token, never a hex', () => {
     render(<NameTag tag={tag} />);
-    const pill = screen.getByLabelText(/Founder/);
+    const pill = screen.getByText('Founder').parentElement as HTMLElement;
     expect(pill.style.borderColor.startsWith('var(--color-')).toBe(true);
     expect(pill.style.color.startsWith('var(--color-')).toBe(true);
+  });
+
+  it('announces "Name tag: <label>" via sr-only text, not an aria-label on a span', () => {
+    const { container } = render(<NameTag tag={tag} />);
+    expect(container.querySelector('[aria-label]')).toBeNull();
+    const sr = screen.getByText('Name tag: Founder');
+    expect(sr).toHaveClass('sr-only');
+    expect(screen.getByText('Founder')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('exposes the description as tooltip content', async () => {

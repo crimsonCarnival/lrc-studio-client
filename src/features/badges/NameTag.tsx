@@ -17,12 +17,12 @@ export function NameTag({ tag, className = '' }: NameTagProps) {
   return (
     <Tip content={description}>
       <span
-        aria-label={t('badges.nameTag.ariaLabel', { label })}
         className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-pill border px-1.5 py-0.5 text-[11px] font-medium leading-none ${className}`}
         style={{ borderColor: tint, color: tint }}
       >
         {tag.icon && <span aria-hidden="true">{tag.icon}</span>}
-        {label}
+        <span className="sr-only">{t('badges.nameTag.ariaLabel', { label })}</span>
+        <span aria-hidden="true">{label}</span>
       </span>
     </Tip>
   );

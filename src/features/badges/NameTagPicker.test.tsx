@@ -79,7 +79,7 @@ describe('NameTagPicker', () => {
 
   it('shows the Staff pill and default hint for staff with no equipped tag', () => {
     render(<Harness staff />);
-    expect(screen.getByLabelText(/Staff/)).toBeInTheDocument();
+    expect(screen.getByText('Name tag: Staff')).toBeInTheDocument();
     expect(screen.getByText(/by default/i)).toBeInTheDocument();
   });
 });
