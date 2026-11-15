@@ -95,6 +95,10 @@ export default {
     sortDescending:    'Descendente',
   },
 
+  nameTag: {
+    ariaLabel: 'Etiqueta: {{label}}',
+  },
+
   // ─── Etiquetas de insignias integradas (clave: badges.<id>.label) ─────────────
   og:           { label: 'OG', tip: 'Se unió durante la fase alfa' },
   pioneer:      { label: 'Pionero', tip: 'Uno de los primeros en crear un proyecto' },
