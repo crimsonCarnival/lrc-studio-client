@@ -12,6 +12,8 @@ import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { useCardReactions } from '@features/reactions/hooks/useCardReactions';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { NameTag } from '@/features/badges/NameTag';
+import type { NameTagData } from '@/features/badges/badges.types';
 import { Button } from '@ui/button';
 import { useFollowToggle } from '@/features/explore/hooks/useFollowToggle';
 
@@ -36,7 +38,7 @@ const TYPE_I18N_KEY: Record<string, string> = {
 // Project-type activities that support reactions
 const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJECT_FORKED', 'PROJECT_SHARED']);
 
-type ActivityUser = { accountName: string; avatarUrl?: string | null; staffRole?: string | null; displayName?: string | null; isFollowedByMe?: boolean | null };
+type ActivityUser = { accountName: string; avatarUrl?: string | null; staffRole?: string | null; nameTag?: NameTagData | null; displayName?: string | null; isFollowedByMe?: boolean | null };
 
 export interface Activity {
   id: string;
@@ -168,11 +170,14 @@ export function ActivityCard({ activity }: { activity: Activity }) {
           {actorIsViewer ? (
             <span className="font-semibold text-foreground">{t('feed.you')}</span>
           ) : (
-            <UserHoverCard accountName={actor.accountName}>
-              <Link to={profilePath(actor.accountName)} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
-                {actor.displayName || actor.accountName}
-              </Link>
-            </UserHoverCard>
+            <>
+              <UserHoverCard accountName={actor.accountName}>
+                <Link to={profilePath(actor.accountName)} className="font-semibold text-foreground hover:text-primary-ink transition-colors">
+                  {actor.displayName || actor.accountName}
+                </Link>
+              </UserHoverCard>
+              <NameTag tag={actor.nameTag} className="ml-1.5 align-middle" />
+            </>
           )}
           {' '}
           <span className="text-subtle">{actionText}</span>

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
 }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: null }) }));
 vi.mock('@ui/UserHoverCard', () => ({ UserHoverCard: ({ children }: { children: React.ReactNode }) => children }));
@@ -40,5 +40,42 @@ describe('ActivityCard text colours', () => {
     expect(screen.getByText('Song')).toHaveClass('text-foreground');
     const classes = Array.from(container.querySelectorAll('[class]'), (el) => el.getAttribute('class')).join(' ');
     expect(classes).not.toMatch(/text-white|zinc-/);
+  });
+});
+
+const nameTag = {
+  id: 'og',
+  label: { en: 'Founder', es: 'Fundador' },
+  description: { en: 'Joined early', es: 'Se unió pronto' },
+  icon: '',
+  color: 'primary',
+};
+
+describe('ActivityCard name tag', () => {
+  const renderWith = (tag: typeof nameTag | null) =>
+    render(
+      <MemoryRouter>
+        <ActivityCard
+          activity={{
+            id: 'a1',
+            actor: { accountName: 'ana', displayName: 'Ana', nameTag: tag },
+            type: 'PROJECT_FORKED',
+            publicId: 'p1',
+            projectTitle: 'Song',
+            targetPath: '/ana/song',
+            createdAt: new Date().toISOString(),
+          }}
+        />
+      </MemoryRouter>,
+    );
+
+  it('shows the pill beside the actor name when nameTag is provided', () => {
+    renderWith(nameTag);
+    expect(screen.getByText('Founder')).toBeInTheDocument();
+  });
+
+  it('shows no pill when nameTag is null', () => {
+    renderWith(null);
+    expect(screen.queryByText('Founder')).toBeNull();
   });
 });
