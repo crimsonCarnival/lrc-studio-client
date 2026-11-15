@@ -125,4 +125,11 @@ export default {
   streak7:      { label: 'En Racha', tip: 'Mantuvo una racha de 7 días' },
   streak30:     { label: 'Imparable', tip: 'Mantuvo una racha de 30 días' },
   verified:     { label: 'Verificado', tip: 'Cuenta verificada' },
+  scout:        { label: 'Explorador', tip: '1 aportación al catálogo aprobada' },
+  archivist:    { label: 'Archivista', tip: '10 aportaciones al catálogo aprobadas' },
+  curator:      { label: 'Curador', tip: '50 aportaciones al catálogo aprobadas' },
+  chronicler:   { label: 'Cronista', tip: '100 aportaciones al catálogo aprobadas' },
+  historian:    { label: 'Historiador', tip: '175 aportaciones al catálogo aprobadas' },
+  librarian:    { label: 'Bibliotecario', tip: '250 aportaciones al catálogo aprobadas' },
+  gatekeeper:   { label: 'Guardián', tip: '100 revisiones de catálogo completadas' },
 };

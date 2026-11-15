@@ -17,6 +17,13 @@ export const BADGE_REGISTRY = {
   streak7:     { label: 'On a Roll',     icon: '🔥', color: 'orange',  condition: '7-day activity streak'         },
   streak30:    { label: 'Unstoppable',   icon: '⚡', color: 'amber',   condition: '30-day activity streak'        },
   verified:    { label: 'Verified',      icon: '✓',  color: 'primary', condition: 'Email verified'                },
+  scout:       { label: 'Scout',         icon: '🔎', color: 'green',   condition: '1 catalog contribution approved'   },
+  archivist:   { label: 'Archivist',     icon: '🗂️', color: 'teal',    condition: '10 catalog contributions approved' },
+  curator:     { label: 'Curator',       icon: '🖼️', color: 'blue',    condition: '50 catalog contributions approved' },
+  chronicler:  { label: 'Chronicler',    icon: '📜', color: 'orange',  condition: '100 catalog contributions approved' },
+  historian:   { label: 'Historian',     icon: '🏛️', color: 'amber',   condition: '175 catalog contributions approved' },
+  librarian:   { label: 'Librarian',     icon: '📚', color: 'shimmer', condition: '250 catalog contributions approved' },
+  gatekeeper:  { label: 'Gatekeeper',    icon: '🛡️', color: 'rose',    condition: '100 catalog reviews completed'     },
 };
 
 export const RARITY_CONFIG = {
