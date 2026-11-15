@@ -16,10 +16,11 @@ const isUnplaced = (p: ShelfProject): boolean =>
 
 const includes = (text: string | null | undefined, needle: string): boolean => !!text && text.toLowerCase().includes(needle);
 
-/** The query matches the track, or the artist/album it sits under (so searching an album name shows the album). */
+/** The query matches the track (title, song name, tags, like the flat view), or the artist/album it sits under. */
 function trackMatches(p: ShelfProject, artist: ShelfArtist, album: ShelfAlbum, needle: string): boolean {
   return !needle
     || includes(p.title, needle) || includes(p.metadata?.songName, needle)
+    || !!p.metadata?.tags?.some((tag) => includes(tag, needle))
     || includes(artist.name, needle) || includes(album.title, needle);
 }
 
