@@ -379,6 +379,7 @@ export default {
     saveError: 'Failed to save badge',
     deleteError: 'Failed to delete badge',
     grantError: 'Failed to grant badge',
+    grantExpiresInvalid: 'Pick a date in the future',
     grantSuccess: 'Granted "{{label}}" to user',
     createSuccess: 'Badge "{{label}}" created',
     updateSuccess: 'Badge "{{label}}" updated',

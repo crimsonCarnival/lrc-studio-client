@@ -588,7 +588,9 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
       toast.success(t('admin.badges.grantSuccess', { label: labelText }));
       onClose();
     } catch (e) {
-      toast.error((e as Error)?.message || t('admin.badges.grantError'));
+      // A past expiry is the one failure the admin can act on; say so instead of echoing the server text.
+      if ((e as { code?: string })?.code === 'invalid_input') toast.error(t('admin.badges.grantExpiresInvalid'));
+      else toast.error((e as Error)?.message || t('admin.badges.grantError'));
     } finally {
       setLoading(false);
     }

@@ -379,6 +379,7 @@ export default {
     saveError: 'Error al guardar insignia',
     deleteError: 'Error al eliminar insignia',
     grantError: 'Error al otorgar insignia',
+    grantExpiresInvalid: 'Elige una fecha futura',
     grantSuccess: 'Insignia "{{label}}" otorgada',
     createSuccess: 'Insignia "{{label}}" creada',
     updateSuccess: 'Insignia "{{label}}" actualizada',

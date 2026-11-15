@@ -18,6 +18,7 @@ vi.mock('@/features/badges/BadgeDefsContext', () => ({ useBadgeDefs: () => ({}) 
 const gqlRequest = vi.fn();
 vi.mock('@/app/graphql.client', () => ({ gqlRequest: (...a: unknown[]) => gqlRequest(...a) }));
 
+import toast from 'react-hot-toast';
 import AdminBadgesTab from './AdminBadgesTab';
 
 const def = {
@@ -60,6 +61,26 @@ describe('AdminBadgesTab grant modal', () => {
     expect(grantCall()![1]).toEqual({
       userIdentifier: 'alice', badgeId: 'og', expiresAt: new Date('2099-01-15T23:59:59').toISOString(),
     });
+  });
+
+  it('explains a rejected expiry instead of echoing the server message', async () => {
+    await openGrantModal();
+    gqlRequest.mockImplementation(async (query: string) => {
+      if (String(query).includes('adminGrantBadge')) throw Object.assign(new Error('raw server text'), { code: 'invalid_input' });
+      return { badgeDefinitions: [def] };
+    });
+    fireEvent.click(screen.getByText('admin.badges.grant'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('admin.badges.grantExpiresInvalid'));
+  });
+
+  it('keeps the server message for other grant failures', async () => {
+    await openGrantModal();
+    gqlRequest.mockImplementation(async (query: string) => {
+      if (String(query).includes('adminGrantBadge')) throw Object.assign(new Error('User not found'), { code: 'not_found' });
+      return { badgeDefinitions: [def] };
+    });
+    fireEvent.click(screen.getByText('admin.badges.grant'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('User not found'));
   });
 
   it('cannot pick a past date', async () => {
