@@ -26,6 +26,7 @@ import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
 import { ArtistsSection, type ArtistsSectionHandle } from '@/features/artists/ArtistsSection';
 import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
+import { TitleCleanupChip } from '@/features/assist/TitleCleanupChip';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { mergeCredits, primaryArtistText, renamePrimary, soleArtistName } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
@@ -479,6 +480,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 <TitleFeatSuggestion
                   title={projectName}
                   onApply={(cleaned, featured) => setMetadataState((prev) => ({ name: cleaned, artists: mergeCredits(prev.artists, featured) }))}
+                />
+                <TitleCleanupChip
+                  title={projectName}
+                  onApply={(split) => setMetadataState((prev) => ({
+                    name: split.songName,
+                    songName: split.songName,
+                    artists: mergeCredits(prev.artists, split.artists.map((name, i) => ({ name, role: i === 0 ? 'primary' as const : 'featured' as const, order: i }))),
+                    ...(prev.songAlbum ? {} : split.album ? { songAlbum: split.album } : {}),
+                  }))}
                 />
                 <p
                   id="project-identity-hint"

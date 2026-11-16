@@ -816,6 +816,13 @@ export default {
     },
   },
   assist: {
+    titleCleanup: {
+      chip: "Clean up title",
+      preview: "Song <b>{{song}}</b> by <b>{{artists}}</b>.",
+      previewAlbum: "Album <b>{{album}}</b>.",
+      apply: "Apply",
+      dismiss: "Dismiss",
+    },
     nameCheck: {
       message: "Did you mean <b>{{name}}</b>?",
       apply: "Apply",
