@@ -409,6 +409,11 @@ export default {
     applyModeEmptyOnly: "Only unsynced lines"
   },
 
+  aiAssist: {
+    title: "AI suggestions",
+    body: "When you ask for an AI suggestion (spelling, title cleanup, genre and tags, romanization or singer labels), the names and lyrics involved are sent to Groq to generate it, as audio already is for Auto Stamp. Nothing is changed until you apply it."
+  },
+
   themeEditor: {
     description: "Pick a theme, or build your own from one. Changes preview live.",
     create: "Create custom theme",

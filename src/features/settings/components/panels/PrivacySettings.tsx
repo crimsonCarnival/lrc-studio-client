@@ -193,6 +193,10 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
 
       <BlockedUsersSettings searchTerm={searchTerm} />
 
+      <Section title={tk('settings.aiAssist.title')} searchTerm={searchTerm}>
+        <p className="pb-3 text-sm text-zinc-400">{tk('settings.aiAssist.body')}</p>
+      </Section>
+
       {isDirty && <UnsavedChangesBar saving={saving} onSave={save} onDiscard={discard} />}
     </>
   );
