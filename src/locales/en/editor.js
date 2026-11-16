@@ -840,8 +840,14 @@ export default {
       none: "No runs left today",
       tooLong: "Too long for this tool (max {{max}} lines)",
     },
+    romanize: {
+      label: "Romanize",
+      button_one: "Romanize ({{count}} left today)",
+      button_other: "Romanize ({{count}} left today)",
+      running: "Romanizing…",
+    },
     errors: {
-      dailyCap: "You have used all of today's daily runs. They reset at {{time}}.",
+      dailyCap:"You have used all of today's daily runs. They reset at {{time}}.",
       dailyCapNoTime: "You have used all of today's daily runs. They reset tomorrow (UTC).",
       unavailable: "AI assist is unavailable right now",
       upstream: "The AI assistant could not complete that. Try again shortly.",

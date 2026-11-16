@@ -539,6 +539,7 @@ export function AppRouter({
     songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || EMPTY_STRING_ARRAY,
     declaredSingers: projectMetadata?.singers || EMPTY_STRING_ARRAY,
+    songLanguage: typeof projectMetadata?.language === 'string' ? projectMetadata.language : undefined,
     playerSlot,
     onShowPreview: showPreviewView,
     onExit: handleExitEditor,

@@ -11,6 +11,9 @@ import { Tip } from '@ui/tip';
 import { cn } from '@/shared/utils/utils';
 import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { romanize } from '@/features/assist/assist.service';
+import { HEAVY_LINE_LIMIT, useHeavyUsage } from '@/features/assist/useHeavyUsage';
 
 /** Row height shared by the lyric column and the textarea, so row N and text line N line up. */
 const ROW = 28;
@@ -31,6 +34,8 @@ interface SecondaryLyricsModalProps {
    * one tab per language. Apply calls onApply once per language (a removed tab with no values).
    */
   kind?: 'secondary' | 'translation';
+  /** The song's language, passed to Romanize as a hint. Omitted when the project has none. */
+  songLanguage?: string;
 }
 
 const EMPTY_FOCUS = { current: null as HTMLElement | null };
@@ -75,8 +80,9 @@ function caretLineOf(el: HTMLTextAreaElement): number {
   return el.value.slice(0, el.selectionStart).split('\n').length - 1;
 }
 
-export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind = 'secondary' }: SecondaryLyricsModalProps) {
+export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind = 'secondary', songLanguage }: SecondaryLyricsModalProps) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -84,6 +90,13 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
   const [caretLine, setCaretLine] = useState(0);
   const [opened, setOpened] = useState<EditorLine[]>([]);
   const isTranslation = kind === 'translation';
+  // Romanize: signed-in, secondary editor only. `romanizing` holds the opened snapshot a request was
+  // sent for, so a response is dropped once the modal closed or reopened (a new snapshot).
+  const canRomanize = !!user && !isTranslation;
+  const heavy = useHeavyUsage(open && canRomanize);
+  const [romanizing, setRomanizing] = useState<EditorLine[] | null>(null);
+  const latest = useRef({ open, opened });
+  useEffect(() => { latest.current = { open, opened }; });
   // Translation mode: one tab and one text buffer per language. Switching tabs keeps what was
   // typed in the others; Apply writes every tab, and clears the languages whose tab was removed.
   const [langs, setLangs] = useState<string[]>([]);
@@ -173,6 +186,25 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
       onApply(splitSecondaryText(secondary), opened, '');
     }
     onOpenChange(false);
+  };
+  const running = romanizing !== null && romanizing === opened;
+  const tooLong = mainCount > HEAVY_LINE_LIMIT;
+  const romanizeBlocked = tooLong
+    ? t('editor.assist.heavy.tooLong', { max: HEAVY_LINE_LIMIT })
+    : heavy.exhausted ? t('editor.assist.heavy.none') : null;
+  const runRomanize = async () => {
+    if (romanizeBlocked || running) return;
+    const snapshot = opened;
+    setRomanizing(snapshot);
+    try {
+      const res = await romanize({ lines: snapshot.map((l) => l.text ?? ''), ...(songLanguage ? { language: songLanguage } : {}) });
+      heavy.setUsage(res.usage);
+      if (latest.current.open && latest.current.opened === snapshot) setSecondary(res.lines.join('\n'));
+    } catch (err) {
+      heavy.reportError(err);
+    } finally {
+      setRomanizing((cur) => (cur === snapshot ? null : cur));
+    }
   };
   const rowCount = Math.max(mainCount, textLines.length, 1);
 
@@ -340,7 +372,25 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
           </div>
         )}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex items-center justify-end gap-2">
+          {canRomanize && (
+            <div className="mr-auto">
+              <Tip content={romanizeBlocked ?? undefined}>
+                {/* aria-disabled, not disabled: a disabled button emits no hover, so the reason would be unreachable. */}
+                <Button
+                  variant="outline"
+                  aria-disabled={romanizeBlocked !== null || running}
+                  onClick={runRomanize}
+                  className={cn((romanizeBlocked !== null || running) && 'opacity-50 cursor-not-allowed')}
+                >
+                  {running
+                    ? t('editor.assist.romanize.running')
+                    : heavy.usage ? t('editor.assist.romanize.button', { count: heavy.usage.remaining }) : t('editor.assist.romanize.label')}
+                </Button>
+              </Tip>
+              <span role="status" className="sr-only">{running ? t('editor.assist.romanize.running') : ''}</span>
+            </div>
+          )}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button disabled={anyOverflow} onClick={apply}>
             {t('common.apply')}

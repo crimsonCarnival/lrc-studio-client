@@ -162,6 +162,8 @@ interface EditorProps {
   singerColors?: string[];
   /** Song-level singer roster from project metadata (project setup), offered as picker choices. */
   declaredSingers?: string[];
+  /** The project's language from its metadata, a hint for Romanize. */
+  songLanguage?: string;
   playerSlot?: PlayerSlot;
   duration?: number;
   /** Switches the workspace to the preview ("Revisar"). */
@@ -228,6 +230,7 @@ export default function Editor({
   songArtists = EMPTY_ARTISTS,
   singerColors,
   declaredSingers = EMPTY_ARTISTS,
+  songLanguage,
   playerSlot,
   duration,
   onShowPreview,
@@ -1526,6 +1529,7 @@ export default function Editor({
         onOpenChange={setSecondaryOpen}
         lines={lines}
         onApply={handleSetSecondaryLines}
+        songLanguage={songLanguage}
       />
 
       <SecondaryLyricsModal

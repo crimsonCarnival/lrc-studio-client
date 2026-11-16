@@ -840,8 +840,14 @@ export default {
       none: "No quedan ejecuciones hoy",
       tooLong: "Demasiado largo para esta herramienta (máx. {{max}} líneas)",
     },
+    romanize: {
+      label: "Romanizar",
+      button_one: "Romanizar (queda {{count}} hoy)",
+      button_other: "Romanizar (quedan {{count}} hoy)",
+      running: "Romanizando…",
+    },
     errors: {
-      dailyCap: "Has usado todas las ejecuciones de hoy. Se reinician a las {{time}}.",
+      dailyCap:"Has usado todas las ejecuciones de hoy. Se reinician a las {{time}}.",
       dailyCapNoTime: "Has usado todas las ejecuciones de hoy. Se reinician mañana (UTC).",
       unavailable: "La asistencia con IA no está disponible ahora",
       upstream: "El asistente de IA no pudo completarlo. Inténtalo de nuevo en breve.",
