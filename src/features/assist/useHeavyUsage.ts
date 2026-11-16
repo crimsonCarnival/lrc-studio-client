@@ -20,13 +20,18 @@ export function useHeavyUsage(enabled: boolean) {
   const [usage, setUsage] = useState<HeavyUsage | null>(null);
   const [capped, setCapped] = useState(false);
   const fetched = useRef(false);
+  const mounted = useRef(false);
+
+  // Set in the effect body (not an initial value) so a StrictMode mount/cleanup/mount ends true.
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   useEffect(() => {
     if (!enabled || fetched.current) return;
     fetched.current = true;
-    let live = true;
-    getUsage().then((u) => { if (live) setUsage(u); }).catch(() => {});
-    return () => { live = false; };
+    getUsage().then((u) => { if (mounted.current) setUsage(u); }).catch(() => {});
   }, [enabled]);
 
   const update = useCallback((u: HeavyUsage) => {
@@ -40,7 +45,7 @@ export function useHeavyUsage(enabled: boolean) {
       setCapped(true);
       const at = typeof body?.resetsAt === 'string' ? body.resetsAt : undefined;
       const time = at ? formatInTimezone(at, undefined, { hour: '2-digit', minute: '2-digit' }, i18n.language) : '';
-      toast.error(t('editor.assist.errors.dailyCap', { time }));
+      toast.error(time ? t('editor.assist.errors.dailyCap', { time }) : t('editor.assist.errors.dailyCapNoTime'));
     } else if (code === 'assist_unavailable') {
       toast.error(t('editor.assist.errors.unavailable'));
     } else {

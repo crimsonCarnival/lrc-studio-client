@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { StrictMode } from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import i18n from 'i18next';
 import '@/app/i18n';
@@ -62,7 +63,20 @@ describe('useHeavyUsage', () => {
     act(() => result.current.reportError(apiError('assist_daily_cap', { resetsAt: '2026-11-16T00:00:00.000Z' })));
     expect(result.current.exhausted).toBe(true);
     expect(toast.error).toHaveBeenCalledTimes(1);
-    expect(toast.error.mock.calls[0][0]).toContain("daily");
+    expect(toast.error.mock.calls[0][0]).toBe(i18n.t('editor.assist.errors.dailyCap', { time: new Date('2026-11-16T00:00:00.000Z').toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }) }));
+  });
+
+  it('a daily cap without resetsAt uses the no-time message', () => {
+    const { result } = renderHook(() => useHeavyUsage(false));
+    act(() => result.current.reportError(apiError('assist_daily_cap')));
+    expect(toast.error).toHaveBeenCalledWith(i18n.t('editor.assist.errors.dailyCapNoTime'));
+    expect(i18n.t('editor.assist.errors.dailyCapNoTime')).not.toContain('{{');
+  });
+
+  it('still populates usage under StrictMode with one fetch', async () => {
+    const { result } = renderHook(() => useHeavyUsage(true), { wrapper: StrictMode });
+    await waitFor(() => expect(result.current.usage).toEqual(USAGE));
+    expect(mockedUsage).toHaveBeenCalledTimes(1);
   });
 
   it('maps unavailable and unknown errors, including the hourly 429, to their own messages', () => {
