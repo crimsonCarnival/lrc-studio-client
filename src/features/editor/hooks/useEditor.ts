@@ -35,6 +35,8 @@ import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
+import { prevTimedIndex } from '../utils/line-span';
+import { pinPreviousEnd } from '../utils/line-timing';
 import { applySecondaryLines, applyTranslationLines } from '../utils/secondary-lines';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
@@ -66,6 +68,17 @@ interface UseEditorParams {
 
 const EMPTY_ROSTER: string[] = [];
 const NO_LOCKS: LockSnapshot = {};
+
+/**
+ * Words mode, as a line's start is about to change: the line before it keeps the end it has
+ * now instead of following the new start. Writes into `updated`, the copy being built.
+ */
+function keepPreviousEnd(prev: EditorLine[], updated: EditorLine[], index: number) {
+  const pinned = pinPreviousEnd(prev, index);
+  if (pinned === prev) return;
+  const p = prevTimedIndex(prev, index);
+  if (p >= 0) updated[p] = pinned[p];
+}
 
 export function useEditor({
   lines,
@@ -524,6 +537,7 @@ export function useEditor({
           // Words mode keeps the line's start and its first word together, so typing
           // a start time moves the first chip with it rather than leaving the two
           // showing different numbers.
+          if (editorMode === 'words') keepPreviousEnd(prev, updated, index);
           updated[index] = editorMode === 'words'
             ? alignLineStart(updated[index], numericValue)
             : { ...updated[index], timestamp: numericValue };
@@ -604,6 +618,7 @@ export function useEditor({
             const nudged = { ...updated[index], [wField]: newWords };
             // The first word is the line's start; nudging one nudges both. The
             // romaji track is marked on its own, so only the main layer carries it.
+            if (wi === 0 && wField === 'words') keepPreviousEnd(prev, updated, index);
             updated[index] = wi === 0 && wField === 'words' ? alignLineStart(nudged, newWordTime) : nudged;
           }
         } else if (
@@ -619,6 +634,7 @@ export function useEditor({
         } else if (updated[index].timestamp != null) {
           const newTimestamp = Math.max(0, Number(updated[index].timestamp) + numericDelta);
           if (!isNaN(newTimestamp)) {
+            if (editorMode === 'words') keepPreviousEnd(prev, updated, index);
             updated[index] = editorMode === 'words'
               ? alignLineStart(updated[index], newTimestamp)
               : { ...updated[index], timestamp: newTimestamp };

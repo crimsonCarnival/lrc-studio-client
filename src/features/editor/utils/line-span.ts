@@ -46,14 +46,17 @@ export function tailWordEnd(line: TailLine | undefined): number | null {
 }
 
 /**
- * Where a line really stops sounding: its natural end, or later when its last word is held past
- * it (the singer is still on that word while the next line has begun).
+ * Where a line really stops sounding. A line that was given an end of its own (its last word's
+ * end, or an end time) stops there, whether that is before the next line starts (a pause) or
+ * after it (the last word is held over the next line). A line without one runs up to the next
+ * line, so its end follows that line's start.
  */
 export function lineSpanEnd(lines: EditorLine[], index: number, duration?: number | null): number | null {
-  const natural = naturalLineEnd(lines, index, duration);
-  const tail = tailWordEnd(lines[index]);
-  if (natural == null) return tail;
-  return tail != null && tail > natural ? tail : natural;
+  const line = lines[index];
+  const tail = tailWordEnd(line);
+  if (line?.endTime != null) return tail != null && tail > line.endTime ? tail : line.endTime;
+  if (tail != null) return tail;
+  return naturalLineEnd(lines, index, duration);
 }
 
 /** The next line this one is still sounding over, and for how long; null when they do not overlap. */

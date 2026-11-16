@@ -6,6 +6,7 @@ import { TooltipProvider } from '@ui/tooltip';
 import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
 import Editor from './Editor';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { lineSpanEnd } from '@/features/editor/utils/line-span';
 
 vi.mock('@/features/settings/useSettings', () => ({
   useSettings: () => ({ settings: DEFAULT_SETTINGS, updateSetting: vi.fn(), updateSettings: vi.fn() }),
@@ -52,7 +53,8 @@ function Harness() {
   );
 }
 const starts = (ls: EditorLine[]) => ls.map((l) => ({ ts: l.timestamp, times: l.words!.map((w) => w.time) }));
-const full = (ls: EditorLine[]) => ls.map((l) => JSON.stringify(l));
+// Where each line stops sounding: its own end, or up to the next line when it has none.
+const ends = (ls: EditorLine[]) => ls.map((_, i) => lineSpanEnd(ls, i, 239));
 
 describe('words focus: one handle changes one line', () => {
   beforeEach(() => {
@@ -65,7 +67,7 @@ describe('words focus: one handle changes one line', () => {
 
   const handleCount = () => { render(<Harness />); const n = screen.getAllByRole('slider').length; cleanup(); return n; };
 
-  it('moving an end never moves the start of any line, and a start only moves its own line', { timeout: 60_000 }, () => {
+  it('moving an end never moves a start, and moving a start never moves an end', { timeout: 60_000 }, () => {
     const count = handleCount();
     // Word handles of the focused line and of the lines on either side, and the lines lane's.
     expect(count).toBeGreaterThanOrEqual(16);
@@ -75,11 +77,20 @@ describe('words focus: one handle changes one line', () => {
         const before = [...latest];
         const handle = screen.getAllByRole('slider')[k];
         const label = handle.getAttribute('aria-label') ?? '';
+        const isStart = /start|inicio/i.test(label);
         fireEvent.keyDown(handle, { key });
-        const changed = latest.map((l, i) => i).filter((i) => full(latest)[i] !== full(before)[i]);
-        expect(changed.length, `${label} ${key}`).toBeLessThanOrEqual(1);
-        // Nobody's start changes unless it was a start handle, and then only that line's.
-        if (!/start/i.test(label)) expect(starts(latest), `${label} ${key}`).toEqual(starts(before));
+        const where = `${label} ${key}`;
+        if (isStart) {
+          // Only the line it belongs to starts anywhere else, and no line stops anywhere else:
+          // the end of the line before stays where it was.
+          expect(ends(latest), where).toEqual(ends(before));
+          const moved = starts(latest).filter((s, i) => JSON.stringify(s) !== JSON.stringify(starts(before)[i]));
+          expect(moved.length, where).toBeLessThanOrEqual(1);
+        } else {
+          expect(starts(latest), where).toEqual(starts(before));
+          const stopped = ends(latest).filter((e, i) => e !== ends(before)[i]);
+          expect(stopped.length, where).toBeLessThanOrEqual(1);
+        }
         cleanup();
       }
     }

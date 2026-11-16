@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { applyLineTiming } from './line-timing';
+import { applyLineTiming, pinPreviousEnd } from './line-timing';
+import { lineSpanEnd } from './line-span';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const mk = (text: string, times: number[], end?: number): EditorLine => ({
@@ -21,7 +22,35 @@ describe('applyLineTiming', () => {
     const before = lines();
     const after = applyLineTiming(before, 1, { kind: 'start', time: 19 }, 239);
     expect(times(after)[1]).toEqual({ ts: 19, w: [[19, null], [21, null], [22, null]] });
-    othersUntouched(before, after, 1);
+    // The line before keeps its end, where it was (the old start of this line).
+    expect(times(after)[0]).toEqual({ ts: 10, w: [[10, null], [11, 20]] });
+    expect(after[2]).toBe(before[2]);
+    expect(after[3]).toBe(before[3]);
+  });
+
+  it('does not take the end of the line before along when a start moves, either way', () => {
+    const before = lines();
+    const ends = (ls: EditorLine[]) => ls.map((_, i) => lineSpanEnd(ls, i, 239));
+    // Line 1 runs up to line 2 (24), which is where its end is now.
+    expect(ends(before)[1]).toBe(24);
+    for (const time of [23, 24.4, 24.9]) {
+      const after = applyLineTiming(before, 2, { kind: 'start', time }, 239);
+      expect(after[2].timestamp).toBe(time);
+      expect(ends(after)[1], `start at ${time}`).toBe(24);
+    }
+    for (const start of [22.5, 25]) {
+      const after = applyLineTiming(before, 2, { kind: 'move', start }, 239);
+      expect(ends(after)[1], `move to ${start}`).toBe(24);
+    }
+  });
+
+  it('leaves an end the line before already has, and a line being timed for the first time', () => {
+    const before = lines();
+    expect(pinPreviousEnd(before, 3)).toBe(before);
+    const untimed = [...before];
+    untimed[3] = { ...before[3], timestamp: null, words: before[3].words!.map((w) => ({ ...w, time: null })) };
+    expect(pinPreviousEnd(untimed, 3)).toBe(untimed);
+    expect(pinPreviousEnd(before, 0)).toBe(before);
   });
 
   it('keeps the start before the line\'s second word and after the line before has started', () => {
@@ -55,7 +84,18 @@ describe('applyLineTiming', () => {
     const before = lines();
     const after = applyLineTiming(before, 2, { kind: 'move', start: 24.5 }, 239);
     expect(times(after)[2]).toEqual({ ts: 24.5, w: [[24.5, null], [25.5, 27]] });
-    othersUntouched(before, after, 2);
+    expect(after[3]).toBe(before[3]);
+    expect(after[0]).toBe(before[0]);
+    // The line before keeps its end.
+    expect(times(after)[1].w[2]).toEqual([22, 24]);
+  });
+
+  it('keeps the length of a line that ran up to the next one when it is moved', () => {
+    const before = lines();
+    // Line 1 has no end of its own: it runs from 20 to the start of line 2 (24).
+    const after = applyLineTiming(before, 1, { kind: 'move', start: 21 }, 239);
+    expect(after[1].timestamp).toBe(21);
+    expect(lineSpanEnd(after, 1, 239)).toBe(25);
   });
 
   it('keeps the order of the lines when one is moved', () => {
