@@ -11,4 +11,4 @@ export type Description = { language: string | null; genre: PrimaryGenre | null;
 export type SingerLabel = { lineIndex: number; singers: string[] };
 
 /** `resetsAt` is an ISO timestamp for the next UTC day. */
-export type HeavyUsage = { used: number; limit: number; remaining: number; resetsAt: string };
+export type HeavyUsage = { used: number; cap: number; remaining: number; resetsAt: string };

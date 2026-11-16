@@ -5,6 +5,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import i18n from 'i18next';
 import '@/app/i18n';
 import { HEAVY_LINE_LIMIT, useHeavyUsage } from './useHeavyUsage';
+import { formatInTimezone } from '@/shared/utils/date';
 import { getUsage } from './assist.service';
 import type { HeavyUsage } from './assist.types';
 
@@ -13,7 +14,7 @@ const toast = vi.hoisted(() => ({ error: vi.fn() }));
 vi.mock('react-hot-toast', () => ({ default: toast, toast }));
 
 const mockedUsage = vi.mocked(getUsage);
-const USAGE: HeavyUsage = { used: 2, limit: 5, remaining: 3, resetsAt: '2026-11-16T00:00:00.000Z' };
+const USAGE: HeavyUsage = { used: 2, cap: 5, remaining: 3, resetsAt: '2026-11-16T00:00:00.000Z' };
 const apiError = (code: string | undefined, body: Record<string, unknown> = {}) =>
   Object.assign(new Error(code ?? 'x'), { status: 429, code, body: code ? { error: code, ...body } : body });
 
@@ -63,7 +64,7 @@ describe('useHeavyUsage', () => {
     act(() => result.current.reportError(apiError('assist_daily_cap', { resetsAt: '2026-11-16T00:00:00.000Z' })));
     expect(result.current.exhausted).toBe(true);
     expect(toast.error).toHaveBeenCalledTimes(1);
-    expect(toast.error.mock.calls[0][0]).toBe(i18n.t('editor.assist.errors.dailyCap', { time: new Date('2026-11-16T00:00:00.000Z').toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }) }));
+    expect(toast.error.mock.calls[0][0]).toBe(i18n.t('editor.assist.errors.dailyCap', { time: formatInTimezone('2026-11-16T00:00:00.000Z', undefined, { hour: '2-digit', minute: '2-digit' }, 'en') }));
   });
 
   it('a daily cap without resetsAt uses the no-time message', () => {
