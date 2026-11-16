@@ -33,7 +33,8 @@ describe('line spans', () => {
 
   it('does not call a pause before the next line an overlap', () => {
     const paused = lines.map((l, i) => (i === 1 ? { ...l, words: [{ word: 'just', time: 20.36 }, { word: 'way', time: 23.8, end: 24.1 }] } : l));
-    expect(lineSpanEnd(paused, 1, 240)).toBe(24.42);
+    // A pause is the line's own end: it stops there, not where the next line starts.
+    expect(lineSpanEnd(paused, 1, 240)).toBe(24.1);
     expect(lineOverlap(paused, 1)).toBeNull();
   });
 

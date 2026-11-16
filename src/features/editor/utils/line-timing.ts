@@ -1,6 +1,6 @@
 import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import { alignLineStart } from '@/features/editor/services/editor.service';
-import { naturalLineEnd, nextTimedIndex, prevTimedIndex } from './line-span';
+import { lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex, tailWordEnd } from './line-span';
 
 /** Smallest distance kept between two edges of the same line, and between two lines' starts. */
 const GAP = 0.02;
@@ -27,9 +27,41 @@ const shiftWords = (words: EditorWord[] | undefined, delta: number): EditorWord[
   ...(w.end != null ? { end: round(w.end + delta) } : {}),
 }));
 
+/** The line with its end put at `end`: its last timed word's end, or an end time when no word is timed. Null if that cannot be. */
+function withEnd(line: EditorLine, end: number): EditorLine | null {
+  const words = line.words ?? [];
+  let last = -1;
+  words.forEach((w, i) => { if (w.time != null) last = i; });
+  if (last < 0) return { ...line, endTime: round(end) };
+  if (end <= (words[last].time as number) + GAP) return null;
+  return { ...line, words: words.map((w, i) => (i === last ? { ...w, end: round(end) } : w)) };
+}
+
 /**
- * Applies one timing edit to one line and nothing else: another line's start or end is never
- * touched. A line cannot start before the line before it has, nor after the line after it
+ * Before a line's start moves: gives the line before it an end of its own, where it stops now,
+ * so that moving this start does not take the end of that line along. A line without an end of
+ * its own runs up to the next line, which is why its end follows that line's start; once it has
+ * one, the two are independent. A line that already has an end, a counterpart, or a line that
+ * has no time yet (being marked for the first time) is left as it is.
+ */
+export function pinPreviousEnd(lines: EditorLine[], index: number): EditorLine[] {
+  const line = lines[index];
+  if (!line || line.type === 'section' || line.timestamp == null || line.adLibOf != null) return lines;
+  const p = prevTimedIndex(lines, index);
+  if (p < 0) return lines;
+  const prev = lines[p];
+  if (prev.adLibOf != null || prev.endTime != null || tailWordEnd(prev) != null) return lines;
+  const pinned = withEnd(prev, line.timestamp);
+  if (!pinned) return lines;
+  const out = [...lines];
+  out[p] = pinned;
+  return out;
+}
+
+/**
+ * Applies one timing edit to one line, and nothing else but what keeps the lines around it where
+ * they were: when this line's start moves, the line before it keeps its end (see pinPreviousEnd).
+ * Another line's start is never touched. A line cannot start before the line before it has, nor after the line after it
  * (their order is kept), and its own words stay in order. The end may go anywhere after the
  * last word starts, including past the start of the next line (the two then overlap).
  *
@@ -46,8 +78,9 @@ export function applyLineTiming(lines: EditorLine[], index: number, edit: LineTi
   const ceil = nextIndex >= 0 ? (lines[nextIndex].timestamp as number) - GAP : Infinity;
   const words = line.words ?? [];
   const timed = words.map((w, i) => ({ w, i })).filter(({ w }) => w.time != null);
-  const apply = (next: EditorLine): EditorLine[] => {
-    const out = [...lines];
+  // The line before keeps its end when this line's start moves.
+  const apply = (next: EditorLine, keepPreviousEnd = false): EditorLine[] => {
+    const out = [...(keepPreviousEnd ? pinPreviousEnd(lines, index) : lines)];
     out[index] = next;
     return out;
   };
@@ -69,21 +102,25 @@ export function applyLineTiming(lines: EditorLine[], index: number, edit: LineTi
         })
         : line.words,
     };
-    return apply(alignLineStart(moved, time));
+    return apply(alignLineStart(moved, time), true);
   }
 
   if (edit.kind === 'move') {
     const start = round(clamp(edit.start, floor, ceil));
     const delta = round(start - line.timestamp);
     if (delta === 0) return lines;
-    return apply({
+    const moved: EditorLine = {
       ...line,
       source: 'manual',
       timestamp: start,
       ...(line.endTime != null ? { endTime: round(line.endTime + delta) } : {}),
       ...(line.words ? { words: shiftWords(line.words, delta) } : {}),
       ...(line.secondaryWords ? { secondaryWords: shiftWords(line.secondaryWords, delta) } : {}),
-    });
+    };
+    // A line that ran up to the next one keeps its length: its end moves with it instead of
+    // staying on the next line's start.
+    const ownEnd = line.endTime == null && tailWordEnd(line) == null && nextIndex >= 0 ? lineSpanEnd(lines, index, duration) : null;
+    return apply((ownEnd != null ? withEnd(moved, ownEnd + delta) : null) ?? moved, true);
   }
 
   // end

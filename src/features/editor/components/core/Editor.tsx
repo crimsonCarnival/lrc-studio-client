@@ -62,7 +62,7 @@ import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { syncedCoverage } from '@features/editor/utils/sync-coverage';
 import { alignLineStart } from '@/features/editor/services/editor.service';
-import { applyLineTiming } from '@/features/editor/utils/line-timing';
+import { applyLineTiming, pinPreviousEnd } from '@/features/editor/utils/line-timing';
 import type { LineTimingEdit } from '@/features/editor/utils/line-timing';
 import { lineBands, lineOverlap, lineSpanEnd, naturalLineEnd, nextTimedIndex, prevTimedIndex } from '@features/editor/utils/line-span';
 import type { EditorLine } from '@/features/editor/editor.types';
@@ -867,8 +867,10 @@ export default function Editor({
   }, [lines, activeLineIndex, duration]);
   const focusStart = focusLine?.timestamp ?? null;
   const focusLength = focusStart != null && focusInfo.end != null && focusInfo.end > focusStart ? focusInfo.end - focusStart : null;
-  // What "spread evenly" fills: the line up to its natural end, not the held tail of its last word.
-  const spreadLength = focusStart != null && focusInfo.naturalEnd != null && focusInfo.naturalEnd > focusStart ? focusInfo.naturalEnd - focusStart : null;
+  // What "spread evenly" fills: the line up to where it stops, not the held tail of its last word
+  // (past the next line's start).
+  const spreadEnd = focusInfo.end != null && focusInfo.naturalEnd != null ? Math.min(focusInfo.end, focusInfo.naturalEnd) : focusInfo.naturalEnd;
+  const spreadLength = focusStart != null && spreadEnd != null && spreadEnd > focusStart ? spreadEnd - focusStart : null;
   // The lines around the focused one, for the words timeline: every timed line as a band, the
   // next timed line, and the one before it when that one still sounds over this line.
   const focusOverlap = useMemo(() => (wordsFocus ? lineOverlap(lines, activeLineIndex) : null), [wordsFocus, lines, activeLineIndex]);
@@ -910,11 +912,13 @@ export default function Editor({
   }, [wordsFocus, playerIsPlaying, focusLine, playbackPosition]);
 
   // Moves where a word starts. `lineIndex` is the focused line unless a neighbouring line's word
-  // is dragged from its own row. A line's first word carries the line's start with it.
+  // is dragged from its own row. A line's first word carries the line's start with it, and the
+  // line before keeps its end when that start moves.
   const handleSetWordTime = useCallback((wordIndex: number, time: number, lineIndex: number = activeLineIndex) => {
     setLines((prev) => {
       const line = prev[lineIndex];
       if (!line?.words?.[wordIndex]) return prev;
+      if (wordIndex === 0 && line.timestamp === time && line.words[0].time === time) return prev;
       const moved: EditorLine = {
         ...line,
         words: line.words.map((w, i) => {
@@ -924,7 +928,7 @@ export default function Editor({
           return w;
         }),
       };
-      const next = [...prev];
+      const next = [...(wordIndex === 0 ? pinPreviousEnd(prev, lineIndex) : prev)];
       next[lineIndex] = wordIndex === 0 ? alignLineStart(moved, time) : moved;
       return next;
     });
@@ -1067,7 +1071,7 @@ export default function Editor({
   const handleDistributeFrom = useCallback((wordIndex: number) => {
     const words = focusWords ?? [];
     const from = words[wordIndex]?.time ?? words.slice(0, wordIndex).reverse().find((w) => w.time != null)?.time ?? focusStart;
-    const to = focusInfo.naturalEnd;
+    const to = spreadEnd;
     if (from == null || to == null || to <= from) return;
     const step = (to - from) / (words.length - wordIndex);
     setLines((prev) => {
@@ -1080,7 +1084,7 @@ export default function Editor({
       };
       return next;
     });
-  }, [focusWords, focusStart, focusInfo.naturalEnd, setLines, activeLineIndex]);
+  }, [focusWords, focusStart, spreadEnd, setLines, activeLineIndex]);
   // Clearing a word's time says what went and offers it back.
   const handleClearWordWithUndo = useCallback((wordIndex: number) => {
     const word = focusWords?.[wordIndex];
