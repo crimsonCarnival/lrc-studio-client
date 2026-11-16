@@ -310,6 +310,7 @@ export default function Editor({
     handleClearAllWordTimestamps,
     handleSaveLineText,
     handleSetSecondaryLines,
+    handleApplySingerLabels,
     handleSetTranslationLines,
     handleToggleLineMode,
     handleDeleteLine,
@@ -2163,6 +2164,7 @@ export default function Editor({
             recordIndexMap={recordIndexMap}
             songArtists={combinedSingers}
             clearSelection={clearSelection as () => void}
+            onApplySingerLabels={handleApplySingerLabels}
           />
           )}
           {wordsFocus ? (

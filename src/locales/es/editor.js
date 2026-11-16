@@ -846,6 +846,18 @@ export default {
       button_other: "Romanizar (quedan {{count}} hoy)",
       running: "Romanizando…",
     },
+    singers: {
+      label: "Sugerir cantantes",
+      button_one: "Sugerir cantantes (queda {{count}} hoy)",
+      button_other: "Sugerir cantantes (quedan {{count}} hoy)",
+      running: "Sugiriendo cantantes…",
+      needRoster: "Añade al menos dos cantantes primero",
+      reviewTitle: "Cantantes sugeridos",
+      reviewDescription: "Revisa las sugerencias. No cambia nada hasta que las apliques.",
+      apply: "Aplicar",
+      cancel: "Cancelar",
+      none: "No hay cambios de cantantes que sugerir",
+    },
     errors: {
       dailyCap: "Has usado todas las ejecuciones de hoy. Se reinician a las {{time}}.",
       dailyCapNoTime: "Has usado todas las ejecuciones de hoy. Se reinician mañana (UTC).",

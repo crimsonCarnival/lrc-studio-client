@@ -846,6 +846,18 @@ export default {
       button_other: "Romanize ({{count}} left today)",
       running: "Romanizing…",
     },
+    singers: {
+      label: "Suggest singers",
+      button_one: "Suggest singers ({{count}} left today)",
+      button_other: "Suggest singers ({{count}} left today)",
+      running: "Suggesting singers…",
+      needRoster: "Add at least two singers first",
+      reviewTitle: "Suggested singers",
+      reviewDescription: "Review the suggestions. Nothing changes until you apply them.",
+      apply: "Apply",
+      cancel: "Cancel",
+      none: "No singer changes to suggest",
+    },
     errors: {
       dailyCap: "You have used all of today's daily runs. They reset at {{time}}.",
       dailyCapNoTime: "You have used all of today's daily runs. They reset tomorrow (UTC).",
