@@ -1,10 +1,12 @@
 import { gqlRequest } from '@/app/graphql.client';
 import { request } from '@/app/api.client';
 import { isApiError } from '@/types';
+import { PROJECT_LIST_FIELDS } from '@/features/projects/services/projects.service';
 import type {
   AdminCatalogEntryEdit,
   CatalogAlbum,
   CatalogArtist,
+  CatalogArtistPage,
   CatalogEntryEdit,
   CatalogKind,
   CatalogQueue,
@@ -197,4 +199,18 @@ export async function uploadCatalogImage(file: File, recaptchaToken?: string): P
   }
   const data = await res.json() as { secure_url: string };
   return data.secure_url;
+}
+
+/** A public catalog artist with its approved albums; null when the slug is unknown or not approved. */
+export async function getCatalogArtist(slug: string): Promise<CatalogArtistPage | null> {
+  const data = await gqlRequest<{ catalogArtist: CatalogArtistPage | null }>(/* GraphQL */ `
+    query CatalogArtist($slug: String!) {
+      catalogArtist(slug: $slug) {
+        artist { id name disambiguation slug imageUrl bio }
+        albums { id artistId title slug year coverUrl }
+        songs { ...ProjectListFields user { accountName } }
+      }
+    }
+  ` + PROJECT_LIST_FIELDS, { slug });
+  return data.catalogArtist;
 }

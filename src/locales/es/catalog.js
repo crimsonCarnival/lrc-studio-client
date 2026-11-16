@@ -79,4 +79,13 @@ export default {
     yearLabel: "Año",
     thumbAlt: "Imagen de {{name}}",
   },
+  page: {
+    kicker: "Artista",
+    albums: "Álbumes",
+    songs_one: "{{count}} canción",
+    songs_other: "{{count}} canciones",
+    noSongs: "Aún no hay canciones.",
+    noAlbums: "Aún no hay álbumes.",
+    back: "Volver",
+  },
 };
