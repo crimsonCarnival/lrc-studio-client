@@ -38,8 +38,8 @@ beforeEach(async () => {
   auth.user = { id: 'me' };
   mockedRomanize.mockReset();
   mockedUsage.mockReset();
-  mockedUsage.mockResolvedValue({ remaining: 12, limit: 20, resetsAt: '2026-11-16T00:00:00.000Z' } as never);
-  mockedRomanize.mockResolvedValue({ lines: ['konnichiwa', '', 'sayonara'], usage: { remaining: 11, limit: 20, resetsAt: '2026-11-16T00:00:00.000Z' } as never });
+  mockedUsage.mockResolvedValue({ remaining: 12, cap: 20, resetsAt: '2026-11-16T00:00:00.000Z' } as never);
+  mockedRomanize.mockResolvedValue({ lines: ['konnichiwa', '', 'sayonara'], usage: { remaining: 11, cap: 20, resetsAt: '2026-11-16T00:00:00.000Z' } as never });
   toast.error.mockReset();
   await i18n.changeLanguage('en');
 });
@@ -77,6 +77,38 @@ describe('SecondaryLyricsModal romanize', () => {
     expect((await screen.findAllByText('Too long for this tool (max 200 lines)')).length).toBeGreaterThan(0);
   });
 
+  it('is disabled, never sending, when a line is over 500 characters', async () => {
+    const user = userEvent.setup();
+    renderModal({ lines: [{ text: 'x'.repeat(501) }, { text: 'ok' }] });
+    const button = await romanizeButton();
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(button);
+    expect(mockedRomanize).not.toHaveBeenCalled();
+    await user.hover(button);
+    expect((await screen.findAllByText('A line is over 500 characters')).length).toBeGreaterThan(0);
+  });
+
+  it('is disabled with a reason when there are no lines to send', async () => {
+    const user = userEvent.setup();
+    renderModal({ lines: [{ type: 'section', label: 'intro' }] });
+    const button = await romanizeButton();
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(button);
+    expect(mockedRomanize).not.toHaveBeenCalled();
+    await user.hover(button);
+    expect((await screen.findAllByText('No lyric lines to send')).length).toBeGreaterThan(0);
+  });
+
+  it('keeps the same button element when the daily runs run out', async () => {
+    mockedRomanize.mockRejectedValue(Object.assign(new Error('cap'), { code: 'assist_daily_cap', body: {} }));
+    renderModal();
+    const before = await romanizeButton();
+    fireEvent.click(before);
+    await waitFor(() => expect(toast.error).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(before).toHaveAttribute('aria-disabled', 'true'));
+    expect(await romanizeButton()).toBe(before);
+  });
+
   it('a daily-cap error disables the button and shows the cap toast, leaving the text alone', async () => {
     mockedRomanize.mockRejectedValue(Object.assign(new Error('cap'), { code: 'assist_daily_cap', body: { resetsAt: '2026-11-16T00:00:00.000Z' } }));
     renderModal();
@@ -96,7 +128,7 @@ describe('SecondaryLyricsModal romanize', () => {
     fireEvent.click(await romanizeButton());
     rerender(<SecondaryLyricsModal open={false} {...props} />);
     rerender(<SecondaryLyricsModal open {...props} />);
-    await act(async () => { resolve({ lines: ['late', '', 'late'], usage: { remaining: 3, limit: 20, resetsAt: '' } as never }); });
+    await act(async () => { resolve({ lines: ['late', '', 'late'], usage: { remaining: 3, cap: 20, resetsAt: '' } as never }); });
     // Reopening re-read the project's own secondary text (three empty lines); the late answer is not in it.
     expect(textarea().value).toBe('\n\n');
   });

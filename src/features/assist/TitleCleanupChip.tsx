@@ -57,7 +57,11 @@ export function TitleCleanupChip({ title, onApply }: Props) {
         {split && (
           <div className="flex flex-wrap items-center gap-2 rounded-[calc(var(--radius)*1.2)] bg-primary-soft px-3 py-2 text-[13px] text-primary-ink">
             <span className="min-w-0 flex-1">
-              <Trans i18nKey="editor.assist.titleCleanup.preview" values={{ song: split.songName, artists: split.artists.join(', ') }} components={{ b: <strong /> }} />
+              {split.artists.length > 0 ? (
+                <Trans i18nKey="editor.assist.titleCleanup.preview" values={{ song: split.songName, artists: split.artists.join(', ') }} components={{ b: <strong /> }} />
+              ) : (
+                <Trans i18nKey="editor.assist.titleCleanup.previewNoArtist" values={{ song: split.songName }} components={{ b: <strong /> }} />
+              )}
               {split.album && (
                 <>
                   {' '}

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import i18n from 'i18next';
 import '@/app/i18n';
 import TaggingToolbar from './TaggingToolbar';
@@ -15,7 +16,7 @@ vi.mock('react-hot-toast', () => ({ default: toast, toast }));
 
 const mockedLabel = vi.mocked(labelSingers);
 const mockedUsage = vi.mocked(getUsage);
-const USAGE = { used: 1, limit: 20, remaining: 19, resetsAt: '2026-11-16T00:00:00.000Z' };
+const USAGE = { used: 1, cap: 20, remaining: 19, resetsAt: '2026-11-16T00:00:00.000Z' };
 
 const mk = (n: number): EditorLine[] => Array.from({ length: n }, (_, i) => ({ id: `l${i}`, text: `line ${i}` }));
 
@@ -94,5 +95,32 @@ describe('TaggingToolbar suggest singers', () => {
     fireEvent.click(button());
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(screen.queryByRole('button', { name: 'Apply' })).toBeNull();
+  });
+
+  it('is inert, never sending, when a selected line is over 500 characters', () => {
+    renderBar([{ id: 'a', text: 'x'.repeat(501) }, ...mk(2)], ['Ann', 'Bob'], [0, 1]);
+    expect(button().getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(button());
+    expect(mockedLabel).not.toHaveBeenCalled();
+  });
+
+  it('is inert with a reason when only section markers are selected', async () => {
+    const user = userEvent.setup();
+    renderBar([{ id: 's', type: 'section', label: 'chorus' }, ...mk(2)], ['Ann', 'Bob'], [0]);
+    expect(button().getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(button());
+    expect(mockedLabel).not.toHaveBeenCalled();
+    await user.hover(button());
+    expect((await screen.findAllByText('No lyric lines to send')).length).toBeGreaterThan(0);
+  });
+
+  it('keeps the same button element when the daily runs run out', async () => {
+    mockedLabel.mockRejectedValue(Object.assign(new Error('cap'), { code: 'assist_daily_cap', body: {} }));
+    renderBar(mk(2), ['Ann', 'Bob']);
+    const before = button();
+    fireEvent.click(before);
+    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    await waitFor(() => expect(button().getAttribute('aria-disabled')).toBe('true'));
+    expect(button()).toBe(before);
   });
 });

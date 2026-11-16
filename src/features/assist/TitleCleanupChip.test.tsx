@@ -50,6 +50,14 @@ describe('TitleCleanupChip', () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
+  it('omits the "by" clause when the split has no artists', async () => {
+    mockedSplit.mockResolvedValue({ ...SPLIT, artists: [] });
+    render(<TitleCleanupChip title={TITLE} onApply={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Clean up title' }));
+    const status = await screen.findByText(/Los Malaventurados/);
+    expect(status.closest('[role="status"]')).not.toHaveTextContent(/ by /);
+  });
+
   it('Apply passes the split and hides chip and preview', async () => {
     const onApply = vi.fn();
     render(<TitleCleanupChip title={TITLE} onApply={onApply} />);

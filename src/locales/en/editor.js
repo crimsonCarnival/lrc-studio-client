@@ -825,6 +825,7 @@ export default {
     titleCleanup: {
       chip: "Clean up title",
       preview: "Song <b>{{song}}</b> by <b>{{artists}}</b>.",
+      previewNoArtist: "Song <b>{{song}}</b>.",
       previewAlbum: "Album <b>{{album}}</b>.",
       apply: "Apply",
       dismiss: "Dismiss",
@@ -839,6 +840,8 @@ export default {
       left_other: "{{count}} runs left today",
       none: "No runs left today",
       tooLong: "Too long for this tool (max {{max}} lines)",
+      lineTooLong: "A line is over {{max}} characters",
+      noLines: "No lyric lines to send",
     },
     romanize: {
       label: "Romanize",

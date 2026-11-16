@@ -7,6 +7,8 @@ import type { HeavyUsage } from './assist.types';
 
 /** Heavy assists (romanize, singers) refuse more lines than this; the server enforces the same cap. */
 export const HEAVY_LINE_LIMIT = 200;
+/** ...and reject the whole request when any single line is longer than this. */
+export const HEAVY_LINE_MAX_CHARS = 500;
 
 type ErrorShape = { code?: string; body?: { resetsAt?: unknown } };
 

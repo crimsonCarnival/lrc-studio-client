@@ -13,7 +13,7 @@ import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { romanize } from '@/features/assist/assist.service';
-import { HEAVY_LINE_LIMIT, useHeavyUsage } from '@/features/assist/useHeavyUsage';
+import { HEAVY_LINE_LIMIT, HEAVY_LINE_MAX_CHARS, useHeavyUsage } from '@/features/assist/useHeavyUsage';
 
 /** Row height shared by the lyric column and the textarea, so row N and text line N line up. */
 const ROW = 28;
@@ -188,10 +188,15 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
     onOpenChange(false);
   };
   const running = romanizing !== null && romanizing === opened;
-  const tooLong = mainCount > HEAVY_LINE_LIMIT;
-  const romanizeBlocked = tooLong
-    ? t('editor.assist.heavy.tooLong', { max: HEAVY_LINE_LIMIT })
-    : heavy.exhausted ? t('editor.assist.heavy.none') : null;
+  // What is sent is the opened snapshot; the server rejects an empty list, more than 200 lines or any line over 500 characters.
+  const romanizeBlocked = opened.length === 0
+    ? t('editor.assist.heavy.noLines')
+    : opened.length > HEAVY_LINE_LIMIT ? t('editor.assist.heavy.tooLong', { max: HEAVY_LINE_LIMIT })
+      : opened.some((l) => (l.text ?? '').length > HEAVY_LINE_MAX_CHARS) ? t('editor.assist.heavy.lineTooLong', { max: HEAVY_LINE_MAX_CHARS })
+        : heavy.exhausted ? t('editor.assist.heavy.none') : null;
+  const romanizeLabel = running
+    ? t('editor.assist.romanize.running')
+    : heavy.usage ? t('editor.assist.romanize.button', { count: heavy.usage.remaining }) : t('editor.assist.romanize.label');
   const runRomanize = async () => {
     if (romanizeBlocked || running) return;
     const snapshot = opened;
@@ -375,7 +380,8 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
         <div className="flex items-center justify-end gap-2">
           {canRomanize && (
             <div className="mr-auto">
-              <Tip content={romanizeBlocked ?? undefined}>
+              {/* Tip renders bare children when its content is empty, which would remount the button (and drop focus) as the block flips; always give it text. */}
+              <Tip content={romanizeBlocked ?? romanizeLabel}>
                 {/* aria-disabled, not disabled: a disabled button emits no hover, so the reason would be unreachable. */}
                 <Button
                   variant="outline"
@@ -383,9 +389,7 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply, kind 
                   onClick={runRomanize}
                   className={cn((romanizeBlocked !== null || running) && 'opacity-50 cursor-not-allowed')}
                 >
-                  {running
-                    ? t('editor.assist.romanize.running')
-                    : heavy.usage ? t('editor.assist.romanize.button', { count: heavy.usage.remaining }) : t('editor.assist.romanize.label')}
+                  {romanizeLabel}
                 </Button>
               </Tip>
               <span role="status" className="sr-only">{running ? t('editor.assist.romanize.running') : ''}</span>

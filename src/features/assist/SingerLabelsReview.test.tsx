@@ -44,4 +44,12 @@ describe('SingerLabelsReview', () => {
     expect(screen.getByText('No singer changes to suggest')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Apply' })).toBeNull();
   });
+
+  it('shows the current singers from the live lines, not the opened snapshot', () => {
+    const labels = [{ lineIndex: 1, singers: ['Bob'] }];
+    const current: EditorLine[] = [OPENED[0], { ...OPENED[1], singers: ['Cy'] }];
+    render(<SingerLabelsReview open onOpenChange={vi.fn()} labels={labels} opened={OPENED} current={current} onApply={vi.fn()} />);
+    expect(screen.getByText(/Cy/)).toBeTruthy();
+    expect(screen.queryByText(/Ann/)).toBeNull();
+  });
 });

@@ -12,7 +12,7 @@ import { Button } from '@ui/button';
 import { cn } from '@/shared/utils/utils';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { labelSingers } from '@/features/assist/assist.service';
-import { HEAVY_LINE_LIMIT, useHeavyUsage } from '@/features/assist/useHeavyUsage';
+import { HEAVY_LINE_LIMIT, HEAVY_LINE_MAX_CHARS, useHeavyUsage } from '@/features/assist/useHeavyUsage';
 import { SingerLabelsReview } from '@/features/assist/SingerLabelsReview';
 import type { SingerLabel } from '@/features/assist/assist.types';
 
@@ -144,24 +144,28 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
   }, []);
 
   const roster = useMemo(() => songArtists.filter((n) => n.length > 0 && n.length <= NAME_MAX).slice(0, ROSTER_MAX), [songArtists]);
-  const suggestLineCount = useMemo(() => {
-    let n = 0;
-    lines.forEach((l, i) => { if (l.type !== 'section' && (selectedLines.size === 0 || selectedLines.has(i))) n++; });
-    return n;
-  }, [lines, selectedLines]);
+  // Toolbar only renders with a selection, so the lines to send are the selected non-section ones.
+  const suggestLines = useMemo(
+    () => lines.filter((l, i) => l.type !== 'section' && selectedLines.has(i)),
+    [lines, selectedLines],
+  );
+  const suggestLineCount = suggestLines.length;
   const suggestBlocked = roster.length < ROSTER_MIN
     ? t('editor.assist.singers.needRoster')
-    : suggestLineCount === 0 ? null
+    : suggestLineCount === 0 ? t('editor.assist.heavy.noLines')
       : suggestLineCount > HEAVY_LINE_LIMIT ? t('editor.assist.heavy.tooLong', { max: HEAVY_LINE_LIMIT })
-        : heavy.exhausted ? t('editor.assist.heavy.none') : null;
-  const suggestInert = suggestBlocked !== null || suggestLineCount === 0 || running;
+        : suggestLines.some((l) => (l.text ?? '').length > HEAVY_LINE_MAX_CHARS) ? t('editor.assist.heavy.lineTooLong', { max: HEAVY_LINE_MAX_CHARS })
+          : heavy.exhausted ? t('editor.assist.heavy.none') : null;
+  const suggestInert = suggestBlocked !== null || running;
+  const suggestLabel = running
+    ? t('editor.assist.singers.running')
+    : heavy.usage ? t('editor.assist.singers.button', { count: heavy.usage.remaining }) : t('editor.assist.singers.label');
 
   const runSuggest = async () => {
     if (suggestInert) return;
-    const opened = lines.filter((l, i) => l.type !== 'section' && (selectedLines.size === 0 || selectedLines.has(i)));
+    const opened = suggestLines;
     setRunning(true);
     try {
-      // Lines over the server's 500-character cap are rejected as a whole and surface as the generic error.
       const res = await labelSingers({ lines: opened.map((l) => l.text ?? ''), roster });
       heavy.setUsage(res.usage);
       if (mounted.current) setReview({ labels: res.labels, opened });
@@ -178,6 +182,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
       onOpenChange={(open) => { if (!open) setReview(null); }}
       labels={review.labels}
       opened={review.opened}
+      current={lines}
       onApply={onApplySingerLabels}
     />
   ) : null;
@@ -277,7 +282,8 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
           </div>
           {canSuggest && (
             <div className="ml-auto">
-              <Tip content={suggestBlocked ?? undefined}>
+              {/* Tip renders bare children when its content is empty, which would remount the button (and drop focus) as the block flips; always give it text. */}
+              <Tip content={suggestBlocked ?? suggestLabel}>
                 {/* aria-disabled, not disabled: a disabled button emits no hover, so the reason would be unreachable. */}
                 <Button
                   variant="outline"
@@ -286,9 +292,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
                   onClick={runSuggest}
                   className={cn('h-7 text-[13px]', suggestInert && 'opacity-50 cursor-not-allowed')}
                 >
-                  {running
-                    ? t('editor.assist.singers.running')
-                    : heavy.usage ? t('editor.assist.singers.button', { count: heavy.usage.remaining }) : t('editor.assist.singers.label')}
+                  {suggestLabel}
                 </Button>
               </Tip>
               <span role="status" className="sr-only">{running ? t('editor.assist.singers.running') : ''}</span>
