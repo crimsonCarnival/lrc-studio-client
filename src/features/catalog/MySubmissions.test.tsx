@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const { getMySubmissions, updateMyEntry, withdrawMyEntry } = vi.hoisted(() => ({
+const { getMySubmissions, updateMyEntry, withdrawMyEntry, uploadCatalogImage } = vi.hoisted(() => ({
+  uploadCatalogImage: vi.fn(),
   getMySubmissions: vi.fn(),
   updateMyEntry: vi.fn(),
   withdrawMyEntry: vi.fn(),
@@ -13,11 +14,23 @@ vi.mock('./catalog.service', async (importOriginal) => ({
   getMySubmissions,
   updateMyEntry,
   withdrawMyEntry,
+  uploadCatalogImage,
+}));
+vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
+// The crop step needs a real canvas; here it is a stand-in that confirms a fixed blob.
+vi.mock('@ui/ImageCropModal', () => ({
+  ImageCropModal: ({ imageSrc, onConfirm }: { imageSrc: string | null; onConfirm: (b: Blob) => void }) =>
+    imageSrc ? <button type="button" onClick={() => onConfirm(new Blob(['c'], { type: 'image/png' }))}>Use framed photo</button> : null,
 }));
 vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { advanced: { confirmDestructive: true } } }) }));
 vi.mock('react-hot-toast', () => ({ default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
 
 import { MySubmissions } from './MySubmissions';
+
+beforeAll(() => {
+  URL.createObjectURL = vi.fn(() => 'blob:preview');
+  URL.revokeObjectURL = vi.fn();
+});
 
 const base = { slug: 's', source: 'community', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z', reviewNote: null, imageUrl: null, bio: null, disambiguation: null };
 const queue = {
@@ -115,5 +128,60 @@ describe('MySubmissions', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
     expect(await screen.findByText('That entry no longer exists.')).toBeInTheDocument();
     expect(screen.queryByText('RAW SERVER TEXT')).not.toBeInTheDocument();
+  });
+
+  describe('photo', () => {
+    const IMG = 'https://res.cloudinary.com/x/image/upload/c_fill,w_600,h_600,f_webp,q_auto/catalog/u1/old.webp';
+    const withPhoto = { ...queue, artists: [{ ...base, id: 'a1', name: 'Pending Pal', status: 'pending', imageUrl: IMG }], albums: [] };
+
+    async function editFirst() {
+      getMySubmissions.mockResolvedValue(withPhoto);
+      show();
+      await expand();
+      fireEvent.click(screen.getByRole('button', { name: 'Edit Pending Pal' }));
+    }
+
+    it('shows the stored photo as a thumbnail', async () => {
+      getMySubmissions.mockResolvedValue(withPhoto);
+      show();
+      await expand();
+      expect(screen.getByAltText('Image for Pending Pal')).toHaveAttribute('src', IMG);
+    });
+
+    it('leaves the image alone when only the text changes', async () => {
+      updateMyEntry.mockResolvedValue(true);
+      await editFirst();
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(updateMyEntry).toHaveBeenCalledWith({ kind: 'artist', id: 'a1', name: 'Pending Pal', bio: '' }));
+    });
+
+    it('clears the image with null when the photo is removed', async () => {
+      updateMyEntry.mockResolvedValue(true);
+      await editFirst();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(updateMyEntry).toHaveBeenCalledWith({ kind: 'artist', id: 'a1', name: 'Pending Pal', bio: '', imageUrl: null }));
+      expect(uploadCatalogImage).not.toHaveBeenCalled();
+    });
+
+    it('uploads the framed replacement and sends its URL', async () => {
+      uploadCatalogImage.mockResolvedValue('https://res.cloudinary.com/x/image/upload/catalog/u1/new.webp');
+      updateMyEntry.mockResolvedValue(true);
+      await editFirst();
+      fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'new.jpg', { type: 'image/jpeg' })] } });
+      fireEvent.click(await screen.findByRole('button', { name: 'Use framed photo' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(updateMyEntry).toHaveBeenCalledWith(expect.objectContaining({ imageUrl: 'https://res.cloudinary.com/x/image/upload/catalog/u1/new.webp' })));
+    });
+
+    it('says the upload failed, and saves nothing, when the image upload throws', async () => {
+      uploadCatalogImage.mockRejectedValue(new Error('network'));
+      await editFirst();
+      fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'new.jpg', { type: 'image/jpeg' })] } });
+      fireEvent.click(await screen.findByRole('button', { name: 'Use framed photo' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      expect(await screen.findByText('The image could not be uploaded. Please try again.')).toBeInTheDocument();
+      expect(updateMyEntry).not.toHaveBeenCalled();
+    });
   });
 });

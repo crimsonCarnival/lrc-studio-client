@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from '@ui/alert-dialog';
 import { Icon } from '@/shared/ui/Icon';
+import { ImageLightbox } from '@/shared/ui/ImageLightbox';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission } from '@/features/auth/permissions';
@@ -107,6 +108,33 @@ function LoadError({ message, onRetry }: { message: string; onRetry: () => void 
 function CatalogImage({ url, alt }: { url: string | null | undefined; alt: string }) {
   if (!isCloudinaryUrl(url)) return null;
   return <img src={url} alt={alt} loading="lazy" referrerPolicy="no-referrer" className="size-16 shrink-0 rounded-md object-cover" />;
+}
+
+/** The submitted image in the review queue: big enough to judge, click for full size, and an explicit "no photo" tile. */
+function QueueImage({ url, name }: { url: string | null | undefined; name: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  if (!isCloudinaryUrl(url)) {
+    return (
+      <div className="flex size-24 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-zinc-700 text-zinc-500">
+        <span aria-hidden="true" className="text-2xl font-semibold text-zinc-300">{Array.from(name)[0]?.toUpperCase()}</span>
+        <span className="text-xs">{t('admin.catalogTab.queue.noImage')}</span>
+      </div>
+    );
+  }
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={t('admin.catalogTab.queue.viewImage', { name })}
+        onClick={() => setOpen(true)}
+        className="size-24 shrink-0 cursor-zoom-in overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+      >
+        <img src={url} alt={t('admin.catalogTab.queue.imageAlt', { name })} loading="lazy" referrerPolicy="no-referrer" className="size-full object-cover" />
+      </button>
+      <ImageLightbox src={open ? url : null} alt={t('admin.catalogTab.queue.imageAlt', { name })} onClose={() => setOpen(false)} />
+    </>
+  );
 }
 
 // ---------------------------------------------------------------- review queue
@@ -231,7 +259,7 @@ function ReviewRow({ row, parentName, duplicate, busy, onDecide }: {
   const image = row.kind === 'artist' ? row.entry.imageUrl : row.entry.coverUrl;
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-zinc-800/60 bg-zinc-900/40 p-3 sm:flex-row sm:items-start">
-      <CatalogImage url={image} alt={t('admin.catalogTab.queue.imageAlt', { name })} />
+      <QueueImage url={image} name={name} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">

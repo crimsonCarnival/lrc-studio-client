@@ -17,10 +17,24 @@ const KEYS = {
   forbidden: 'catalog.errors.forbidden',
 } as const;
 
-export type CatalogErrorKey = (typeof KEYS)[keyof typeof KEYS] | 'catalog.errors.generic';
+export type CatalogErrorKey =
+  | (typeof KEYS)[keyof typeof KEYS]
+  | 'catalog.errors.generic'
+  | 'catalog.errors.imageNotImage'
+  | 'catalog.errors.imageTooLarge'
+  | 'catalog.errors.uploadFailed';
 
 /** The i18n key for a failed catalog call. Server text is never surfaced: unknown codes get the generic message. */
 export function catalogErrorKey(err: unknown): CatalogErrorKey {
   const code = catalogErrorCode(err);
   return code && code in KEYS ? KEYS[code as keyof typeof KEYS] : 'catalog.errors.generic';
+}
+
+/**
+ * Like `catalogErrorKey`, for a failed image upload. A signature rejection carries a code (rate limit,
+ * bad image); a Cloudinary or network failure does not, so that case says the upload failed.
+ */
+export function uploadErrorKey(err: unknown): CatalogErrorKey {
+  const key = catalogErrorKey(err);
+  return key === 'catalog.errors.generic' ? 'catalog.errors.uploadFailed' : key;
 }

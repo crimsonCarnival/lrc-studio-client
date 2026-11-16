@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,12 +10,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Textarea } from '@ui/textarea';
-import { catalogErrorKey } from './catalog-errors';
+import { catalogErrorKey, uploadErrorKey } from './catalog-errors';
 import type { CatalogErrorKey } from './catalog-errors';
+import { CatalogPhotoField } from './CatalogPhotoField';
+import { UNCHANGED } from './catalog-photo';
+import type { PhotoState } from './catalog-photo';
 import { catalogDuplicateOf, submitCatalogAlbum, submitCatalogArtist, uploadCatalogImage } from './catalog.service';
 import { MY_SUBMISSIONS_KEY } from './catalog.queries';
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const NAME_MAX = 300;
 const TITLE_MAX = 500;
 const BIO_MAX = 1000;
@@ -29,7 +31,7 @@ type SubmitCatalogDialogProps = {
   target: SubmitTarget;
 };
 
-type FormError = { key: CatalogErrorKey | 'catalog.errors.imageNotImage' | 'catalog.errors.imageTooLarge' | 'catalog.errors.uploadFailed'; duplicate?: { name: string } };
+type FormError = { key: CatalogErrorKey; duplicate?: { name: string } };
 
 /** The artist / album submission form. Both end up in the review queue; nothing is public until a reviewer approves. */
 export function SubmitCatalogDialog({ open, onOpenChange, target }: SubmitCatalogDialogProps) {
@@ -53,31 +55,14 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
   const queryClient = useQueryClient();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const isAlbum = target.kind === 'album';
-  const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [year, setYear] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [photo, setPhoto] = useState<PhotoState>(UNCHANGED);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<FormError | null>(null);
 
   const trimmed = name.trim();
-
-  function pickFile(next: File | undefined) {
-    if (!next) return;
-    const invalid = !next.type.startsWith('image/') ? 'catalog.errors.imageNotImage' : next.size > MAX_IMAGE_BYTES ? 'catalog.errors.imageTooLarge' : null;
-    if (invalid) {
-      clearFile();
-      return setError({ key: invalid });
-    }
-    setError(null);
-    setFile(next);
-  }
-
-  function clearFile() {
-    setFile(null);
-    if (fileRef.current) fileRef.current.value = '';
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -86,14 +71,12 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
     setError(null);
     let imageUrl: string | undefined;
     try {
-      if (file) {
+      if (photo.kind === 'new') {
         try {
           const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_catalog_image');
-          imageUrl = await uploadCatalogImage(file, token);
+          imageUrl = await uploadCatalogImage(photo.file, token);
         } catch (err) {
-          // A signature rejection carries a code (rate limit, bad image); a Cloudinary or network failure does not.
-          const key = catalogErrorKey(err);
-          setError({ key: key === 'catalog.errors.generic' ? 'catalog.errors.uploadFailed' : key });
+          setError({ key: uploadErrorKey(err) });
           return;
         }
       }
@@ -116,9 +99,6 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
   const nameId = 'catalog-submit-name';
   const bioId = 'catalog-submit-bio';
   const yearId = 'catalog-submit-year';
-  const imageLabel = isAlbum
-    ? file ? t('catalog.dialog.coverChange') : t('catalog.dialog.coverChoose')
-    : file ? t('catalog.dialog.imageChange') : t('catalog.dialog.imageChoose');
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -142,29 +122,13 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-foreground">{isAlbum ? t('catalog.dialog.coverLabel') : t('catalog.dialog.imageLabel')}</span>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            tabIndex={-1}
-            aria-label={isAlbum ? t('catalog.dialog.coverChoose') : t('catalog.dialog.imageChoose')}
-            onChange={(e) => pickFile(e.target.files?.[0])}
-          />
-          <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>{imageLabel}</Button>
-          {file && (
-            <>
-              <span className="max-w-48 truncate text-xs text-muted-foreground">{file.name}</span>
-              <Button type="button" variant="ghost" size="sm" onClick={clearFile}>
-                {isAlbum ? t('catalog.dialog.coverRemove') : t('catalog.dialog.imageRemove')}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      <CatalogPhotoField
+        variant={target.kind}
+        value={photo}
+        onChange={setPhoto}
+        onError={(key) => setError(key ? { key } : null)}
+        disabled={busy}
+      />
 
       {error && (
         <p role="alert" className="text-sm text-love">
