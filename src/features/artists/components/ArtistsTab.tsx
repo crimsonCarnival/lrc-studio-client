@@ -1,11 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
 import { EmptyState } from '@ui/EmptyState';
 import { SearchField } from '@ui/search-field';
 import { SelectField } from '@ui/select-field';
 import { Skeleton } from '@ui/skeleton';
+import { MySubmissions } from '@/features/catalog/MySubmissions';
+import { SubmitCatalogDialog } from '@/features/catalog/SubmitCatalogDialog';
+import type { SubmitTarget } from '@/features/catalog/SubmitCatalogDialog';
 import { artistPath } from '../shelf-path';
 import { useArtistShelf } from '../shelf.queries';
 import type { ShelfArtist } from '../shelf.service';
@@ -20,6 +24,8 @@ type ArtistsTabProps = {
   isOwner: boolean;
   /** Ask for the visitor projection: the owner's "view as others" preview. */
   asVisitor: boolean;
+  /** The viewer's email is verified; the server refuses catalog submissions otherwise. */
+  isVerified: boolean;
 };
 
 function sortArtists(artists: ShelfArtist[], sort: ArtistSort): ShelfArtist[] {
@@ -33,10 +39,12 @@ function sortArtists(artists: ShelfArtist[], sort: ArtistSort): ShelfArtist[] {
 }
 
 /** The profile's Artists tab: a searchable, sortable grid built from each song's artist credits. */
-export function ArtistsTab({ accountName, isOwner, asVisitor }: ArtistsTabProps) {
+export function ArtistsTab({ accountName, isOwner, asVisitor, isVerified }: ArtistsTabProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<ArtistSort>('songs');
+  const [submitTarget, setSubmitTarget] = useState<SubmitTarget | null>(null);
+  const hintId = useId();
   const { data, isPending } = useArtistShelf(accountName, { asVisitor });
 
   const shown = useMemo(() => {
@@ -68,10 +76,25 @@ export function ArtistsTab({ accountName, isOwner, asVisitor }: ArtistsTabProps)
           />
         </div>
         {isOwner && (
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Icon name="lock" size={14} />
-            {t('profile.artists.ownerNote')}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Icon name="lock" size={14} />
+              {t('profile.artists.ownerNote')}
+            </p>
+            {/* aria-disabled, not disabled: the button stays focusable so the hint is reachable. */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-disabled={!isVerified}
+              aria-describedby={isVerified ? undefined : hintId}
+              className={isVerified ? undefined : 'opacity-60'}
+              onClick={() => { if (isVerified) setSubmitTarget({ kind: 'artist' }); }}
+            >
+              {t('catalog.suggest.button')}
+            </Button>
+            {!isVerified && <span id={hintId} className="text-xs text-muted-foreground">{t('catalog.suggest.unverifiedHint')}</span>}
+          </div>
         )}
       </div>
 
@@ -111,6 +134,13 @@ export function ArtistsTab({ accountName, isOwner, asVisitor }: ArtistsTabProps)
             </Link>
           ))}
         </div>
+      )}
+
+      {isOwner && isVerified && (
+        <MySubmissions onAddAlbum={(a) => setSubmitTarget({ kind: 'album', artistId: a.id, artistName: a.name })} />
+      )}
+      {submitTarget && (
+        <SubmitCatalogDialog open onOpenChange={(open) => { if (!open) setSubmitTarget(null); }} target={submitTarget} />
       )}
     </div>
   );

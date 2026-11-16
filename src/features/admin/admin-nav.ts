@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { isAdminHost } from '@/shared/utils/host';
 
-export const ADMIN_TABS = ['inbox', 'appeals', 'moderation', 'reports', 'staff', 'audit', 'badges', 'levels', 'xp', 'permissions', 'requests'] as const;
+export const ADMIN_TABS = ['inbox', 'appeals', 'moderation', 'reports', 'staff', 'audit', 'badges', 'levels', 'xp', 'permissions', 'requests', 'catalog'] as const;
 export type AdminTabId = (typeof ADMIN_TABS)[number];
 
 /** Tabs that split into sub-views. Only these get a second path segment; the rest are one segment. */
@@ -10,13 +10,14 @@ export const ADMIN_SUBTABS = {
   moderation: ['users', 'ips', 'devices'],
   xp: ['grant', 'levels'],
   permissions: ['catalog', 'defaults', 'overrides'],
+  catalog: ['queue', 'browse'],
 } as const satisfies Partial<Record<AdminTabId, readonly string[]>>;
 
 export type AdminNavGroupId = 'queue' | 'people' | 'rewards' | 'records';
 
 /** How the phone drawer groups the tabs. Every tab sits in exactly one group (a test enforces it). */
 export const ADMIN_NAV_GROUPS: readonly { id: AdminNavGroupId; tabs: readonly AdminTabId[] }[] = [
-  { id: 'queue', tabs: ['inbox', 'appeals', 'reports', 'requests'] },
+  { id: 'queue', tabs: ['inbox', 'appeals', 'reports', 'requests', 'catalog'] },
   { id: 'people', tabs: ['moderation', 'staff', 'permissions'] },
   { id: 'rewards', tabs: ['badges', 'levels', 'xp'] },
   { id: 'records', tabs: ['audit'] },

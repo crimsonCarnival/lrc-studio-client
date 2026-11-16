@@ -128,4 +128,11 @@ export default {
   streak7:      { label: 'On a Roll', tip: 'Maintained a 7-day streak' },
   streak30:     { label: 'Unstoppable', tip: 'Maintained a 30-day streak' },
   verified:     { label: 'Verified', tip: 'A verified account' },
+  scout:        { label: 'Scout', tip: 'Had 1 catalog contribution approved' },
+  archivist:    { label: 'Archivist', tip: 'Had 10 catalog contributions approved' },
+  curator:      { label: 'Curator', tip: 'Had 50 catalog contributions approved' },
+  chronicler:   { label: 'Chronicler', tip: 'Had 100 catalog contributions approved' },
+  historian:    { label: 'Historian', tip: 'Had 175 catalog contributions approved' },
+  librarian:    { label: 'Librarian', tip: 'Had 250 catalog contributions approved' },
+  gatekeeper:   { label: 'Gatekeeper', tip: 'Completed 100 catalog reviews' },
 };

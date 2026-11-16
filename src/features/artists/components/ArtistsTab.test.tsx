@@ -15,11 +15,11 @@ const artist = (over: Partial<ShelfArtist>): ShelfArtist => ({
   coverImage: null, latestEditAt: '2026-01-01T00:00:00.000Z', albums: [], ...over,
 });
 
-function wrap(isOwner: boolean) {
+function wrap(isOwner: boolean, isVerified = true) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter><ArtistsTab accountName="mika" isOwner={isOwner} asVisitor={!isOwner} /></MemoryRouter>
+      <MemoryRouter><ArtistsTab accountName="mika" isOwner={isOwner} asVisitor={!isOwner} isVerified={isVerified} /></MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -75,5 +75,33 @@ describe('ArtistsTab', () => {
 
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'mi' } });
     expect(names()).toEqual(['Mika']);
+  });
+
+  describe('catalog suggestions', () => {
+    beforeEach(() => getArtistShelf.mockResolvedValue([artist({})]));
+
+    it('lets a verified owner open the suggest dialog and shows My submissions', async () => {
+      wrap(true);
+      const suggest = await screen.findByRole('button', { name: 'Suggest an artist' });
+      expect(screen.getByRole('button', { name: /My submissions/ })).toBeInTheDocument();
+      fireEvent.click(suggest);
+      expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('disables the button with a visible hint for an unverified owner', async () => {
+      wrap(true, false);
+      const button = await screen.findByRole('button', { name: 'Suggest an artist' });
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAccessibleDescription('Verify your email to suggest artists.');
+      fireEvent.click(button);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('shows neither the button nor My submissions to visitors', async () => {
+      wrap(false);
+      await screen.findByText('Luna Vale');
+      expect(screen.queryByRole('button', { name: 'Suggest an artist' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /My submissions/ })).not.toBeInTheDocument();
+    });
   });
 });

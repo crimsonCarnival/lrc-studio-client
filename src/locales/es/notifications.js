@@ -74,6 +74,17 @@ export default {
   newDevice: 'Inicio de sesión desde un dispositivo que no habíamos visto en tu cuenta. Si no fuiste tú, cambia tu contraseña.',
   appealRejected: 'Tu apelación del bloqueo fue revisada y rechazada.',
   badgeUnlocked: 'Insignia desbloqueada:',
+  catalogApproved: {
+    artist: 'Tu artista <0>{{name}}</0> fue aprobado',
+    album: 'Tu álbum <0>{{name}}</0> fue aprobado',
+    entry: 'Tu entrada del catálogo <0>{{name}}</0> fue aprobada',
+  },
+  catalogRejected: {
+    artist: 'Tu artista <0>{{name}}</0> fue rechazado',
+    album: 'Tu álbum <0>{{name}}</0> fue rechazado',
+    entry: 'Tu entrada del catálogo <0>{{name}}</0> fue rechazada',
+  },
+  catalogNote: 'Nota: {{note}}',
   verifyEmail: 'Verifica tu correo para acceder a todas las funciones.',
   verifyEmailCta: 'Verificar ahora',
   setPassword: 'Establece una contraseña o clave de acceso para proteger tu cuenta.',

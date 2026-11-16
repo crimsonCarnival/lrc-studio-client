@@ -21,6 +21,7 @@ import AdminBadgesTab from './AdminBadgesTab';
 import AdminLevelsTab from './AdminLevelsTab';
 import AdminXpTab from './AdminXpTab';
 import AdminRequestsTab from './AdminRequestsTab';
+import AdminCatalogTab from './AdminCatalogTab';
 import AdminPermissionsTab from './AdminPermissionsTab';
 import AdminReportsTab from './AdminReportsTab';
 import AdminAppealsTab from './AdminAppealsTab';
@@ -598,6 +599,10 @@ export default function AdminDashboard() {
 
         {activeTab === 'requests' && (
           <AdminRequestsTab />
+        )}
+
+        {activeTab === 'catalog' && (
+          <AdminCatalogTab />
         )}
 
         {activeTab === 'permissions' && (

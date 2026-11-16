@@ -82,6 +82,14 @@ const BUILTIN: Record<string, Emblem> = {
   influential:  { shape: 'hexagon', glyph: GLYPHS.fork,      color: foam },
   streak7:      { shape: 'hexagon', glyph: GLYPHS.flame,     color: rose },
   streak30:     { shape: 'hexagon', glyph: GLYPHS.bolt,      color: gold, pips: true },
+  // Catalog contributions reuse the library glyph, tiers apart by colour; reviewing is a shield.
+  scout:        { shape: 'tile',    glyph: GLYPHS.library,   color: pine },
+  archivist:    { shape: 'tile',    glyph: GLYPHS.library,   color: foam },
+  curator:      { shape: 'tile',    glyph: GLYPHS.library,   color: iris },
+  chronicler:   { shape: 'tile',    glyph: GLYPHS.library,   color: rose },
+  historian:    { shape: 'tile',    glyph: GLYPHS.library,   color: gold },
+  librarian:    { shape: 'tile',    glyph: GLYPHS.library,   color: gold, pips: true },
+  gatekeeper:   { shape: 'shield',  glyph: GLYPHS.check,     color: love },
 };
 
 // Staff-defined badges carry one of the legacy colour names and no category, so they get a

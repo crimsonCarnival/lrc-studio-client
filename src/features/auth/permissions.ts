@@ -20,6 +20,8 @@ export const PERMISSIONS = [
   'levels.manage',
   'xp.adjust',
   'users.shadowban',
+  'catalog.review',
+  'catalog.manage',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
