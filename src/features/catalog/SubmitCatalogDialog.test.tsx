@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,9 +17,24 @@ vi.mock('./catalog.service', async (importOriginal) => ({
   uploadCatalogImage,
 }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
+// The crop step needs a real canvas; here it is a stand-in that confirms a fixed blob.
+vi.mock('@ui/ImageCropModal', () => ({
+  ImageCropModal: ({ imageSrc, onConfirm, onCancel }: { imageSrc: string | null; onConfirm: (b: Blob) => void; onCancel: () => void }) =>
+    imageSrc ? (
+      <div role="dialog" aria-label="crop">
+        <button type="button" onClick={() => onConfirm(new Blob(['c'], { type: 'image/png' }))}>Use framed photo</button>
+        <button type="button" onClick={onCancel}>Cancel crop</button>
+      </div>
+    ) : null,
+}));
 vi.mock('react-hot-toast', () => ({ default: Object.assign(vi.fn(), { success, error: vi.fn() }) }));
 
 import { SubmitCatalogDialog } from './SubmitCatalogDialog';
+
+beforeAll(() => {
+  URL.createObjectURL = vi.fn(() => 'blob:preview');
+  URL.revokeObjectURL = vi.fn();
+});
 
 const apiError = (code: string, extensions: Record<string, unknown> = {}) =>
   Object.assign(new Error('RAW SERVER TEXT'), { code, graphqlErrors: [{ message: 'RAW SERVER TEXT', extensions: { code, ...extensions } }] });
@@ -121,12 +136,13 @@ describe('SubmitCatalogDialog (artist)', () => {
     expect(uploadCatalogImage).not.toHaveBeenCalled();
   });
 
-  it('drops a previously chosen file when a new pick is invalid', async () => {
+  it('drops a previously framed photo when a new pick is invalid', async () => {
     submitCatalogArtist.mockResolvedValue({ id: 'c1' });
     open();
     typeName('Luna Vale');
     const input = screen.getByLabelText('Choose a photo');
     fireEvent.change(input, { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Use framed photo' }));
     fireEvent.change(input, { target: { files: [new File(['x'], 'a.txt', { type: 'text/plain' })] } });
     expect(await screen.findByText('Choose an image file.')).toBeInTheDocument();
     fireEvent.click(submitBtn());
@@ -134,14 +150,40 @@ describe('SubmitCatalogDialog (artist)', () => {
     expect(uploadCatalogImage).not.toHaveBeenCalled();
   });
 
-  it('uploads a valid image on submit and sends its URL', async () => {
+  it('opens the crop step on pick and uploads the framed photo, not the original file', async () => {
     uploadCatalogImage.mockResolvedValue('https://res.cloudinary.com/x/image/upload/catalog/a.png');
     submitCatalogArtist.mockResolvedValue({ id: 'c1' });
     open();
     typeName('Luna Vale');
-    fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'luna.jpg', { type: 'image/jpeg' })] } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Use framed photo' }));
+    expect(await screen.findByAltText('Preview of the chosen image')).toBeInTheDocument();
     fireEvent.click(submitBtn());
     await waitFor(() => expect(submitCatalogArtist).toHaveBeenCalledWith(expect.objectContaining({ imageUrl: 'https://res.cloudinary.com/x/image/upload/catalog/a.png' })));
+    const uploaded = uploadCatalogImage.mock.calls[0][0] as File;
+    expect(uploaded.name).toBe('luna.png');
+    expect(uploaded.type).toBe('image/png');
+  });
+
+  it('keeps no photo when the crop step is cancelled', async () => {
+    submitCatalogArtist.mockResolvedValue({ id: 'c1' });
+    open();
+    typeName('Luna Vale');
+    fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel crop' }));
+    expect(screen.queryByAltText('Preview of the chosen image')).not.toBeInTheDocument();
+    fireEvent.click(submitBtn());
+    await waitFor(() => expect(submitCatalogArtist).toHaveBeenCalled());
+    expect(uploadCatalogImage).not.toHaveBeenCalled();
+  });
+
+  it('removes a framed photo', async () => {
+    open();
+    fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Use framed photo' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }));
+    expect(screen.queryByAltText('Preview of the chosen image')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose a photo' })).toBeInTheDocument();
   });
 });
 

@@ -19,9 +19,10 @@ export type CatalogEntryEdit = {
   name?: string;
   title?: string;
   bio?: string;
-  imageUrl?: string;
+  /** `null` clears the image; `undefined` leaves it alone. */
+  imageUrl?: string | null;
   year?: string;
-  coverUrl?: string;
+  coverUrl?: string | null;
 };
 
 /** For admin edits `undefined` leaves a field alone and `null` on an image clears it. */

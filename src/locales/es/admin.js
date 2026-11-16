@@ -289,6 +289,8 @@ export default {
       albumBy: 'Álbum de {{artist}}',
       duplicateHint: 'Ya existe otra entrada con este nombre',
       imageAlt: 'Imagen enviada para {{name}}',
+      noImage: 'Sin foto',
+      viewImage: 'Ver a tamaño completo la imagen enviada para {{name}}',
       noteLabel: 'Nota para {{name}}',
       notePlaceholder: 'Nota para quien envió (opcional)',
       approve: 'Aprobar',
