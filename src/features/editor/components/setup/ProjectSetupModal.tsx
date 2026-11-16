@@ -16,9 +16,10 @@ import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
 import { ArtistsInput } from '@/features/artists/ArtistsInput';
 import { ArtistImportReview } from '@/features/artists/ArtistImportReview';
+import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { useArtistImport } from '@/features/artists/useArtistImport';
-import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renumber } from '@/features/artists/artist-credits';
+import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renamePrimary, soleArtistName, renumber } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
@@ -425,7 +426,14 @@ export default function ProjectSetupModal({
                   />
                 </div>
                 <div className="col-span-2 flex flex-col gap-3">
-                  <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} />
+                  <NameCheckSuggestion
+                    field="artist"
+                    value={soleArtistName(form.artists)}
+                    title={form.songName || form.name}
+                    onApply={(next) => setForm((f) => ({ ...f, artists: renamePrimary(f.artists, next) }))}
+                  >
+                    <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} />
+                  </NameCheckSuggestion>
                   <ArtistImportReview importer={artistImporter} />
                 </div>
                 <div className="flex flex-col gap-1.5 mt-2">
@@ -501,12 +509,14 @@ export default function ProjectSetupModal({
                   <Label htmlFor="song-album" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     {t('setup.songAlbum')}
                   </Label>
-                  <Input
-                    id="song-album"
-                    value={form.songAlbum}
-                    onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
-                  />
+                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName || form.name} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
+                    <Input
+                      id="song-album"
+                      value={form.songAlbum}
+                      onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
+                      className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
+                    />
+                  </NameCheckSuggestion>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="song-year" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">

@@ -815,4 +815,11 @@ export default {
       generic: "Ocurrió un error con Auto-marcar",
     },
   },
+  assist: {
+    nameCheck: {
+      message: "¿Quisiste decir <b>{{name}}</b>?",
+      apply: "Aplicar",
+      keep: "Mantener el mío",
+    },
+  },
 };

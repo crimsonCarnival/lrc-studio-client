@@ -815,4 +815,11 @@ export default {
       generic: "Something went wrong with Auto Stamp",
     },
   },
+  assist: {
+    nameCheck: {
+      message: "Did you mean <b>{{name}}</b>?",
+      apply: "Apply",
+      keep: "Keep mine",
+    },
+  },
 };

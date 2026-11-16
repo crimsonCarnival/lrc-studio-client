@@ -25,8 +25,9 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
 import { ArtistsSection, type ArtistsSectionHandle } from '@/features/artists/ArtistsSection';
+import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
-import { mergeCredits, primaryArtistText } from '@/features/artists/artist-credits';
+import { mergeCredits, primaryArtistText, renamePrimary, soleArtistName } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/editor/components/setup/YoutubeSearchPanel';
@@ -510,29 +511,36 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
                 onChange={(e) => setMetadataState({ songName: e.target.value })}
                 maxLength={500} />
-              <ArtistsSection
-                ref={artistsRef}
-                idPrefix="setup-artists"
-                value={artists}
-                onChange={(next) => setMetadataState({ artists: next })}
-                afterPrimary={(
-                  <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
-                    {/* span keeps the tooltip working while the button is disabled */}
-                    <span className="block">
-                      <Button
-                        type="button"
-                        variant="sync"
-                        onClick={handleFetchSongInfo}
-                        disabled={metaSearching || !songName.trim() || !primaryText.trim()}
-                        className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
-                      >
-                        {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
-                        {t('setup.fetchInfo')}
-                      </Button>
-                    </span>
-                  </Tip>
-                )}
-              />
+              <NameCheckSuggestion
+                field="artist"
+                value={soleArtistName(artists)}
+                title={songName || projectName}
+                onApply={(next) => setMetadataState((prev) => ({ artists: renamePrimary(prev.artists, next) }))}
+              >
+                <ArtistsSection
+                  ref={artistsRef}
+                  idPrefix="setup-artists"
+                  value={artists}
+                  onChange={(next) => setMetadataState({ artists: next })}
+                  afterPrimary={(
+                    <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
+                      {/* span keeps the tooltip working while the button is disabled */}
+                      <span className="block">
+                        <Button
+                          type="button"
+                          variant="sync"
+                          onClick={handleFetchSongInfo}
+                          disabled={metaSearching || !songName.trim() || !primaryText.trim()}
+                          className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
+                        >
+                          {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
+                          {t('setup.fetchInfo')}
+                        </Button>
+                      </span>
+                    </Tip>
+                  )}
+                />
+              </NameCheckSuggestion>
             </div>
 
             {/* Only shown once a lookup actually populated one of these — neither
@@ -579,16 +587,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               defaultOpen={filledDetails > 0}
             >
               <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3 items-start">
-                <FloatingCombobox
-                  id="song-album"
-                  label={t('setup.songAlbum')}
-                  value={songAlbum}
-                  onChange={(v: string) => setMetadataState({ songAlbum: v })}
-                  onSelect={handleAlbumSelect}
-                  options={albumOptions}
-                  maxLength={300}
-                  className="col-span-2 sm:col-span-1"
-                />
+                <div className="col-span-2 sm:col-span-1">
+                  <NameCheckSuggestion field="album" value={songAlbum} title={songName || projectName} onApply={(next) => setMetadataState({ songAlbum: next })}>
+                    <FloatingCombobox
+                      id="song-album"
+                      label={t('setup.songAlbum')}
+                      value={songAlbum}
+                      onChange={(v: string) => setMetadataState({ songAlbum: v })}
+                      onSelect={handleAlbumSelect}
+                      options={albumOptions}
+                      maxLength={300}
+                    />
+                  </NameCheckSuggestion>
+                </div>
                 <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 4);

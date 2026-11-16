@@ -6,6 +6,7 @@ vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ execu
 vi.mock('@/app/api', () => ({ songMetadata: { lookupTrack: vi.fn() } }));
 vi.mock('@/features/artists/ArtistsInput', () => ({ ArtistsInput: () => null }));
 vi.mock('@/features/artists/ArtistImportReview', () => ({ ArtistImportReview: () => null }));
+vi.mock('@/features/assist/NameCheckSuggestion', () => ({ NameCheckSuggestion: ({ children }: { children: unknown }) => children }));
 vi.mock('@/features/artists/TitleFeatSuggestion', () => ({ TitleFeatSuggestion: () => null }));
 
 vi.mock('@/features/projects/components/PublishDialog', () => ({
