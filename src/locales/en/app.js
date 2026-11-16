@@ -21,6 +21,7 @@ export default {
     verifyEmail: "Verify Email",
     joinSession: "Join session",
     sessions: "Sessions",
+    artist: "Artist",
     notFound: "Page Not Found"
   },
   shareProject: "Share",

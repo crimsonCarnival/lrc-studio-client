@@ -26,6 +26,10 @@ export function usePageTitle(projectName: string | null = null) {
       ?? matchPath('/:accountName/lists/:listId', path)
     )?.params.accountName;
 
+    // /:accountName/artists/:artistId is a user's artist page; /artists/:slug is the shared catalog page.
+    const artistAccount = matchPath('/:accountName/artists/:artistId', path)?.params.accountName;
+    const isCatalogArtist = !!matchPath('/artists/:slug', path);
+
     // The admin host serves its dashboard at "/" and "/home", so it has to be told apart first.
     if ((cleanPath === 'home' || cleanPath === '') && !isAdminPathname(path)) {
       pageTitle = t('app.titles.home');
@@ -76,6 +80,8 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (/^[^/]+\/projects\/[^/]+(\/(edit|fork))?$/.test(cleanPath)) {
       // /:accountName/projects/:slug-:id[/edit|/fork]
       pageTitle = projectName || t('app.titles.library');
+    } else if (isCatalogArtist || artistAccount) {
+      pageTitle = t('app.titles.artist');
     } else if (rootAccount) {
       // /:accountName, /:accountName/lists and /:accountName/lists/:listId. The hook runs above <Routes>, so useParams is empty here
       // and the account has to come from the pathname. An unknown account still gets its own not-found view from ProfilePage.

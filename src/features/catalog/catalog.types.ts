@@ -40,3 +40,13 @@ export type ReviewInput = {
   /** The entry's `updatedAt` when the reviewer opened it; the server rejects with `catalog_changed` if it moved. */
   expectedUpdatedAt?: string;
 };
+
+/** Public catalog page: an approved artist and its approved albums. Reviewer-only fields are null. */
+export type CatalogArtistPage = {
+  artist: CatalogArtist;
+  albums: CatalogAlbum[];
+  /** Every public song crediting the artist, from any user. */
+  songs: CatalogSong[];
+};
+
+export type CatalogSong = import('@/features/artists/shelf.service').ShelfProject & { user?: { accountName?: string | null } | null };

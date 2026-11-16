@@ -253,6 +253,7 @@ export default function ArtistPage() {
   const backTo = `${profilePath(accountName)}?tab=artists${viewAsOthers ? '&view=public' : ''}`;
 
   return (
+    <div className="flex-1 min-h-0 overflow-y-auto">
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
       <Link to={backTo} className="flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <Icon name="arrow_back" size={16} />
@@ -304,6 +305,7 @@ export default function ArtistPage() {
           />
         ))}
       </div>
+    </div>
     </div>
   );
 }
