@@ -15,9 +15,9 @@ vi.mock('react-hot-toast', () => ({ default: toast, toast }));
 
 const mockedCheck = vi.mocked(checkNames);
 
-function setup(onApply = vi.fn()) {
+function setup(onApply = vi.fn(), title = 'Hello', value = 'Adelle') {
   render(
-    <NameCheckSuggestion field="artist" value="Adelle" title="Hello" onApply={onApply}>
+    <NameCheckSuggestion field="artist" value={value} title={title} onApply={onApply}>
       <input aria-label="Artist" />
     </NameCheckSuggestion>,
   );
@@ -68,7 +68,7 @@ describe('NameCheckSuggestion', () => {
     const { input } = setup();
     await blur(input);
     fireEvent.click(screen.getByRole('button', { name: 'Keep mine' }));
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
     await blur(input);
     expect(mockedCheck).toHaveBeenCalledTimes(1);
   });
@@ -77,7 +77,7 @@ describe('NameCheckSuggestion', () => {
     mockedCheck.mockRejectedValue(new Error('assist_upstream'));
     const { input } = setup();
     await blur(input);
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
     expect(toast.error).not.toHaveBeenCalled();
   });
 
@@ -86,6 +86,49 @@ describe('NameCheckSuggestion', () => {
     const { input } = setup();
     await blur(input);
     expect(mockedCheck).not.toHaveBeenCalled();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('sends nothing when the title is empty or only spaces', async () => {
+    const { input } = setup(vi.fn(), '   ');
+    await blur(input);
+    expect(mockedCheck).not.toHaveBeenCalled();
+  });
+
+  it('sends trimmed values cut to the server bounds', async () => {
+    const { input } = setup(vi.fn(), `  ${'t'.repeat(600)}  `, ` ${'a'.repeat(400)} `);
+    await blur(input);
+    expect(mockedCheck).toHaveBeenCalledWith({ title: 't'.repeat(500), artist: 'a'.repeat(300) });
+  });
+
+  it('a failed request can be retried for the same value', async () => {
+    mockedCheck.mockRejectedValueOnce(new Error('assist_upstream'));
+    const { input } = setup();
+    await blur(input);
+    await blur(input);
+    expect(mockedCheck).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('status')).toHaveTextContent('Did you mean Adele?');
+  });
+
+  it('refocusing within the debounce cancels the pending request', async () => {
+    const { input } = setup();
+    fireEvent.blur(input);
+    await act(async () => { await vi.advanceTimersByTimeAsync(200); });
+    fireEvent.focus(input);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(mockedCheck).not.toHaveBeenCalled();
+  });
+
+  it('keeps the same input element when the person signs in', async () => {
+    auth.user = null;
+    const { rerender } = render(
+      <NameCheckSuggestion field="artist" value="Adelle" title="Hello" onApply={vi.fn()}><input aria-label="Artist" /></NameCheckSuggestion>,
+    );
+    const before = screen.getByLabelText('Artist');
+    auth.user = { id: 'me' };
+    rerender(
+      <NameCheckSuggestion field="artist" value="Adelle" title="Hello" onApply={vi.fn()}><input aria-label="Artist" /></NameCheckSuggestion>,
+    );
+    expect(screen.getByLabelText('Artist')).toBe(before);
   });
 });
