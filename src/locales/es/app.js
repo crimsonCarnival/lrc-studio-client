@@ -21,6 +21,7 @@ export default {
     verifyEmail: "Verificar Correo",
     joinSession: "Unirse a la sesión",
     sessions: "Sesiones",
+    artist: "Artista",
     notFound: "Página No Encontrada"
   },
   shareProject: "Compartir",
