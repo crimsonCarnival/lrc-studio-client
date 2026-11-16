@@ -229,6 +229,9 @@ describe('AdminCatalogTab load failures', () => {
   });
 });
 
+// The albums panel is modal: the artist grid behind it is inert until it closes.
+const closeDrawer = () => fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
 describe('AdminCatalogTab edit and delete options', () => {
   const adminArtist = artist('a7', 'Admin Act', '2026-01-01', { status: 'approved', source: 'admin', bio: 'old bio', disambiguation: '', imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/catalog/a.jpg' });
   beforeEach(() => {
@@ -255,9 +258,31 @@ describe('AdminCatalogTab edit and delete options', () => {
     show('/admin/catalog/browse');
     await screen.findByText('Admin Act');
     fireEvent.click(screen.getByRole('button', { name: /^Edit Admin Act/ }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Remove the current photo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(adminUpdate).toHaveBeenCalledWith({ kind: 'artist', id: 'a7', imageUrl: null }));
+  });
+
+  it('lists albums in the side panel and creates one from it', async () => {
+    adminListAlbums.mockResolvedValue([{ id: 'al1', artistId: 'a7', title: 'First LP', year: '1999', coverUrl: null, source: 'admin', status: 'approved' }]);
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    expect(await screen.findByText('First LP')).toBeInTheDocument();
+    expect(screen.getByText('1 album')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'New album' }));
+    expect(await screen.findByRole('heading', { name: 'New album' })).toBeInTheDocument();
+  });
+
+  it('loads the next page of artists with the current offset', async () => {
+    const first = Array.from({ length: 24 }, (_, i) => artist(`p${i}`, `Artist ${i}`, '2026-01-01', { status: 'approved', source: 'admin' }));
+    adminListArtists.mockResolvedValueOnce(first).mockResolvedValueOnce([artist('p24', 'Artist 24', '2026-01-01', { status: 'approved', source: 'admin' })]);
+    show('/admin/catalog/browse');
+    await screen.findByText('Artist 0');
+    fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByText('Artist 24');
+    expect(adminListArtists).toHaveBeenLastCalledWith({ query: undefined, offset: 24, limit: 24 });
+    expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
   });
 
   it('offers the revoke option with a hint for an artist whose albums are not loaded', async () => {
@@ -275,6 +300,7 @@ describe('AdminCatalogTab edit and delete options', () => {
     await screen.findByText('Admin Act');
     fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
     await screen.findByText('Fan Album');
+    closeDrawer();
     fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).getByRole('checkbox')).toBeInTheDocument();
@@ -286,6 +312,7 @@ describe('AdminCatalogTab edit and delete options', () => {
     await screen.findByText('Admin Act');
     fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
     await screen.findByText('No albums yet.');
+    closeDrawer();
     fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
