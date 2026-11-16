@@ -847,7 +847,7 @@ export default {
       running: "Romanizing…",
     },
     errors: {
-      dailyCap:"You have used all of today's daily runs. They reset at {{time}}.",
+      dailyCap: "You have used all of today's daily runs. They reset at {{time}}.",
       dailyCapNoTime: "You have used all of today's daily runs. They reset tomorrow (UTC).",
       unavailable: "AI assist is unavailable right now",
       upstream: "The AI assistant could not complete that. Try again shortly.",

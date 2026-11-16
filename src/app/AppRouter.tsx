@@ -1,6 +1,7 @@
 import {
   Suspense, lazy, useEffect, useRef, useCallback, useMemo, useState, memo
 } from 'react';
+import { songLanguageHint } from '@/features/assist/song-language';
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
 import { isAdminHost, canUseAdminHost, adminHostUrl } from '@/shared/utils/host';
@@ -539,7 +540,7 @@ export function AppRouter({
     songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || EMPTY_STRING_ARRAY,
     declaredSingers: projectMetadata?.singers || EMPTY_STRING_ARRAY,
-    songLanguage: typeof projectMetadata?.language === 'string' ? projectMetadata.language : undefined,
+    songLanguage: songLanguageHint(projectMetadata),
     playerSlot,
     onShowPreview: showPreviewView,
     onExit: handleExitEditor,
