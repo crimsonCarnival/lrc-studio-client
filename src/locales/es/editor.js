@@ -816,6 +816,12 @@ export default {
     },
   },
   assist: {
+    describe: {
+      suggest: "Sugerir",
+      proposal: "Sugerencia: <b>{{summary}}</b>",
+      apply: "Aplicar",
+      dismiss: "Descartar",
+    },
     titleCleanup: {
       chip: "Limpiar título",
       preview: "Canción <b>{{song}}</b> de <b>{{artists}}</b>.",

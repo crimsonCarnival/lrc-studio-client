@@ -21,7 +21,8 @@ import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { useArtistImport } from '@/features/artists/useArtistImport';
 import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renamePrimary, soleArtistName, renumber } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
-import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
+import { MAX_TAGS, PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
+import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
 import toast from 'react-hot-toast';
 import { songMetadata } from '@/app/api';
@@ -142,6 +143,8 @@ interface ProjectSetupModalProps {
   onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
   sourceInfo?: SourceInfo | null;
   songSingers?: string[];
+  /** Main lyric line texts. Passing them shows the genre/tags suggestion; omit where the lines are not at hand. */
+  lyricsSample?: string[];
 }
 
 export default function ProjectSetupModal({
@@ -165,6 +168,7 @@ export default function ProjectSetupModal({
   onVisibilityChange,
   sourceInfo = null,
   songSingers = [],
+  lyricsSample,
 }: ProjectSetupModalProps) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -552,6 +556,16 @@ export default function ProjectSetupModal({
                   onValueChange={(v) => setForm(f => ({ ...f, genre: v }))}
                   options={[{ value: '', label: '—' }, ...PRIMARY_GENRES.map((g) => ({ value: g, label: t(`setup.genre.${g}`) }))]}
                 />
+                {lyricsSample && (
+                  <DescribeSuggestion
+                    input={{ title: form.songName.trim() || form.name.trim() || undefined, artist: primaryText.trim() || undefined, lines: lyricsSample }}
+                    onApply={(d) => setForm((f) => {
+                      // No language field here, so only genre and tags are offered. Set both at once.
+                      const tags = [...f.tags, ...d.tags.filter((x) => !f.tags.includes(x))].slice(0, MAX_TAGS);
+                      return { ...f, ...(d.genre ? { genre: d.genre } : {}), tags };
+                    })}
+                  />
+                )}
               </div>
 
               <div className="space-y-2">

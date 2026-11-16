@@ -213,6 +213,12 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // Only a saved project of your own has a visibility to change from the settings modal.
   const settingsProjectId = activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && !isSharedProject && !collabViewer ? activepublicId : null;
 
+  // Main lyric texts for the AI describe suggestion in the metadata modal (section markers excluded).
+  const lyricsSample = useMemo(
+    () => (lines ?? []).filter((l) => l.type !== 'section').map((l) => l.text ?? ''),
+    [lines],
+  );
+
   const songSingers = useMemo(() => buildSingerRoster(lines, artistRoster(projectMetadata)), [lines, projectMetadata]);
 
   return (
@@ -393,6 +399,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               title: mediaTitle || appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '') || '',
             }}
             songSingers={songSingers}
+            lyricsSample={lyricsSample}
             isPublic={projectIsPublic}
             publicId={settingsProjectId}
             onVisibilityChange={settingsProjectId ? (next: boolean, listed?: boolean) => setProjectVisibility(settingsProjectId, next, listed) : undefined}

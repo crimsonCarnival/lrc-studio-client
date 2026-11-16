@@ -14,7 +14,7 @@ import { Textarea } from '@ui/textarea';
 import { Tip } from '@ui/tip';
 import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { TagsSelector } from '@ui/tags-selector';
-import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
+import { MAX_TAGS, PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import { parseRawLyricsText } from '@/features/editor/utils/parse-raw-lyrics';
 import { Icon } from '@/shared/ui/Icon';
@@ -27,6 +27,7 @@ import { hasProjectIdentity } from '@/features/projects/project-path';
 import { ArtistsSection, type ArtistsSectionHandle } from '@/features/artists/ArtistsSection';
 import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
 import { TitleCleanupChip } from '@/features/assist/TitleCleanupChip';
+import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { mergeCredits, primaryArtistText, renamePrimary, soleArtistName } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
@@ -348,6 +349,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const genreOptions    = useMemo(() => PRIMARY_GENRES.map((k) => ({ value: k, label: (t as TkFn)(`setup.genre.${k}`) })), [t]);
   const languageOptions = useLanguageOptions();
+  const languageValues = useMemo(() => languageOptions.map((o) => o.value), [languageOptions]);
+  // Main lyric text only: section markers are not lyrics. Pasted text is used until it is parsed.
+  const describeLines = useMemo(
+    () => (parsedLines ? parsedLines.filter((l) => l.type !== 'section').map((l) => l.text ?? '') : lyricsText.split(/\r?\n/)),
+    [parsedLines, lyricsText],
+  );
+  const describeInput = useMemo(
+    () => ({ title: songName.trim() || projectName.trim() || undefined, artist: primaryText.trim() || undefined, lines: describeLines }),
+    [songName, projectName, primaryText, describeLines],
+  );
 
   const albumOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -634,6 +645,21 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
               {/* Three even columns: genre and tags were taking two thirds of a
                   row each for values that are a single short word. */}
+              <DescribeSuggestion
+                input={describeInput}
+                languageOptions={languageValues}
+                onApply={(d) => setMetadataState((prev) => {
+                  // A genre change clears tags (see the genre field), so genre and tags are set in one update.
+                  const genreChanged = !!d.genre && d.genre !== prev.genre;
+                  const base = genreChanged ? [] : prev.tags;
+                  const tags = [...base, ...d.tags.filter((x) => !base.includes(x))].slice(0, MAX_TAGS);
+                  return {
+                    ...(d.genre ? { genre: d.genre } : {}),
+                    tags,
+                    ...(d.language ? { songLanguage: d.language } : {}),
+                  };
+                })}
+              />
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
                 <FloatingCombobox
                   id="song-genre"
