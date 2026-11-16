@@ -1,10 +1,12 @@
-import { lazy, Suspense } from 'react';
-import { useParams } from 'react-router-dom';
+import { lazy, Suspense, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
-import { Link } from 'react-router-dom';
+import { Button } from '@ui/button';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectPath } from '@/features/projects/project-path';
+import { SubmitCatalogDialog } from './SubmitCatalogDialog';
 import { useCatalogArtist } from './catalog.queries';
 import type { CatalogArtistPage } from './catalog.types';
 
@@ -36,6 +38,8 @@ export default function CatalogArtistPage() {
   const { t } = useTranslation();
   const { slug } = useParams();
   const { data, isPending, isError } = useCatalogArtist(slug);
+  const { user } = useAuthContext();
+  const [suggesting, setSuggesting] = useState(false);
 
   if (isPending) return <div className="flex justify-center py-24"><LoadingSpinner size="lg" /></div>;
   if (isError || !data) return <Suspense fallback={null}><NotFoundPage /></Suspense>;
@@ -60,7 +64,14 @@ export default function CatalogArtistPage() {
         </header>
 
         <section aria-labelledby="catalog-albums" className="flex flex-col gap-4">
-          <h2 id="catalog-albums" className="font-heading text-xl font-semibold text-foreground">{t('catalog.page.albums')}</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="catalog-albums" className="font-heading text-xl font-semibold text-foreground">{t('catalog.page.albums')}</h2>
+            {user?.isVerified && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setSuggesting(true)}>
+                <Icon name="add" size={14} /> {t('catalog.page.suggestAlbum')}
+              </Button>
+            )}
+          </div>
           {albums.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('catalog.page.noAlbums')}</p>
           ) : (
@@ -109,6 +120,13 @@ export default function CatalogArtistPage() {
           )}
         </section>
       </div>
+      {suggesting && (
+        <SubmitCatalogDialog
+          open
+          onOpenChange={(open) => { if (!open) setSuggesting(false); }}
+          target={{ kind: 'album', artistId: artist.id, artistName: artist.name }}
+        />
+      )}
     </div>
   );
 }

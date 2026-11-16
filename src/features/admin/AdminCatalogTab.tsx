@@ -27,6 +27,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission } from '@/features/auth/permissions';
 import {
   adminCreateAlbum,
+  adminImportAlbums,
   adminCreateArtist,
   adminDelete,
   adminListAlbums,
@@ -370,6 +371,16 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
     }
   }, []);
 
+  async function importAlbums(artistId: string) {
+    try {
+      const created = await adminImportAlbums(artistId);
+      toast.success(t('admin.catalogTab.browse.importDone', { count: created }));
+      if (created > 0) await loadAlbums(artistId);
+    } catch (err) {
+      toast.error(t(catalogErrorKey(err)));
+    }
+  }
+
   function toggleAlbums(artistId: string) {
     const next = open === artistId ? null : artistId;
     setOpen(next);
@@ -501,9 +512,14 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
                   {form?.mode === 'create' && form.kind === 'album' && form.artistId === artist.id ? (
                     <EntryForm target={form} onDone={afterSave} onCancel={() => setForm(null)} />
                   ) : (
-                    <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setForm({ mode: 'create', kind: 'album', artistId: artist.id })}>
-                      <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newAlbum')}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setForm({ mode: 'create', kind: 'album', artistId: artist.id })}>
+                        <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newAlbum')}
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => void importAlbums(artist.id)}>
+                        <Icon name="library_music" size={14} /> {t('admin.catalogTab.browse.importAlbums')}
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
