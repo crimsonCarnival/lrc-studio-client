@@ -1,5 +1,5 @@
 import { profilePath } from '@/features/profile/profile-path';
-import { ArtistText } from '@/features/artists/ArtistText';
+import { ArtistLinks } from '@/features/catalog/ArtistLinks';
 import { artistDisplay, creditsOf, primaryArtistText, type ArtistCredit } from '@/features/artists/artist-credits';
 import { localizeSongLanguage } from '@features/editor/utils/song-language';
 import { StaffRing } from '@/shared/ui/StaffRing';
@@ -223,7 +223,7 @@ export default function ProjectInfoPanel({
             {title}
           </h1>
           {showSongName && <p className="text-[15px] text-subtle">{meta.songName}</p>}
-          {artistDisplay(meta) && <p className="text-[15px] leading-tight font-bold text-foreground"><ArtistText metadata={meta} /></p>}
+          {artistDisplay(meta) && <p className="text-[15px] leading-tight font-bold text-foreground"><ArtistLinks metadata={meta} /></p>}
           {albumLine && (
             <Tip content={albumLine}>
               <p className="line-clamp-2 text-sm text-subtle">

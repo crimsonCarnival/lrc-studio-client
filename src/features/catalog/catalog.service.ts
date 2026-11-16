@@ -214,3 +214,14 @@ export async function getCatalogArtist(slug: string): Promise<CatalogArtistPage 
   ` + PROJECT_LIST_FIELDS, { slug });
   return data.catalogArtist;
 }
+
+/** Catalog slugs for the artists that have an approved page; names without one are simply absent. */
+export async function getCatalogSlugs(names: string[]): Promise<Array<{ name: string; key: string; slug: string }>> {
+  if (names.length === 0) return [];
+  const data = await gqlRequest<{ catalogArtistSlugs: Array<{ name: string; key: string; slug: string }> }>(/* GraphQL */ `
+    query CatalogArtistSlugs($names: [String!]!) {
+      catalogArtistSlugs(names: $names) { name key slug }
+    }
+  `, { names });
+  return data.catalogArtistSlugs;
+}

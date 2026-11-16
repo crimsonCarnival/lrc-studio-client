@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getCatalogArtist } from './catalog.service';
+import { getCatalogArtist, getCatalogSlugs } from './catalog.service';
 
 export const MY_SUBMISSIONS_KEY = ['catalog', 'my-submissions'] as const;
 
@@ -12,4 +12,16 @@ export function useCatalogArtist(slug: string | undefined) {
     queryFn: () => getCatalogArtist(slug!),
     enabled: !!slug,
   });
+}
+
+/** name key (NFC, lower-case) -> catalog slug, for the given artist names. Empty while loading or on error. */
+export function useCatalogSlugs(names: string[]): Map<string, string> {
+  const keys = [...new Set(names.map((n) => n.normalize('NFC').toLowerCase()))].sort();
+  const { data } = useQuery({
+    queryKey: ['catalog', 'slugs', keys] as const,
+    queryFn: () => getCatalogSlugs(keys),
+    enabled: keys.length > 0,
+    staleTime: 5 * 60_000,
+  });
+  return new Map((data ?? []).map((r) => [r.key, r.slug]));
 }

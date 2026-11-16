@@ -311,6 +311,7 @@ export default {
     singlesHint: "Songs with no album set",
     synced: "Synced",
     inProgress: "In progress",
+    viewCatalogPage: "View the artist page",
     kicker: "Artist",
     back: "{{name}}'s artists",
     empty: "No artists to show yet.",

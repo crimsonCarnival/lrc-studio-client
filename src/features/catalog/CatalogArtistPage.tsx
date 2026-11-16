@@ -6,6 +6,28 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Link } from 'react-router-dom';
 import { projectPath } from '@/features/projects/project-path';
 import { useCatalogArtist } from './catalog.queries';
+import type { CatalogArtistPage } from './catalog.types';
+
+type AlbumCard = { key: string; title: string; year: string | null; cover: string | null; count: number };
+
+/** Catalog albums plus every album named by a song's metadata, merged case-insensitively. */
+function albumCards(albums: CatalogArtistPage['albums'], songs: CatalogArtistPage['songs']): AlbumCard[] {
+  const cards = new Map<string, AlbumCard>();
+  for (const a of albums) {
+    cards.set(a.title.normalize('NFC').toLowerCase(), { key: a.id, title: a.title, year: a.year ?? null, cover: a.coverUrl ?? null, count: 0 });
+  }
+  for (const song of songs) {
+    const title = song.metadata?.songAlbum?.trim();
+    if (!title) continue;
+    const key = title.normalize('NFC').toLowerCase();
+    const card = cards.get(key) ?? { key, title, year: null, cover: null, count: 0 };
+    card.count += 1;
+    card.year ??= song.metadata?.songYear?.toString().trim() || null;
+    card.cover ??= song.coverImage ?? null;
+    cards.set(key, card);
+  }
+  return [...cards.values()].sort((a, b) => (b.year ?? '').localeCompare(a.year ?? '') || a.title.localeCompare(b.title));
+}
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 
@@ -18,7 +40,8 @@ export default function CatalogArtistPage() {
   if (isPending) return <div className="flex justify-center py-24"><LoadingSpinner size="lg" /></div>;
   if (isError || !data) return <Suspense fallback={null}><NotFoundPage /></Suspense>;
 
-  const { artist, albums, songs } = data;
+  const { artist, songs } = data;
+  const albums = albumCards(data.albums, songs);
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
@@ -43,14 +66,18 @@ export default function CatalogArtistPage() {
           ) : (
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {albums.map((album) => (
-                <li key={album.id} className="flex flex-col gap-2">
+                <li key={album.key} className="flex flex-col gap-2">
                   <span className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground">
-                    {album.coverUrl
-                      ? <img src={album.coverUrl} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
+                    {album.cover
+                      ? <img src={album.cover} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
                       : <Icon name="music_note" size={32} />}
                   </span>
                   <span className="truncate text-sm font-medium text-foreground">{album.title}</span>
-                  {album.year && <span className="-mt-1 text-xs text-muted-foreground">{album.year}</span>}
+                  {(album.year || album.count > 0) && (
+                    <span className="-mt-1 text-xs text-muted-foreground">
+                      {[album.year, album.count > 0 && t('catalog.page.songs', { count: album.count })].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
