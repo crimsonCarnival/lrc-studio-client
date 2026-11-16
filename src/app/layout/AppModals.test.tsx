@@ -8,6 +8,7 @@ vi.mock('@/app/api', () => ({ songMetadata: { lookupTrack: vi.fn() } }));
 vi.mock('@/features/artists/ArtistsInput', () => ({ ArtistsInput: () => null }));
 vi.mock('@/features/artists/ArtistImportReview', () => ({ ArtistImportReview: () => null }));
 vi.mock('@/features/artists/TitleFeatSuggestion', () => ({ TitleFeatSuggestion: () => null }));
+vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: { id: 'me' } }) }));
 vi.mock('@/features/projects/components/PublishDialog', () => ({
   PublishDialog: ({ open, project }: { open: boolean; project: { publicId?: string | null; isPublic: boolean } }) => (
     open ? <div>publish-dialog:{project.publicId}:{String(project.isPublic)}</div> : null
@@ -40,5 +41,18 @@ describe('AppModals settings modal visibility', () => {
     renderModals({ isPublic: false, publicId: null });
     expect(await screen.findByText('project.visibilityPrivate', {}, { timeout: 10000 })).toBeInTheDocument();
     expect(screen.queryByText('project.visibilityManage')).not.toBeInTheDocument();
+  });
+});
+
+describe('AppModals describe suggestion', () => {
+  it('offers the suggestion only where lyric lines are passed in', async () => {
+    renderModals({ isPublic: false, publicId: null, lyricsSample: ['la la la'] });
+    expect(await screen.findByText('editor.assist.describe.suggest', {}, { timeout: 10000 })).toBeInTheDocument();
+  });
+
+  it('hides the suggestion when no lines are passed (Home/Library/Profile)', async () => {
+    renderModals({ isPublic: false, publicId: null });
+    expect(await screen.findByText('project.visibilityPrivate', {}, { timeout: 10000 })).toBeInTheDocument();
+    expect(screen.queryByText('editor.assist.describe.suggest')).not.toBeInTheDocument();
   });
 });

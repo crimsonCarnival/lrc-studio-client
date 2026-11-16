@@ -14,7 +14,7 @@ import { Textarea } from '@ui/textarea';
 import { Tip } from '@ui/tip';
 import { FileDropZone } from '@/shared/ui/FileDropZone';
 import { TagsSelector } from '@ui/tags-selector';
-import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
+import { MAX_TAGS, PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import { parseRawLyricsText } from '@/features/editor/utils/parse-raw-lyrics';
 import { Icon } from '@/shared/ui/Icon';
@@ -25,8 +25,11 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
 import { ArtistsSection, type ArtistsSectionHandle } from '@/features/artists/ArtistsSection';
+import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
+import { TitleCleanupChip } from '@/features/assist/TitleCleanupChip';
+import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
-import { mergeCredits, primaryArtistText } from '@/features/artists/artist-credits';
+import { mergeCredits, primaryArtistText, renamePrimary, soleArtistName } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/editor/components/setup/YoutubeSearchPanel';
@@ -346,6 +349,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const genreOptions    = useMemo(() => PRIMARY_GENRES.map((k) => ({ value: k, label: (t as TkFn)(`setup.genre.${k}`) })), [t]);
   const languageOptions = useLanguageOptions();
+  const languageValues = useMemo(() => languageOptions.map((o) => o.value), [languageOptions]);
+  // Main lyric text only: section markers are not lyrics. Pasted text is used until it is parsed.
+  const describeLines = useMemo(
+    () => (parsedLines ? parsedLines.filter((l) => l.type !== 'section').map((l) => l.text ?? '') : lyricsText.split(/\r?\n/)),
+    [parsedLines, lyricsText],
+  );
+  const describeInput = useMemo(
+    () => ({ title: songName.trim() || projectName.trim() || undefined, artist: primaryText.trim() || undefined, lines: describeLines }),
+    [songName, projectName, primaryText, describeLines],
+  );
 
   const albumOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -479,6 +492,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   title={projectName}
                   onApply={(cleaned, featured) => setMetadataState((prev) => ({ name: cleaned, artists: mergeCredits(prev.artists, featured) }))}
                 />
+                <TitleCleanupChip
+                  title={projectName}
+                  onApply={(split) => setMetadataState((prev) => ({
+                    name: split.songName,
+                    songName: split.songName,
+                    artists: mergeCredits(prev.artists, split.artists.map((name, i) => ({ name, role: i === 0 ? 'primary' as const : 'featured' as const, order: i }))),
+                    ...(prev.songAlbum ? {} : split.album ? { songAlbum: split.album } : {}),
+                  }))}
+                />
                 <p
                   id="project-identity-hint"
                   className={`text-xs ${audioReady && hasLyrics && !hasIdentity ? 'text-love' : 'text-zinc-500'}`}
@@ -510,29 +532,36 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
                 onChange={(e) => setMetadataState({ songName: e.target.value })}
                 maxLength={500} />
-              <ArtistsSection
-                ref={artistsRef}
-                idPrefix="setup-artists"
-                value={artists}
-                onChange={(next) => setMetadataState({ artists: next })}
-                afterPrimary={(
-                  <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
-                    {/* span keeps the tooltip working while the button is disabled */}
-                    <span className="block">
-                      <Button
-                        type="button"
-                        variant="sync"
-                        onClick={handleFetchSongInfo}
-                        disabled={metaSearching || !songName.trim() || !primaryText.trim()}
-                        className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
-                      >
-                        {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
-                        {t('setup.fetchInfo')}
-                      </Button>
-                    </span>
-                  </Tip>
-                )}
-              />
+              <NameCheckSuggestion
+                field="artist"
+                value={soleArtistName(artists)}
+                title={songName || projectName}
+                onApply={(next) => setMetadataState((prev) => ({ artists: renamePrimary(prev.artists, next) }))}
+              >
+                <ArtistsSection
+                  ref={artistsRef}
+                  idPrefix="setup-artists"
+                  value={artists}
+                  onChange={(next) => setMetadataState({ artists: next })}
+                  afterPrimary={(
+                    <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
+                      {/* span keeps the tooltip working while the button is disabled */}
+                      <span className="block">
+                        <Button
+                          type="button"
+                          variant="sync"
+                          onClick={handleFetchSongInfo}
+                          disabled={metaSearching || !songName.trim() || !primaryText.trim()}
+                          className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
+                        >
+                          {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
+                          {t('setup.fetchInfo')}
+                        </Button>
+                      </span>
+                    </Tip>
+                  )}
+                />
+              </NameCheckSuggestion>
             </div>
 
             {/* Only shown once a lookup actually populated one of these — neither
@@ -579,16 +608,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               defaultOpen={filledDetails > 0}
             >
               <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3 items-start">
-                <FloatingCombobox
-                  id="song-album"
-                  label={t('setup.songAlbum')}
-                  value={songAlbum}
-                  onChange={(v: string) => setMetadataState({ songAlbum: v })}
-                  onSelect={handleAlbumSelect}
-                  options={albumOptions}
-                  maxLength={300}
-                  className="col-span-2 sm:col-span-1"
-                />
+                <div className="col-span-2 sm:col-span-1">
+                  <NameCheckSuggestion field="album" value={songAlbum} title={songName || projectName} onApply={(next) => setMetadataState({ songAlbum: next })}>
+                    <FloatingCombobox
+                      id="song-album"
+                      label={t('setup.songAlbum')}
+                      value={songAlbum}
+                      onChange={(v: string) => setMetadataState({ songAlbum: v })}
+                      onSelect={handleAlbumSelect}
+                      options={albumOptions}
+                      maxLength={300}
+                    />
+                  </NameCheckSuggestion>
+                </div>
                 <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 4);
@@ -613,6 +645,21 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
               {/* Three even columns: genre and tags were taking two thirds of a
                   row each for values that are a single short word. */}
+              <DescribeSuggestion
+                input={describeInput}
+                languageOptions={languageValues}
+                onApply={(d) => setMetadataState((prev) => {
+                  // A genre change clears tags (see the genre field), so genre and tags are set in one update.
+                  const genreChanged = !!d.genre && d.genre !== prev.genre;
+                  const base = genreChanged ? [] : prev.tags;
+                  const tags = [...base, ...d.tags.filter((x) => !base.includes(x))].slice(0, MAX_TAGS);
+                  return {
+                    ...(d.genre ? { genre: d.genre } : {}),
+                    tags,
+                    ...(d.language ? { songLanguage: d.language } : {}),
+                  };
+                })}
+              />
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
                 <FloatingCombobox
                   id="song-genre"

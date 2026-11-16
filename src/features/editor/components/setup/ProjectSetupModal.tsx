@@ -16,11 +16,13 @@ import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
 import { ArtistsInput } from '@/features/artists/ArtistsInput';
 import { ArtistImportReview } from '@/features/artists/ArtistImportReview';
+import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { useArtistImport } from '@/features/artists/useArtistImport';
-import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renumber } from '@/features/artists/artist-credits';
+import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renamePrimary, soleArtistName, renumber } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
-import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
+import { MAX_TAGS, PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
+import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
 import toast from 'react-hot-toast';
 import { songMetadata } from '@/app/api';
@@ -141,6 +143,8 @@ interface ProjectSetupModalProps {
   onVisibilityChange?: (isPublic: boolean, listed?: boolean) => void;
   sourceInfo?: SourceInfo | null;
   songSingers?: string[];
+  /** Main lyric line texts. Passing them shows the genre/tags suggestion; omit where the lines are not at hand. */
+  lyricsSample?: string[];
 }
 
 export default function ProjectSetupModal({
@@ -164,6 +168,7 @@ export default function ProjectSetupModal({
   onVisibilityChange,
   sourceInfo = null,
   songSingers = [],
+  lyricsSample,
 }: ProjectSetupModalProps) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -425,7 +430,14 @@ export default function ProjectSetupModal({
                   />
                 </div>
                 <div className="col-span-2 flex flex-col gap-3">
-                  <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} />
+                  <NameCheckSuggestion
+                    field="artist"
+                    value={soleArtistName(form.artists)}
+                    title={form.songName || form.name}
+                    onApply={(next) => setForm((f) => ({ ...f, artists: renamePrimary(f.artists, next) }))}
+                  >
+                    <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} />
+                  </NameCheckSuggestion>
                   <ArtistImportReview importer={artistImporter} />
                 </div>
                 <div className="flex flex-col gap-1.5 mt-2">
@@ -501,12 +513,14 @@ export default function ProjectSetupModal({
                   <Label htmlFor="song-album" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     {t('setup.songAlbum')}
                   </Label>
-                  <Input
-                    id="song-album"
-                    value={form.songAlbum}
-                    onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
-                  />
+                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName || form.name} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
+                    <Input
+                      id="song-album"
+                      value={form.songAlbum}
+                      onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
+                      className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
+                    />
+                  </NameCheckSuggestion>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="song-year" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
@@ -542,6 +556,16 @@ export default function ProjectSetupModal({
                   onValueChange={(v) => setForm(f => ({ ...f, genre: v }))}
                   options={[{ value: '', label: '—' }, ...PRIMARY_GENRES.map((g) => ({ value: g, label: t(`setup.genre.${g}`) }))]}
                 />
+                {lyricsSample && (
+                  <DescribeSuggestion
+                    input={{ title: form.songName.trim() || form.name.trim() || undefined, artist: primaryText.trim() || undefined, lines: lyricsSample }}
+                    onApply={(d) => setForm((f) => {
+                      // No language field here, so only genre and tags are offered. Set both at once.
+                      const tags = [...f.tags, ...d.tags.filter((x) => !f.tags.includes(x))].slice(0, MAX_TAGS);
+                      return { ...f, ...(d.genre ? { genre: d.genre } : {}), tags };
+                    })}
+                  />
+                )}
               </div>
 
               <div className="space-y-2">

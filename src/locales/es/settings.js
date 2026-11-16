@@ -409,6 +409,11 @@ export default {
     applyModeEmptyOnly: "Solo líneas sin marcar"
   },
 
+  aiAssist: {
+    title: "Sugerencias con IA",
+    body: "Cuando pides una sugerencia con IA (ortografía, limpieza del título, género y etiquetas, romanización o voces), los nombres y la letra correspondientes se envían a Groq para generarla, igual que el audio con Auto Stamp. No se cambia nada hasta que la aplicas."
+  },
+
   themeEditor: {
     description: "Elige un tema, o crea el tuyo a partir de uno. Los cambios se ven en vivo.",
     create: "Crear tema personalizado",

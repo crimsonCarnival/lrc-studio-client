@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -8,6 +8,18 @@ import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/
 import type { EditorLine } from '@/features/editor/editor.types';
 import { SuggestInput } from '@ui/suggest-input';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { cn } from '@/shared/utils/utils';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { labelSingers } from '@/features/assist/assist.service';
+import { HEAVY_LINE_LIMIT, HEAVY_LINE_MAX_CHARS, useHeavyUsage } from '@/features/assist/useHeavyUsage';
+import { SingerLabelsReview } from '@/features/assist/SingerLabelsReview';
+import type { SingerLabel } from '@/features/assist/assist.types';
+
+/** The server accepts 2-12 roster names of 1-100 characters. */
+const ROSTER_MIN = 2;
+const ROSTER_MAX = 12;
+const NAME_MAX = 100;
 
 const STANDARD_TYPES = SECTION_TYPES.filter(s => s.depth !== 0);
 const STANDARD_IDS = new Set(STANDARD_TYPES.map(s => s.id));
@@ -29,10 +41,13 @@ interface TaggingToolbarProps {
   recordIndexMap: (indexMap: number[]) => void;
   songArtists?: string[];
   clearSelection: () => void;
+  /** Writes reviewed singer suggestions (useEditor's handleApplySingerLabels). Omit to hide the suggest button. */
+  onApplySingerLabels?: (labels: SingerLabel[], opened: EditorLine[]) => void;
 }
 
-export default function TaggingToolbar({ lines, setLines, selectedLines, recordIndexMap, songArtists = [], clearSelection }: TaggingToolbarProps) {
+export default function TaggingToolbar({ lines, setLines, selectedLines, recordIndexMap, songArtists = [], clearSelection, onApplySingerLabels }: TaggingToolbarProps) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const tk = t as (key: string, defaultValueOrOptions?: string | Record<string, unknown>) => string;
 
   const [singerInput, setSingerInput] = useState('');
@@ -116,18 +131,78 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
     return () => window.removeEventListener('keydown', handler);
   }, [selectedLines, applySection]);
 
+  // Suggest singers (AI assist): signed-in only. Sends the selected main lines, or all of them when
+  // nothing is selected. `review` holds the response with the exact lines it was computed for.
+  const canSuggest = !!user && !!onApplySingerLabels;
+  const heavy = useHeavyUsage(canSuggest);
+  const [running, setRunning] = useState(false);
+  const [review, setReview] = useState<{ labels: SingerLabel[]; opened: EditorLine[] } | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  const roster = useMemo(() => songArtists.filter((n) => n.length > 0 && n.length <= NAME_MAX).slice(0, ROSTER_MAX), [songArtists]);
+  // Toolbar only renders with a selection, so the lines to send are the selected non-section ones.
+  const suggestLines = useMemo(
+    () => lines.filter((l, i) => l.type !== 'section' && selectedLines.has(i)),
+    [lines, selectedLines],
+  );
+  const suggestLineCount = suggestLines.length;
+  const suggestBlocked = roster.length < ROSTER_MIN
+    ? t('editor.assist.singers.needRoster')
+    : suggestLineCount === 0 ? t('editor.assist.heavy.noLines')
+      : suggestLineCount > HEAVY_LINE_LIMIT ? t('editor.assist.heavy.tooLong', { max: HEAVY_LINE_LIMIT })
+        : suggestLines.some((l) => (l.text ?? '').length > HEAVY_LINE_MAX_CHARS) ? t('editor.assist.heavy.lineTooLong', { max: HEAVY_LINE_MAX_CHARS })
+          : heavy.exhausted ? t('editor.assist.heavy.none') : null;
+  const suggestInert = suggestBlocked !== null || running;
+  const suggestLabel = running
+    ? t('editor.assist.singers.running')
+    : heavy.usage ? t('editor.assist.singers.button', { count: heavy.usage.remaining }) : t('editor.assist.singers.label');
+
+  const runSuggest = async () => {
+    if (suggestInert) return;
+    const opened = suggestLines;
+    setRunning(true);
+    try {
+      const res = await labelSingers({ lines: opened.map((l) => l.text ?? ''), roster });
+      heavy.setUsage(res.usage);
+      if (mounted.current) setReview({ labels: res.labels, opened });
+    } catch (err) {
+      heavy.reportError(err);
+    } finally {
+      if (mounted.current) setRunning(false);
+    }
+  };
+
+  const reviewModal = review && onApplySingerLabels ? (
+    <SingerLabelsReview
+      open
+      onOpenChange={(open) => { if (!open) setReview(null); }}
+      labels={review.labels}
+      opened={review.opened}
+      current={lines}
+      onApply={onApplySingerLabels}
+    />
+  ) : null;
+
   const hasSections = lines.some(l => l.type === 'section');
 
   if (selectedLines.size === 0) {
-    if (hasSections) return null;
+    if (hasSections) return reviewModal;
     return (
+      <>
       <div data-tour="editor-sections-banner" className="flex items-center justify-center px-4 py-2 mb-2 rounded-xl bg-zinc-900/50 border border-zinc-800/50 text-zinc-500 text-sm h-[52px]">
         {t('editor.tagging.selectLinesPrompt')}
       </div>
+      {reviewModal}
+      </>
     );
   }
 
   return (
+    <>
     <div className="flex flex-col gap-2 px-3 py-2 mb-2 rounded-xl bg-zinc-900 border border-zinc-700 shadow-sm animate-fade-in">
       <div className="flex items-center justify-between text-xs font-semibold text-zinc-400 px-1">
         <span>{tk('editor.tagging.taggingNLines', { count: selectedLines.size })}</span>
@@ -205,8 +280,28 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
               className="h-7 w-32 px-3 text-[13px] rounded-[calc(var(--radius)*1.4)] border bg-zinc-800 border-zinc-600 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-primary/60 transition-colors ml-1"
             />
           </div>
+          {canSuggest && (
+            <div className="ml-auto">
+              {/* Tip renders bare children when its content is empty, which would remount the button (and drop focus) as the block flips; always give it text. */}
+              <Tip content={suggestBlocked ?? suggestLabel}>
+                {/* aria-disabled, not disabled: a disabled button emits no hover, so the reason would be unreachable. */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-disabled={suggestInert}
+                  onClick={runSuggest}
+                  className={cn('h-7 text-[13px]', suggestInert && 'opacity-50 cursor-not-allowed')}
+                >
+                  {suggestLabel}
+                </Button>
+              </Tip>
+              <span role="status" className="sr-only">{running ? t('editor.assist.singers.running') : ''}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
+    {reviewModal}
+    </>
   );
 }

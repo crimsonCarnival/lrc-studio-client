@@ -13,6 +13,13 @@ import BlockedUsersSettings from './BlockedUsersSettings';
 import UnsavedChangesBar from '../UnsavedChangesBar';
 import { useReportDraft } from '../SettingsDraftContext';
 
+// Section only filters SettingRow children, so the AI disclosure (a plain paragraph) is matched here.
+function blockMatches(searchTerm: string | undefined, labels: string[]) {
+  if (!searchTerm) return true;
+  const q = searchTerm.toLowerCase();
+  return labels.some((l) => l.toLowerCase().includes(q));
+}
+
 type Audience = 'everyone' | 'friends' | 'nobody';
 
 // Every notification type with a per-user switch on the server (NotificationPreferences),
@@ -192,6 +199,12 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
       </Section>
 
       <BlockedUsersSettings searchTerm={searchTerm} />
+
+      {blockMatches(searchTerm, [tk('settings.aiAssist.title'), tk('settings.aiAssist.body'), 'ai', 'assist', 'groq', 'suggestions']) && (
+        <Section title={tk('settings.aiAssist.title')}>
+          <p className="pb-3 text-sm text-zinc-400">{tk('settings.aiAssist.body')}</p>
+        </Section>
+      )}
 
       {isDirty && <UnsavedChangesBar saving={saving} onSave={save} onDiscard={discard} />}
     </>

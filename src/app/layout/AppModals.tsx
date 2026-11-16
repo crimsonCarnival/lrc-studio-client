@@ -33,6 +33,8 @@ interface AppModalsProps {
   setUnsavedModalTarget: (v: string | null) => void;
   sourceInfo?: unknown;
   songSingers?: string[];
+  /** Main lyric line texts of the open project; undefined where no editor lines exist (Home/Library/Profile). */
+  lyricsSample?: string[];
   /** Real visibility of the open project (the settings modal shows it read-only). */
   isPublic?: boolean;
   /** Server id; absent for an unsaved, local or shared project, which hides the change button. */
@@ -61,6 +63,7 @@ export function AppModals({
   setUnsavedModalTarget,
   sourceInfo,
   songSingers,
+  lyricsSample,
   isPublic = false,
   publicId,
   onVisibilityChange,
@@ -101,6 +104,7 @@ export function AppModals({
             isEditing={true}
             sourceInfo={sourceInfo}
             songSingers={songSingers}
+            lyricsSample={lyricsSample}
           />
         </Suspense>
       )}

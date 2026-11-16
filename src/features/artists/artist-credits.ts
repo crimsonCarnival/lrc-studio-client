@@ -44,6 +44,18 @@ export function primaryArtistText(credits: readonly ArtistCredit[]): string {
   return joinNames(primaryNames(credits));
 }
 
+/** The name of the one primary artist, or '' when there are none or several (a joined "A & B" is not one name to fix). */
+export function soleArtistName(credits: readonly ArtistCredit[]): string {
+  const primaries = primaryNames(credits);
+  return primaries.length === 1 ? primaries[0] : '';
+}
+
+/** Credits with the single primary renamed; unchanged when there is not exactly one primary. */
+export function renamePrimary(credits: ArtistCredit[], name: string): ArtistCredit[] {
+  if (!soleArtistName(credits)) return credits;
+  return credits.map((c) => (c.role === 'primary' ? { ...c, name } : c));
+}
+
 /** The write shape: `{ name, role }` in display order, primaries first. */
 export function toArtistInput(credits: readonly ArtistCredit[]): Array<{ name: string; role: ArtistRole }> {
   return renumber(credits).map(({ name, role }) => ({ name, role }));

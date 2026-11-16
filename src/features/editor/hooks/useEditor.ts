@@ -38,6 +38,8 @@ import { useWordsMode } from './useWordsMode';
 import { prevTimedIndex } from '../utils/line-span';
 import { pinPreviousEnd } from '../utils/line-timing';
 import { applySecondaryLines, applyTranslationLines } from '../utils/secondary-lines';
+import { applySingerLabels } from '../utils/singer-labels';
+import type { SingerLabel } from '@/features/assist/assist.types';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
@@ -897,6 +899,21 @@ export function useEditor({
     setLines((prev) => applySecondaryLines(prev, values, opened).lines);
   }, [lines, setLines, setModifiedLines]);
 
+  /**
+   * Reviewed singer suggestions: labels[k].lineIndex indexes `opened`, the main lines that were sent.
+   * Same contract as handleSetSecondaryLines: matched by id against the latest lines, one history entry.
+   */
+  const handleApplySingerLabels = useCallback((labels: SingerLabel[], opened: EditorLine[]) => {
+    const { changed } = applySingerLabels(lines, labels, opened);
+    if (!changed.length) return;
+    setModifiedLines(prev => {
+      const s = new Set(prev);
+      changed.forEach((i) => s.add(i));
+      return s;
+    });
+    setLines((prev) => applySingerLabels(prev, labels, opened).lines);
+  }, [lines, setLines, setModifiedLines]);
+
   /** Bulk translations for one language; same contract as handleSetSecondaryLines. */
   const handleSetTranslationLines = useCallback((values: string[], opened: EditorLine[], language: string) => {
     const { changed } = applyTranslationLines(lines, values, language, opened);
@@ -1485,6 +1502,7 @@ export function useEditor({
     handleClearActiveLineWordTimestamps,
     handleSaveLineText,
     handleSetSecondaryLines,
+    handleApplySingerLabels,
     handleSetTranslationLines,
     handleToggleLineMode,
     handleDeleteLine,
