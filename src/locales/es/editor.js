@@ -834,5 +834,16 @@ export default {
       apply: "Aplicar",
       keep: "Mantener el mío",
     },
+    heavy: {
+      left_one: "Queda {{count}} ejecución hoy",
+      left_other: "Quedan {{count}} ejecuciones hoy",
+      none: "No quedan ejecuciones hoy",
+      tooLong: "Demasiado largo para esta herramienta (máx. {{max}} líneas)",
+    },
+    errors: {
+      dailyCap: "Has usado todas las ejecuciones de hoy. Se reinician a las {{time}}.",
+      unavailable: "La asistencia con IA no está disponible ahora",
+      upstream: "El asistente de IA no pudo completarlo. Inténtalo de nuevo en breve.",
+    },
   },
 };

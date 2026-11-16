@@ -834,5 +834,16 @@ export default {
       apply: "Apply",
       keep: "Keep mine",
     },
+    heavy: {
+      left_one: "{{count}} run left today",
+      left_other: "{{count}} runs left today",
+      none: "No runs left today",
+      tooLong: "Too long for this tool (max {{max}} lines)",
+    },
+    errors: {
+      dailyCap: "You have used all of today's daily runs. They reset at {{time}}.",
+      unavailable: "AI assist is unavailable right now",
+      upstream: "The AI assistant could not complete that. Try again shortly.",
+    },
   },
 };
