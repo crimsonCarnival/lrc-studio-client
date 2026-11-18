@@ -1,9 +1,10 @@
 import {
-  Suspense, lazy, useEffect, useRef, useCallback, useMemo, useState, memo
+  Suspense, lazy, useEffect, useLayoutEffect, useRef, useCallback, useMemo, useState, memo
 } from 'react';
 import { songLanguageHint } from '@/features/assist/song-language';
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
+import { armHistoryGuard, disarmHistoryGuard, listenForGuardedBack, BACK_TARGET } from '@/app/history-guard';
 import { isAdminHost, canUseAdminHost, adminHostUrl } from '@/shared/utils/host';
 import { ADMIN_TABS } from '@features/admin/admin-nav';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
@@ -493,6 +494,23 @@ export function AppRouter({
     if (hasUnsavedChanges()) setUnsavedModalTarget('/');
     else navigate('/');
   }, [hasUnsavedChanges, setUnsavedModalTarget, navigate]);
+
+  // System/browser Back: ask before dropping real unsaved edits, same dialog as the header Back.
+  const guardPathname = routerLocation.pathname;
+  useEffect(() => {
+    if (hasUnsavedChanges()) armHistoryGuard();
+    else disarmHistoryGuard();
+    // `hasUnsavedChanges` changes identity with every edit; isSaving covers the save that clears them.
+  }, [hasUnsavedChanges, isSaving, guardPathname]);
+  const hasUnsavedRef = useRef(hasUnsavedChanges);
+  useLayoutEffect(() => { hasUnsavedRef.current = hasUnsavedChanges; });
+  useEffect(() => {
+    const stop = listenForGuardedBack(() => hasUnsavedRef.current(), () => setUnsavedModalTarget(BACK_TARGET));
+    return () => {
+      stop();
+      disarmHistoryGuard();
+    };
+  }, [setUnsavedModalTarget]);
 
   const handleNewProject = useCallback(() => navigate('/project/new'), [navigate]);
   const handleToggleKeyboardHelp = useCallback(() => {

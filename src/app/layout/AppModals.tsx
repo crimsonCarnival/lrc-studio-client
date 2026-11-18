@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
 import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
+import { leaveEditor } from '@/app/history-guard';
 import type { ProjectMetadata } from '@/types/app-state';
 
 const EditorHelpModal = lazy(() => import('@features/settings/components/EditorHelpModal'));
@@ -151,7 +152,7 @@ export function AppModals({
                   await handleManualSave();
                   const target = unsavedModalTarget;
                   setUnsavedModalTarget(null);
-                  navigate(target);
+                  leaveEditor(target, navigate);
                 }}
                 className="w-full bg-primary text-zinc-950 hover:bg-primary-dim font-semibold"
               >
@@ -162,7 +163,7 @@ export function AppModals({
                 onClick={() => {
                   const target = unsavedModalTarget;
                   setUnsavedModalTarget(null);
-                  navigate(target);
+                  leaveEditor(target, navigate);
                 }}
                 className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
               >
