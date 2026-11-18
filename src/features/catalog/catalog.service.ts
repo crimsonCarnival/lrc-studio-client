@@ -147,16 +147,6 @@ export async function adminCreateAlbum(input: { artistId: string; title: string;
   return data.adminCreateCatalogAlbum;
 }
 
-/** Creates approved albums from the album names on the artist's public songs; resolves to how many were new. */
-export async function adminImportAlbums(artistId: string): Promise<number> {
-  const data = await gqlRequest<{ adminImportCatalogAlbums: number }>(/* GraphQL */ `
-    mutation AdminImportCatalogAlbums($artistId: ID!) {
-      adminImportCatalogAlbums(artistId: $artistId)
-    }
-  `, { artistId });
-  return data.adminImportCatalogAlbums;
-}
-
 export async function adminUpdate(input: AdminCatalogEntryEdit): Promise<boolean> {
   const data = await gqlRequest<{ adminUpdateCatalogEntry: boolean }>(/* GraphQL */ `
     mutation AdminUpdateCatalogEntry($kind: CatalogKind!, $id: ID!, $name: String, $disambiguation: String, $title: String, $bio: String, $imageUrl: String, $year: String, $coverUrl: String, $imageSource: CatalogImageSource, $imageSourceUrl: String) {
