@@ -237,7 +237,7 @@ export async function copyGeniusPhoto(geniusId: number): Promise<GeniusPhoto> {
   return data;
 }
 
-/** Album titles found in public songs crediting the artist that the catalog does not have yet. */
+/** Album titles found in songs crediting the artist (any visibility) that the catalog does not have yet. */
 export async function detectAlbums(artistId: string): Promise<DetectedAlbum[]> {
   const data = await gqlRequest<{ catalogDetectAlbums: DetectedAlbum[] }>(/* GraphQL */ `
     query CatalogDetectAlbums($artistId: ID!) {

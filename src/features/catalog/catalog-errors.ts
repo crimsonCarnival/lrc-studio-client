@@ -1,3 +1,4 @@
+import { isApiError } from '@/types';
 import { catalogErrorCode } from './catalog.service';
 
 const KEYS = {
@@ -31,7 +32,10 @@ export type CatalogErrorKey =
 /** The i18n key for a failed catalog call. Server text is never surfaced: unknown codes get the generic message. */
 export function catalogErrorKey(err: unknown): CatalogErrorKey {
   const code = catalogErrorCode(err);
-  return code && code in KEYS ? KEYS[code as keyof typeof KEYS] : 'catalog.errors.generic';
+  if (code && code in KEYS) return KEYS[code as keyof typeof KEYS];
+  // The per-route limiter's 429 body is `{ error: 'too_many_requests' }` with no catalog code.
+  if (isApiError(err) && err.status === 429) return 'catalog.errors.rateLimited';
+  return 'catalog.errors.generic';
 }
 
 /**

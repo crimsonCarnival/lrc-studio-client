@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
@@ -48,14 +48,17 @@ function PickerBody({ initialQuery, onBusyChange, onPick, onClose }: Pick<Genius
   const [results, setResults] = useState<Results>({ status: 'loading' });
   const [copyingId, setCopyingId] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<CatalogErrorKey | null>(null);
+  // Only the newest search may write results; an older, slower one is dropped.
+  const latest = useRef(0);
 
   // Fetch only: state is set after the await, so it is safe to call from the mount effect.
   const load = useCallback(async (q: string) => {
+    const id = ++latest.current;
     try {
       const matches = q.trim() ? await searchGeniusArtists(q.trim()) : [];
-      setResults({ status: 'ready', matches });
+      if (id === latest.current) setResults({ status: 'ready', matches });
     } catch (err) {
-      setResults({ status: 'error', key: catalogErrorKey(err) });
+      if (id === latest.current) setResults({ status: 'error', key: catalogErrorKey(err) });
     }
   }, []);
 
@@ -85,6 +88,7 @@ function PickerBody({ initialQuery, onBusyChange, onPick, onClose }: Pick<Genius
     setCopyError(null);
     try {
       const photo = await copyGeniusPhoto(match.geniusId);
+      onBusyChange(false);
       onPick(photo);
       onClose();
     } catch (err) {

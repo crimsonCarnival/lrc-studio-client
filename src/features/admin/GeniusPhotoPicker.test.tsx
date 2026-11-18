@@ -78,4 +78,40 @@ describe('GeniusPhotoPicker', () => {
     await waitFor(() => screen.getAllByRole('button', { name: /Use this photo|Copying/ }).forEach((b) => expect(b).toBeDisabled()));
     expect(copyGeniusPhoto).toHaveBeenCalledTimes(1);
   });
+
+  it('closes on Escape after a successful pick when the picker is reopened', async () => {
+    searchGeniusArtists.mockResolvedValue(matches);
+    copyGeniusPhoto.mockResolvedValue({ imageUrl: 'https://res.cloudinary.com/x/a.jpg', sourceUrl: 'https://genius.com/artists/Luna-vale' });
+    const onPick = vi.fn();
+    const onClose = vi.fn();
+    const { rerender } = render(<GeniusPhotoPicker open initialQuery="Luna" onPick={onPick} onClose={onClose} />);
+    await screen.findByText('Luna Vale');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Use this photo' })[0]);
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    rerender(<GeniusPhotoPicker open={false} initialQuery="Luna" onPick={onPick} onClose={onClose} />);
+    rerender(<GeniusPhotoPicker open initialQuery="Luna" onPick={onPick} onClose={onClose} />);
+    await screen.findByText('Luna Vale');
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(2));
+  });
+
+  it('ignores a slower earlier search that resolves after a newer one', async () => {
+    let resolveA: (v: typeof matches) => void = () => {};
+    searchGeniusArtists.mockResolvedValueOnce([]);
+    show();
+    await screen.findByText('No matches on Genius');
+    const box = screen.getByRole('searchbox');
+    const form = box.closest('form') as HTMLFormElement;
+    searchGeniusArtists.mockReturnValueOnce(new Promise((r) => { resolveA = r; }));
+    fireEvent.change(box, { target: { value: 'A' } });
+    fireEvent.submit(form);
+    searchGeniusArtists.mockResolvedValueOnce([matches[1]]);
+    fireEvent.change(box, { target: { value: 'B' } });
+    fireEvent.submit(form);
+    expect(await screen.findByText('Luna Vales')).toBeInTheDocument();
+    resolveA(matches);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.queryByText('Luna Vale')).not.toBeInTheDocument();
+    expect(screen.getByText('Luna Vales')).toBeInTheDocument();
+  });
 });
