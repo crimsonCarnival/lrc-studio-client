@@ -1,4 +1,6 @@
 export default {
+  deletePasskey: "¿Eliminar esta llave de acceso? Ya no podrás iniciar sesión con ella.",
+  deletePasskeyTitle: "Eliminar llave de acceso",
   action: "¿Estás seguro?",
   confirm: "Confirmar",
   cancel: "Cancelar",
