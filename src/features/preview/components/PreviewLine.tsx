@@ -10,6 +10,7 @@ import { isHeldAt, tailWordEnd } from '@/features/editor/utils/line-span';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
+import { showsInstrumentalBreak } from '@/features/editor/utils/instrumental-break';
 import { formatTimestamp } from '@/shared/utils/lrc';
 
 /** Inline text color classes for words attributed to a specific singer */
@@ -283,6 +284,10 @@ export default function PreviewLine({
   const isUntimed = effectiveTimestamp == null;
   // Review rows dim what has already been sung and what still has no time.
   const muted = isReview && (isPast || isUntimed);
+
+  // A gap too short to register reads as a flicker between lines, not as a
+  // break in the song, so the row is dropped rather than shown for an instant.
+  if (isEmptyLine && !showsInstrumentalBreak(gap)) return null;
 
   const body = isEmptyLine ? (
         <div className="w-full flex items-center justify-center min-h-[2rem] sm:min-h-[2.5rem] py-1 sm:py-2">
