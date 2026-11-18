@@ -223,7 +223,7 @@ export default function ProjectInfoPanel({
             {title}
           </h1>
           {showSongName && <p className="text-[15px] text-subtle">{meta.songName}</p>}
-          {artistDisplay(meta) && <p className="text-[15px] leading-tight font-bold text-foreground"><ArtistText metadata={meta} /></p>}
+          {artistDisplay(meta) && <p className="text-[15px] leading-tight font-bold text-foreground"><ArtistText metadata={meta} linkArtists /></p>}
           {albumLine && (
             <Tip content={albumLine}>
               <p className="line-clamp-2 text-sm text-subtle">

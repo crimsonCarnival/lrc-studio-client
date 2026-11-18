@@ -16,8 +16,22 @@ describe('catalogErrorKey', () => {
     ['catalog_self_review', 'catalog.errors.selfReview'],
     ['catalog_disambiguation_required', 'catalog.errors.disambiguationRequired'],
     ['forbidden', 'catalog.errors.forbidden'],
+    ['catalog_genius_unavailable', 'catalog.errors.geniusUnavailable'],
+    ['catalog_genius_upstream', 'catalog.errors.geniusUpstream'],
+    ['catalog_genius_not_found', 'catalog.errors.geniusNotFound'],
+    ['catalog_genius_image_rejected', 'catalog.errors.geniusImageRejected'],
   ])('maps %s', (code, key) => {
     expect(catalogErrorKey(Object.assign(new Error('raw server text'), { code }))).toBe(key);
+  });
+
+  it('maps an HTTP 429 from the route limiter (body has no catalog code) to the Genius rate-limit key', () => {
+    const err = Object.assign(new Error('too_many_requests'), { status: 429, body: { error: 'too_many_requests' } });
+    expect(catalogErrorKey(err)).toBe('catalog.errors.geniusRateLimited');
+  });
+
+  it('keeps a catalog code ahead of the status, and other statuses stay generic', () => {
+    expect(catalogErrorKey(Object.assign(new Error('x'), { status: 429, body: { code: 'catalog_pending_cap' } }))).toBe('catalog.errors.pendingCap');
+    expect(catalogErrorKey(Object.assign(new Error('x'), { status: 500 }))).toBe('catalog.errors.generic');
   });
 
   it('falls back to the generic key for unknown codes and non-API errors', () => {

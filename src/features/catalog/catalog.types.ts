@@ -2,12 +2,20 @@ import type {
   CatalogAlbum as GqlCatalogAlbum,
   CatalogArtist as GqlCatalogArtist,
   CatalogDecision,
+  CatalogImageSource,
   CatalogKind,
+  DetectedAlbum,
 } from '@/types/graphql';
 
 export type CatalogArtist = GqlCatalogArtist;
 export type CatalogAlbum = GqlCatalogAlbum;
-export type { CatalogDecision, CatalogKind };
+export type { CatalogDecision, CatalogImageSource, CatalogKind, DetectedAlbum };
+
+/** One match from `GET /catalog/genius/artists`; the server only returns matches with a usable photo. */
+export type GeniusArtistMatch = { geniusId: number; name: string; imageUrl: string; url: string };
+
+/** The Genius photo after the server copied it to Cloudinary. */
+export type GeniusPhoto = { imageUrl: string; sourceUrl: string };
 
 export type CatalogStatus = 'pending' | 'approved' | 'rejected';
 
@@ -30,6 +38,8 @@ export type AdminCatalogEntryEdit = Omit<CatalogEntryEdit, 'imageUrl' | 'coverUr
   disambiguation?: string;
   imageUrl?: string | null;
   coverUrl?: string | null;
+  imageSource?: CatalogImageSource | null;
+  imageSourceUrl?: string | null;
 };
 
 export type ReviewInput = {

@@ -35,6 +35,7 @@ import { useAdminSub } from './admin-nav';
 import { isSudoCancelled, withSudo } from './services/sudo';
 import { CatalogAlbumsDrawer } from './CatalogAlbumsDrawer';
 import { CatalogArtistCard } from './CatalogArtistCard';
+import { DetectAlbumsDialog } from './DetectAlbumsDialog';
 import { CatalogEntryDialog } from './CatalogEntryDialog';
 import type { FormTarget } from './CatalogEntryDialog';
 import { CatalogReviewCard } from './CatalogReviewCard';
@@ -208,6 +209,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
   const [albums, setAlbums] = useState<Record<string, CatalogAlbum[]>>({});
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [form, setForm] = useState<FormTarget | null>(null);
+  const [detectFor, setDetectFor] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<DeleteTarget | null>(null);
   const [revokeCredit, setRevokeCredit] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -307,6 +309,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
   }
 
   const drawerArtist = artists.find((a) => a.id === drawerId) ?? null;
+  const detectArtist = artists.find((a) => a.id === detectFor) ?? null;
 
   return (
     <section className="flex flex-col gap-4">
@@ -364,9 +367,17 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
         failed={drawerId ? !!albumsFailed[drawerId] : false}
         onRetry={() => drawerId && void loadAlbums(drawerId)}
         onNew={() => drawerId && setForm({ mode: 'create', kind: 'album', artistId: drawerId })}
+        onDetect={() => drawerId && setDetectFor(drawerId)}
         onEdit={(album) => setForm({ mode: 'edit', kind: 'album', entry: album })}
         onDelete={(album) => askDelete({ kind: 'album', id: album.id, name: album.title, community: album.source === 'community', creditKnown: true })}
         onClose={() => setDrawerId(null)}
+      />
+
+      <DetectAlbumsDialog
+        artist={detectArtist}
+        // The drawer lists the albums, so reload them to show the new one.
+        onApproved={(album) => void loadAlbums(album.artistId)}
+        onClose={() => setDetectFor(null)}
       />
 
       <AlertDialog open={deleting !== null} onOpenChange={(next) => { if (!next && !deleteBusy) setDeleting(null); }}>

@@ -48,6 +48,11 @@ export default {
     selfReview: "No puedes revisar tu propia sugerencia.",
     disambiguationRequired: "Ya existe un artista con este nombre. Añade una desambiguación para distinguirlos.",
     forbidden: "No tienes permiso para hacer eso.",
+    geniusUnavailable: "La búsqueda en Genius no está disponible ahora.",
+    geniusUpstream: "Genius no respondió. Inténtalo de nuevo en un momento.",
+    geniusNotFound: "Genius no tiene un artista con ese id.",
+    geniusImageRejected: "No se pudo usar esa foto de Genius.",
+    geniusRateLimited: "Demasiadas solicitudes a Genius. Inténtalo de nuevo en un rato.",
     generic: "Algo salió mal. Inténtalo de nuevo.",
     imageNotImage: "Elige un archivo de imagen.",
     imageTooLarge: "La imagen pesa más de 5 MB.",
@@ -87,5 +92,6 @@ export default {
     noSongs: "Aún no hay canciones.",
     noAlbums: "Aún no hay álbumes.",
     back: "Volver",
+    photoCredit: "Foto: Genius",
   },
 };

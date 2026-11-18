@@ -12,6 +12,7 @@ import { Textarea } from '@ui/textarea';
 import { adminCreateAlbum, adminCreateArtist, adminUpdate, uploadCatalogImage } from '@/features/catalog/catalog.service';
 import { catalogErrorKey, uploadErrorKey } from '@/features/catalog/catalog-errors';
 import type { CatalogErrorKey } from '@/features/catalog/catalog-errors';
+import { GeniusPhotoPicker } from './GeniusPhotoPicker';
 import { CatalogPhotoField } from '@/features/catalog/CatalogPhotoField';
 import { UNCHANGED } from '@/features/catalog/catalog-photo';
 import type { PhotoState } from '@/features/catalog/catalog-photo';
@@ -71,6 +72,7 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
   const [photo, setPhoto] = useState<PhotoState>(UNCHANGED);
   const [photoError, setPhotoError] = useState<CatalogErrorKey | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pickingGenius, setPickingGenius] = useState(false);
   const existingUrl = initialArtist?.imageUrl ?? initialAlbum?.coverUrl ?? null;
   const idPrefix = `catalog-form-${target.mode}-${target.kind}`;
 
@@ -83,6 +85,8 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
     try {
       // undefined leaves the image alone, null removes it.
       let imageUrl: string | null | undefined;
+      // Only a Genius pick says where the image came from; any other write leaves the server to reset it to an upload.
+      const source = photo.kind === 'genius' ? { imageSource: 'genius' as const, imageSourceUrl: photo.sourceUrl } : {};
       if (photo.kind === 'new') {
         try {
           const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_catalog_image');
@@ -91,11 +95,13 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
           setPhotoError(uploadErrorKey(err));
           return;
         }
+      } else if (photo.kind === 'genius') {
+        imageUrl = photo.url;
       } else if (photo.kind === 'remove') {
         imageUrl = null;
       }
       if (target.mode === 'create' && target.kind === 'artist') {
-        await adminCreateArtist({ name: trimmed, disambiguation: disambiguation.trim() || undefined, bio: bio.trim() || undefined, imageUrl: imageUrl ?? undefined });
+        await adminCreateArtist({ name: trimmed, disambiguation: disambiguation.trim() || undefined, bio: bio.trim() || undefined, imageUrl: imageUrl ?? undefined, ...source });
       } else if (target.mode === 'create') {
         await adminCreateAlbum({ artistId: target.artistId, title: trimmed, year: year.trim() || undefined, coverUrl: imageUrl ?? undefined });
       } else if (target.kind === 'artist') {
@@ -106,7 +112,7 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
           ...(trimmed !== target.entry.name && { name: trimmed }),
           ...(disambiguation.trim() !== (target.entry.disambiguation ?? '') && { disambiguation: disambiguation.trim() }),
           ...(bio.trim() !== (target.entry.bio ?? '') && { bio: bio.trim() }),
-          ...(imageUrl !== undefined && { imageUrl }),
+          ...(imageUrl !== undefined && { imageUrl, ...source }),
         });
       } else {
         await adminUpdate({
@@ -126,6 +132,7 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
   }
 
   return (
+    <>
     <form onSubmit={submit} className="flex flex-col gap-4">
       <CatalogPhotoField
         variant={target.kind}
@@ -135,6 +142,11 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
         existingUrl={existingUrl}
         disabled={busy}
       />
+      {!isAlbum && (
+        <Button type="button" variant="outline" size="sm" className="self-start" disabled={busy} onClick={() => setPickingGenius(true)}>
+          {t('admin.catalogTab.genius.button')}
+        </Button>
+      )}
       {photoError && <p role="alert" className="text-sm text-love">{t(photoError)}</p>}
 
       <div className="flex flex-col gap-1.5">
@@ -176,5 +188,15 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
         </Button>
       </DialogFooter>
     </form>
+    {/* Outside the form: portal events bubble through React, and Enter in the picker must not submit this form. */}
+    {!isAlbum && (
+      <GeniusPhotoPicker
+        open={pickingGenius}
+        initialQuery={name.trim()}
+        onPick={(p) => { setPhotoError(null); setPhoto({ kind: 'genius', url: p.imageUrl, sourceUrl: p.sourceUrl }); }}
+        onClose={() => setPickingGenius(false)}
+      />
+    )}
+    </>
   );
 }
