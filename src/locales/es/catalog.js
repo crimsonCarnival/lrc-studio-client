@@ -91,5 +91,6 @@ export default {
     noSongs: "Aún no hay canciones.",
     noAlbums: "Aún no hay álbumes.",
     back: "Volver",
+    photoCredit: "Foto: Genius",
   },
 };
