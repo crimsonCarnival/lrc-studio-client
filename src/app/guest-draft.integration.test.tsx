@@ -23,6 +23,7 @@ vi.mock('@/features/auth/useAuthContext', () => ({
 // The phone header reads the unread count; in the app NotificationsProvider wraps everything, which this render does not need.
 vi.mock('@/features/notifications/NotificationsContext', () => ({
   useNotificationsContext: () => ({ notifications: [], unreadCount: 0, markRead: vi.fn(), markAllRead: vi.fn(), dismiss: vi.fn() }),
+  useUnreadNotificationCount: () => 0,
   NotificationsProvider: ({ children }: { children: unknown }) => children,
 }));
 vi.mock('@/app/socket.client', () => ({
