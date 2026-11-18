@@ -178,7 +178,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Isolate heavy 3D libs — only used on guest landing page
+          // Isolate heavy 3D libs: the 3D visualizer presets, loaded on demand by startVisualizer
           if (id.includes('node_modules/three') ||
               id.includes('node_modules/@react-three') ||
               id.includes('node_modules/troika')) {
