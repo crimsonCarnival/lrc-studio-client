@@ -42,7 +42,7 @@ export function usePageTitle(projectName: string | null = null) {
     // The admin host serves its dashboard at "/" and "/home", so it has to be told apart first.
     if ((cleanPath === 'home' || cleanPath === '') && !isAdminPathname(path)) {
       pageTitle = t('app.titles.home');
-    } else if (cleanPath === 'library' || cleanPath === 'projects') {
+    } else if (cleanPath === 'library' || cleanPath === 'library/playlists' || cleanPath === 'projects') {
       pageTitle = t('app.titles.library');
     } else if (cleanPath.startsWith('uploads')) {
       pageTitle = projectName || t('app.titles.uploads');

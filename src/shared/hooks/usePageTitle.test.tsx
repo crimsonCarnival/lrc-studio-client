@@ -31,6 +31,10 @@ describe('usePageTitle', () => {
     expect(titleAt('/32blunts/artists/6ad6b6acb11b7bd48d4340a1')).toBe('app.titles.artist - app.name');
   });
 
+  it('titles the library playlists page as the library', () => {
+    expect(titleAt('/library/playlists')).toBe('app.titles.library - app.name');
+  });
+
   it('still titles an unknown deep path as not found', () => {
     expect(titleAt('/a/b/c/d')).toBe('app.titles.notFound - app.name');
   });
