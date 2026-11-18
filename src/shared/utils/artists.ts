@@ -15,6 +15,8 @@ export interface ArtistCredit {
   name: string;
   role: ArtistRole;
   order: number;
+  /** Read-only: slug of the approved catalog artist with this name, when exactly one exists. */
+  catalogSlug?: string | null;
 }
 
 export const ARTIST_LIMITS = {

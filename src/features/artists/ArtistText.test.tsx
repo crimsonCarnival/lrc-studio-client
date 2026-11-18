@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { ArtistText } from './ArtistText';
 
 const c = (name: string, role: 'primary' | 'featured', order: number) => ({ name, role, order });
@@ -42,5 +43,40 @@ describe('ArtistText', () => {
     expect(container).toHaveTextContent('No artist');
     rerender(<ArtistText metadata={{ artists: [] }} />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  describe('linkArtists', () => {
+    const withSlug = (name: string, role: 'primary' | 'featured', order: number, catalogSlug: string | null) => ({ name, role, order, catalogSlug });
+    const renderLinked = (artists: ReturnType<typeof withSlug>[], linkArtists = true) =>
+      render(<MemoryRouter><ArtistText metadata={{ artists }} linkArtists={linkArtists} /></MemoryRouter>);
+
+    it('links a primary artist with a catalogSlug', () => {
+      const { container } = renderLinked([withSlug('Björk', 'primary', 0, 'bjork')]);
+      expect(screen.getByRole('link', { name: 'Björk' })).toHaveAttribute('href', '/artists/bjork');
+      expect(container).toHaveTextContent('Björk');
+    });
+
+    it('links featured artists too', () => {
+      const { container } = renderLinked([withSlug('Drake', 'primary', 0, 'drake'), withSlug('Rihanna', 'featured', 1, 'rihanna')]);
+      expect(screen.getByRole('link', { name: 'Rihanna' })).toHaveAttribute('href', '/artists/rihanna');
+      expect(container).toHaveTextContent('Drake feat. Rihanna');
+      expect(screen.getByText('feat.', { exact: false })).toHaveClass('text-subtle');
+    });
+
+    it('leaves names without a slug as plain text', () => {
+      const { container } = renderLinked([withSlug('A', 'primary', 0, 'a'), withSlug('B', 'primary', 1, null)]);
+      expect(screen.getAllByRole('link')).toHaveLength(1);
+      expect(container).toHaveTextContent('A & B');
+    });
+
+    it('does not link unless linkArtists is set', () => {
+      renderLinked([withSlug('Björk', 'primary', 0, 'bjork')], false);
+      expect(screen.queryByRole('link')).toBeNull();
+    });
+
+    it('encodes the slug', () => {
+      renderLinked([withSlug('X', 'primary', 0, 'a b/c')]);
+      expect(screen.getByRole('link', { name: 'X' })).toHaveAttribute('href', '/artists/a%20b%2Fc');
+    });
   });
 });
