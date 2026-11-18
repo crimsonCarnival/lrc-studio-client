@@ -8,7 +8,11 @@ import type {
   CatalogArtist,
   CatalogArtistPage,
   CatalogEntryEdit,
+  CatalogImageSource,
   CatalogKind,
+  DetectedAlbum,
+  GeniusArtistMatch,
+  GeniusPhoto,
   CatalogQueue,
   ReviewInput,
 } from './catalog.types';
@@ -17,12 +21,17 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 // `updatedAt` is selected everywhere: reviewers echo it back as `expectedUpdatedAt`.
 const SUBMITTER = 'submittedBy { id accountName displayName avatarUrl }';
-const ARTIST_FIELDS = `id name disambiguation slug imageUrl bio status source reviewNote createdAt updatedAt ${SUBMITTER}`;
+const ARTIST_FIELDS = `id name disambiguation slug imageUrl imageSource imageSourceUrl bio status source reviewNote createdAt updatedAt ${SUBMITTER}`;
 const ALBUM_FIELDS = `id artistId title slug year coverUrl status source reviewNote createdAt updatedAt ${SUBMITTER}`;
 
-/** The server's lower-cased `extensions.code` (e.g. `catalog_duplicate`), or null when there is none. */
+/**
+ * The server's lower-cased code (e.g. `catalog_duplicate`), or null when there is none.
+ * REST failures put the message in `err.code` and the machine code in `body.code`, so the body wins.
+ */
 export function catalogErrorCode(err: unknown): string | null {
   if (!isApiError(err)) return null;
+  const bodyCode = (err.body as { code?: unknown } | null | undefined)?.code;
+  if (typeof bodyCode === 'string') return bodyCode;
   return err.code ?? err.graphqlErrors?.[0]?.extensions?.code ?? null;
 }
 
@@ -120,10 +129,10 @@ export async function adminListAlbums(artistId: string): Promise<CatalogAlbum[]>
   return data.catalogAdminAlbums;
 }
 
-export async function adminCreateArtist(input: { name: string; disambiguation?: string; bio?: string; imageUrl?: string }): Promise<CatalogArtist> {
+export async function adminCreateArtist(input: { name: string; disambiguation?: string; bio?: string; imageUrl?: string; imageSource?: CatalogImageSource | null; imageSourceUrl?: string | null }): Promise<CatalogArtist> {
   const data = await gqlRequest<{ adminCreateCatalogArtist: CatalogArtist }>(/* GraphQL */ `
-    mutation AdminCreateCatalogArtist($name: String!, $disambiguation: String, $bio: String, $imageUrl: String) {
-      adminCreateCatalogArtist(name: $name, disambiguation: $disambiguation, bio: $bio, imageUrl: $imageUrl) { ${ARTIST_FIELDS} }
+    mutation AdminCreateCatalogArtist($name: String!, $disambiguation: String, $bio: String, $imageUrl: String, $imageSource: CatalogImageSource, $imageSourceUrl: String) {
+      adminCreateCatalogArtist(name: $name, disambiguation: $disambiguation, bio: $bio, imageUrl: $imageUrl, imageSource: $imageSource, imageSourceUrl: $imageSourceUrl) { ${ARTIST_FIELDS} }
     }
   `, input);
   return data.adminCreateCatalogArtist;
@@ -150,8 +159,8 @@ export async function adminImportAlbums(artistId: string): Promise<number> {
 
 export async function adminUpdate(input: AdminCatalogEntryEdit): Promise<boolean> {
   const data = await gqlRequest<{ adminUpdateCatalogEntry: boolean }>(/* GraphQL */ `
-    mutation AdminUpdateCatalogEntry($kind: CatalogKind!, $id: ID!, $name: String, $disambiguation: String, $title: String, $bio: String, $imageUrl: String, $year: String, $coverUrl: String) {
-      adminUpdateCatalogEntry(kind: $kind, id: $id, name: $name, disambiguation: $disambiguation, title: $title, bio: $bio, imageUrl: $imageUrl, year: $year, coverUrl: $coverUrl)
+    mutation AdminUpdateCatalogEntry($kind: CatalogKind!, $id: ID!, $name: String, $disambiguation: String, $title: String, $bio: String, $imageUrl: String, $year: String, $coverUrl: String, $imageSource: CatalogImageSource, $imageSourceUrl: String) {
+      adminUpdateCatalogEntry(kind: $kind, id: $id, name: $name, disambiguation: $disambiguation, title: $title, bio: $bio, imageUrl: $imageUrl, year: $year, coverUrl: $coverUrl, imageSource: $imageSource, imageSourceUrl: $imageSourceUrl)
     }
   `, input);
   return data.adminUpdateCatalogEntry;
@@ -216,7 +225,7 @@ export async function getCatalogArtist(slug: string): Promise<CatalogArtistPage 
   const data = await gqlRequest<{ catalogArtist: CatalogArtistPage | null }>(/* GraphQL */ `
     query CatalogArtist($slug: String!) {
       catalogArtist(slug: $slug) {
-        artist { id name disambiguation slug imageUrl bio }
+        artist { id name disambiguation slug imageUrl imageSource imageSourceUrl bio }
         albums { id artistId title slug year coverUrl }
         songs { ...ProjectListFields user { accountName } }
       }
@@ -234,4 +243,45 @@ export async function getCatalogSlugs(names: string[]): Promise<Array<{ name: st
     }
   `, { names });
   return data.catalogArtistSlugs;
+}
+
+/** Genius artists matching `q` (at most 5, each with a usable photo). Needs `catalog.manage`. */
+export async function searchGeniusArtists(q: string): Promise<GeniusArtistMatch[]> {
+  const data = await request<{ artists: GeniusArtistMatch[] }>(`/catalog/genius/artists?q=${encodeURIComponent(q)}`);
+  return data?.artists ?? [];
+}
+
+/** Has the server copy a Genius artist photo to Cloudinary; returns the hosted URL and the Genius page it came from. */
+export async function copyGeniusPhoto(geniusId: number): Promise<GeniusPhoto> {
+  const data = await request<GeniusPhoto>('/catalog/genius/photo', { method: 'POST', body: JSON.stringify({ geniusId }) });
+  if (!data) throw new Error('Empty response');
+  return data;
+}
+
+/** Album titles found in songs crediting the artist (any visibility) that the catalog does not have yet. */
+export async function detectAlbums(artistId: string): Promise<DetectedAlbum[]> {
+  const data = await gqlRequest<{ catalogDetectAlbums: DetectedAlbum[] }>(/* GraphQL */ `
+    query CatalogDetectAlbums($artistId: ID!) {
+      catalogDetectAlbums(artistId: $artistId) { key title songCount year }
+    }
+  `, { artistId });
+  return data.catalogDetectAlbums;
+}
+
+export async function approveDetectedAlbum(input: { artistId: string; title: string; year?: string | null }): Promise<CatalogAlbum> {
+  const data = await gqlRequest<{ approveDetectedAlbum: CatalogAlbum }>(/* GraphQL */ `
+    mutation ApproveDetectedAlbum($artistId: ID!, $title: String!, $year: String) {
+      approveDetectedAlbum(artistId: $artistId, title: $title, year: $year) { ${ALBUM_FIELDS} }
+    }
+  `, input);
+  return data.approveDetectedAlbum;
+}
+
+export async function dismissDetectedAlbum(artistId: string, key: string): Promise<boolean> {
+  const data = await gqlRequest<{ dismissDetectedAlbum: boolean }>(/* GraphQL */ `
+    mutation DismissDetectedAlbum($artistId: ID!, $key: String!) {
+      dismissDetectedAlbum(artistId: $artistId, key: $key)
+    }
+  `, { artistId, key });
+  return data.dismissDetectedAlbum;
 }

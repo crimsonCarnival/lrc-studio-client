@@ -3,13 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, adminUpdate, withSudo, toast, auth } = vi.hoisted(() => ({
+const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, adminUpdate, adminCreateArtist, uploadCatalogImage, searchGeniusArtists, copyGeniusPhoto, detectAlbums, approveDetectedAlbum, withSudo, toast, auth } = vi.hoisted(() => ({
   getReviewQueue: vi.fn(),
   reviewEntry: vi.fn(),
   adminListArtists: vi.fn(),
   adminListAlbums: vi.fn(),
   adminDelete: vi.fn(),
   adminUpdate: vi.fn(),
+  adminCreateArtist: vi.fn(),
+  uploadCatalogImage: vi.fn(),
+  searchGeniusArtists: vi.fn(),
+  copyGeniusPhoto: vi.fn(),
+  detectAlbums: vi.fn(),
+  approveDetectedAlbum: vi.fn(),
   withSudo: vi.fn(),
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
   auth: { permissions: ['catalog.review', 'catalog.manage'] as string[] },
@@ -22,6 +28,18 @@ vi.mock('@/features/catalog/catalog.service', async (importOriginal) => ({
   adminListAlbums,
   adminDelete,
   adminUpdate,
+  adminCreateArtist,
+  uploadCatalogImage,
+  searchGeniusArtists,
+  copyGeniusPhoto,
+  detectAlbums,
+  approveDetectedAlbum,
+}));
+vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
+// The crop step needs a real canvas; here it is a stand-in that confirms a fixed blob.
+vi.mock('@ui/ImageCropModal', () => ({
+  ImageCropModal: ({ imageSrc, onConfirm }: { imageSrc: string | null; onConfirm: (b: Blob) => void }) =>
+    imageSrc ? <button type="button" onClick={() => onConfirm(new Blob(['c'], { type: 'image/png' }))}>Use framed photo</button> : null,
 }));
 vi.mock('./services/sudo', async (importOriginal) => ({ ...(await importOriginal<object>()), withSudo }));
 vi.mock('react-hot-toast', () => ({ default: toast }));
@@ -229,6 +247,9 @@ describe('AdminCatalogTab load failures', () => {
   });
 });
 
+// The albums panel is modal: the artist grid behind it is inert until it closes.
+const closeDrawer = () => fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
 describe('AdminCatalogTab edit and delete options', () => {
   const adminArtist = artist('a7', 'Admin Act', '2026-01-01', { status: 'approved', source: 'admin', bio: 'old bio', disambiguation: '', imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/catalog/a.jpg' });
   beforeEach(() => {
@@ -255,9 +276,49 @@ describe('AdminCatalogTab edit and delete options', () => {
     show('/admin/catalog/browse');
     await screen.findByText('Admin Act');
     fireEvent.click(screen.getByRole('button', { name: /^Edit Admin Act/ }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Remove the current photo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(adminUpdate).toHaveBeenCalledWith({ kind: 'artist', id: 'a7', imageUrl: null }));
+  });
+
+  it('lists albums in the side panel and creates one from it', async () => {
+    adminListAlbums.mockResolvedValue([{ id: 'al1', artistId: 'a7', title: 'First LP', year: '1999', coverUrl: null, source: 'admin', status: 'approved' }]);
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    expect(await screen.findByText('First LP')).toBeInTheDocument();
+    expect(screen.getByText('1 album')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'New album' }));
+    expect(await screen.findByRole('heading', { name: 'New album' })).toBeInTheDocument();
+  });
+
+  it('Detect albums opens from the drawer and an approval reloads the albums', async () => {
+    const created = { id: 'al2', artistId: 'a7', title: 'Blue', year: '1999', coverUrl: null, source: 'admin', status: 'approved' };
+    adminListAlbums.mockResolvedValueOnce([]).mockResolvedValueOnce([created]);
+    detectAlbums.mockResolvedValue([{ key: 'blue', title: 'Blue', songCount: 4, year: '1999' }]);
+    approveDetectedAlbum.mockResolvedValue(created);
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    await screen.findByText('No albums yet.');
+    fireEvent.click(screen.getByRole('button', { name: 'Detect albums' }));
+    expect(await screen.findByText('4 songs')).toBeInTheDocument();
+    expect(detectAlbums).toHaveBeenCalledWith('a7');
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(approveDetectedAlbum).toHaveBeenCalledWith({ artistId: 'a7', title: 'Blue', year: '1999' }));
+    await waitFor(() => expect(adminListAlbums).toHaveBeenCalledTimes(2));
+    expect(adminListAlbums).toHaveBeenLastCalledWith('a7');
+  });
+
+  it('loads the next page of artists with the current offset', async () => {
+    const first = Array.from({ length: 24 }, (_, i) => artist(`p${i}`, `Artist ${i}`, '2026-01-01', { status: 'approved', source: 'admin' }));
+    adminListArtists.mockResolvedValueOnce(first).mockResolvedValueOnce([artist('p24', 'Artist 24', '2026-01-01', { status: 'approved', source: 'admin' })]);
+    show('/admin/catalog/browse');
+    await screen.findByText('Artist 0');
+    fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByText('Artist 24');
+    expect(adminListArtists).toHaveBeenLastCalledWith({ query: undefined, offset: 24, limit: 24 });
+    expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
   });
 
   it('offers the revoke option with a hint for an artist whose albums are not loaded', async () => {
@@ -275,6 +336,7 @@ describe('AdminCatalogTab edit and delete options', () => {
     await screen.findByText('Admin Act');
     fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
     await screen.findByText('Fan Album');
+    closeDrawer();
     fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).getByRole('checkbox')).toBeInTheDocument();
@@ -286,6 +348,7 @@ describe('AdminCatalogTab edit and delete options', () => {
     await screen.findByText('Admin Act');
     fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
     await screen.findByText('No albums yet.');
+    closeDrawer();
     fireEvent.click(screen.getByRole('button', { name: /^Delete Admin Act/ }));
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).queryByRole('checkbox')).not.toBeInTheDocument();
@@ -312,5 +375,69 @@ describe('AdminCatalogTab permissions', () => {
     show('/admin/catalog/queue');
     await waitFor(() => expect(adminListArtists).toHaveBeenCalled());
     expect(getReviewQueue).not.toHaveBeenCalled();
+  });
+});
+
+describe('AdminCatalogTab Genius photo', () => {
+  const adminArtist = artist('a7', 'Admin Act', '2026-01-01', { status: 'approved', source: 'admin' });
+  const cloud = { imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/catalog/g.jpg', sourceUrl: 'https://genius.com/artists/Luna-vale' };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    auth.permissions = ['catalog.review', 'catalog.manage'];
+    getReviewQueue.mockResolvedValue({ artists: [], albums: [] });
+    adminListArtists.mockResolvedValue([adminArtist]);
+    adminListAlbums.mockResolvedValue([]);
+    adminCreateArtist.mockResolvedValue({ id: 'new' });
+    searchGeniusArtists.mockResolvedValue([{ geniusId: 11, name: 'Luna Vale', imageUrl: 'https://images.genius.com/a.jpg', url: cloud.sourceUrl }]);
+    copyGeniusPhoto.mockResolvedValue(cloud);
+    withSudo.mockImplementation((fn: () => unknown) => fn());
+  });
+
+  async function openNewArtist() {
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: 'New artist' }));
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Luna Vale' } });
+  }
+
+  async function pickGenius() {
+    fireEvent.click(screen.getByRole('button', { name: 'Fetch from Genius' }));
+    await waitFor(() => expect(searchGeniusArtists).toHaveBeenCalledWith('Luna Vale'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Use this photo' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Use this photo' })).not.toBeInTheDocument());
+  }
+
+  it('creating an artist with a Genius photo sends imageSource genius and the page URL', async () => {
+    await openNewArtist();
+    await pickGenius();
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await waitFor(() => expect(adminCreateArtist).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Luna Vale', imageUrl: cloud.imageUrl, imageSource: 'genius', imageSourceUrl: cloud.sourceUrl,
+    })));
+    expect(uploadCatalogImage).not.toHaveBeenCalled();
+  });
+
+  it('uploading a file after picking Genius sends no imageSource', async () => {
+    uploadCatalogImage.mockResolvedValue('https://res.cloudinary.com/demo/image/upload/v1/catalog/u.png');
+    await openNewArtist();
+    await pickGenius();
+    fireEvent.change(screen.getByLabelText('Choose a photo'), { target: { files: [new File(['x'], 'luna.jpg', { type: 'image/jpeg' })] } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Use framed photo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await waitFor(() => expect(adminCreateArtist).toHaveBeenCalled());
+    const input = adminCreateArtist.mock.calls[0][0] as Record<string, unknown>;
+    expect(input.imageUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/catalog/u.png');
+    expect(input).not.toHaveProperty('imageSource');
+    expect(input).not.toHaveProperty('imageSourceUrl');
+  });
+
+  it('album dialog has no Genius button', async () => {
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'New album' }));
+    await screen.findByRole('heading', { name: 'New album' });
+    expect(screen.queryByRole('button', { name: 'Fetch from Genius' })).not.toBeInTheDocument();
   });
 });

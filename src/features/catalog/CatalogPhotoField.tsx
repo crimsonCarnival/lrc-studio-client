@@ -51,8 +51,8 @@ export function CatalogPhotoField({ variant, value, onChange, onError, existingU
   }, []);
 
   const label = isAlbum ? t('catalog.dialog.coverLabel') : t('catalog.dialog.imageLabel');
-  const shown = value.kind === 'new' ? preview : value.kind === 'unchanged' ? existingUrl ?? null : null;
-  const hasImage = value.kind === 'new' || (value.kind === 'unchanged' && !!existingUrl);
+  const shown = value.kind === 'new' ? preview : value.kind === 'genius' ? value.url : value.kind === 'unchanged' ? existingUrl ?? null : null;
+  const hasImage = value.kind === 'new' || value.kind === 'genius' || (value.kind === 'unchanged' && !!existingUrl);
 
   function dropSource() {
     if (source) URL.revokeObjectURL(source.url);

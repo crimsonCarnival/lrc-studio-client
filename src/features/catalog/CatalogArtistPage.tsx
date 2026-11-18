@@ -46,15 +46,24 @@ export default function CatalogArtistPage() {
 
   const { artist, songs } = data;
   const albums = albumCards(data.albums, songs);
+  // The server validates this too; checking the host keeps a bad row from rendering an arbitrary link.
+  const showGeniusCredit = artist.imageSource === 'genius' && !!artist.imageSourceUrl?.startsWith('https://genius.com/');
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
         <header className="flex flex-wrap items-end gap-6">
-          <span className="flex size-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-6xl font-bold text-muted-foreground sm:size-44">
-            {artist.imageUrl
-              ? <img src={artist.imageUrl} alt="" className="size-full object-cover" decoding="async" />
-              : <span aria-hidden="true">{Array.from(artist.name)[0]?.toUpperCase()}</span>}
-          </span>
+          <div className="flex shrink-0 flex-col gap-1">
+            <span className="flex size-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-6xl font-bold text-muted-foreground sm:size-44">
+              {artist.imageUrl
+                ? <img src={artist.imageUrl} alt="" className="size-full object-cover" decoding="async" />
+                : <span aria-hidden="true">{Array.from(artist.name)[0]?.toUpperCase()}</span>}
+            </span>
+            {showGeniusCredit && (
+              <a href={artist.imageSourceUrl!} target="_blank" rel="noopener noreferrer nofollow" className="text-xs text-muted-foreground hover:underline">
+                {t('catalog.page.photoCredit')}
+              </a>
+            )}
+          </div>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t('catalog.page.kicker')}</span>
             <h1 className="break-words font-heading text-4xl font-bold text-foreground">{artist.name}</h1>
