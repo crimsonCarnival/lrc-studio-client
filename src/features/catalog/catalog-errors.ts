@@ -15,6 +15,10 @@ const KEYS = {
   catalog_self_review: 'catalog.errors.selfReview',
   catalog_disambiguation_required: 'catalog.errors.disambiguationRequired',
   forbidden: 'catalog.errors.forbidden',
+  catalog_genius_unavailable: 'catalog.errors.geniusUnavailable',
+  catalog_genius_upstream: 'catalog.errors.geniusUpstream',
+  catalog_genius_not_found: 'catalog.errors.geniusNotFound',
+  catalog_genius_image_rejected: 'catalog.errors.geniusImageRejected',
 } as const;
 
 export type CatalogErrorKey =
