@@ -13,13 +13,14 @@ type CatalogAlbumsDrawerProps = {
   failed: boolean;
   onRetry: () => void;
   onNew: () => void;
+  onDetect: () => void;
   onEdit: (album: CatalogAlbum) => void;
   onDelete: (album: CatalogAlbum) => void;
   onClose: () => void;
 };
 
 /** The albums of one artist, in a panel that slides over the right edge so the artist grid stays in place behind it. */
-export function CatalogAlbumsDrawer({ artist, albums, failed, onRetry, onNew, onEdit, onDelete, onClose }: CatalogAlbumsDrawerProps) {
+export function CatalogAlbumsDrawer({ artist, albums, failed, onRetry, onNew, onDetect, onEdit, onDelete, onClose }: CatalogAlbumsDrawerProps) {
   const { t } = useTranslation();
   return (
     <Dialog open={artist !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -58,9 +59,14 @@ export function CatalogAlbumsDrawer({ artist, albums, failed, onRetry, onNew, on
           ))}
         </ul>
 
-        <Button type="button" variant="outline" className="justify-self-start" disabled={!albums} onClick={onNew}>
-          <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newAlbum')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" disabled={!albums} onClick={onNew}>
+            <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newAlbum')}
+          </Button>
+          <Button type="button" variant="outline" disabled={!albums} onClick={onDetect}>
+            <Icon name="search" size={14} /> {t('admin.catalogTab.detect.button')}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

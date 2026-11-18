@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, adminUpdate, adminCreateArtist, uploadCatalogImage, searchGeniusArtists, copyGeniusPhoto, withSudo, toast, auth } = vi.hoisted(() => ({
+const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDelete, adminUpdate, adminCreateArtist, uploadCatalogImage, searchGeniusArtists, copyGeniusPhoto, detectAlbums, approveDetectedAlbum, withSudo, toast, auth } = vi.hoisted(() => ({
   getReviewQueue: vi.fn(),
   reviewEntry: vi.fn(),
   adminListArtists: vi.fn(),
@@ -14,6 +14,8 @@ const { getReviewQueue, reviewEntry, adminListArtists, adminListAlbums, adminDel
   uploadCatalogImage: vi.fn(),
   searchGeniusArtists: vi.fn(),
   copyGeniusPhoto: vi.fn(),
+  detectAlbums: vi.fn(),
+  approveDetectedAlbum: vi.fn(),
   withSudo: vi.fn(),
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
   auth: { permissions: ['catalog.review', 'catalog.manage'] as string[] },
@@ -30,6 +32,8 @@ vi.mock('@/features/catalog/catalog.service', async (importOriginal) => ({
   uploadCatalogImage,
   searchGeniusArtists,
   copyGeniusPhoto,
+  detectAlbums,
+  approveDetectedAlbum,
 }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
 // The crop step needs a real canvas; here it is a stand-in that confirms a fixed blob.
@@ -286,6 +290,24 @@ describe('AdminCatalogTab edit and delete options', () => {
     expect(screen.getByText('1 album')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'New album' }));
     expect(await screen.findByRole('heading', { name: 'New album' })).toBeInTheDocument();
+  });
+
+  it('Detect albums opens from the drawer and an approval reloads the albums', async () => {
+    const created = { id: 'al2', artistId: 'a7', title: 'Blue', year: '1999', coverUrl: null, source: 'admin', status: 'approved' };
+    adminListAlbums.mockResolvedValueOnce([]).mockResolvedValueOnce([created]);
+    detectAlbums.mockResolvedValue([{ key: 'blue', title: 'Blue', songCount: 4, year: '1999' }]);
+    approveDetectedAlbum.mockResolvedValue(created);
+    show('/admin/catalog/browse');
+    await screen.findByText('Admin Act');
+    fireEvent.click(screen.getByRole('button', { name: /^Show albums of/ }));
+    await screen.findByText('No albums yet.');
+    fireEvent.click(screen.getByRole('button', { name: 'Detect albums' }));
+    expect(await screen.findByText('4 songs')).toBeInTheDocument();
+    expect(detectAlbums).toHaveBeenCalledWith('a7');
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(approveDetectedAlbum).toHaveBeenCalledWith({ artistId: 'a7', title: 'Blue', year: '1999' }));
+    await waitFor(() => expect(adminListAlbums).toHaveBeenCalledTimes(2));
+    expect(adminListAlbums).toHaveBeenLastCalledWith('a7');
   });
 
   it('loads the next page of artists with the current offset', async () => {
