@@ -24,9 +24,9 @@ describe('catalogErrorKey', () => {
     expect(catalogErrorKey(Object.assign(new Error('raw server text'), { code }))).toBe(key);
   });
 
-  it('maps an HTTP 429 from the route limiter (body has no catalog code) to the rate-limit key', () => {
+  it('maps an HTTP 429 from the route limiter (body has no catalog code) to the Genius rate-limit key', () => {
     const err = Object.assign(new Error('too_many_requests'), { status: 429, body: { error: 'too_many_requests' } });
-    expect(catalogErrorKey(err)).toBe('catalog.errors.rateLimited');
+    expect(catalogErrorKey(err)).toBe('catalog.errors.geniusRateLimited');
   });
 
   it('keeps a catalog code ahead of the status, and other statuses stay generic', () => {

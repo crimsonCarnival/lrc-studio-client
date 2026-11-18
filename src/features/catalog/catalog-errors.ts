@@ -25,6 +25,7 @@ const KEYS = {
 export type CatalogErrorKey =
   | (typeof KEYS)[keyof typeof KEYS]
   | 'catalog.errors.generic'
+  | 'catalog.errors.geniusRateLimited'
   | 'catalog.errors.imageNotImage'
   | 'catalog.errors.imageTooLarge'
   | 'catalog.errors.uploadFailed';
@@ -34,7 +35,7 @@ export function catalogErrorKey(err: unknown): CatalogErrorKey {
   const code = catalogErrorCode(err);
   if (code && code in KEYS) return KEYS[code as keyof typeof KEYS];
   // The per-route limiter's 429 body is `{ error: 'too_many_requests' }` with no catalog code.
-  if (isApiError(err) && err.status === 429) return 'catalog.errors.rateLimited';
+  if (isApiError(err) && err.status === 429) return 'catalog.errors.geniusRateLimited';
   return 'catalog.errors.generic';
 }
 

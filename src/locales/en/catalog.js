@@ -52,6 +52,7 @@ export default {
     geniusUpstream: "Genius did not respond. Try again in a moment.",
     geniusNotFound: "Genius has no artist with that id.",
     geniusImageRejected: "That Genius photo could not be used.",
+    geniusRateLimited: "Too many Genius requests. Try again in a while.",
     generic: "Something went wrong. Please try again.",
     imageNotImage: "Choose an image file.",
     imageTooLarge: "The image is larger than 5 MB.",
