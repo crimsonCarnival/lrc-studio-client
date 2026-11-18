@@ -224,6 +224,17 @@ export async function getCatalogArtist(slug: string): Promise<CatalogArtistPage 
   return data.catalogArtist;
 }
 
+/** Catalog slugs for the artists that have an approved page; names without one are simply absent. */
+export async function getCatalogSlugs(names: string[]): Promise<Array<{ name: string; key: string; slug: string }>> {
+  if (names.length === 0) return [];
+  const data = await gqlRequest<{ catalogArtistSlugs: Array<{ name: string; key: string; slug: string }> }>(/* GraphQL */ `
+    query CatalogArtistSlugs($names: [String!]!) {
+      catalogArtistSlugs(names: $names) { name key slug }
+    }
+  `, { names });
+  return data.catalogArtistSlugs;
+}
+
 /** Genius artists matching `q` (at most 5, each with a usable photo). Needs `catalog.manage`. */
 export async function searchGeniusArtists(q: string): Promise<GeniusArtistMatch[]> {
   const data = await request<{ artists: GeniusArtistMatch[] }>(`/catalog/genius/artists?q=${encodeURIComponent(q)}`);

@@ -90,6 +90,7 @@ export default {
     songs_one: "{{count}} song",
     songs_other: "{{count}} songs",
     noSongs: "No songs yet.",
+    suggestAlbum: "Suggest an album",
     noAlbums: "No albums yet.",
     back: "Back",
     photoCredit: "Photo: Genius",

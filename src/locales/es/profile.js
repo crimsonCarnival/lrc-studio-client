@@ -310,6 +310,7 @@ export default {
     singlesHint: "Canciones sin álbum",
     synced: "Sincronizada",
     inProgress: "En progreso",
+    viewCatalogPage: "Ver la página del artista",
     kicker: "Artista",
     back: "Artistas de {{name}}",
     empty: "Aún no hay artistas para mostrar.",

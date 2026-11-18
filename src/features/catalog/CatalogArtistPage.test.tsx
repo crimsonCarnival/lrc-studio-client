@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 const { getCatalogArtist } = vi.hoisted(() => ({ getCatalogArtist: vi.fn() }));
 vi.mock('./catalog.service', async (importOriginal) => ({ ...(await importOriginal<object>()), getCatalogArtist }));
+vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: null }) }));
 
 import CatalogArtistPage from './CatalogArtistPage';
 

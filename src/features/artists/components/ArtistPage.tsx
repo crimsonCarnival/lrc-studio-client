@@ -16,6 +16,8 @@ import { formatTrackLength } from '@/features/playlists/playlist-stats';
 import { useSetShelfVisibility, useShelfArtist } from '../shelf.queries';
 import type { ShelfAlbum, ShelfProject, ShelfTrack } from '../shelf.service';
 import { SongConnections } from '@/features/project-view/SongConnections';
+import { useCatalogSlugs } from '@/features/catalog/catalog.queries';
+import { catalogArtistPath } from '@/features/catalog/catalog-path';
 import { VisibilityChip } from './VisibilityChip';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -233,6 +235,7 @@ export default function ArtistPage() {
   const { data: artist, isPending, isError } = useShelfArtist(accountName, artistId, viewAsOthers);
   const setVisibility = useSetShelfVisibility(accountName ?? '');
   const { save: saveAsPlaylist, pending: savePending } = useSaveAsPlaylist(accountName ?? '');
+  const catalogSlug = useCatalogSlugs(artist ? [artist.name] : []).get(artist?.name.normalize('NFC').toLowerCase() ?? '');
 
   if (isPending) {
     return <div className="flex justify-center py-24"><LoadingSpinner size="lg" /></div>;
@@ -270,6 +273,12 @@ export default function ArtistPage() {
           <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t('profile.artists.kicker')}</span>
           <h1 className="break-words font-heading text-4xl font-bold text-foreground">{artist.name}</h1>
           <span className="text-sm text-muted-foreground">{summary}</span>
+          {catalogSlug && (
+            <Link to={catalogArtistPath(catalogSlug)} className="flex w-fit items-center gap-1 text-sm text-primary hover:underline">
+              {t('profile.artists.viewCatalogPage')}
+              <Icon name="arrow_forward" size={14} />
+            </Link>
+          )}
         </div>
         {isOwner && (
           <div className="flex flex-wrap items-center gap-3">
