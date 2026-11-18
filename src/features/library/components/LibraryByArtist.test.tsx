@@ -81,6 +81,14 @@ describe('LibraryByArtist', () => {
     expect(cards()).toEqual(['one-more-time', 'aerodynamic']);
   });
 
+  it('search matches a tag, like the flat view', () => {
+    const shelf = [artist('a1', 'Daft Punk', [album('discovery', 'Discovery', [
+      ['one-more-time', { metadata: { tags: ['House', 'french'] } }], ['aerodynamic'],
+    ])])];
+    view({ shelf, query: 'hous' });
+    expect(cards()).toEqual(['one-more-time']);
+  });
+
   it('shows an empty message when nothing matches', () => {
     view({ query: 'zzzz' });
     expect(screen.queryAllByTestId('card')).toHaveLength(0);
