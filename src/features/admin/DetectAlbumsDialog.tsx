@@ -26,7 +26,9 @@ export function DetectAlbumsDialog({ artist, onApproved, onClose }: DetectAlbums
   const [busy, setBusy] = useState(false);
   return (
     <Dialog open={artist !== null} onOpenChange={(next) => { if (!next && !busy) onClose(); }}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
+      {/* minmax(0,1fr): the grid's implicit auto column would otherwise grow to a long title's
+          full width (nowrap), so `truncate` never engages and the row's buttons are clipped. */}
+      <DialogContent className="max-h-[calc(100dvh-2rem)] grid-cols-[minmax(0,1fr)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('admin.catalogTab.detect.title', { name: artist?.name ?? '' })}</DialogTitle>
           <DialogDescription>{t('admin.catalogTab.detect.description')}</DialogDescription>
@@ -136,8 +138,8 @@ function DetectBody({ artistId, onBusyChange, onApproved }: Pick<DetectAlbumsDia
                 {item.year && <span>{item.year}</span>}
               </span>
             </div>
-            <Button type="button" size="sm" disabled={busyKey !== null} aria-busy={rowBusy} onClick={() => void approve(item)}>{t('admin.catalogTab.detect.approve')}</Button>
-            <Button type="button" size="sm" variant="outline" disabled={busyKey !== null} onClick={() => void reject(item)}>{t('admin.catalogTab.detect.reject')}</Button>
+            <Button type="button" size="sm" className="shrink-0" disabled={busyKey !== null} aria-busy={rowBusy} onClick={() => void approve(item)}>{t('admin.catalogTab.detect.approve')}</Button>
+            <Button type="button" size="sm" variant="outline" className="shrink-0" disabled={busyKey !== null} onClick={() => void reject(item)}>{t('admin.catalogTab.detect.reject')}</Button>
           </li>
         );
       })}
