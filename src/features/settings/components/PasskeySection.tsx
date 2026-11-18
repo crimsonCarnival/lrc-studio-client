@@ -14,6 +14,7 @@ import { formatInTimezone } from '@/shared/utils/date';
 import { auth } from '@/app/api';
 import toast from 'react-hot-toast';
 import { LogoLoader } from '@ui/LogoLoader';
+import useConfirm from '@/shared/hooks/useConfirm';
 import { Tip } from '@ui/tip';
 import { IconRow } from './shared';
 import type { ApiError } from '@/types/api/error';
@@ -34,6 +35,7 @@ export default function PasskeySection() {
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [requestConfirm, confirmModal] = useConfirm();
   const registeringRef = useRef(false);
 
   const fetchPasskeys = useCallback(async () => {
@@ -81,7 +83,7 @@ export default function PasskeySection() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const performDelete = async (id: string) => {
     setDeletingId(id);
     try {
       await auth.deletePasskey(id);
@@ -92,6 +94,17 @@ export default function PasskeySection() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // Removing a passkey takes away a sign-in method, and if it is the last one
+  // the account can become unreachable — so it goes through the shared confirm,
+  // which also honours the "confirm destructive actions" setting.
+  const handleDelete = (id: string) => {
+    requestConfirm(
+      t('confirm.deletePasskey'),
+      () => { void performDelete(id); },
+      { title: t('confirm.deletePasskeyTitle'), variant: 'danger' }
+    );
   };
 
   const formatDate = (dateString?: string) => {
@@ -181,6 +194,7 @@ export default function PasskeySection() {
           })}
         </div>
       )}
+      {confirmModal}
     </div>
   );
 }

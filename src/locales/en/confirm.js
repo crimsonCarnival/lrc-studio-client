@@ -1,4 +1,6 @@
 export default {
+  deletePasskey: "Delete this passkey? You will no longer be able to sign in with it.",
+  deletePasskeyTitle: "Delete Passkey",
   action: "Are you sure?",
   confirm: "Confirm",
   cancel: "Cancel",
