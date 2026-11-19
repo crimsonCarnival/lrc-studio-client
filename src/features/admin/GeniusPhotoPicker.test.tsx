@@ -2,11 +2,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-const { searchGeniusArtists, copyGeniusPhoto } = vi.hoisted(() => ({ searchGeniusArtists: vi.fn(), copyGeniusPhoto: vi.fn() }));
+const svc = vi.hoisted(() => ({ searchGeniusArtists: vi.fn(), copyGeniusPhoto: vi.fn(), searchGeniusAlbums: vi.fn(), copyGeniusAlbumCover: vi.fn(), listProjectCovers: vi.fn(), copyProjectCover: vi.fn() }));
+const { searchGeniusArtists, copyGeniusPhoto, searchGeniusAlbums, copyGeniusAlbumCover, listProjectCovers, copyProjectCover } = svc;
 vi.mock('@/features/catalog/catalog.service', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  searchGeniusArtists,
-  copyGeniusPhoto,
+  ...svc,
 }));
 
 import { GeniusPhotoPicker } from './GeniusPhotoPicker';
@@ -127,5 +127,71 @@ describe('GeniusPhotoPicker', () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(screen.queryByText('Luna Vale')).not.toBeInTheDocument();
     expect(screen.getByText('Luna Vales')).toBeInTheDocument();
+  });
+});
+
+describe('GeniusPhotoPicker (album covers)', () => {
+  const albumMatches = [{ geniusId: 5, name: 'OK Computer', artistName: 'Radiohead', imageUrl: 'https://images.genius.com/c.jpg', url: 'https://genius.com/albums/Radiohead/Ok-computer' }];
+  const songs = [{ publicId: 'p1', title: 'Airbag', coverUrl: 'https://res.cloudinary.com/x/image/upload/a.jpg' }];
+  const showAlbum = (songCovers?: { artistId: string; title: string }) => {
+    const onPick = vi.fn();
+    const onClose = vi.fn();
+    render(<GeniusPhotoPicker open kind="album" initialQuery="Radiohead OK Computer" songCovers={songCovers} onPick={onPick} onClose={onClose} />);
+    return { onPick, onClose };
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    searchGeniusAlbums.mockResolvedValue(albumMatches);
+    listProjectCovers.mockResolvedValue([]);
+  });
+
+  it('searches Genius albums, shows the artist and copies the album cover', async () => {
+    copyGeniusAlbumCover.mockResolvedValue({ imageUrl: 'https://res.cloudinary.com/x/c.webp', sourceUrl: 'https://genius.com/albums/Radiohead/Ok-computer' });
+    const { onPick } = showAlbum();
+    expect(await screen.findByText('OK Computer')).toBeInTheDocument();
+    expect(screen.getByText('Radiohead')).toBeInTheDocument();
+    expect(searchGeniusAlbums).toHaveBeenCalledWith('Radiohead OK Computer');
+    expect(searchGeniusArtists).not.toHaveBeenCalled();
+    expect(listProjectCovers).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Use this cover' }));
+    await waitFor(() => expect(onPick).toHaveBeenCalledWith({ imageUrl: 'https://res.cloudinary.com/x/c.webp', sourceUrl: 'https://genius.com/albums/Radiohead/Ok-computer' }));
+    expect(copyGeniusAlbumCover).toHaveBeenCalledWith(5);
+  });
+
+  it('offers covers from songs on the album first and copies them by publicId', async () => {
+    listProjectCovers.mockResolvedValue(songs);
+    copyProjectCover.mockResolvedValue({ imageUrl: 'https://res.cloudinary.com/x/catalog/p.webp' });
+    const { onPick } = showAlbum({ artistId: 'a1', title: 'OK Computer' });
+    expect(await screen.findByText('Airbag')).toBeInTheDocument();
+    expect(listProjectCovers).toHaveBeenCalledWith('a1', 'OK Computer');
+    expect(screen.getByText('From songs on this album')).toBeInTheDocument();
+    await screen.findByText('Radiohead');
+    const buttons = screen.getAllByRole('button', { name: 'Use this cover' });
+    expect(buttons).toHaveLength(2);
+    fireEvent.click(buttons[0]);
+    await waitFor(() => expect(onPick).toHaveBeenCalledWith({ imageUrl: 'https://res.cloudinary.com/x/catalog/p.webp' }));
+    expect(copyProjectCover).toHaveBeenCalledWith({ artistId: 'a1', title: 'OK Computer', publicId: 'p1' });
+    expect(copyGeniusAlbumCover).not.toHaveBeenCalled();
+  });
+
+  it('a failing song-cover lookup does not hide the Genius results', async () => {
+    listProjectCovers.mockRejectedValue(new Error('x'));
+    showAlbum({ artistId: 'a1', title: 'OK Computer' });
+    expect(await screen.findByText('OK Computer')).toBeInTheDocument();
+    expect(screen.queryByText('From songs on this album')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('a failed song-cover copy is reported inside that row', async () => {
+    listProjectCovers.mockResolvedValue(songs);
+    copyProjectCover.mockRejectedValue(Object.assign(new Error('x'), { code: 'catalog_cover_proposal_not_found' }));
+    showAlbum({ artistId: 'a1', title: 'OK Computer' });
+    await screen.findByText('Airbag');
+    await screen.findByText('Radiohead');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Use this cover' })[0]);
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('no longer available');
+    expect(alert.closest('li')).toHaveTextContent('Airbag');
   });
 });

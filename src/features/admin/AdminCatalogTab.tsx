@@ -267,6 +267,10 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
     if (!albums[artistId]) void loadAlbums(artistId);
   }
 
+  // The artist an album form belongs to, for its Genius cover search; the album form never edits it.
+  const formArtistId = form?.kind !== 'album' ? null : form.mode === 'create' ? form.artistId : form.entry.artistId;
+  const formArtistName = formArtistId ? artists.find((a) => a.id === formArtistId)?.name : undefined;
+
   async function afterSave(target: FormTarget) {
     setForm(null);
     toast.success(t(target.mode === 'create' ? 'admin.catalogTab.form.created' : 'admin.catalogTab.form.saved'));
@@ -364,7 +368,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
         </>
       )}
 
-      <CatalogEntryDialog target={form} onDone={afterSave} onClose={() => setForm(null)} />
+      <CatalogEntryDialog target={form} artistName={formArtistName} onDone={afterSave} onClose={() => setForm(null)} />
 
       <CatalogAlbumsDrawer
         artist={drawerArtist}

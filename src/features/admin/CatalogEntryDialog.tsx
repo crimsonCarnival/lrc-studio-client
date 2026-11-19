@@ -32,12 +32,14 @@ export type FormTarget =
 
 type CatalogEntryDialogProps = {
   target: FormTarget | null;
+  /** Album forms: the artist's name, so the Genius cover search starts from rtist album. */
+  artistName?: string;
   onDone: (target: FormTarget) => void | Promise<void>;
   onClose: () => void;
 };
 
 /** Create or edit a catalog artist or album as an admin. Entries made here are approved at once. */
-export function CatalogEntryDialog({ target, onDone, onClose }: CatalogEntryDialogProps) {
+export function CatalogEntryDialog({ target, artistName, onDone, onClose }: CatalogEntryDialogProps) {
   const { t } = useTranslation();
   const key = target ? `${target.mode}:${target.kind}:${target.mode === 'edit' ? target.entry.id : target.kind === 'album' ? target.artistId : ''}` : 'closed';
   return (
@@ -50,7 +52,7 @@ export function CatalogEntryDialog({ target, onDone, onClose }: CatalogEntryDial
               <DialogDescription>{t(target.mode === 'create' ? 'admin.catalogTab.form.createDescription' : 'admin.catalogTab.form.editDescription')}</DialogDescription>
             </DialogHeader>
             {/* Keyed so each target starts from its own values. */}
-            <EntryForm key={key} target={target} onDone={onDone} onClose={onClose} />
+            <EntryForm key={key} target={target} artistName={artistName} onDone={onDone} onClose={onClose} />
           </>
         )}
       </DialogContent>
@@ -58,7 +60,7 @@ export function CatalogEntryDialog({ target, onDone, onClose }: CatalogEntryDial
   );
 }
 
-function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: CatalogEntryDialogProps['onDone']; onClose: () => void }) {
+function EntryForm({ target, artistName, onDone, onClose }: { target: FormTarget; artistName?: string; onDone: CatalogEntryDialogProps['onDone']; onClose: () => void }) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const isAlbum = target.kind === 'album';
@@ -75,6 +77,7 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
   const [pickingGenius, setPickingGenius] = useState(false);
   const existingUrl = initialArtist?.imageUrl ?? initialAlbum?.coverUrl ?? null;
   const idPrefix = `catalog-form-${target.mode}-${target.kind}`;
+  const albumArtistId = target.kind !== 'album' ? null : target.mode === 'create' ? target.artistId : target.entry.artistId;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -142,11 +145,9 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
         existingUrl={existingUrl}
         disabled={busy}
       />
-      {!isAlbum && (
-        <Button type="button" variant="outline" size="sm" className="self-start" disabled={busy} onClick={() => setPickingGenius(true)}>
-          {t('admin.catalogTab.genius.button')}
-        </Button>
-      )}
+      <Button type="button" variant="outline" size="sm" className="self-start" disabled={busy} onClick={() => setPickingGenius(true)}>
+        {isAlbum ? t('admin.catalogTab.genius.albumButton') : t('admin.catalogTab.genius.button')}
+      </Button>
       {photoError && <p role="alert" className="text-sm text-love">{t(photoError)}</p>}
 
       <div className="flex flex-col gap-1.5">
@@ -189,14 +190,14 @@ function EntryForm({ target, onDone, onClose }: { target: FormTarget; onDone: Ca
       </DialogFooter>
     </form>
     {/* Outside the form: portal events bubble through React, and Enter in the picker must not submit this form. */}
-    {!isAlbum && (
-      <GeniusPhotoPicker
-        open={pickingGenius}
-        initialQuery={name.trim()}
-        onPick={(p) => { setPhotoError(null); setPhoto({ kind: 'genius', url: p.imageUrl, sourceUrl: p.sourceUrl }); }}
-        onClose={() => setPickingGenius(false)}
-      />
-    )}
+    <GeniusPhotoPicker
+      open={pickingGenius}
+      kind={isAlbum ? 'album' : 'artist'}
+      initialQuery={isAlbum ? `${artistName ?? ''} ${name}`.trim() : name.trim()}
+      songCovers={albumArtistId && name.trim() ? { artistId: albumArtistId, title: name.trim() } : undefined}
+      onPick={(p) => { setPhotoError(null); setPhoto({ kind: 'genius', url: p.imageUrl, sourceUrl: p.sourceUrl ?? '' }); }}
+      onClose={() => setPickingGenius(false)}
+    />
     </>
   );
 }
