@@ -994,8 +994,8 @@ export default function Editor({
     });
   };
   const handleDistributeWords = () => {
-    // Replacing times someone stamped by hand is confirmed first.
-    if (focusLine?.words?.some((w) => w.time != null)) {
+    // Replacing times someone stamped by hand is confirmed first (the first word only mirrors the line's start).
+    if (focusLine?.words?.some((w, i) => i > 0 && w.time != null)) {
       requestConfirm(t('editor.words.distributeConfirm'), distributeWords, { title: t('editor.words.distribute') });
     } else {
       distributeWords();

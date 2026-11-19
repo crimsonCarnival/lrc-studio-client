@@ -145,7 +145,7 @@ describe('applyMark — auto-advance modes', () => {
   });
 
   it('next-unsynced skips lines that already have a timestamp', () => {
-    const lines = [line('one'), line('two', { timestamp: 1 }), line('three', { timestamp: 2 }), line('four')];
+    const lines = [line('one'), line('two', { timestamp: 20 }), line('three', { timestamp: 30 }), line('four')];
     const res = mark({
       lines,
       activeLineIndex: 0,
@@ -183,7 +183,7 @@ describe('applyMark — auto-advance modes', () => {
   });
 
   it('clamps when next-unsynced finds nothing unsynced ahead', () => {
-    const lines = [line('one'), line('two', { timestamp: 1 })];
+    const lines = [line('one'), line('two', { timestamp: 20 })];
     const res = mark({
       lines,
       activeLineIndex: 0,
@@ -684,5 +684,45 @@ describe('markTargetIndex', () => {
     const res = applyMark({ lines, activeLineIndex: 0, time: 3, editorMode: 'lrc', settings } as never);
     const stamped = res.nextLines.findIndex((l) => l.timestamp === 3);
     expect(stamped).toBe(markTargetIndex(lines, 0, null));
+  });
+});
+
+describe('applyMark — a line cannot start after the line that follows it', () => {
+  const words = (...t: (number | null)[]) => ['a', 'b', 'c'].map((word, i) => ({ word, time: t[i] ?? null }));
+
+  it('refuses a first stamp later than the next timed line', () => {
+    const lines = [line('one'), line('two', { timestamp: 5 })];
+    const res = mark({ lines, time: 6 });
+    expect(res.refused).toBe(true);
+    expect(res.nextLines).toBe(lines);
+    expect(res.nextActiveLineIndex).toBeNull();
+  });
+
+  it('refuses re-stamping the first word of a line past the next line', () => {
+    const lines = [
+      line('a b c', { timestamp: 1, words: words(1, 2, 3) }),
+      line('next', { timestamp: 5 }),
+    ];
+    const res = mark({ lines, editorMode: 'words', activeWordIndex: 0, time: 6 });
+    expect(res.refused).toBe(true);
+    expect(res.nextLines).toBe(lines);
+  });
+
+  it('allows a start before the next line, and words after the first past it (held words)', () => {
+    const lines = [line('a b c', { timestamp: 1, words: words(1, 2, null) }), line('next', { timestamp: 5 })];
+    expect(mark({ lines, editorMode: 'words', activeWordIndex: 0, time: 4 }).refused).toBeUndefined();
+    const held = mark({ lines, editorMode: 'words', activeWordIndex: 2, time: 6 });
+    expect(held.refused).toBeUndefined();
+    expect(held.nextLines[0].words?.[2].time).toBe(6);
+  });
+});
+
+describe('applyMark — the first word sits on the line start', () => {
+  it('stamps the second word, not the first, when the line already starts and word 1 is unset', () => {
+    const lines = [line('a b c', { timestamp: 2, words: [{ word: 'a', time: null }, { word: 'b', time: null }, { word: 'c', time: null }] })];
+    const res = mark({ lines, editorMode: 'words', activeWordIndex: 0, time: 3 });
+    expect(res.nextLines[0].timestamp).toBe(2);
+    expect(res.nextLines[0].words?.map((w) => w.time)).toEqual([2, 3, null]);
+    expect(res.nextActiveWordIndex).toBe(2);
   });
 });

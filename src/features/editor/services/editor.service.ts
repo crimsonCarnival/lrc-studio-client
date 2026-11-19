@@ -2,6 +2,7 @@
  * Pure functions for editor logic — no side effects, no React imports.
  */
 import type { EditorLine, EditorWord, FocusedTimestamp, LineMode } from '../editor.types';
+import { nextTimedIndex } from '../utils/line-span';
 
 /**
  * Single source of truth for the singers/words ↔ mode invariant.
@@ -39,6 +40,8 @@ interface ApplyMarkResult {
   nextActiveLineIndex: number | null;
   nextAwaitingEndMark?: { lineIndex: number; mode: string } | null;
   nextActiveWordIndex?: number;
+  /** The mark would have started a line after the start of the line that follows it, so nothing changed. */
+  refused?: boolean;
 }
 
 /**
@@ -242,10 +245,25 @@ export function markTargetIndex(
 export function applyMark(params: ApplyMarkParams): ApplyMarkResult {
   const { lines, activeLineIndex, focusedTimestamp } = params;
   const target = markTargetIndex(lines, activeLineIndex, focusedTimestamp);
-  if (focusedTimestamp || target === activeLineIndex) return applyMarkAt(params);
-  if (target === null) return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
-  const result = applyMarkAt({ ...params, activeLineIndex: target });
-  return result.nextActiveLineIndex == null ? { ...result, nextActiveLineIndex: target } : result;
+  let result: ApplyMarkResult;
+  if (focusedTimestamp || target === activeLineIndex) result = applyMarkAt(params);
+  else if (target === null) return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
+  else {
+    result = applyMarkAt({ ...params, activeLineIndex: target });
+    if (result.nextActiveLineIndex == null) result = { ...result, nextActiveLineIndex: target };
+  }
+  // A line cannot start after the line that follows it: that leaves it with no length, and its
+  // words with nowhere to sit. The mark is dropped and the cursor stays where it was.
+  const at = focusedTimestamp ? focusedTimestamp.lineIndex : target;
+  const before = at != null ? lines[at]?.timestamp : null;
+  const after = at != null ? result.nextLines[at]?.timestamp : null;
+  if (at != null && after != null && after !== before) {
+    const next = nextTimedIndex(lines, at);
+    if (next >= 0 && after > (lines[next].timestamp as number)) {
+      return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined, refused: true };
+    }
+  }
+  return result;
 }
 
 /**
@@ -399,9 +417,17 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
     }
 
     // Subsequent presses: stamp words one by one
-    const clampedIdx = Math.min(activeWordIndex, words.length - 1);
+    // A line that already starts somewhere has its first word there too: the first press
+    // stamps the second word instead of moving the line's start.
+    let cursor = activeWordIndex;
+    let base = words;
+    if (wordField === 'words' && words.length > 1 && words[0].time == null) {
+      base = [{ ...words[0], time: line.timestamp }, ...words.slice(1)];
+      if (cursor === 0) cursor = 1;
+    }
+    const clampedIdx = Math.min(cursor, words.length - 1);
     if (clampedIdx >= 0) {
-      const newWords = [...words];
+      const newWords = [...base];
       newWords[clampedIdx] = { ...newWords[clampedIdx], time };
       const stamped: EditorLine = { ...line, [wordField]: newWords };
       // Re-marking the first word moves the line's start with it.

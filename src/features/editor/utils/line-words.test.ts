@@ -77,3 +77,15 @@ describe('ensureLineWords', () => {
     ]);
   });
 });
+
+describe('ensureLineWords — first word', () => {
+  it('starts the first word where the line starts', () => {
+    const out = ensureLineWords({ id: 'a', text: 'one two', timestamp: 4 });
+    expect(out.words?.map((w) => w.time)).toEqual([4, null]);
+  });
+
+  it('leaves an untimed line untimed', () => {
+    const out = ensureLineWords({ id: 'a', text: 'one two', timestamp: null });
+    expect(out.words?.map((w) => w.time)).toEqual([null, null]);
+  });
+});
