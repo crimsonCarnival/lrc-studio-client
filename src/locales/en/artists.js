@@ -14,9 +14,10 @@ export default {
   reorderHint: "Alt + ← / → moves the focused artist.",
   limit: "A song can have at most {{max}} artists.",
   suggestions: {
-    label: "Artists you have credited before",
+    label: "Artist suggestions",
     loading: "Searching…",
-    empty: "No matching artists in your library",
+    empty: "No matching artists",
+    catalog: "Catalog",
     error: "Could not load suggestions",
   },
   announce: {

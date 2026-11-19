@@ -297,6 +297,13 @@ export type CatalogQueue = {
   artists: Array<CatalogArtist>;
 };
 
+export type CatalogSuggestion = {
+  disambiguation: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  slug?: Maybe<Scalars['String']['output']>;
+};
+
 export type CollabInvite = {
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
@@ -1858,6 +1865,7 @@ export type Query = {
   catalogArtistSlugs: Array<CatalogArtistRef>;
   catalogDetectAlbums: Array<DetectedAlbum>;
   catalogReviewQueue: CatalogQueue;
+  catalogSuggestions: Array<CatalogSuggestion>;
   /** The live session, for its owner or a signed-in member; null otherwise. */
   collabSession?: Maybe<CollabSession>;
   exploreStats: ExploreStats;
@@ -1979,6 +1987,14 @@ export type QueryCatalogArtistSlugsArgs = {
 
 export type QueryCatalogDetectAlbumsArgs = {
   artistId: Scalars['ID']['input'];
+};
+
+
+export type QueryCatalogSuggestionsArgs = {
+  artist?: InputMaybe<Scalars['String']['input']>;
+  kind: CatalogKind;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  prefix?: InputMaybe<Scalars['String']['input']>;
 };
 
 

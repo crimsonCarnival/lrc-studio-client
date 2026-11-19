@@ -14,9 +14,10 @@ export default {
   reorderHint: "Alt + ← / → mueve al artista enfocado.",
   limit: "Una canción puede tener como máximo {{max}} artistas.",
   suggestions: {
-    label: "Artistas que ya has acreditado",
+    label: "Sugerencias de artistas",
     loading: "Buscando…",
-    empty: "No hay artistas coincidentes en tu biblioteca",
+    empty: "No hay artistas coincidentes",
+    catalog: "Catálogo",
     error: "No se pudieron cargar las sugerencias",
   },
   announce: {

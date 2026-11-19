@@ -10,6 +10,27 @@ const MY_ARTIST_SUGGESTIONS = /* GraphQL */ `
 `;
 
 export interface ArtistSuggestion { id: string; name: string }
+/** An approved catalog artist; `disambiguation` tells namesakes apart. */
+export interface CatalogArtistSuggestion { id: string; name: string; disambiguation: string }
+
+const CATALOG_ARTIST_SUGGESTIONS = /* GraphQL */ `
+  query CatalogArtistSuggestions($prefix: String!, $limit: Int) {
+    catalogSuggestions(kind: artist, prefix: $prefix, limit: $limit) { id name disambiguation }
+  }
+`;
+
+/** Approved catalog artists whose name starts with `prefix`, A to Z. Public; no account needed. */
+export async function fetchCatalogArtistSuggestions(
+  prefix: string,
+  { limit = SUGGESTION_LIMIT, signal }: { limit?: number; signal?: AbortSignal } = {},
+): Promise<CatalogArtistSuggestion[]> {
+  const data = await gqlRequest<{ catalogSuggestions: CatalogArtistSuggestion[] | null }>(
+    CATALOG_ARTIST_SUGGESTIONS,
+    { prefix, limit: Math.min(limit, 20) },
+    { signal },
+  );
+  return data?.catalogSuggestions ?? [];
+}
 export interface ArtistSuggestionPage { total: number; items: ArtistSuggestion[] }
 
 /** The server caps `limit` at 20. */
