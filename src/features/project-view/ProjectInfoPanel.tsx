@@ -26,6 +26,7 @@ import type { EditorLine } from '@/features/editor/editor.types';
 import type { ProjectKind } from '@/types';
 import { SongConnections } from './SongConnections';
 import { ProjectKindBadge } from '@/features/projects/components/ProjectKindBadge';
+import { catalogAlbumPath } from '@/features/catalog/catalog-path';
 
 interface ProjectMeta {
   description?: string;
@@ -33,6 +34,8 @@ interface ProjectMeta {
   songArtist?: string;
   artists?: ArtistCredit[];
   songAlbum?: string;
+  /** Set by the server only when songAlbum matches an approved catalog album page. */
+  catalogAlbum?: { artistSlug: string; albumSlug: string } | null;
   songYear?: string | number;
   songLanguage?: string;
   genre?: string;
@@ -227,7 +230,9 @@ export default function ProjectInfoPanel({
           {albumLine && (
             <Tip content={albumLine}>
               <p className="line-clamp-2 text-sm text-subtle">
-                {meta.songAlbum && <i>{meta.songAlbum}</i>}
+                {meta.songAlbum && (meta.catalogAlbum
+                  ? <Link to={catalogAlbumPath(meta.catalogAlbum.artistSlug, meta.catalogAlbum.albumSlug)} className="hover:underline hover:text-foreground"><i>{meta.songAlbum}</i></Link>
+                  : <i>{meta.songAlbum}</i>)}
                 {meta.songAlbum && meta.songYear && ' · '}
                 {meta.songYear}
               </p>
