@@ -1,4 +1,5 @@
 import { useRef, useCallback, useLayoutEffect } from 'react';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 const DateTimeFormat = Intl.DateTimeFormat;
 import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import toast from 'react-hot-toast';
@@ -40,6 +41,9 @@ function toLocalISOString(date: Date, utcOffset: string): string {
 import deepEqual from 'fast-deep-equal';
 import { flatToSections, flatIndexToSectionPos } from '../utils/sections';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { AppSettings } from '@/features/settings/settings.types';
+import type { ForkedFrom, ProjectMetadata, UploadedAudio } from '@/types/app-state';
+import type { PlayerHandle } from '@/features/player/player.types';
 import { artistDisplay } from '@/features/artists/artist-credits';
 
 const cloneValue = <T,>(v: T): T => structuredClone(v);
@@ -213,6 +217,37 @@ export function updateServerSnapshot(
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
+/** What useAppState hands the save hook: the project state it serialises plus the setters a save reports through. */
+type UseManualSaveParams = {
+  settings: AppSettings;
+  lines: EditorLine[];
+  syncMode: boolean;
+  activeLineIndex: number;
+  editorMode: string;
+  projectKind: ProjectKind;
+  projectYtUrl: string;
+  playbackPosition: number;
+  hasMedia: boolean;
+  mediaTitle: string;
+  projectMetadata: ProjectMetadata;
+  duration: number;
+  uploadedAudio: UploadedAudio | null;
+  setUploadedAudio: Dispatch<SetStateAction<UploadedAudio | null>>;
+  isSharedProjectRef: RefObject<boolean>;
+  inSessionRef: RefObject<boolean>;
+  activepublicIdRef: RefObject<string | null>;
+  isCreatingProjectRef: RefObject<boolean>;
+  sessionUploadIdRef: RefObject<string | null>;
+  lastServerSnapshotRef: RefObject<ProjectSnapshot | null>;
+  playerRef: RefObject<PlayerHandle | null>;
+  setIsAutosaving: Dispatch<SetStateAction<boolean>>;
+  setIsSaving: Dispatch<SetStateAction<boolean>>;
+  setSaveFailed: Dispatch<SetStateAction<boolean>>;
+  setActivepublicId: Dispatch<SetStateAction<string | null>>;
+  setForkedFrom: Dispatch<SetStateAction<ForkedFrom | null>>;
+  onSaveSuccess: () => void;
+};
+
 export function useManualSave({
   settings,
   lines,
@@ -241,7 +276,7 @@ export function useManualSave({
   setActivepublicId,
   setForkedFrom,
   onSaveSuccess,
-}) {
+}: UseManualSaveParams) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
 
@@ -326,10 +361,10 @@ export function useManualSave({
         // Skip a cached sessionUploadId that was set with a local: temp id
         if (uploadIdToSave && String(uploadIdToSave).startsWith('local:')) uploadIdToSave = null;
         if (!uploadIdToSave && uploadedAudio) {
-          const hasRealId = uploadedAudio.id && !String(uploadedAudio.id).startsWith('local:');
-          if (hasRealId) {
-            uploadIdToSave = uploadedAudio.id;
-            sessionUploadIdRef.current = uploadedAudio.id;
+          const realId = uploadedAudio.id && !String(uploadedAudio.id).startsWith('local:') ? uploadedAudio.id : null;
+          if (realId) {
+            uploadIdToSave = realId;
+            sessionUploadIdRef.current = realId;
           } else {
             try {
               const { upload } = await uploads.saveMedia({ source: 'cloudinary', uploadUrl: uploadedAudio.uploadUrl, publicId: uploadedAudio.publicId, fileName: uploadedAudio.fileName, title: overrides?.title ?? mediaTitle ?? '', duration: uploadedAudio.duration });
@@ -363,13 +398,7 @@ export function useManualSave({
           // Tags this as an explicit save (heatmap). Added after the emptiness
           // check so it never turns a no-op into a request; the server still
           // decides whether anything actually changed.
-          // `as` is load-bearing here, not laziness: EditorLine is deliberately
-          // permissive (optional `text`, optional `word` on EditorWord, an index
-          // signature) while the generated UpdateProjectInput requires those
-          // fields. The values we send always have them — sanitizeLines and the
-          // editor guarantee it — but the two types don't express that. Tightening
-          // EditorLine/EditorWord to match is the real fix and a separate change.
-          const manualPatch = { ...patchData, saveKind: 'manual' as const } as Parameters<typeof projects.patch>[1];
+          const manualPatch: Parameters<typeof projects.patch>[1] = { ...patchData, saveKind: 'manual' };
           try {
             await projects.patch(activepublicIdRef.current, manualPatch);
             updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
@@ -411,8 +440,8 @@ export function useManualSave({
       if (isCreatingProjectRef.current) return false;
       isCreatingProjectRef.current = true;
       let uploadIdToSave: string | null = null;
-      const cloudinaryHasRealId = uploadedAudio?.id && !String(uploadedAudio.id).startsWith('local:');
-      if (cloudinaryHasRealId) { uploadIdToSave = uploadedAudio.id; }
+      const cloudinaryRealId = uploadedAudio?.id && !String(uploadedAudio.id).startsWith('local:') ? uploadedAudio.id : null;
+      if (cloudinaryRealId) { uploadIdToSave = cloudinaryRealId; }
       else if (uploadedAudio) {
         try {
           const { upload } = await uploads.saveMedia({ source: 'cloudinary', uploadUrl: uploadedAudio.uploadUrl, publicId: uploadedAudio.publicId, fileName: uploadedAudio.fileName, title: uploadedAudio.fileName?.replace(/\.[^/.]+$/, '') || '', duration: uploadedAudio.duration });

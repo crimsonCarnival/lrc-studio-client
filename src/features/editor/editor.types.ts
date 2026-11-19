@@ -2,7 +2,7 @@
 // sections only at the persistence boundary (utils/sections.ts).
 
 export interface EditorWord {
-  word?: string;
+  word: string;
   time?: number | null;
   /** Where the word stops, when that is earlier than the next word's start (a pause). */
   end?: number | null;
@@ -11,8 +11,8 @@ export interface EditorWord {
 }
 
 export interface EditorTranslation {
-  text?: string;
-  language?: string;
+  text: string;
+  language: string;
 }
 
 export interface EditorLine {
