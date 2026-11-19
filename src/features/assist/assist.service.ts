@@ -1,10 +1,11 @@
 import { request } from '@/app/api.client';
-import type { Description, HeavyUsage, NameSuggestion, SingerLabel, TitleSplit } from './assist.types';
+import type { Description, HeavyUsage, NameField, NameSuggestion, SingerLabel, TitleSplit } from './assist.types';
 
 const post = <T>(path: string, body: unknown) =>
   request<T>(`/assist/${path}`, { method: 'POST', body: JSON.stringify(body) });
 
-export async function checkNames(input: { title: string; artist?: string; album?: string }): Promise<NameSuggestion[]> {
+/** `field` limits the check to that field; the other value (the artist of an album) is context. */
+export async function checkNames(input: { title: string; artist?: string; album?: string; field?: NameField }): Promise<NameSuggestion[]> {
   const res = await post<{ suggestions: NameSuggestion[] }>('name-check', input);
   return res?.suggestions ?? [];
 }

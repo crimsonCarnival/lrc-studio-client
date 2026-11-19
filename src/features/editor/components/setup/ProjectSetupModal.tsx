@@ -20,7 +20,7 @@ import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { useArtistImport } from '@/features/artists/useArtistImport';
 import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renamePrimary, soleArtistName, renumber } from '@/features/artists/artist-credits';
-import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
+import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { MAX_TAGS, PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
@@ -513,7 +513,7 @@ export default function ProjectSetupModal({
                   <Label htmlFor="song-album" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     {t('setup.songAlbum')}
                   </Label>
-                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName || form.name} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
+                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName || form.name} artist={primaryNames(form.artists)[0]} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
                     <Input
                       id="song-album"
                       value={form.songAlbum}

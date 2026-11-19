@@ -52,7 +52,7 @@ describe('NameCheckSuggestion', () => {
     expect(mockedCheck).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(mockedCheck).toHaveBeenCalledTimes(1);
-    expect(mockedCheck).toHaveBeenCalledWith({ title: 'Hello', artist: 'Adelle' });
+    expect(mockedCheck).toHaveBeenCalledWith({ title: 'Hello', field: 'artist', artist: 'Adelle' });
     expect(screen.getByRole('status')).toHaveTextContent('Did you mean Adele?');
   });
 
@@ -98,7 +98,7 @@ describe('NameCheckSuggestion', () => {
   it('sends trimmed values cut to the server bounds', async () => {
     const { input } = setup(vi.fn(), `  ${'t'.repeat(600)}  `, ` ${'a'.repeat(400)} `);
     await blur(input);
-    expect(mockedCheck).toHaveBeenCalledWith({ title: 't'.repeat(500), artist: 'a'.repeat(300) });
+    expect(mockedCheck).toHaveBeenCalledWith({ title: 't'.repeat(500), field: 'artist', artist: 'a'.repeat(300) });
   });
 
   it('a failed request can be retried for the same value', async () => {
@@ -130,5 +130,43 @@ describe('NameCheckSuggestion', () => {
       <NameCheckSuggestion field="artist" value="Adelle" title="Hello" onApply={vi.fn()}><input aria-label="Artist" /></NameCheckSuggestion>,
     );
     expect(screen.getByLabelText('Artist')).toBe(before);
+  });
+
+  describe('album checks', () => {
+    function setupAlbum(artist: string | undefined) {
+      mockedCheck.mockResolvedValue([{ field: 'album', suggestion: 'OK Computer', confidence: 1 }]);
+      const utils = render(
+        <NameCheckSuggestion field="album" value="ok computer" title="Airbag" artist={artist} onApply={vi.fn()}>
+          <input aria-label="Album" />
+        </NameCheckSuggestion>,
+      );
+      return { input: screen.getByLabelText('Album'), ...utils };
+    }
+
+    it('sends the artist as context and asks only about the album', async () => {
+      const { input } = setupAlbum(' Radiohead ');
+      await blur(input);
+      expect(mockedCheck).toHaveBeenCalledWith({ title: 'Airbag', field: 'album', album: 'ok computer', artist: 'Radiohead' });
+      expect(screen.getByRole('status')).toHaveTextContent('OK Computer');
+    });
+
+    it('omits the artist when there is none', async () => {
+      const { input } = setupAlbum(undefined);
+      await blur(input);
+      expect(mockedCheck).toHaveBeenCalledWith({ title: 'Airbag', field: 'album', album: 'ok computer' });
+    });
+
+    it('asks again for the same album once the artist changes', async () => {
+      const { input, rerender } = setupAlbum('Radiohed');
+      await blur(input);
+      rerender(
+        <NameCheckSuggestion field="album" value="ok computer" title="Airbag" artist="Radiohead" onApply={vi.fn()}>
+          <input aria-label="Album" />
+        </NameCheckSuggestion>,
+      );
+      await blur(screen.getByLabelText('Album'));
+      expect(mockedCheck).toHaveBeenCalledTimes(2);
+      expect(mockedCheck).toHaveBeenLastCalledWith(expect.objectContaining({ artist: 'Radiohead' }));
+    });
   });
 });
