@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { accessFor } from './route-access'
 
 describe('accessFor', () => {
+  it('makes the artist catalog public: index, artist and album pages', () => {
+    expect(accessFor('/artists')).toBe('public');
+    expect(accessFor('/artists/robyn')).toBe('public');
+    expect(accessFor('/artists/robyn/albums/honey')).toBe('public');
+    expect(accessFor('/artists/robyn/edit')).not.toBe('public');
+    expect(accessFor('/artists/robyn/albums/honey/x')).not.toBe('public');
+  });
+
   it('keeps profiles, lists and project pages at the root public', () => {
     expect(accessFor('/32blunts')).toBe('public');
     expect(accessFor('/32blunts/lists/abc')).toBe('public');

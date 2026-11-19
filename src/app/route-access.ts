@@ -37,6 +37,8 @@ const RULES: Rule[] = [
   { test: p => p === '/guide', access: 'public' },
   { test: p => /^\/explore(\/.*)?$/.test(p), access: 'public' },
   { test: p => p === '/leaderboard', access: 'public' },
+  // The artist catalog: index, artist pages and album pages. Its GraphQL reads are public too.
+  { test: p => /^\/artists(\/[^/]+(\/albums\/[^/]+)?)?\/?$/.test(p), access: 'public' },
   // Collab: anonymous guests join with an invite token and then hold only a collabGuest
   // cookie, never an account session. The server checks the token and the cookie.
   { test: p => /^\/join\/[^/]+\/?$/.test(p), access: 'public' },

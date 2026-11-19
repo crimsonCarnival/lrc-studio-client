@@ -36,6 +36,7 @@ const DISCOVER: NavItem[] = [
   { id: 'explore', path: '/explore', labelKey: 'nav.explore', icon: 'explore', group: 'discover' },
   { id: 'explore-projects', path: '/explore/projects', labelKey: 'nav.exploreProjects', icon: 'library_music', group: 'discover' },
   { id: 'explore-playlists', path: '/explore/playlists', labelKey: 'nav.explorePlaylists', icon: 'queue_music', group: 'discover' },
+  { id: 'artists', path: '/artists', labelKey: 'nav.artists', icon: 'artist', group: 'discover' },
   { id: 'feed', path: '/feed', labelKey: 'nav.feed', icon: 'rss_feed', group: 'discover' },
   { id: 'search', path: '/search', labelKey: 'nav.search', icon: 'search', group: 'discover' },
   { id: 'leaderboard', path: '/leaderboard', labelKey: 'nav.leaderboard', icon: 'emoji_events', group: 'discover' },
