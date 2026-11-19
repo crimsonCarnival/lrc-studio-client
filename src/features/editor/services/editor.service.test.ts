@@ -20,6 +20,7 @@ import {
   wordTimeBounds,
   clampWordTime,
   alignLineStart,
+  followLineStarts,
   reapplyMarkById,
   lineRefsAt,
   resolveLineRefs,
@@ -724,5 +725,35 @@ describe('applyMark — the first word sits on the line start', () => {
     expect(res.nextLines[0].timestamp).toBe(2);
     expect(res.nextLines[0].words?.map((w) => w.time)).toEqual([2, 3, null]);
     expect(res.nextActiveWordIndex).toBe(2);
+  });
+});
+
+describe('followLineStarts', () => {
+  const w = (...t: (number | null)[]) => t.map((time, i) => ({ word: `w${i}`, time }));
+  const withWords = (id: string, timestamp: number | null, words: ReturnType<typeof w>): EditorLine =>
+    ({ id, text: 'x', timestamp, words } as EditorLine);
+
+  it('moves the first word with a line whose start changed', () => {
+    const prev = [withWords('a', 1, w(1, 2, 3))];
+    const next = [{ ...prev[0], timestamp: 4 }];
+    expect(followLineStarts(prev, next)[0].words?.map((x) => x.time)).toEqual([4, 2, 3]);
+  });
+
+  it('leaves lines whose start did not change, and returns the same array when nothing moved', () => {
+    const prev = [withWords('a', 1, w(1.5, 2))];
+    const next = [{ ...prev[0], words: w(1.5, 2.5) }];
+    expect(followLineStarts(prev, next)).toBe(next);
+  });
+
+  it('leaves lines that were not there before as written', () => {
+    const next = [withWords('new', 4, w(null, null))];
+    expect(followLineStarts([], next)).toBe(next);
+  });
+
+  it('shifts every word with a bulk shift', () => {
+    const lines = [withWords('a', 1, w(1, 2, 3))];
+    const out = applyBulkShift(lines, new Set([0]), 0.5);
+    expect(out[0].timestamp).toBe(1.5);
+    expect(out[0].words?.map((x) => x.time)).toEqual([1.5, 2.5, 3.5]);
   });
 });

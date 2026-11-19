@@ -134,7 +134,7 @@ export function applyBulkShift(lines: EditorLine[], selectedIndices: Set<number>
     if (result.endTime != null) {
       result.endTime = Math.max(0, Number(l.endTime) + numericDelta);
     }
-    return result;
+    return shiftWords(result, numericDelta);
   });
 }
 
@@ -144,11 +144,26 @@ export function applyBulkShift(lines: EditorLine[], selectedIndices: Set<number>
 export function applyGlobalOffset(lines: EditorLine[], delta: number): EditorLine[] {
   const numericDelta = Number(delta);
   if (isNaN(numericDelta) || numericDelta === 0) return lines;
-  return lines.map((l) => ({
-    ...l,
-    timestamp: l.timestamp != null ? Math.max(0, l.timestamp + numericDelta) : null,
-    endTime: l.endTime != null ? Math.max(0, l.endTime + numericDelta) : l.endTime,
+  return lines.map((l) => {
+    const moved: EditorLine = {
+      ...l,
+      timestamp: l.timestamp != null ? Math.max(0, l.timestamp + numericDelta) : null,
+      endTime: l.endTime != null ? Math.max(0, l.endTime + numericDelta) : l.endTime,
+    };
+    return l.timestamp != null ? shiftWords(moved, numericDelta) : moved;
+  });
+}
+
+/** A line that moved takes its words with it, so the first word stays on the line's start. */
+function shiftWords(line: EditorLine, delta: number): EditorLine {
+  const move = (words: EditorWord[] | undefined) => words?.map((w) => ({
+    ...w,
+    ...(w.time != null && { time: Math.max(0, w.time + delta) }),
+    ...(w.end != null && { end: Math.max(0, w.end + delta) }),
   }));
+  const words = move(line.words as EditorWord[] | undefined);
+  const secondaryWords = move(line.secondaryWords as EditorWord[] | undefined);
+  return { ...line, ...(words && { words }), ...(secondaryWords && { secondaryWords }) };
 }
 
 /**
@@ -197,6 +212,29 @@ export function alignLineStart(line: EditorLine, time: number): EditorLine {
   const aligned = [...words];
   aligned[0] = { ...aligned[0], time };
   return { ...next, words: aligned };
+}
+
+/**
+ * Whatever wrote `next`, a line whose start changed has its first word start there too (see
+ * alignLineStart). Lines are matched to `prev` by id (by position when they carry none and the
+ * list kept its length); a line that was not there before is left as written. Returns `next`
+ * itself when nothing needed moving.
+ */
+export function followLineStarts(prev: EditorLine[], next: EditorLine[]): EditorLine[] {
+  if (prev === next) return next;
+  const byId = new Map<string, EditorLine>();
+  for (const l of prev) if (l.id != null) byId.set(l.id, l);
+  const samePositions = prev.length === next.length;
+  let out: EditorLine[] | null = null;
+  next.forEach((line, i) => {
+    if (line.type === 'section' || line.timestamp == null || !line.words?.length) return;
+    if (line.words[0].time === line.timestamp) return;
+    const before = line.id != null ? byId.get(line.id) : samePositions ? prev[i] : undefined;
+    if (!before || before.timestamp === line.timestamp) return;
+    if (!out) out = [...next];
+    out[i] = alignLineStart(line, line.timestamp);
+  });
+  return out ?? next;
 }
 
 /**

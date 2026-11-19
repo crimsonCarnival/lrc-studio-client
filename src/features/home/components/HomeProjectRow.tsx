@@ -11,6 +11,7 @@ import useConfirm from '@/shared/hooks/useConfirm';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
 import { getRelativeTime } from '@/shared/utils/date';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 type HomeProjectRowProps = {
   project: CardProject;
@@ -32,7 +33,7 @@ type HomeProjectRowProps = {
 function HomeProjectRowBase({ project, ownerAccountName, onSelect, onEdit, onDelete, isDeleting = false, locale, timezone }: HomeProjectRowProps) {
   const { t } = useTranslation();
   const [requestConfirm, confirmModal] = useConfirm();
-  const title = project.title || project.upload?.fileName || t('library.untitled');
+  const title = projectDisplayTitle(project, t('library.untitled'));
   const pct = projectProgress(project);
   const complete = projectStatus(project) === 'completed';
   const source = project.upload?.source;

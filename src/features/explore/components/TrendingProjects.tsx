@@ -10,6 +10,7 @@ import { cn } from '@/shared/utils/utils';
 import type { ProjectKind } from '@/types';
 import { NameTag } from '@/features/badges/NameTag';
 import type { NameTagData } from '@/features/badges/badges.types';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 export interface ExploreProject {
   id: string;
@@ -33,8 +34,8 @@ const CARD = 'group flex flex-col overflow-hidden rounded-[var(--radius-card)] b
 
 const ownerOf = (p: ExploreProject) => p.user?.accountName ?? p.owner?.accountName ?? p.accountName;
 const coverOf = (p: ExploreProject) => p.coverImage ?? p.upload?.uploadUrl ?? null;
-const songLine = (p: ExploreProject) =>
-  [p.metadata?.songName, p.metadata?.songArtist].filter(Boolean).join(' — ');
+// The title already is the song name, so the line under it is only who sings it.
+const songLine = (p: ExploreProject) => p.metadata?.songArtist ?? '';
 
 function Cover({ project, className, playSize = 40 }: { project: ExploreProject; className?: string; playSize?: number }) {
   const cover = coverOf(project);
@@ -119,7 +120,7 @@ function FeaturedProject({ project, onOpen }: { project: ExploreProject; onOpen:
       <div className="flex min-w-0 flex-[1_1_320px] flex-col justify-center gap-3.5 p-6 lg:p-7">
         <ProjectKindBadge kind={project.kind} className="self-start" />
         <h3 className="font-heading text-3xl font-bold leading-tight text-foreground group-hover:text-primary-ink line-clamp-2">
-          {project.title || t('feed.untitled')}
+          {projectDisplayTitle(project, t('feed.untitled'))}
         </h3>
         {song && <p className="text-[15px] text-subtle line-clamp-1">{song}</p>}
         <Owner project={project} size="md" />
@@ -143,7 +144,7 @@ export function ProjectCard({ project, onOpen }: { project: ExploreProject; onOp
         )}
       </div>
       <div className="flex flex-col gap-1.5 px-3.5 pb-3.5 pt-3">
-        <p className="truncate text-[15px] font-semibold group-hover:text-primary-ink">{project.title || t('feed.untitled')}</p>
+        <p className="truncate text-[15px] font-semibold group-hover:text-primary-ink">{projectDisplayTitle(project, t('feed.untitled'))}</p>
         {song && <p className="-mt-1 truncate text-xs text-subtle">{song}</p>}
         <Owner project={project} />
         <Stats project={project} />

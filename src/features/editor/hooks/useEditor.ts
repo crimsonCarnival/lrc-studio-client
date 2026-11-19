@@ -24,6 +24,7 @@ import {
   normalizeLineMode,
   clampWordTime,
   alignLineStart,
+  followLineStarts,
 } from '../services/editor.service';
 import type { LineRef } from '../services/editor.service';
 import {
@@ -84,7 +85,7 @@ function keepPreviousEnd(prev: EditorLine[], updated: EditorLine[], index: numbe
 
 export function useEditor({
   lines,
-  setLines,
+  setLines: setLinesRaw,
   syncMode,
   setSyncMode,
   activeLineIndex,
@@ -100,6 +101,11 @@ export function useEditor({
   collab,
 }: UseEditorParams) {
   const { t } = useTranslation();
+  // Every write to the lines goes through here: a line whose start moved takes its first word along.
+  const setLines = useCallback<Dispatch<SetStateAction<EditorLine[]>>>(
+    (update) => setLinesRaw((prev) => followLineStarts(prev, typeof update === 'function' ? update(prev) : update)),
+    [setLinesRaw],
+  );
   const { settings, updateSetting, updateSettings } = useSettings();
   const [rawText, setRawText] = useState('');
   const [editingLineIndex, setEditingLineIndex] = useState<number | null>(null);

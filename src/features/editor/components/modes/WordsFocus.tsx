@@ -352,6 +352,8 @@ interface WordTimelineProps {
   onEditLine?: () => void;
   /** The mark shortcut as the user configured it, already turned into a key-cap label. */
   markKey: string;
+  /** Stamps the next word, as the mark key does: the key-cap beside that word is a button for it. */
+  onMark?: () => void;
   /** Plays from a word's own stamped time. */
   onPlayFrom?: (time: number) => void;
   /** The items of a word's context menu. */
@@ -540,7 +542,7 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
 export function WordTimeline({
   line, lineEnd, naturalEnd: naturalEndProp, duration, lineKey, lineIndex, bands, nextLine, prevLine, onSelectLine, onChangeLineTiming, onEndPrevious,
   playbackPosition, isPlaying, activeWordIndex, selectedWordIndex, playingWordIndex,
-  onSetWordTime, onSetWordEnd, onMoveWord, onSetNeighbourWordTime, onSetNeighbourWordEnd, startFloor = 0, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
+  onSetWordTime, onSetWordEnd, onMoveWord, onSetNeighbourWordTime, onSetNeighbourWordEnd, startFloor = 0, onSelectWord, onEditLine, markKey, onMark, onPlayFrom, wordMenu, footerEnd, hints,
 }: WordTimelineProps) {
   const { t } = useTranslation();
   const { settings } = useSettings();
@@ -551,6 +553,8 @@ export function WordTimeline({
   const hScrollRef = useRef<HTMLDivElement>(null);
   // Dragging the ruler pans the view: where the drag started and the view at that moment.
   const panRef = useRef<{ x: number; from: number } | null>(null);
+  // A press on a line in the song-wide map: which line, and where, until it turns out to be a drag.
+  const trackTapRef = useRef<{ index: number; x: number } | null>(null);
   // Which edge is being dragged. The time is written to the line on every move; the undo history
   // groups changes that arrive in quick succession, so a drag is still one step back.
   const [drag, setDrag] = useState<{ index: number; edge: 'start' | 'end' | 'move' } | null>(null);
@@ -920,12 +924,38 @@ export function WordTimeline({
     if (!rect || rect.width === 0) return;
     moveView({ from: ((clientX - rect.left) / rect.width) * total - view.span / 2, span: view.span });
   };
+  // A press on one of the lines in the map gives that line the focus; dragging from it pans instead.
+  const bandAt = (e: PointerEvent<HTMLDivElement>): LineBand | undefined => {
+    const rect = hScrollRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0 || !bands?.length) return undefined;
+    const time = ((e.clientX - rect.left) / rect.width) * total;
+    const reach = (6 / rect.width) * total;
+    const lane = e.clientY - rect.top < rect.height / 2 ? 0 : 1;
+    const hits = bands.filter((b) => time >= b.from - reach && time <= b.to + reach);
+    return hits.find((b) => (b.lane ? 1 : 0) === lane) ?? hits[0];
+  };
   const handleTrackDown = (e: PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
+    const hit = onSelectLine ? bandAt(e) : undefined;
+    if (hit) {
+      trackTapRef.current = { index: hit.index, x: e.clientX };
+      return;
+    }
     scrollFromTrack(e.clientX);
   };
   const handleTrackMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) scrollFromTrack(e.clientX);
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    const tap = trackTapRef.current;
+    if (tap) {
+      if (Math.abs(e.clientX - tap.x) <= 3) return;
+      trackTapRef.current = null;
+    }
+    scrollFromTrack(e.clientX);
+  };
+  const handleTrackUp = () => {
+    const tap = trackTapRef.current;
+    trackTapRef.current = null;
+    if (tap) onSelectLine?.(tap.index);
   };
   const handleTrackKey = (e: KeyboardEvent) => {
     const next = e.key === 'ArrowLeft' ? view.from - view.span / 4 : e.key === 'ArrowRight' ? view.from + view.span / 4
@@ -1199,7 +1229,21 @@ export function WordTimeline({
                             {formatTime(seg.from)}
                           </span>
                         ) : isNext ? (
-                          <Kbd className="shrink-0">{markKey}</Kbd>
+                          onMark ? (
+                            // Never takes the keyboard focus: a focused button would turn the mark key
+                            // into a second stamp. It sits inside the word's button, so it is not one.
+                            <span
+                              role="presentation"
+                              title={t('editor.words.tapTip', { key: markKey })}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => { e.stopPropagation(); onMark(); }}
+                              className="shrink-0 cursor-pointer rounded-md transition-transform hover:brightness-125 active:scale-95"
+                            >
+                              <Kbd>{markKey}</Kbd>
+                            </span>
+                          ) : (
+                            <Kbd className="shrink-0">{markKey}</Kbd>
+                          )
                         ) : null}
                       </button>
                       <button
@@ -1378,6 +1422,8 @@ export function WordTimeline({
               aria-valuenow={scrollRange > 0 ? Math.round((view.from / scrollRange) * 100) : 0}
               onPointerDown={handleTrackDown}
               onPointerMove={handleTrackMove}
+              onPointerUp={handleTrackUp}
+              onPointerCancel={() => { trackTapRef.current = null; }}
               onKeyDown={handleTrackKey}
               className="group relative h-3.5 cursor-pointer touch-none overflow-hidden rounded-pill bg-hl/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
             >

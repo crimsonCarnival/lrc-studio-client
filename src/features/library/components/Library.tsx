@@ -37,6 +37,7 @@ const EMPTY_LIST: string[] = [];
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
 import { SelectField } from '@ui/select-field';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 const FILTER_TABS: LibraryFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
 
@@ -156,9 +157,9 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const totalSyncedLines = items.reduce((acc, p) => acc + ((p.syncedLineCount as number) || 0), 0);
 
   const searchMatched = items.filter(p => {
-    const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase())) || false;
     const needle = searchQuery.toLowerCase();
+    const titleMatch = projectDisplayTitle(p).toLowerCase().includes(needle) || (p.title || '').toLowerCase().includes(needle);
+    const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(needle)) || false;
     const artistMatch = creditsOf(p.metadata).some(c => c.name.toLowerCase().includes(needle))
       || (p.metadata?.songArtist || '').toLowerCase().includes(needle);
     const albumMatch = (p.metadata?.songAlbum || '').toLowerCase().includes(needle);
@@ -186,7 +187,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
       return bTime - aTime;
     }
     if (sortBy === 'title') {
-      return (a.title || '').localeCompare(b.title || '');
+      return projectDisplayTitle(a).localeCompare(projectDisplayTitle(b));
     }
     return 0;
   });

@@ -9,6 +9,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import { SearchField } from '@ui/search-field';
 import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 interface ExploreProject {
   id: string;
@@ -39,7 +40,7 @@ function ExploreProjectCard({ project, onOpen }: { project: ExploreProject; onOp
           {project.coverImage || project.upload?.uploadUrl ? (
             <img
               src={project.coverImage ?? project.upload?.uploadUrl ?? undefined}
-              alt={project.title ?? ''}
+              alt={projectDisplayTitle(project)}
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
@@ -48,7 +49,7 @@ function ExploreProjectCard({ project, onOpen }: { project: ExploreProject; onOp
         </div>
         <div className="p-3 flex flex-col gap-1">
           <p className="text-sm font-semibold text-white line-clamp-1 group-hover:text-primary transition-colors">
-            {project.title}
+            {projectDisplayTitle(project)}
           </p>
           <p className="text-xs text-zinc-500 truncate">
             {ownerAccountName}

@@ -5,6 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { ProgressRing } from '@ui/progress-ring';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import { Button } from '@ui/button';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 export interface AlmostDoneProject {
   publicId: string;
@@ -12,7 +13,7 @@ export interface AlmostDoneProject {
   coverImage?: string;
   lineCount?: number;
   syncedLineCount?: number;
-  metadata?: { songArtist?: string; artists?: ArtistCredit[]; genre?: string };
+  metadata?: { songName?: string; songArtist?: string; artists?: ArtistCredit[]; genre?: string };
 }
 
 const MAX_SHOWN = 4;
@@ -63,14 +64,14 @@ export function AlmostDoneBand({
       className={className}
     >
       {/* 44px ring, 4px stroke, 2px gap: leaves 32px for the cover. */}
-      <ProgressRing value={p.pct} size={44} label={p.title || t('library.untitled')}>
+      <ProgressRing value={p.pct} size={44} label={projectDisplayTitle(p, t('library.untitled'))}>
         <span className="block size-8 overflow-hidden rounded-full">
           <ProjectListCover coverImage={p.coverImage} genre={p.metadata?.genre} className="size-8" />
         </span>
       </ProgressRing>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-base font-semibold text-foreground">
-          {p.title || t('library.untitled')}
+          {projectDisplayTitle(p, t('library.untitled'))}
         </span>
         <span className="truncate font-mono text-xs font-medium text-subtle">
           {p.syncedLineCount} / {p.lineCount} {t('home.lines')}

@@ -5,6 +5,7 @@ import { projectProgress, projectStatus } from '@/features/projects/project-stat
 import type { CardProject } from '@/features/library/components/ProjectCard';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 /**
  * Phone-width "resume last session": one row, 56px cover, title, thin progress bar and a
@@ -13,7 +14,7 @@ import { Button } from '@ui/button';
  */
 export function HomeResumeRow({ project, onOpen }: { project: CardProject; onOpen: () => void }) {
   const { t } = useTranslation();
-  const title = project.title || t('library.untitled');
+  const title = projectDisplayTitle(project, t('library.untitled'));
   const pct = projectProgress(project);
   const complete = projectStatus(project) === 'completed';
 
