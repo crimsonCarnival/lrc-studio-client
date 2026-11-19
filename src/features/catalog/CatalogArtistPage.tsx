@@ -119,7 +119,7 @@ export default function CatalogArtistPage() {
         <SubmitCatalogDialog
           open
           onOpenChange={(open) => { if (!open) setSuggesting(false); }}
-          target={{ kind: 'album', artistId: artist.id, artistName: artist.name }}
+          target={{ kind: 'album', artistId: artist.id, artistName: artist.name, artistSlug: artist.slug }}
         />
       )}
     </div>

@@ -25,6 +25,7 @@ vi.mock('@ui/ImageCropModal', () => ({
 vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { advanced: { confirmDestructive: true } } }) }));
 vi.mock('react-hot-toast', () => ({ default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
 
+import { MemoryRouter } from 'react-router-dom';
 import { MySubmissions } from './MySubmissions';
 
 beforeAll(() => {
@@ -44,7 +45,7 @@ const queue = {
 
 function show(onAddAlbum = vi.fn()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><MySubmissions onAddAlbum={onAddAlbum} /></QueryClientProvider>);
+  render(<QueryClientProvider client={client}><MemoryRouter><MySubmissions onAddAlbum={onAddAlbum} /></MemoryRouter></QueryClientProvider>);
   return onAddAlbum;
 }
 
@@ -112,12 +113,19 @@ describe('MySubmissions', () => {
     await waitFor(() => expect(updateMyEntry).toHaveBeenCalledWith({ kind: 'artist', id: 'a1', name: 'Pending Paul', bio: '' }));
   });
 
-  it('offers Add album only on approved artists', async () => {
+  it('offers Suggest an album only on approved artists', async () => {
     const onAddAlbum = show();
     await expand();
-    expect(screen.queryByRole('button', { name: 'Add an album to Pending Pal' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Add an album to Approved Ann' }));
-    expect(onAddAlbum).toHaveBeenCalledWith({ id: 'a2', name: 'Approved Ann' });
+    expect(screen.queryByRole('button', { name: 'Suggest an album for Pending Pal' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest an album for Approved Ann' }));
+    expect(onAddAlbum).toHaveBeenCalledWith({ id: 'a2', name: 'Approved Ann', slug: 's' });
+  });
+
+  it('links approved artists to their catalog page, and only those', async () => {
+    show();
+    await expand();
+    expect(screen.getByRole('link', { name: 'Approved Ann' })).toHaveAttribute('href', '/artists/s');
+    expect(screen.queryByRole('link', { name: 'Pending Pal' })).not.toBeInTheDocument();
   });
 
   it('maps a failed withdraw to a message, not the raw text', async () => {

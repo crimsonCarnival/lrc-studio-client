@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
@@ -19,10 +20,11 @@ import { CatalogPhotoField } from './CatalogPhotoField';
 import { UNCHANGED } from './catalog-photo';
 import type { PhotoState } from './catalog-photo';
 import { MY_SUBMISSIONS_KEY } from './catalog.queries';
+import { catalogArtistPath } from './catalog-path';
 import { getMySubmissions, updateMyEntry, uploadCatalogImage, withdrawMyEntry } from './catalog.service';
 import type { CatalogAlbum, CatalogArtist, CatalogKind } from './catalog.types';
 
-type ApprovedArtist = { id: string; name: string };
+type ApprovedArtist = { id: string; name: string; slug?: string | null };
 
 type MySubmissionsProps = {
   /** Open the album form for one of the user's approved catalog artists. */
@@ -90,7 +92,9 @@ function SubmissionRow({ row, onAddAlbum }: { row: Row; onAddAlbum: MySubmission
       <div className="flex flex-wrap items-center gap-3">
         <Thumb url={row.kind === 'artist' ? row.entry.imageUrl : row.entry.coverUrl} label={row.label} />
         <span className="text-xs text-muted-foreground">{t(`catalog.submissions.kind.${row.kind}`)}</span>
-        <span className="min-w-0 flex-1 truncate font-medium text-foreground">{row.label}</span>
+        {row.kind === 'artist' && row.status === 'approved' && row.entry.slug
+          ? <Link to={catalogArtistPath(row.entry.slug)} className="min-w-0 flex-1 truncate font-medium text-foreground hover:underline">{row.label}</Link>
+          : <span className="min-w-0 flex-1 truncate font-medium text-foreground">{row.label}</span>}
         <StatusChip tone={tone}>{isStatus(row.status) ? t(`catalog.submissions.status.${row.status}`) : t('catalog.submissions.status.unknown')}</StatusChip>
       </div>
 
@@ -113,7 +117,7 @@ function SubmissionRow({ row, onAddAlbum }: { row: Row; onAddAlbum: MySubmission
             </>
           )}
           {row.kind === 'artist' && row.status === 'approved' && (
-            <Button type="button" variant="outline" size="sm" aria-label={t('catalog.submissions.addAlbumLabel', { name: row.label })} onClick={() => onAddAlbum({ id: row.id, name: row.label })}>
+            <Button type="button" variant="outline" size="sm" aria-label={t('catalog.submissions.addAlbumLabel', { name: row.label })} onClick={() => onAddAlbum({ id: row.id, name: row.label, slug: row.entry.slug })}>
               {t('catalog.submissions.addAlbum')}
             </Button>
           )}

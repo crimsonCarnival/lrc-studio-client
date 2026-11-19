@@ -81,14 +81,26 @@ describe('SubmitCatalogDialog (artist)', () => {
     expect(success).toHaveBeenCalled();
   });
 
-  it('shows catalog_duplicate as already in the catalog, naming the existing entry as plain text', async () => {
+  it('shows catalog_duplicate as already in the catalog, linking the existing artist page', async () => {
     submitCatalogArtist.mockRejectedValue(apiError('catalog_duplicate', { existing: { id: 'e1', name: 'Luna Vale', slug: 'luna-vale' } }));
     open();
     typeName('Luna Vale');
     fireEvent.click(submitBtn());
     expect(await screen.findByText(/This is already in the catalog\./)).toHaveTextContent('Existing entry: Luna Vale');
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Existing entry: Luna Vale' })).toHaveAttribute('href', '/artists/luna-vale');
     expect(screen.queryByText('RAW SERVER TEXT')).not.toBeInTheDocument();
+  });
+
+  it('links a duplicate album to its album page when the artist slug is known', async () => {
+    submitCatalogAlbum.mockRejectedValue(apiError('catalog_duplicate', { existing: { id: 'b1', name: 'Post', slug: 'post' } }));
+    open({ kind: 'album', artistId: 'a1', artistName: 'Björk', artistSlug: 'bjork', initialName: 'Post' });
+    fireEvent.click(submitBtn());
+    expect(await screen.findByRole('link', { name: 'Existing entry: Post' })).toHaveAttribute('href', '/artists/bjork/albums/post');
+  });
+
+  it('pre-fills the name from initialName', () => {
+    open({ kind: 'artist', initialName: 'Luna Vale' });
+    expect(screen.getByLabelText('Artist name')).toHaveValue('Luna Vale');
   });
 
   it('shows only the generic duplicate message when the existing entry is not revealed', async () => {
