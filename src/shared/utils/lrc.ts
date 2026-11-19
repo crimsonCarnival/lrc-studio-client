@@ -538,7 +538,8 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
       } else {
         // 3rd+ same-ts line: push to translations array
         if (!existing.translations) existing.translations = [];
-        (existing.translations as EditorTranslation[]).push({ text: line.text });
+        // language is required by the save API; '' is the editor's "unspecified".
+        (existing.translations as EditorTranslation[]).push({ text: line.text ?? '', language: '' });
       }
     } else {
       const idx = mergedLines.length;
