@@ -60,6 +60,14 @@ describe('WordTimeline', () => {
     expect(await screen.findByText('menu for 1')).toBeTruthy();
   });
 
+  it('stamps the next word when its key-cap is clicked, without selecting the word', () => {
+    const onMark = vi.fn();
+    const props = renderTimeline({ onMark });
+    fireEvent.click(screen.getByText('Enter'));
+    expect(onMark).toHaveBeenCalledTimes(1);
+    expect(props.onSelectWord).not.toHaveBeenCalled();
+  });
+
   it('draws the pause after a word that ends before the next one', () => {
     renderTimeline();
     expect(screen.getByRole('slider', { name: 'editor.words.endLabel:dreamers' }).getAttribute('aria-valuenow')).toBe('10.98');
@@ -77,6 +85,24 @@ describe('WordTimeline', () => {
     const props = renderTimeline({ line: { ...line, words } });
     fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.endLabel:dreamers' }), { key: 'ArrowRight' });
     expect(props.onSetWordEnd).toHaveBeenLastCalledWith(1, null);
+  });
+});
+
+describe('WordTimeline line map', () => {
+  it('gives a line the focus when its mark in the song-wide scrollbar is pressed', () => {
+    const onSelectLine = vi.fn();
+    renderTimeline({
+      onSelectLine,
+      duration: 100,
+      lineIndex: 0,
+      bands: [{ index: 0, number: 1, from: 8.88, to: 13.04, lane: 0 }, { index: 1, number: 2, from: 50, to: 60, lane: 0 }],
+    });
+    const bar = screen.getByRole('scrollbar');
+    bar.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 14, right: 1000, bottom: 14, x: 0, y: 0, toJSON: () => ({}) });
+    bar.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(bar, { clientX: 550, clientY: 4, button: 0, pointerId: 1 });
+    fireEvent.pointerUp(bar, { clientX: 550, clientY: 4, pointerId: 1 });
+    expect(onSelectLine).toHaveBeenCalledWith(1);
   });
 });
 

@@ -849,6 +849,21 @@ export default function Editor({
     return () => window.removeEventListener('keydown', onKey);
   }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, duplicateKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden, handleAddLine]);
 
+  // The lyric line `step` away from the cursor (sections are headings, never a stop), or -1.
+  const lyricLineFrom = (step: 1 | -1) => {
+    let at = activeLineIndex + step;
+    while (at >= 0 && at < lines.length && lines[at].type === 'section') at += step;
+    return at >= 0 && at < lines.length ? at : -1;
+  };
+  // Moves the cursor like the previous/next line keys: a timed line is also where playback goes.
+  const stepLine = (step: 1 | -1) => {
+    const at = lyricLineFrom(step);
+    if (at < 0) return;
+    setFocusedTimestamp(null);
+    setActiveLineIndex(at);
+    const time = lines[at].timestamp;
+    if (time != null && hasMedia) seek(time);
+  };
   const focusLine: EditorLine | undefined = lines[activeLineIndex];
   const focusInfo = useMemo(() => {
     let lyricNumber = 0;
@@ -2059,6 +2074,30 @@ export default function Editor({
         {wordsFocus ? (
           <>
             <div data-tour="editor-modes" className="hidden lg:flex shrink-0">{modeTabs}</div>
+            <div className="flex shrink-0 items-center gap-1">
+              <Tip content={t('editor.phone.focus.previous')}>
+                <button
+                  type="button"
+                  aria-label={t('editor.phone.focus.previous')}
+                  disabled={lyricLineFrom(-1) < 0}
+                  onClick={() => stepLine(-1)}
+                  className="grid size-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  <Icon name="chevron_left" size={20} />
+                </button>
+              </Tip>
+              <Tip content={t('editor.phone.focus.next')}>
+                <button
+                  type="button"
+                  aria-label={t('editor.phone.focus.next')}
+                  disabled={lyricLineFrom(1) < 0}
+                  onClick={() => stepLine(1)}
+                  className="grid size-9 place-items-center rounded-lg text-subtle transition-colors hover:bg-overlay hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  <Icon name="chevron_right" size={20} />
+                </button>
+              </Tip>
+            </div>
             <div data-tour="words-line-info" className="flex flex-col gap-1 flex-[1_1_150px] min-w-0">
               <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
                 {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
@@ -2242,6 +2281,7 @@ export default function Editor({
                 onSelectWord={handleSelectWord}
                 onEditLine={lineApi.editLine}
                 markKey={keyCap(markKey)}
+                onMark={hasMedia ? handleMarkWithConfidence : undefined}
                 onPlayFrom={hasMedia ? handlePlayFrom : undefined}
                 wordMenu={(wi) => {
                   const word = focusWords?.[wi];
