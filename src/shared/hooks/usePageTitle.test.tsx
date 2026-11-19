@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { unreadTitlePrefix, usePageTitle } from './usePageTitle';
+import { act } from 'react';
+import { unreadTitlePrefix, usePageTitle, usePlaylistPageTitle } from './usePageTitle';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -33,6 +34,20 @@ describe('usePageTitle', () => {
 
   it('titles the library playlists page as the library', () => {
     expect(titleAt('/library/playlists')).toBe('app.titles.library - app.name');
+  });
+
+  it('titles a playlist page with the playlist name once it loads, and falls back to the owner', () => {
+    function ListProbe({ name }: { name?: string }) {
+      usePageTitle();
+      usePlaylistPageTitle(name);
+      return null;
+    }
+    const at = (name?: string) => <MemoryRouter initialEntries={['/32blunts/lists/abc']}><ListProbe name={name} /></MemoryRouter>;
+    const { rerender, unmount } = render(at());
+    expect(document.title).toBe('32blunts - app.name');
+    act(() => rerender(at('Road trip')));
+    expect(document.title).toBe('Road trip - app.name');
+    unmount();
   });
 
   it('still titles an unknown deep path as not found', () => {

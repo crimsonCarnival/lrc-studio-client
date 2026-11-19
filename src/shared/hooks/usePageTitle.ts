@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { matchPath, useLocation, useParams } from 'react-router-dom';
 import { isAdminPathname } from '@/features/admin/admin-nav';
@@ -8,6 +8,27 @@ import { useUnreadNotificationCount } from '@/features/notifications/Notificatio
 export function unreadTitlePrefix(count: number): string {
   if (count <= 0) return '';
   return count > 99 ? '(99+) ' : `(${count}) `;
+}
+
+// The playlist page owns its data, but this hook runs above <Routes> and cannot see it, so the
+// page publishes its name here and the title follows. A store, not an effect that writes
+// document.title directly: the parent's effect would overwrite a child's on a cached navigation.
+let listTitle: string | null = null;
+const listTitleListeners = new Set<() => void>();
+function setListTitle(next: string | null) {
+  if (listTitle === next) return;
+  listTitle = next;
+  listTitleListeners.forEach((l) => l());
+}
+const subscribeListTitle = (l: () => void) => { listTitleListeners.add(l); return () => { listTitleListeners.delete(l); }; };
+const getListTitle = () => listTitle;
+
+/** Called by the playlist page with the loaded playlist's name; clears it on leaving. */
+export function usePlaylistPageTitle(name: string | null | undefined) {
+  useEffect(() => {
+    setListTitle(name?.trim() || null);
+    return () => setListTitle(null);
+  }, [name]);
 }
 
 /**
@@ -20,6 +41,7 @@ export function usePageTitle(projectName: string | null = null) {
   const location = useLocation();
   const { id, accountName, publicId } = useParams();
   const unread = useUnreadNotificationCount();
+  const playlistName = useSyncExternalStore(subscribeListTitle, getListTitle, getListTitle);
 
   useEffect(() => {
     const appName = t('app.name');
@@ -37,6 +59,7 @@ export function usePageTitle(projectName: string | null = null) {
 
     // /:accountName/artists/:artistId is a user's artist page; /artists/:slug is the shared catalog page.
     const artistAccount = matchPath('/:accountName/artists/:artistId', path)?.params.accountName;
+    const isListDetail = !!matchPath('/:accountName/lists/:listId', path);
     const isCatalogArtist = !!matchPath('/artists/:slug', path);
     const isCatalogAlbum = !!matchPath('/artists/:slug/albums/:albumSlug', path);
 
@@ -99,7 +122,7 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (rootAccount) {
       // /:accountName, /:accountName/lists and /:accountName/lists/:listId. The hook runs above <Routes>, so useParams is empty here
       // and the account has to come from the pathname. An unknown account still gets its own not-found view from ProfilePage.
-      pageTitle = rootAccount;
+      pageTitle = isListDetail && playlistName ? playlistName : rootAccount;
     } else {
       // Every real route is matched above, so what is left is the catch-all 404.
       pageTitle = t('app.titles.notFound');
@@ -107,5 +130,5 @@ export function usePageTitle(projectName: string | null = null) {
 
     const prefix = unreadTitlePrefix(unread);
     document.title = pageTitle ? `${prefix}${pageTitle} - ${appName}` : `${prefix}${appName}`;
-  }, [location.pathname, id, accountName, publicId, projectName, t, unread]);
+  }, [location.pathname, id, accountName, publicId, projectName, playlistName, t, unread]);
 }

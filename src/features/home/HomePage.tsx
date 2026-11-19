@@ -42,6 +42,7 @@ interface ProjectMeta {
   tags?: string[];
   description?: string;
   songName?: string;
+  songVersion?: string;
   songArtist?: string;
   songAlbum?: string;
   songYear?: string | number;
@@ -445,7 +446,7 @@ export default function HomePage() {
           onClose={() => setEditingProject(null)}
           onConfirm={async (data: {
             name?: string; description?: string; tags?: string[];
-            songName?: string; artists?: ArtistCredit[]; artistsChanged?: boolean; songAlbum?: string; songYear?: string | number;
+            songName?: string; songVersion?: string; artists?: ArtistCredit[]; artistsChanged?: boolean; songAlbum?: string; songYear?: string | number;
             coverImage?: string; singerColors?: string[]; singers?: string[];
           }) => {
             if (!editingProject) return;

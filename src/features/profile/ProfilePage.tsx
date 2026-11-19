@@ -71,6 +71,7 @@ interface ProjectMetaLoose {
   description?: string;
   tags?: string[];
   songName?: string;
+  songVersion?: string;
   songArtist?: string;
   artists?: ArtistCredit[];
   songAlbum?: string;

@@ -79,14 +79,15 @@ describe('SetupScreen', () => {
     expect(screen.queryByText('setup.public')).not.toBeInTheDocument();
   });
 
-  it('starts on song lyrics, and switching to subtitles drops the song fields', () => {
+  it('starts on song lyrics, and switching to subtitles relabels the name as a title and drops the version', () => {
     renderSetup();
     expect(screen.getByRole('radio', { name: 'setup.kindSong' })).toHaveAttribute('aria-checked', 'true');
     expect(document.getElementById('song-name')).toBeInTheDocument();
+    expect(document.getElementById('song-version')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: 'setup.kindSubtitles' }));
     expect(screen.getByRole('radio', { name: 'setup.kindSubtitles' })).toHaveAttribute('aria-checked', 'true');
-    expect(document.getElementById('song-name')).not.toBeInTheDocument();
-    expect(document.getElementById('project-name')).toBeInTheDocument();
+    expect(document.getElementById('song-version')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('setup.subtitleTitle')).toBeInTheDocument();
     // The hint must not ask for a song or an artist the subtitles form has no fields for.
     expect(screen.getByText('setup.identityRequiredSubtitles')).toBeInTheDocument();
     expect(screen.queryByText('setup.identityRequired')).not.toBeInTheDocument();
@@ -95,7 +96,8 @@ describe('SetupScreen', () => {
   it('opens on subtitles for ?kind=subtitles', () => {
     renderSetup(undefined, '?kind=subtitles');
     expect(screen.getByRole('radio', { name: 'setup.kindSubtitles' })).toHaveAttribute('aria-checked', 'true');
-    expect(document.getElementById('song-name')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('setup.subtitleTitle')).toBeInTheDocument();
+    expect(document.getElementById('song-version')).not.toBeInTheDocument();
   });
 
   it('preselects the upload passed from the uploads library', async () => {
@@ -327,7 +329,6 @@ describe('SetupScreen: phone steps', () => {
         </MemoryRouter>,
       );
       const phone = w < 1024;
-      typeInto('setup.songName', 'Test project');
       typeInto('setup.songName', 'Song one');
       if (phone) fireEvent.click(tab('stepAudio'));
       pickAudio();
@@ -343,7 +344,7 @@ describe('SetupScreen: phone steps', () => {
     // Parsed lines get a fresh random id per parse; everything else must match exactly.
     const strip = (d: { lines: { id?: string }[] }) => ({ ...d, lines: d.lines.map(({ id: _id, ...rest }) => rest) });
     expect(strip(phone)).toEqual(strip(desktop));
-    expect(phone.name).toBe('Test project');
+    expect(phone.name).toBe('Song one');
     expect(phone.lines.length).toBeGreaterThan(0);
   });
 

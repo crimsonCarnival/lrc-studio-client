@@ -20,6 +20,7 @@ import {
   incrementPlaylistShare,
 } from './playlist.service';
 import { usePlaylistDetail, usePlaylistsPage } from './playlist.queries';
+import { usePlaylistPageTitle } from '@/shared/hooks/usePageTitle';
 import { PlaylistModal } from './PlaylistModal';
 import { PlaylistCover } from './PlaylistCover';
 import {
@@ -118,6 +119,7 @@ export default function ListPage() {
   const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
 
   const { playlist, loading, notFound, forbidden, setPlaylist } = usePlaylistDetail<Playlist>(listId);
+  usePlaylistPageTitle(playlist?.name);
   // Saved state lives on the cached playlist, so it cannot drift from it.
   const isSaved = playlist?.isSavedByMe ?? false;
   const setIsSaved = useCallback(
