@@ -39,6 +39,17 @@ interface TailLine {
   words?: { time?: number | null; end?: number | null }[];
 }
 
+/**
+ * Where a timed word's karaoke fill ends: its own end when it was given one, which may be before
+ * the next word starts (a pause) or after it (the two words sound together and fill together);
+ * else the next timed word's start; else `fallback` (how the viewers estimate the last word).
+ */
+export function wordFillEnd(words: { time?: number | null; end?: number | null }[], index: number, fallback: number | null): number | null {
+  const w = words[index];
+  if (w?.time != null && w.end != null && w.end > w.time) return w.end;
+  return words.slice(index + 1).find((x) => x.time != null)?.time ?? fallback;
+}
+
 /** The end of the line's last word when that word is timed and was given one, else null. */
 export function tailWordEnd(line: TailLine | undefined): number | null {
   const last = line?.words?.[line.words.length - 1];

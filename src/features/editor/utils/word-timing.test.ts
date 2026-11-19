@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { layoutWords, snapTime, splitMorae, wordKana } from './word-timing';
+import { layoutWords, snapTime, splitMorae, wordEndAt, wordKana } from './word-timing';
+import { wordFillEnd } from './line-span';
 
 describe('layoutWords', () => {
   const words = [
@@ -22,9 +23,40 @@ describe('layoutWords', () => {
     expect(segs[3].to).toBeCloseTo(13.04, 2);
   });
 
-  it('ignores an end that does not fall inside the word', () => {
+  it('keeps an end past the next word: the two overlap, held to the line', () => {
     const [seg] = layoutWords([{ word: 'a', time: 1, end: 5 }, { word: 'b', time: 2 }], 0, 3);
-    expect(seg).toMatchObject({ to: 2, hasEnd: false });
+    expect(seg).toMatchObject({ to: 3, gapTo: 2, hasEnd: true });
+  });
+
+  it('ignores an end before the word starts, or right on the next word', () => {
+    const [a] = layoutWords([{ word: 'a', time: 1, end: 0.5 }, { word: 'b', time: 2 }], 0, 3);
+    expect(a).toMatchObject({ to: 2, hasEnd: false });
+    const [b] = layoutWords([{ word: 'a', time: 1, end: 2.002 }, { word: 'b', time: 2 }], 0, 3);
+    expect(b).toMatchObject({ to: 2, hasEnd: false });
+  });
+});
+
+describe('wordEndAt', () => {
+  const seg = { word: 'a', timed: true, from: 1, to: 2, gapTo: 2, hasEnd: false };
+  it('pauses before the next word, joins on it, and overlaps past it up to the cap', () => {
+    expect(wordEndAt(seg, 1.5, null, 3)).toBe(1.5);
+    expect(wordEndAt(seg, 2.003, null, 3)).toBeNull();
+    expect(wordEndAt(seg, 2.5, null, 3)).toBe(2.5);
+    expect(wordEndAt(seg, 9, null, 3)).toBe(3);
+  });
+  it('lets a last word run on past the next line, up to the end of the track', () => {
+    expect(wordEndAt(seg, 4, 2, 10)).toBe(4);
+    expect(wordEndAt(seg, 2.001, 2, 10)).toBeNull();
+  });
+});
+
+describe('wordFillEnd', () => {
+  const words = [{ time: 1 }, { time: 2, end: 3.5 }, { time: 3 }, { time: 4, end: 4.5 }];
+  it('fills a word to its own end, before or past the next word, else to the next word', () => {
+    expect(wordFillEnd(words, 0, 9)).toBe(2);
+    expect(wordFillEnd(words, 1, 9)).toBe(3.5);
+    expect(wordFillEnd(words, 3, 9)).toBe(4.5);
+    expect(wordFillEnd([{ time: 1 }], 0, 9)).toBe(9);
   });
 });
 

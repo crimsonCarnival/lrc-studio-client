@@ -5,6 +5,8 @@ import type { EditorWord } from '@/features/editor/editor.types';
 export const MIN_WORD_GAP = 0.02;
 /** A timed word shorter than this (seconds) is flagged: nobody sings a word in under 80 ms. */
 export const TOO_SHORT = 0.08;
+/** Two edges closer than this count as the same instant. */
+const SAME_EDGE = 0.005;
 
 export interface WordSegment {
   word: string;
@@ -13,7 +15,8 @@ export interface WordSegment {
   from: number;
   /** Where the word stops: its own end when it has one, else where the next word starts. */
   to: number;
-  /** Where the next word starts, when the word stops earlier (a pause); else equal to `to`. */
+  /** Where the next word starts. Above `to` the word stops early (a pause); below it the word is
+   *  still sounding when the next one begins (the two overlap, as a backing vocal over a lead). */
   gapTo: number;
   /** The word has its own saved end (it does not simply run into the next word). */
   hasEnd: boolean;
@@ -49,22 +52,27 @@ export function layoutWords(words: EditorWord[], start: number, end: number): Wo
     }
     from = Math.max(start, from);
     next = Math.max(from, Math.min(next, end));
-    const ownEnd = time != null && w.end != null && w.end > from && w.end < next ? clamp(w.end) : null;
+    // An end of its own counts on either side of the next word's start: before it is a pause,
+    // after it the words overlap. Right on it, the word simply runs into the next one.
+    const ownEnd = time != null && w.end != null && w.end > from && Math.abs(w.end - next) > SAME_EDGE ? clamp(w.end) : null;
     return { word: w.word ?? '', timed: time != null, from, to: ownEnd ?? next, gapTo: next, hasEnd: ownEnd != null };
   });
 }
 
 /**
  * Where a word's end is stored when its right edge is put at `raw`: a time, or null when the
- * edge is back against what follows (the word then simply runs up to it). `holdLimit` is given
- * for a line's last word when another line follows: the start of that line, which the word may
- * run on past (the two lines then overlap). `cap` is the end of the track.
+ * edge is back against what follows (the word then simply runs up to it). Short of that point it
+ * is a pause; past it the word overlaps what follows: the next word, or for a line's last word
+ * (`holdLimit`, the start of the line after it) that line. `cap` is as late as the end may go.
+ * An end that crosses that point in one step (an arrow press) stops on it first, so a pause
+ * can be closed, and an overlap undone, without overshooting into the other.
  */
 export function wordEndAt(seg: WordSegment, raw: number, holdLimit: number | null, cap: number): number | null {
   const limit = holdLimit ?? seg.gapTo;
-  if (holdLimit != null && raw > limit + 0.005) return Number(Math.min(raw, cap).toFixed(3));
-  if (raw >= limit - 0.005) return null;
-  return Number(Math.max(seg.from + MIN_WORD_GAP, raw).toFixed(3));
+  if (Math.abs(raw - limit) <= SAME_EDGE) return null;
+  const was = seg.to - limit;
+  if (Math.abs(was) > SAME_EDGE && Math.sign(was) !== Math.sign(raw - limit)) return null;
+  return Number(Math.max(seg.from + MIN_WORD_GAP, Math.min(raw, cap)).toFixed(3));
 }
 
 const SMALL_KANA = /[ゃゅょぁぃぅぇぉゎャュョァィゥェォヮ]/;
