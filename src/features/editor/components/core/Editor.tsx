@@ -925,6 +925,27 @@ export default function Editor({
     };
   }, [wordsFocus, lines, activeLineIndex, duration]);
 
+  // In Words mode the focused line follows the playhead: playing or seeking into another timed
+  // line makes it the line being edited. Only a change of the playhead's line moves the focus, so a
+  // line picked by hand stays put while the playhead remains in the line it was in.
+  const playheadLineIndex = useMemo(() => {
+    if (!isWordsMode) return -1;
+    let found = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.type === 'section' || line.adLibOf != null || line.timestamp == null || !line.text?.trim()) continue;
+      if (line.timestamp > playbackPosition) break;
+      found = i;
+    }
+    return found;
+  }, [isWordsMode, lines, playbackPosition]);
+  const lastPlayheadLineRef = useRef(playheadLineIndex);
+  useEffect(() => {
+    if (playheadLineIndex === lastPlayheadLineRef.current) return;
+    lastPlayheadLineRef.current = playheadLineIndex;
+    if (playheadLineIndex >= 0) setActiveLineIndex(playheadLineIndex);
+  }, [playheadLineIndex, setActiveLineIndex]);
+
   // While the focused line plays, the highlight follows the word being sung
   // (chips and timeline alike) instead of sitting on the stamping cursor.
   const playingWordIndex = useMemo(() => {
