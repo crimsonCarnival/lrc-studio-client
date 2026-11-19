@@ -37,7 +37,7 @@ export default function CatalogBrowsePage() {
             placeholder={t('catalog.browse.searchPlaceholder')}
             aria-label={t('catalog.browse.searchLabel')}
             maxLength={100}
-            className="pl-9"
+            className="pl-9 lg:pl-9"
           />
         </div>
 

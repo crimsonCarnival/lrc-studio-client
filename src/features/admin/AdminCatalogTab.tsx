@@ -321,7 +321,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('admin.catalogTab.browse.searchPlaceholder')}
             aria-label={t('admin.catalogTab.browse.searchPlaceholder')}
-            className="pl-9"
+            className="pl-9 lg:pl-9"
           />
         </div>
         <Button type="button" onClick={() => setForm({ mode: 'create', kind: 'artist' })}>
