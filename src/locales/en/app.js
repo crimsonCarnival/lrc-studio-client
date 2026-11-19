@@ -22,6 +22,7 @@ export default {
     joinSession: "Join session",
     sessions: "Sessions",
     artist: "Artist",
+    album: "Album",
     notFound: "Page Not Found"
   },
   shareProject: "Share",

@@ -5,30 +5,15 @@ import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { projectPath } from '@/features/projects/project-path';
 import { SubmitCatalogDialog } from './SubmitCatalogDialog';
 import { useCatalogArtist } from './catalog.queries';
-import type { CatalogArtistPage } from './catalog.types';
+import { CatalogSongList } from './CatalogSongList';
+import { catalogAlbumPath } from './catalog-path';
+import type { CatalogAlbumCard } from './catalog.types';
 
-type AlbumCard = { key: string; title: string; year: string | null; cover: string | null; count: number };
-
-/** Catalog albums plus every album named by a song's metadata, merged case-insensitively. */
-function albumCards(albums: CatalogArtistPage['albums'], songs: CatalogArtistPage['songs']): AlbumCard[] {
-  const cards = new Map<string, AlbumCard>();
-  for (const a of albums) {
-    cards.set(a.title.normalize('NFC').toLowerCase(), { key: a.id, title: a.title, year: a.year ?? null, cover: a.coverUrl ?? null, count: 0 });
-  }
-  for (const song of songs) {
-    const title = song.metadata?.songAlbum?.trim();
-    if (!title) continue;
-    const key = title.normalize('NFC').toLowerCase();
-    const card = cards.get(key) ?? { key, title, year: null, cover: null, count: 0 };
-    card.count += 1;
-    card.year ??= song.metadata?.songYear?.toString().trim() || null;
-    card.cover ??= song.coverImage ?? null;
-    cards.set(key, card);
-  }
-  return [...cards.values()].sort((a, b) => (b.year ?? '').localeCompare(a.year ?? '') || a.title.localeCompare(b.title));
+/** Newest first; undated albums last, then by title. */
+function byYearDesc(a: CatalogAlbumCard, b: CatalogAlbumCard): number {
+  return (b.album.year ?? '').localeCompare(a.album.year ?? '') || a.album.title.localeCompare(b.album.title);
 }
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -45,7 +30,8 @@ export default function CatalogArtistPage() {
   if (isError || !data) return <Suspense fallback={null}><NotFoundPage /></Suspense>;
 
   const { artist, songs } = data;
-  const albums = albumCards(data.albums, songs);
+  // Older servers predate albumCards; an empty list beats a crash during a deploy.
+  const albums = [...(data.albumCards ?? [])].sort(byYearDesc);
   // The server validates this too; checking the host keeps a bad row from rendering an arbitrary link.
   const showGeniusCredit = artist.imageSource === 'genius' && !!artist.imageSourceUrl?.startsWith('https://genius.com/');
   return (
@@ -85,21 +71,30 @@ export default function CatalogArtistPage() {
             <p className="text-sm text-muted-foreground">{t('catalog.page.noAlbums')}</p>
           ) : (
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {albums.map((album) => (
-                <li key={album.key} className="flex flex-col gap-2">
-                  <span className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground">
-                    {album.cover
-                      ? <img src={album.cover} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
-                      : <Icon name="music_note" size={32} />}
-                  </span>
-                  <span className="truncate text-sm font-medium text-foreground">{album.title}</span>
-                  {(album.year || album.count > 0) && (
-                    <span className="-mt-1 text-xs text-muted-foreground">
-                      {[album.year, album.count > 0 && t('catalog.page.songs', { count: album.count })].filter(Boolean).join(' · ')}
+              {albums.map(({ album, songCount, coverUrl }) => {
+                const body = (
+                  <>
+                    <span className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground">
+                      {coverUrl
+                        ? <img src={coverUrl} alt="" className="size-full object-cover" loading="lazy" decoding="async" />
+                        : <Icon name="album" size={32} />}
                     </span>
-                  )}
-                </li>
-              ))}
+                    <span className="truncate text-sm font-medium text-foreground group-hover:underline">{album.title}</span>
+                    {(album.year || songCount > 0) && (
+                      <span className="-mt-1 text-xs text-muted-foreground">
+                        {[album.year, songCount > 0 && t('catalog.page.songs', { count: songCount })].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                  </>
+                );
+                return (
+                  <li key={album.id}>
+                    {album.slug && artist.slug
+                      ? <Link to={catalogAlbumPath(artist.slug, album.slug)} className="group flex flex-col gap-2 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50">{body}</Link>
+                      : <div className="flex flex-col gap-2">{body}</div>}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -109,23 +104,7 @@ export default function CatalogArtistPage() {
           {songs.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('catalog.page.noSongs')}</p>
           ) : (
-            <ol className="flex flex-col rounded-2xl border border-border bg-card">
-              {songs.map((song) => {
-                const href = projectPath(song, song.user?.accountName);
-                const title = song.metadata?.songName || song.title || t('playlists.detail.untitled');
-                return (
-                  <li key={song.id} className="flex items-center gap-3 border-t border-border px-4 py-2.5 text-sm first:border-t-0">
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      {href
-                        ? <Link to={href} className="truncate font-medium text-foreground hover:underline">{title}</Link>
-                        : <span className="truncate font-medium text-foreground">{title}</span>}
-                      {song.metadata?.songAlbum && <span className="truncate text-xs text-muted-foreground">{song.metadata.songAlbum}</span>}
-                    </span>
-                    {song.user?.accountName && <span className="shrink-0 text-xs text-muted-foreground">@{song.user.accountName}</span>}
-                  </li>
-                );
-              })}
-            </ol>
+            <CatalogSongList songs={songs} showAlbum />
           )}
         </section>
       </div>

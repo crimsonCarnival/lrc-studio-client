@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getCatalogArtist, getCatalogSlugs } from './catalog.service';
+import { getCatalogAlbum, getCatalogArtist, getCatalogSlugs } from './catalog.service';
 
 export const MY_SUBMISSIONS_KEY = ['catalog', 'my-submissions'] as const;
 
@@ -11,6 +11,17 @@ export function useCatalogArtist(slug: string | undefined) {
     queryKey: catalogArtistKey(slug ?? ''),
     queryFn: () => getCatalogArtist(slug!),
     enabled: !!slug,
+  });
+}
+
+export const catalogAlbumKey = (artistSlug: string, albumSlug: string) => ['catalog', 'album', artistSlug, albumSlug] as const;
+
+/** One approved catalog album with its songs; `data` is null when it does not exist. */
+export function useCatalogAlbum(artistSlug: string | undefined, albumSlug: string | undefined) {
+  return useQuery({
+    queryKey: catalogAlbumKey(artistSlug ?? '', albumSlug ?? ''),
+    queryFn: () => getCatalogAlbum(artistSlug!, albumSlug!),
+    enabled: !!artistSlug && !!albumSlug,
   });
 }
 

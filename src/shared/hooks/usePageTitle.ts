@@ -38,6 +38,7 @@ export function usePageTitle(projectName: string | null = null) {
     // /:accountName/artists/:artistId is a user's artist page; /artists/:slug is the shared catalog page.
     const artistAccount = matchPath('/:accountName/artists/:artistId', path)?.params.accountName;
     const isCatalogArtist = !!matchPath('/artists/:slug', path);
+    const isCatalogAlbum = !!matchPath('/artists/:slug/albums/:albumSlug', path);
 
     // The admin host serves its dashboard at "/" and "/home", so it has to be told apart first.
     if ((cleanPath === 'home' || cleanPath === '') && !isAdminPathname(path)) {
@@ -89,6 +90,8 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (/^[^/]+\/projects\/[^/]+(\/(edit|fork))?$/.test(cleanPath)) {
       // /:accountName/projects/:slug-:id[/edit|/fork]
       pageTitle = projectName || t('app.titles.library');
+    } else if (isCatalogAlbum) {
+      pageTitle = t('app.titles.album');
     } else if (isCatalogArtist || artistAccount) {
       pageTitle = t('app.titles.artist');
     } else if (rootAccount) {

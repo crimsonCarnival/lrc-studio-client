@@ -22,6 +22,7 @@ export default {
     joinSession: "Unirse a la sesión",
     sessions: "Sesiones",
     artist: "Artista",
+    album: "Álbum",
     notFound: "Página No Encontrada"
   },
   shareProject: "Compartir",
