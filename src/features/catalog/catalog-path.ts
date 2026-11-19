@@ -1,3 +1,6 @@
+/** The public catalog index: every approved artist, with search. */
+export const CATALOG_BROWSE_PATH = '/artists';
+
 /** The shared catalog page of an approved artist, addressed by slug. */
 export function catalogArtistPath(slug: string): string {
   return `/artists/${encodeURIComponent(slug)}`;

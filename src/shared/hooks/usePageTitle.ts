@@ -90,6 +90,8 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (/^[^/]+\/projects\/[^/]+(\/(edit|fork))?$/.test(cleanPath)) {
       // /:accountName/projects/:slug-:id[/edit|/fork]
       pageTitle = projectName || t('app.titles.library');
+    } else if (cleanPath === 'artists') {
+      pageTitle = t('app.titles.artists');
     } else if (isCatalogAlbum) {
       pageTitle = t('app.titles.album');
     } else if (isCatalogArtist || artistAccount) {

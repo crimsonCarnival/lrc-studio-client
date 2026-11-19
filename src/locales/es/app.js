@@ -23,6 +23,7 @@ export default {
     sessions: "Sesiones",
     artist: "Artista",
     album: "Álbum",
+    artists: "Artistas",
     notFound: "Página No Encontrada"
   },
   shareProject: "Compartir",

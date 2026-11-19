@@ -272,6 +272,11 @@ export type CatalogArtist = {
   updatedAt: Scalars['String']['output'];
 };
 
+export type CatalogArtistList = {
+  items: Array<CatalogArtist>;
+  total: Scalars['Int']['output'];
+};
+
 export type CatalogArtistPage = {
   albumCards: Array<CatalogAlbumCard>;
   albums: Array<CatalogAlbum>;
@@ -1875,6 +1880,7 @@ export type Query = {
   catalogAlbum?: Maybe<CatalogAlbumPage>;
   catalogArtist?: Maybe<CatalogArtistPage>;
   catalogArtistSlugs: Array<CatalogArtistRef>;
+  catalogArtists: CatalogArtistList;
   catalogDetectAlbums: Array<DetectedAlbum>;
   catalogReviewQueue: CatalogQueue;
   catalogSuggestions: Array<CatalogSuggestion>;
@@ -1994,6 +2000,13 @@ export type QueryCatalogArtistArgs = {
 
 export type QueryCatalogArtistSlugsArgs = {
   names: Array<Scalars['String']['input']>;
+};
+
+
+export type QueryCatalogArtistsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 

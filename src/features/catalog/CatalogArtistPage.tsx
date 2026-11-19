@@ -8,7 +8,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { SubmitCatalogDialog } from './SubmitCatalogDialog';
 import { useCatalogArtist } from './catalog.queries';
 import { CatalogSongList } from './CatalogSongList';
-import { catalogAlbumPath } from './catalog-path';
+import { CATALOG_BROWSE_PATH, catalogAlbumPath } from './catalog-path';
 import { artistPath } from '@/features/artists/shelf-path';
 import type { CatalogAlbumCard } from './catalog.types';
 
@@ -38,6 +38,10 @@ export default function CatalogArtistPage() {
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
+        <Link to={CATALOG_BROWSE_PATH} className="-mb-4 flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <Icon name="arrow_back" size={16} />
+          {t('catalog.browse.all')}
+        </Link>
         <header className="flex flex-wrap items-end gap-6">
           <div className="flex shrink-0 flex-col gap-1">
             <span className="flex size-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-muted text-6xl font-bold text-muted-foreground sm:size-44">
