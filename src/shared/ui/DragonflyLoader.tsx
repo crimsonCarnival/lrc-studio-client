@@ -45,6 +45,14 @@ const TRACKS: readonly (readonly number[][])[] = [
   [[60, 40, 150, 30, 240, 70], [330, 110, 420, 40, 420, 100], [420, 160, 330, 170, 240, 130], [150, 90, 60, 160, 60, 100]],
   // Lopsided eight: a big loop and a small one.
   [[250, 30, 430, 20, 430, 100], [430, 180, 250, 170, 200, 100], [170, 58, 60, 50, 60, 100], [60, 150, 170, 142, 200, 100]],
+  // Ring: a circle of radius 80 around the field's centre.
+  [[160, 56, 196, 20, 240, 20], [284, 20, 320, 56, 320, 100], [320, 144, 284, 180, 240, 180], [196, 180, 160, 144, 160, 100]],
+  // Tight loop: a small circle, for a dragonfly that stays near one spot.
+  [[190, 72, 212, 50, 240, 50], [268, 50, 290, 72, 290, 100], [290, 128, 268, 150, 240, 150], [212, 150, 190, 128, 190, 100]],
+  // Tall oval: an ellipse standing on its end.
+  [[180, 56, 207, 20, 240, 20], [273, 20, 300, 56, 300, 100], [300, 144, 273, 180, 240, 180], [207, 180, 180, 144, 180, 100]],
+  // Tall eight: the figure-eight with x squeezed to 45%, a narrow column of loops.
+  [[267, 20, 321, 20, 321, 100], [321, 180, 267, 180, 240, 100], [213, 20, 186, 20, 186, 100], [186, 180, 213, 180, 240, 100]],
 ];
 function trackPath(track: readonly number[][], k: number) {
   const n = (v: number) => Math.round(v * k * 100) / 100;
