@@ -51,12 +51,25 @@ export type ReviewInput = {
   expectedUpdatedAt?: string;
 };
 
+/** An approved album as the artist page shows it: song count and cover come from the artist's primary songs. */
+export type CatalogAlbumCard = { album: CatalogAlbum; songCount: number; coverUrl?: string | null };
+
 /** Public catalog page: an approved artist and its approved albums. Reviewer-only fields are null. */
 export type CatalogArtistPage = {
   artist: CatalogArtist;
   albums: CatalogAlbum[];
+  /** What the page shows: approved catalog albums only, never album titles taken from songs. */
+  albumCards: CatalogAlbumCard[];
   /** Every public song crediting the artist, from any user. */
   songs: CatalogSong[];
+};
+
+/** Public album page: an approved album of an approved artist and its songs, in track order. */
+export type CatalogAlbumPage = {
+  artist: CatalogArtist;
+  album: CatalogAlbum;
+  songs: CatalogSong[];
+  coverUrl?: string | null;
 };
 
 export type CatalogSong = import('@/features/artists/shelf.service').ShelfProject & { user?: { accountName?: string | null } | null };

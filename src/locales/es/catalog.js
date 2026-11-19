@@ -95,4 +95,10 @@ export default {
     back: "Volver",
     photoCredit: "Foto: Genius",
   },
+  album: {
+    kicker: "Álbum",
+    back: "Volver a {{name}}",
+    tracks: "Canciones",
+    noSongs: "Aún no hay canciones públicas en este álbum.",
+  },
 };

@@ -2,3 +2,8 @@
 export function catalogArtistPath(slug: string): string {
   return `/artists/${encodeURIComponent(slug)}`;
 }
+
+/** The shared page of an approved album, under its artist's page. */
+export function catalogAlbumPath(artistSlug: string, albumSlug: string): string {
+  return `${catalogArtistPath(artistSlug)}/albums/${encodeURIComponent(albumSlug)}`;
+}

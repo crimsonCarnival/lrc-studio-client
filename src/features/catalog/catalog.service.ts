@@ -6,6 +6,7 @@ import type {
   AdminCatalogEntryEdit,
   CatalogAlbum,
   CatalogArtist,
+  CatalogAlbumPage,
   CatalogArtistPage,
   CatalogEntryEdit,
   CatalogImageSource,
@@ -217,11 +218,27 @@ export async function getCatalogArtist(slug: string): Promise<CatalogArtistPage 
       catalogArtist(slug: $slug) {
         artist { id name disambiguation slug imageUrl imageSource imageSourceUrl bio }
         albums { id artistId title slug year coverUrl }
+        albumCards { songCount coverUrl album { id artistId title slug year coverUrl } }
         songs { ...ProjectListFields user { accountName } }
       }
     }
   ` + PROJECT_LIST_FIELDS, { slug });
   return data.catalogArtist;
+}
+
+/** A public catalog album with its songs; null when either slug is unknown or not approved. */
+export async function getCatalogAlbum(artistSlug: string, albumSlug: string): Promise<CatalogAlbumPage | null> {
+  const data = await gqlRequest<{ catalogAlbum: CatalogAlbumPage | null }>(/* GraphQL */ `
+    query CatalogAlbum($artistSlug: String!, $albumSlug: String!) {
+      catalogAlbum(artistSlug: $artistSlug, albumSlug: $albumSlug) {
+        artist { id name disambiguation slug imageUrl }
+        album { id artistId title slug year coverUrl }
+        coverUrl
+        songs { ...ProjectListFields user { accountName } }
+      }
+    }
+  ` + PROJECT_LIST_FIELDS, { artistSlug, albumSlug });
+  return data.catalogAlbum;
 }
 
 /** Catalog slugs for the artists that have an approved page; names without one are simply absent. */

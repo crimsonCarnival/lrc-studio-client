@@ -12,8 +12,8 @@ import CatalogArtistPage from './CatalogArtistPage';
 
 const artist = { id: 'a1', slug: 'ada', name: 'Ada', imageUrl: 'https://res.cloudinary.com/x/a.jpg', bio: null, disambiguation: null };
 
-function renderPage(overrides: Record<string, unknown>) {
-  getCatalogArtist.mockResolvedValue({ artist: { ...artist, ...overrides }, albums: [], songs: [] });
+function renderPage(overrides: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+  getCatalogArtist.mockResolvedValue({ artist: { ...artist, ...overrides }, albums: [], albumCards: [], songs: [], ...extra });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
@@ -45,5 +45,30 @@ describe('CatalogArtistPage photo credit', () => {
     renderPage({ imageSource: 'genius', imageSourceUrl: 'https://evil.example/genius.com/' });
     await screen.findByRole('heading', { name: 'Ada' });
     expect(screen.queryByRole('link')).toBeNull();
+  });
+});
+
+describe('CatalogArtistPage albums', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const card = (title: string, slug: string | null, year: string | null, songCount: number) =>
+    ({ album: { id: `id-${title}`, artistId: 'a1', title, slug, year, coverUrl: null }, songCount, coverUrl: null });
+
+  it('shows only the server album cards, newest first, linked to their album page', async () => {
+    renderPage({}, {
+      albumCards: [card('Old', 'old', '1999', 2), card('New', 'new', '2020', 0)],
+      // A song naming an uncatalogued album must not become a card.
+      songs: [{ id: 's1', title: 'S', metadata: { songName: 'S', songAlbum: 'Bootleg' } }],
+    });
+    const links = await screen.findAllByRole('link', { name: /Old|New/ });
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/artists/ada/albums/new', '/artists/ada/albums/old']);
+    expect(screen.queryByRole('link', { name: /Bootleg/ })).toBeNull();
+    expect(screen.getAllByText('Bootleg')).toHaveLength(1); // only under the song row
+  });
+
+  it('renders a slugless album without a link', async () => {
+    renderPage({}, { albumCards: [card('Loose', null, null, 0)] });
+    await screen.findByText('Loose');
+    expect(screen.queryByRole('link', { name: /Loose/ })).toBeNull();
   });
 });

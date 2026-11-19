@@ -237,6 +237,19 @@ export type CatalogAlbum = {
   year?: Maybe<Scalars['String']['output']>;
 };
 
+export type CatalogAlbumCard = {
+  album: CatalogAlbum;
+  coverUrl?: Maybe<Scalars['String']['output']>;
+  songCount: Scalars['Int']['output'];
+};
+
+export type CatalogAlbumPage = {
+  album: CatalogAlbum;
+  artist: CatalogArtist;
+  coverUrl?: Maybe<Scalars['String']['output']>;
+  songs: Array<Project>;
+};
+
 export type CatalogArtist = {
   bio: Scalars['String']['output'];
   createdAt: Scalars['String']['output'];
@@ -255,9 +268,16 @@ export type CatalogArtist = {
 };
 
 export type CatalogArtistPage = {
+  albumCards: Array<CatalogAlbumCard>;
   albums: Array<CatalogAlbum>;
   artist: CatalogArtist;
   songs: Array<Project>;
+};
+
+export type CatalogArtistRef = {
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
 };
 
 export type CatalogDecision =
@@ -746,6 +766,7 @@ export type Mutation = {
   adminDeleteBadge: Scalars['Boolean']['output'];
   adminDeleteCatalogEntry: Scalars['Boolean']['output'];
   adminGrantBadge: Scalars['Boolean']['output'];
+  adminImportCatalogAlbums: Scalars['Int']['output'];
   adminRetroactiveScan: RetroactiveResult;
   adminRevokeBadge: Scalars['Boolean']['output'];
   adminShadowBan: Scalars['Boolean']['output'];
@@ -919,6 +940,11 @@ export type MutationAdminGrantBadgeArgs = {
   badgeId: Scalars['String']['input'];
   expiresAt?: InputMaybe<Scalars['String']['input']>;
   userIdentifier: Scalars['String']['input'];
+};
+
+
+export type MutationAdminImportCatalogAlbumsArgs = {
+  artistId: Scalars['ID']['input'];
 };
 
 
@@ -1827,7 +1853,9 @@ export type Query = {
   blockedUsers: Array<BlockedUser>;
   catalogAdminAlbums: Array<CatalogAlbum>;
   catalogAdminArtists: Array<CatalogArtist>;
+  catalogAlbum?: Maybe<CatalogAlbumPage>;
   catalogArtist?: Maybe<CatalogArtistPage>;
+  catalogArtistSlugs: Array<CatalogArtistRef>;
   catalogDetectAlbums: Array<DetectedAlbum>;
   catalogReviewQueue: CatalogQueue;
   /** The live session, for its owner or a signed-in member; null otherwise. */
@@ -1933,8 +1961,19 @@ export type QueryCatalogAdminArtistsArgs = {
 };
 
 
+export type QueryCatalogAlbumArgs = {
+  albumSlug: Scalars['String']['input'];
+  artistSlug: Scalars['String']['input'];
+};
+
+
 export type QueryCatalogArtistArgs = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryCatalogArtistSlugsArgs = {
+  names: Array<Scalars['String']['input']>;
 };
 
 
