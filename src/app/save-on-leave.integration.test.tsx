@@ -9,6 +9,7 @@ import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { resetGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import { setAccessToken } from '@/app/api';
 import App from './App';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Real App under a MemoryRouter, signed in or not. The save itself is a spy (handleManualSave),
 // so these tests pin WHEN a save is started on leaving the editor, not what the save does.
@@ -93,7 +94,9 @@ function Probe() {
   return null;
 }
 const mount = (path: string) => render(
-  <MemoryRouter initialEntries={[path]}><TooltipProvider><Probe /><App /></TooltipProvider></MemoryRouter>,
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <MemoryRouter initialEntries={[path]}><TooltipProvider><Probe /><App /></TooltipProvider></MemoryRouter>
+  </QueryClientProvider>,
 );
 
 const realSetTimeout = globalThis.setTimeout;

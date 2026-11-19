@@ -1,7 +1,8 @@
 import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'react-router-dom';
 import { guardedLinkClick } from './guarded-link-click';
 import { useTranslation } from 'react-i18next';
@@ -13,11 +14,10 @@ import { Button } from '@ui/button';
 import { CountDot } from '@ui/count-dot';
 import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
-import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/auth.types';
-import { isStaff, userHasPermission } from '@/features/auth/permissions';
-import { useReportCount } from '@/features/admin/report-count';
+import { isStaff } from '@/features/auth/permissions';
+import { useStaffPending } from './use-staff-pending';
 import { adminHostUrl, canUseAdminHost, isAdminHost } from '@/shared/utils/host';
 import { isAdminPathname } from '@/features/admin/admin-nav';
 import { THEMES } from './theme-options';
@@ -40,36 +40,32 @@ interface UserMenuProps {
 export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentTheme, customTheme, updateSetting, i18n }: UserMenuProps) {
   const { t } = useTranslation();
   const currentLang = (i18n?.language || 'en').split('-')[0];
-  // Library/upload/request counts are only shown in this menu — own the state here.
-  const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
+  // Library/upload counts are only shown in this menu — own the state here.
+  const [counts, setCounts] = useState({ library: 0, uploads: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const staff = isStaff(user?.permissions);
   // The dashboard's own header carries this menu too; a link to itself would only point at a wrong host.
   const { pathname } = useLocation();
   const inAdmin = isAdminHost() || isAdminPathname(pathname);
-  const openReports = useReportCount(userHasPermission(user?.permissions, 'users.ban'));
   // What waits on staff in the dashboard: requests to review and reported content.
-  const pending = counts.requests + openReports;
+  const pending = useStaffPending(user?.permissions);
+  const queryClient = useQueryClient();
 
+  // Read from the same cache entries Home, Library and Uploads fill (same keys, same
+  // null → [] shape as useCachedList), so opening the menu after visiting them costs no request;
+  // writes keep those entries current through cache-sync. The 30 s window only spares
+  // back-to-back opens.
   const fetchCounts = async () => {
     if (!user) return;
     try {
       const [pRes, uRes] = await Promise.all([
-        projects.list(),
-        uploads.listMedia(),
-      ]) as [{ length?: number } | null, { length?: number } | null];
-      setCounts(prev => ({ ...prev, library: pRes?.length || 0, uploads: uRes?.length || 0 }));
+        queryClient.fetchQuery({ queryKey: ['projects', 'mine'], queryFn: async () => (await projects.list()) ?? [], staleTime: 30_000 }),
+        queryClient.fetchQuery({ queryKey: ['uploads', 'mine'], queryFn: async () => (await uploads.listMedia()) ?? [], staleTime: 30_000 }),
+      ]) as [unknown[], unknown[]];
+      setCounts({ library: pRes.length, uploads: uRes.length });
     } catch (err) { console.error('Failed to fetch counts for menu:', err); }
   };
-
-  useEffect(() => {
-    if (staff) {
-      requestsApi.counts()
-        .then(rRes => setCounts(prev => ({ ...prev, requests: rRes.pendingReview + rRes.myPending })))
-        .catch(() => {});
-    }
-  }, [staff]);
 
   return (
     <>
