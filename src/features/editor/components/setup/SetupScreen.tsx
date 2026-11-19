@@ -161,7 +161,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const lyricsInputRef = useRef<HTMLInputElement | null>(null);
   const lyricsTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const projectNameInputRef = useRef<HTMLInputElement | null>(null);
+  const songNameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     // autoFocus removed as requested
@@ -217,7 +217,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     name: prefill?.name || '',
     description: prefill?.description || '',
     tags: prefill?.tags || [],
-    songName: prefill?.songName || '',
+    songName: prefill?.songName || prefill?.name || '',
     artists: prefill?.artists || [],
     songAlbum: prefill?.songAlbum || '',
     songYear: prefill?.songYear || '',
@@ -238,7 +238,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
+  const { description: projectDescription, tags: projectTags, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
   // The server owns `songArtist` (derived from the credits); here only the primary names are needed, for lookups.
   const primaryText = primaryArtistText(artists);
 
@@ -273,7 +273,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
   // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
   // Subtitles have no song or artist fields to fall back on: the name is the identity.
-  const hasIdentity = hasProjectIdentity({ title: projectName, metadata: isSubtitles ? {} : { songName, songArtist: formatArtistDisplay(artists) } });
+  const hasIdentity = hasProjectIdentity({ title: songName, metadata: isSubtitles ? { songName } : { songName, songArtist: formatArtistDisplay(artists) } });
   const canContinue = audioReady && hasLyrics && hasIdentity;
 
   // Fetch music library for artist/album autofill
@@ -282,17 +282,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     getMyMusicLibrary().then((lib) => setMusicLibrary(lib as MusicEntry[])).catch(() => {});
   }, []);
 
-  // Sync project name to audio name if empty when reaching step 2
+  // Sync song name to audio name if empty when reaching step 2
   const prevStepRef = useRef(step);
   useLayoutEffect(() => {
     if (step !== prevStepRef.current) {
       prevStepRef.current = step;
-      if (step === 2 && !projectName && audioName && !audioName.includes('://') && audioName !== t('setup.youtubeVideo')) {
+      if (step === 2 && !songName && audioName && !audioName.includes('://') && audioName !== t('setup.youtubeVideo')) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMetadataState({ name: audioName });
+        setMetadataState({ songName: audioName });
       }
     }
-  }, [step, projectName, audioName, t, setMetadataState]);
+  }, [step, songName, audioName, t, setMetadataState]);
 
 
   // ── Lyrics handlers ──
@@ -358,8 +358,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     [parsedLines, lyricsText],
   );
   const describeInput = useMemo(
-    () => ({ title: songName.trim() || projectName.trim() || undefined, artist: primaryText.trim() || undefined, lines: describeLines }),
-    [songName, projectName, primaryText, describeLines],
+    () => ({ title: songName.trim() || undefined, artist: primaryText.trim() || undefined, lines: describeLines }),
+    [songName, primaryText, describeLines],
   );
 
   const catalogAlbums = useCatalogAlbumSuggestions(primaryNames(artists)[0]);
@@ -435,7 +435,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
     // Subtitles are timed as blocks with an end, whatever the lyrics were imported as.
-    onComplete({ kind, lines: finalLines, editorMode: isSubtitles ? 'srt' : editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
+    onComplete({ kind, lines: finalLines, editorMode: isSubtitles ? 'srt' : editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: songName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
   };
 
   // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
@@ -485,25 +485,24 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               />
               <div className="flex-1 min-w-0 flex flex-col gap-3">
                 <FloatingInput
-                  ref={projectNameInputRef}
-                  id="project-name"
+                  ref={songNameInputRef}
+                  id="song-name"
                   type="text"
-                  label={t('setup.projectName')}
+                  label={t('setup.songName')}
                   aria-invalid={audioReady && hasLyrics && !hasIdentity}
                   aria-describedby="project-identity-hint"
-                  value={projectName}
-                  onChange={(e) => setMetadataState({ name: e.target.value })}
-                  placeholder={t('setup.projectNamePlaceholder')}
-                  maxLength={200}
+                  value={songName}
+                  onChange={(e) => setMetadataState({ songName: e.target.value })}
+                  placeholder={t('setup.songNamePlaceholder')}
+                  maxLength={500}
                 />
                 <TitleFeatSuggestion
-                  title={projectName}
-                  onApply={(cleaned, featured) => setMetadataState((prev) => ({ name: cleaned, artists: mergeCredits(prev.artists, featured) }))}
+                  title={songName}
+                  onApply={(cleaned, featured) => setMetadataState((prev) => ({ songName: cleaned, artists: mergeCredits(prev.artists, featured) }))}
                 />
                 <TitleCleanupChip
-                  title={projectName}
+                  title={songName}
                   onApply={(split) => setMetadataState((prev) => ({
-                    name: split.songName,
                     songName: split.songName,
                     artists: mergeCredits(prev.artists, split.artists.map((name, i) => ({ name, role: i === 0 ? 'primary' as const : 'featured' as const, order: i }))),
                     ...(prev.songAlbum ? {} : split.album ? { songAlbum: split.album } : {}),
@@ -537,13 +536,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 field, where it read as unrelated to the inputs it uses. */}
             {!isSubtitles && (<>
             <div className="shrink-0 flex flex-col gap-3">
-              <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
-                onChange={(e) => setMetadataState({ songName: e.target.value })}
-                maxLength={500} />
               <NameCheckSuggestion
                 field="artist"
                 value={soleArtistName(artists)}
-                title={songName || projectName}
+                title={songName}
                 onApply={(next) => setMetadataState((prev) => ({ artists: renamePrimary(prev.artists, next) }))}
               >
                 {(suggestion) => (
@@ -621,7 +617,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             >
               <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3 items-start">
                 <div className="col-span-2 sm:col-span-1">
-                  <NameCheckSuggestion field="album" value={songAlbum} title={songName || projectName} artist={primaryNames(artists)[0]} onApply={(next) => setMetadataState({ songAlbum: next })}>
+                  <NameCheckSuggestion field="album" value={songAlbum} title={songName} artist={primaryNames(artists)[0]} onApply={(next) => setMetadataState({ songAlbum: next })}>
                     <FloatingCombobox
                       id="song-album"
                       label={t('setup.songAlbum')}
@@ -996,7 +992,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
         done={{ identity: hasIdentity, audio: audioReady, lyrics: hasLyrics }}
         canStart={canContinue}
         onStart={handleProceed}
-        onFocusName={() => projectNameInputRef.current?.focus()}
+        onFocusName={() => songNameInputRef.current?.focus()}
         notice={rollbackNotice}
         song={songFields}
         audio={mediaPanel}

@@ -183,7 +183,7 @@ export default function ProjectSetupModal({
     description: initialDescription || '',
     tags: initialTags || [],
     tagInput: '',
-    songName: initialSongName || '',
+    songName: initialSongName || initialName || '',
     artists: initialArtists,
     songAlbum: initialSongAlbum || '',
     songYear: initialSongYear || '',
@@ -208,7 +208,7 @@ export default function ProjectSetupModal({
         description: initialDescription || '',
         tags: initialTags || [],
         tagInput: '',
-        songName: initialSongName || '',
+        songName: initialSongName || initialName || '',
         artists: initialArtists,
         songAlbum: initialSongAlbum || '',
         songYear: initialSongYear || '',
@@ -305,15 +305,15 @@ export default function ProjectSetupModal({
     }
   }, [form.songName, primaryText, metaSearching, t, artistImporter]);
 
-  const hasIdentity = hasProjectIdentity({ title: form.name, metadata: { songName: form.songName, songArtist: formatArtistDisplay(form.artists) } });
+  const hasIdentity = hasProjectIdentity({ title: form.songName, metadata: { songName: form.songName, songArtist: formatArtistDisplay(form.artists) } });
 
   const handleSubmit = (e: FormEvent | ReactMouseEvent) => {
     e.preventDefault();
     if (!hasIdentity) return;
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
     onConfirm({
-      name: form.name.trim(),
-      title: form.name.trim(),
+      name: form.songName.trim(),
+      title: form.songName.trim(),
       description: form.description.trim(),
       tags: finalTags,
       songName: form.songName.trim(),
@@ -373,14 +373,14 @@ export default function ProjectSetupModal({
 
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="project-name" className="text-xs font-semibold text-zinc-300">
-                  {t('setup.projectName')}
+                <Label htmlFor="song-name" className="text-xs font-semibold text-zinc-300">
+                  {t('setup.songName')}
                 </Label>
                 <Input
-                  id="project-name"
-                  value={form.name}
-                  onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder={t('project.titlePlaceholder')}
+                  id="song-name"
+                  value={form.songName}
+                  onChange={(e) => setForm(f => ({ ...f, songName: e.target.value }))}
+                  placeholder={t('setup.songNamePlaceholder')}
                   className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
                   aria-invalid={!hasIdentity}
                   aria-describedby="project-identity-hint"
@@ -389,8 +389,8 @@ export default function ProjectSetupModal({
                   {t('setup.identityRequired')}
                 </p>
                 <TitleFeatSuggestion
-                  title={form.name}
-                  onApply={(cleaned, featured) => setForm((f) => ({ ...f, name: cleaned, artists: mergeCredits(f.artists, featured) }))}
+                  title={form.songName}
+                  onApply={(cleaned, featured) => setForm((f) => ({ ...f, songName: cleaned, artists: mergeCredits(f.artists, featured) }))}
                 />
               </div>
 
@@ -418,22 +418,11 @@ export default function ProjectSetupModal({
                 </Tip>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="song-name" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    {t('setup.songName')}
-                  </Label>
-                  <Input
-                    id="song-name"
-                    value={form.songName}
-                    onChange={(e) => setForm(f => ({ ...f, songName: e.target.value }))}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
-                  />
-                </div>
                 <div className="col-span-2 flex flex-col gap-3">
                   <NameCheckSuggestion
                     field="artist"
                     value={soleArtistName(form.artists)}
-                    title={form.songName || form.name}
+                    title={form.songName}
                     onApply={(next) => setForm((f) => ({ ...f, artists: renamePrimary(f.artists, next) }))}
                   >
                     {(suggestion) => (
@@ -515,7 +504,7 @@ export default function ProjectSetupModal({
                   <Label htmlFor="song-album" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     {t('setup.songAlbum')}
                   </Label>
-                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName || form.name} artist={primaryNames(form.artists)[0]} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
+                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName} artist={primaryNames(form.artists)[0]} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
                     <Input
                       id="song-album"
                       value={form.songAlbum}
@@ -560,7 +549,7 @@ export default function ProjectSetupModal({
                 />
                 {lyricsSample && (
                   <DescribeSuggestion
-                    input={{ title: form.songName.trim() || form.name.trim() || undefined, artist: primaryText.trim() || undefined, lines: lyricsSample }}
+                    input={{ title: form.songName.trim() || undefined, artist: primaryText.trim() || undefined, lines: lyricsSample }}
                     onApply={(d) => setForm((f) => {
                       // No language field here, so only genre and tags are offered. Set both at once.
                       const tags = [...f.tags, ...d.tags.filter((x) => !f.tags.includes(x))].slice(0, MAX_TAGS);
@@ -711,7 +700,7 @@ export default function ProjectSetupModal({
           project={{
             publicId,
             isPublic: visiblePublic,
-            title: form.name,
+            title: form.songName,
             artists: form.artists.map((c) => c.name),
             coverImage: form.coverImage,
           }}

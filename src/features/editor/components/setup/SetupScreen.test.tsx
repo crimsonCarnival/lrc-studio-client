@@ -285,7 +285,7 @@ describe('SetupScreen: phone steps', () => {
     expect(screen.getByText('setup.stepStart')).toBeDisabled();
 
     fireEvent.click(tab('stepSong'));
-    typeInto('setup.projectName', 'Test project');
+    typeInto('setup.songName', 'Test project');
     expect(footer()).toHaveTextContent('setup.stepNeedAudio');
     fireEvent.click(tab('stepAudio'));
     pickAudio();
@@ -306,7 +306,7 @@ describe('SetupScreen: phone steps', () => {
 
   it('jumps to the step that needs attention when the message is tapped', () => {
     renderSetup();
-    typeInto('setup.projectName', 'Test project');
+    typeInto('setup.songName', 'Test project');
     fireEvent.click(tab('stepLyrics'));
     fireEvent.click(footer());
     expect(tab('stepAudio')).toHaveAttribute('aria-current', 'step');
@@ -327,7 +327,7 @@ describe('SetupScreen: phone steps', () => {
         </MemoryRouter>,
       );
       const phone = w < 1024;
-      typeInto('setup.projectName', 'Test project');
+      typeInto('setup.songName', 'Test project');
       typeInto('setup.songName', 'Song one');
       if (phone) fireEvent.click(tab('stepAudio'));
       pickAudio();
@@ -369,7 +369,7 @@ describe('SetupScreen: phone step bar focus and rules', () => {
   // Regression: the focus-the-heading effect used to re-run on every render, so each keystroke
   // pulled focus out of the field being typed in.
   it.each([
-    ['project name', () => screen.getByLabelText('setup.projectName'), 1, 'Test project'],
+    ['project name', () => screen.getByLabelText('setup.songName'), 1, 'Test project'],
     ['song name', () => screen.getByLabelText('setup.songName'), 1, 'Song one'],
     ['media URL box', () => screen.getByLabelText('setup.urlPlaceholder'), 2, 'https://example.com/a'],
     ['lyrics', () => screen.getByPlaceholderText('setup.pasteLyricsDesc'), 3, 'Line one'],
@@ -407,7 +407,7 @@ describe('SetupScreen: phone step bar focus and rules', () => {
   it('offers Start syncing on any step once every requirement is met, Continue otherwise', () => {
     renderSetup();
     expect(screen.getByText('setup.stepContinue')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('setup.projectName'), { target: { value: 'Test project' } });
+    fireEvent.change(screen.getByLabelText('setup.songName'), { target: { value: 'Test project' } });
     fireEvent.click(tab('stepAudio'));
     fireEvent.click(screen.getByText('setup.tabLocal'));
     fireEvent.change(document.getElementById('setup-audio-input')!, { target: { files: [new File(['x'], 'song-one.mp3', { type: 'audio/mpeg' })] } });

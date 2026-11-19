@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect, useMemo, startTransition } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation, useNavigationType } from 'react-router-dom';
-import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
@@ -29,12 +28,10 @@ interface HeaderBreadcrumbProps {
   hideLogo?: boolean;
 }
 
-export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings, onLibrary, hideLogo }: HeaderBreadcrumbProps) {
+export function HeaderBreadcrumb({ isReady, mediaTitle, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings, onLibrary, hideLogo }: HeaderBreadcrumbProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [editingProjectName, setEditingProjectName] = useState(false);
-  const projectNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const isSetupPage = location.pathname === '/project/new';
   const isSettingsPage = location.pathname.startsWith('/settings');
@@ -129,38 +126,17 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 </Button>
               </Tip>
             )}
-            {editingProjectName ? (
-              <Input
-                ref={projectNameInputRef}
-                type="text"
-                value={mediaTitle}
-                onChange={(e) => setMediaTitle(e.target.value)}
-                onBlur={() => {
-                  setEditingProjectName(false);
-                  triggerImportSave({ title: mediaTitle });
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') { setEditingProjectName(false); triggerImportSave({ title: mediaTitle }); }
-                  else if (e.key === 'Escape') { setEditingProjectName(false); }
-                }}
-                maxLength={200}
-                className="h-6 text-xs bg-zinc-800/60 border-zinc-700/60 text-zinc-200 min-w-[100px] max-w-[180px]"
-              />
-            ) : (
-              <button
-                onClick={() => {
-                  startTransition(() => setEditingProjectName(true));
-                  requestAnimationFrame(() => projectNameInputRef.current?.focus());
-                }}
-                className="flex items-center gap-1 min-w-0 group py-1 coarse:py-3.5 -my-1"
-                aria-label={t('setup.projectNamePlaceholder')}
-              >
-                <span className={`truncate transition-colors max-w-[16vw] sm:max-w-[200px] ${onLibrary ? 'text-sm font-semibold text-foreground' : 'text-xs font-medium text-zinc-400 group-hover:text-zinc-200'}`}>
-                  {mediaTitle || t('setup.projectNamePlaceholder')}
-                </span>
-                <Icon name="edit" size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
-              </button>
-            )}
+            {/* Read-only: the title is the song name, edited in project settings. */}
+            <button
+              type="button"
+              onClick={onProjectSettings}
+              disabled={!onProjectSettings}
+              className="flex items-center gap-1 min-w-0 py-1 coarse:py-3.5 -my-1 disabled:cursor-default"
+            >
+              <span className={`truncate max-w-[16vw] sm:max-w-[200px] ${onLibrary ? 'text-sm font-semibold text-foreground' : 'text-xs font-medium text-zinc-400'}`}>
+                {mediaTitle || t('setup.songName')}
+              </span>
+            </button>
             {forkedFrom?.publicId && (
               <Tip content={forkedFrom.accountName ? t('share.forkedFrom', { accountName: forkedFrom.accountName }) : t('share.forkedProject')}>
                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-accent-blue/10 border border-accent-blue/20 text-[9px] font-bold text-accent-blue uppercase shrink-0 cursor-help transition-colors hover:bg-accent-blue/20">
