@@ -445,13 +445,17 @@ export function AppRouter({
     return ownsSavedProject && activepublicId ? { publicId: activepublicId, live: false, onEnded: handleSessionEnded } : undefined;
   }, [signedInUserId, sessionPublicId, collabIsOwner, ownsSavedProject, activepublicId, handleSessionEnded]);
 
+  // The editor state still holds the previous project until this route's project has loaded, so
+  // naming the tab from it would show the wrong song. Until they match, only the app name shows.
+  const routeProjectId = publicIdFromSlugId(/^\/[^/]+\/projects\/([^/]+)(?:\/(?:edit|fork))?$/.exec(routerLocation.pathname)?.[1]);
+  const editorMatchesRoute = routeProjectId === null || (activepublicId === routeProjectId && !isProjectLoading);
   usePageTitle(
-    projectPageTitle(
+    !editorMatchesRoute ? null : (projectPageTitle(
       projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }),
       // The signed-in user is not the song's owner in a session, so no "Synced by" there.
       sessionPublicId !== null ? null : user?.accountName,
       (name) => (t as (k: string, o?: object) => string)('app.titles.syncedBy', { name }),
-    ) || (sessionPublicId !== null ? null : mediaTitle),
+    ) || (sessionPublicId !== null ? null : mediaTitle)),
   );
   // Every credit, primaries then featured: the singer choices when assigning lines. Memoised, so the editor's props keep a stable identity.
   const rosterNames = useMemo(() => artistRoster(projectMetadata as Parameters<typeof artistRoster>[0]), [projectMetadata]);
