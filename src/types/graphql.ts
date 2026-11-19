@@ -277,6 +277,7 @@ export type CatalogArtistPage = {
   albums: Array<CatalogAlbum>;
   artist: CatalogArtist;
   songs: Array<Project>;
+  viewerShelf?: Maybe<CatalogViewerShelf>;
 };
 
 export type CatalogArtistRef = {
@@ -307,6 +308,11 @@ export type CatalogSuggestion = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   slug?: Maybe<Scalars['String']['output']>;
+};
+
+export type CatalogViewerShelf = {
+  artistId: Scalars['ID']['output'];
+  songCount: Scalars['Int']['output'];
 };
 
 export type CollabInvite = {

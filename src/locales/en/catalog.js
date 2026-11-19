@@ -94,6 +94,8 @@ export default {
     noAlbums: "No albums yet.",
     back: "Back",
     photoCredit: "Photo: Genius",
+    yourSongs_one: "Your {{count}} song by {{name}}",
+    yourSongs_other: "Your {{count}} songs by {{name}}",
   },
   album: {
     kicker: "Album",
