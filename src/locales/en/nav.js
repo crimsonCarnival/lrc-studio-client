@@ -2,6 +2,7 @@ export default {
   main: "Main",
   home: "Home",
   explore: "Explore",
+  artists: "Artists",
   feed: "Feed",
   leaderboard: "Leaderboard",
   project: "Project",

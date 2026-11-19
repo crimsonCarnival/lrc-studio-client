@@ -13,7 +13,7 @@ describe('getNavItems', () => {
     const items = getNavItems({ user, permissions: [], accountName: 'ana' });
     expect(paths(items)).toEqual([
       '/home', '/library', '/uploads', '/project/new',
-      '/explore', '/explore/projects', '/explore/playlists', '/feed', '/search', '/leaderboard',
+      '/explore', '/explore/projects', '/explore/playlists', '/artists', '/feed', '/search', '/leaderboard',
       '/ana', '/notifications', '/reports', '/sessions', '/settings', '/guide',
     ]);
     expect(new Set(items.map((i) => i.group))).toEqual(new Set(['main', 'discover', 'you']));
@@ -42,7 +42,7 @@ describe('getNavItems', () => {
   it('never gives a guest an account page, Admin or Profile', () => {
     const items = getNavItems({ user: null, permissions: ['*'], accountName: 'ana' });
     expect(paths(items)).toEqual([
-      '/project/new', '/explore', '/explore/projects', '/explore/playlists', '/search', '/leaderboard', '/guide',
+      '/project/new', '/explore', '/explore/projects', '/explore/playlists', '/artists', '/search', '/leaderboard', '/guide',
     ]);
     for (const item of items) expect(accessFor(item.path)).toBe('public');
   });

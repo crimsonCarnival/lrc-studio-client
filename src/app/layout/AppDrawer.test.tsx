@@ -94,7 +94,7 @@ describe('AppDrawer', () => {
     const hrefs = within(nav).getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual([
       '/home', '/library', '/uploads', '/project/new',
-      '/explore', '/explore/projects', '/explore/playlists', '/feed', '/search', '/leaderboard',
+      '/explore', '/explore/projects', '/explore/playlists', '/artists', '/feed', '/search', '/leaderboard',
       '/ana', '/notifications', '/reports', '/sessions', '/settings', '/guide',
     ]);
   });
@@ -143,7 +143,7 @@ describe('AppDrawer', () => {
     expect(within(dialog).queryByRole('button', { name: 'auth.signOut' })).toBeNull();
     const hrefs = within(dialog).getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual([
-      '/project/new', '/explore', '/explore/projects', '/explore/playlists', '/search', '/leaderboard', '/guide',
+      '/project/new', '/explore', '/explore/projects', '/explore/playlists', '/artists', '/search', '/leaderboard', '/guide',
     ]);
     fireEvent.click(within(dialog).getByRole('button', { name: 'auth.signUp' }));
     await waitFor(() => expect(onGuestAuth).toHaveBeenCalledWith('signup'));
