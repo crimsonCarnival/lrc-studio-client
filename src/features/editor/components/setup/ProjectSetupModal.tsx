@@ -94,6 +94,7 @@ interface ProjectSetupForm {
   songName: string;
   artists: ArtistCredit[];
   songAlbum: string;
+  songVersion: string;
   songYear: string;
   genre: string;
   coverImage: string;
@@ -111,6 +112,7 @@ export interface ProjectSetupConfirm {
   /** True when the artists differ from what the modal opened with, so the caller knows to send them. */
   artistsChanged: boolean;
   songAlbum: string;
+  songVersion: string;
   songYear: string;
   genre: string;
   coverImage: string;
@@ -129,6 +131,9 @@ interface ProjectSetupModalProps {
   initialSongName?: string;
   initialArtists?: ArtistCredit[];
   initialSongAlbum?: string;
+  /** Subtitle projects have no song, so the name is a plain title and there is no version. */
+  kind?: 'song' | 'subtitles';
+  initialSongVersion?: string;
   initialSongYear?: string;
   initialGenre?: string;
   initialCoverImage?: string;
@@ -157,6 +162,8 @@ export default function ProjectSetupModal({
   initialSongName = '',
   initialArtists = EMPTY_ARTISTS,
   initialSongAlbum = '',
+  kind = 'song',
+  initialSongVersion = '',
   initialSongYear = '',
   initialGenre = '',
   initialCoverImage = '',
@@ -186,6 +193,7 @@ export default function ProjectSetupModal({
     songName: initialSongName || initialName || '',
     artists: initialArtists,
     songAlbum: initialSongAlbum || '',
+    songVersion: initialSongVersion || '',
     songYear: initialSongYear || '',
     genre: initialGenre || '',
     coverImage: initialCoverImage || '',
@@ -211,6 +219,7 @@ export default function ProjectSetupModal({
         songName: initialSongName || initialName || '',
         artists: initialArtists,
         songAlbum: initialSongAlbum || '',
+        songVersion: initialSongVersion || '',
         songYear: initialSongYear || '',
         genre: initialGenre || '',
         coverImage: initialCoverImage || '',
@@ -220,7 +229,7 @@ export default function ProjectSetupModal({
     }
   // `initialArtists` is compared by content through `initialArtistsKey`: callers build a new array every render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialArtistsKey, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialSingerColors, initialSingers]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialArtistsKey, initialSongAlbum, initialSongVersion, initialSongYear, initialGenre, initialCoverImage, initialSingerColors, initialSingers]);
 
 
   const addTag = (text: string) => {
@@ -305,6 +314,7 @@ export default function ProjectSetupModal({
     }
   }, [form.songName, primaryText, metaSearching, t, artistImporter]);
 
+  const isSubtitles = kind === 'subtitles';
   const hasIdentity = hasProjectIdentity({ title: form.songName, metadata: { songName: form.songName, songArtist: formatArtistDisplay(form.artists) } });
 
   const handleSubmit = (e: FormEvent | ReactMouseEvent) => {
@@ -320,6 +330,7 @@ export default function ProjectSetupModal({
       artists: form.artists,
       artistsChanged: !creditsEqual(initialArtists, form.artists),
       songAlbum: form.songAlbum.trim(),
+      songVersion: form.songVersion.trim(),
       songYear: form.songYear.trim(),
       genre: form.genre,
       coverImage: form.coverImage.trim(),
@@ -374,24 +385,39 @@ export default function ProjectSetupModal({
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="song-name" className="text-xs font-semibold text-zinc-300">
-                  {t('setup.songName')}
+                  {t(isSubtitles ? 'setup.subtitleTitle' : 'setup.songName')}
                 </Label>
                 <Input
                   id="song-name"
                   value={form.songName}
                   onChange={(e) => setForm(f => ({ ...f, songName: e.target.value }))}
-                  placeholder={t('setup.songNamePlaceholder')}
+                  placeholder={t(isSubtitles ? 'setup.subtitleTitlePlaceholder' : 'setup.songNamePlaceholder')}
                   className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
                   aria-invalid={!hasIdentity}
                   aria-describedby="project-identity-hint"
                 />
                 <p id="project-identity-hint" className={`text-xs ${hasIdentity ? 'text-zinc-500' : 'text-love'}`} role={hasIdentity ? undefined : 'alert'}>
-                  {t('setup.identityRequired')}
+                  {t(isSubtitles ? 'setup.identityRequiredSubtitles' : 'setup.identityRequired')}
                 </p>
                 <TitleFeatSuggestion
                   title={form.songName}
                   onApply={(cleaned, featured) => setForm((f) => ({ ...f, songName: cleaned, artists: mergeCredits(f.artists, featured) }))}
                 />
+                {!isSubtitles && (
+                  <div className="flex flex-col gap-1.5 mt-2">
+                    <Label htmlFor="song-version" className="text-xs font-semibold text-zinc-300">
+                      {t('setup.songVersion')}
+                    </Label>
+                    <Input
+                      id="song-version"
+                      value={form.songVersion}
+                      onChange={(e) => setForm(f => ({ ...f, songVersion: e.target.value }))}
+                      placeholder={t('setup.songVersionPlaceholder')}
+                      maxLength={100}
+                      className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Song Metadata Fields */}

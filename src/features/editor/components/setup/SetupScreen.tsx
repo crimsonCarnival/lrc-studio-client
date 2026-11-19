@@ -65,6 +65,7 @@ interface Prefill {
   description?: string;
   tags?: string[];
   songName?: string;
+  songVersion?: string;
   artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string;
@@ -99,6 +100,7 @@ interface MetadataState {
   description: string;
   tags: string[];
   songName: string;
+  songVersion: string;
   artists: ArtistCredit[];
   songAlbum: string;
   songYear: string;
@@ -218,6 +220,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     description: prefill?.description || '',
     tags: prefill?.tags || [],
     songName: prefill?.songName || prefill?.name || '',
+    songVersion: prefill?.songVersion || '',
     artists: prefill?.artists || [],
     songAlbum: prefill?.songAlbum || '',
     songYear: prefill?.songYear || '',
@@ -238,7 +241,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { description: projectDescription, tags: projectTags, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
+  const { description: projectDescription, tags: projectTags, songName, songVersion, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
   // The server owns `songArtist` (derived from the credits); here only the primary names are needed, for lookups.
   const primaryText = primaryArtistText(artists);
 
@@ -435,7 +438,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
     // Subtitles are timed as blocks with an end, whatever the lyrics were imported as.
-    onComplete({ kind, lines: finalLines, editorMode: isSubtitles ? 'srt' : editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: songName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
+    onComplete({ kind, lines: finalLines, editorMode: isSubtitles ? 'srt' : editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: songName.trim(), description: projectDescription.trim(), tags: projectTags, songName: songName.trim(), songVersion: songVersion.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
   };
 
   // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
@@ -488,12 +491,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   ref={songNameInputRef}
                   id="song-name"
                   type="text"
-                  label={t('setup.songName')}
+                  label={t(isSubtitles ? 'setup.subtitleTitle' : 'setup.songName')}
                   aria-invalid={audioReady && hasLyrics && !hasIdentity}
                   aria-describedby="project-identity-hint"
                   value={songName}
                   onChange={(e) => setMetadataState({ songName: e.target.value })}
-                  placeholder={t('setup.songNamePlaceholder')}
+                  placeholder={t(isSubtitles ? 'setup.subtitleTitlePlaceholder' : 'setup.songNamePlaceholder')}
                   maxLength={500}
                 />
                 <TitleFeatSuggestion
@@ -515,6 +518,18 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 >
                   {t(isSubtitles ? 'setup.identityRequiredSubtitles' : 'setup.identityRequired')}
                 </p>
+
+                {!isSubtitles && (
+                  <FloatingInput
+                    id="song-version"
+                    type="text"
+                    label={t('setup.songVersion')}
+                    value={songVersion}
+                    onChange={(e) => setMetadataState({ songVersion: e.target.value })}
+                    placeholder={t('setup.songVersionPlaceholder')}
+                    maxLength={100}
+                  />
+                )}
 
                 {/* Sits inside the cover's own row so the URL path is next to
                     the thing it sets, and costs no height until asked for. */}

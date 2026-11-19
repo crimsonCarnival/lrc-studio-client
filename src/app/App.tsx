@@ -42,6 +42,7 @@ interface SetupCompleteData {
   tags?: string[];
   songName?: string;
   artists?: ArtistCredit[];
+  songVersion?: string;
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -163,6 +164,7 @@ function AppInner() {
     tags,
     songName,
     artists,
+    songVersion,
     songAlbum,
     songYear,
     genre,
@@ -215,7 +217,7 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [], ...(previewUrl ? { previewUrl } : {}), ...(explicit != null ? { explicit } : {}) };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songVersion: songVersion || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [], ...(previewUrl ? { previewUrl } : {}), ...(explicit != null ? { explicit } : {}) };
     appState.setProjectMetadata(newMetadata);
     // Setup always starts a fresh project: replace, never inherit, the previous cover.
     appState.setProjectCoverImage(_coverImage || '');

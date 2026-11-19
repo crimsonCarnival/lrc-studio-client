@@ -52,6 +52,7 @@ interface SetupConfirmData {
   songName?: string;
   artists?: ArtistCredit[];
   artistsChanged?: boolean;
+  songVersion?: string;
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -80,7 +81,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     handleManualSave, triggerImportSave, handleDiscardProject, handleRestoreProject, buildProjectPayload,
     handleTimeUpdate, handleDurationChange, handleMediaChange, handleYtUrlChange,
     handleMediaUpload, restoredMedia, restoredPosition,
-    restoredSpeed, restoredLoop, hasUnsavedChanges, activepublicId, projectMetadata, setProjectMetadata,
+    restoredSpeed, restoredLoop, hasUnsavedChanges, activepublicId, projectMetadata, setProjectMetadata, projectKind,
     forkedFrom,
     isProjectLoading, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed,
@@ -186,7 +187,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     if (isEditorPath(location.pathname)) rememberEditorPath(lines && lines.length > 0 ? location.pathname : null);
   }, [location.pathname, lines]);
 
-  const handleProjectConfirm = useCallback(({ name, description, tags, songName, artists, artistsChanged, songAlbum, songYear, genre, coverImage, singerColors, singers }: SetupConfirmData) => {
+  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songVersion, artists, artistsChanged, songAlbum, songYear, genre, coverImage, singerColors, singers }: SetupConfirmData) => {
     const newTitle = name || mediaTitle || '';
     const newMetadata = {
       // Preserve fields not exposed in the modal (songLanguage, trackNumber, trackCount)
@@ -194,6 +195,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       description: description || '',
       tags: tags || [],
       songName: songName || '',
+      songVersion: songVersion || '',
       // Credits are only sent when they changed or already exist, so an untouched legacy row keeps its stored artists.
       ...artistFieldsFromForm({ artists, artistsChanged: artistsChanged || projectMetadata?.artistsDirty === true }),
       songAlbum: songAlbum || '',
@@ -383,6 +385,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             handleProjectConfirm={handleProjectConfirm}
             mediaTitle={mediaTitle}
             projectMetadata={projectMetadata}
+            projectKind={projectKind}
             projectCoverImage={projectCoverImage || ''}
             pendingProject={pendingProject}
             handleDiscardProject={handleDiscardProject}

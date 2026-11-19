@@ -43,6 +43,7 @@ export const PROJECT_LIST_FIELDS = /* GraphQL */ `
       singerColors
       singers
       songName
+      songVersion
       songArtist
       artists { name role order }
       songAlbum
@@ -117,6 +118,7 @@ const GET_PROJECT = /* GraphQL */ `
         singerColors
         singers
         songName
+        songVersion
         songArtist
         artists { name role order }
         songAlbum
@@ -231,6 +233,7 @@ const GET_SHARE = /* GraphQL */ `
         singerColors
         singers
         songName
+        songVersion
         songArtist
         artists { name role order }
         songAlbum

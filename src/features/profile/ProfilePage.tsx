@@ -830,12 +830,13 @@ export default function ProfilePage() {
               onClose={() => setEditingProject(null)}
               onConfirm={async (data: ProjectSetupConfirm) => {
                 try {
-                  const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, singerColors, singers } = data;
+                  const { name: title, description, tags, songName, songVersion, songAlbum, songYear, genre, coverImage, singerColors, singers } = data;
                   const updatedMetadata = {
                     ...(editingProject.metadata as Record<string, unknown>),
                     description,
                     tags,
                     songName,
+                    songVersion,
                     ...artistFieldsFromForm(data),
                     songAlbum,
                     songYear,
@@ -866,6 +867,8 @@ export default function ProfilePage() {
               initialDescription={meta.description || ''}
               initialTags={meta.tags ?? EMPTY_LIST}
               initialSongName={meta.songName || ''}
+              kind={editingProject.kind === 'subtitles' ? 'subtitles' : 'song'}
+              initialSongVersion={meta.songVersion || ''}
               initialArtists={creditsOf(meta)}
               initialSongAlbum={meta.songAlbum || ''}
               initialSongYear={meta.songYear || ''}

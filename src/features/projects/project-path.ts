@@ -33,6 +33,7 @@ export function slugify(input: string): string {
 
 type SlugMetadata = {
   songName?: string | null;
+  songVersion?: string | null;
   songArtist?: string | null;
   songArtists?: (string | null)[] | null;
 };
@@ -148,8 +149,10 @@ export function projectDisplayName({ title, metadata }: ProjectNameSource): stri
   const m = (metadata ?? {}) as SlugMetadata;
   const song = m.songName?.trim() || '';
   const artist = m.songArtist?.trim() || '';
-  if (song && artist) return `${song} – ${artist}`;
-  return song || artist || title?.trim() || '';
+  const version = m.songVersion?.trim() || '';
+  const songLabel = song && version ? `${song} (${version})` : song;
+  if (songLabel && artist) return `${songLabel} – ${artist}`;
+  return songLabel || artist || title?.trim() || '';
 }
 
 /**

@@ -1771,6 +1771,7 @@ export type ProjectMetadata = {
   songGenre?: Maybe<Scalars['String']['output']>;
   songLanguage?: Maybe<Scalars['String']['output']>;
   songName?: Maybe<Scalars['String']['output']>;
+  songVersion?: Maybe<Scalars['String']['output']>;
   songYear?: Maybe<Scalars['String']['output']>;
   tags?: Maybe<Array<Scalars['String']['output']>>;
   trackCount?: Maybe<Scalars['Int']['output']>;
@@ -1790,6 +1791,7 @@ export type ProjectMetadataInput = {
   songGenre?: InputMaybe<Scalars['String']['input']>;
   songLanguage?: InputMaybe<Scalars['String']['input']>;
   songName?: InputMaybe<Scalars['String']['input']>;
+  songVersion?: InputMaybe<Scalars['String']['input']>;
   songYear?: InputMaybe<Scalars['String']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   trackCount?: InputMaybe<Scalars['Int']['input']>;

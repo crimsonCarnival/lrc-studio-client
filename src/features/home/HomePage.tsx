@@ -450,12 +450,13 @@ export default function HomePage() {
           }) => {
             if (!editingProject) return;
             try {
-              const { name: title, description, tags, songName, songAlbum, songYear, coverImage, singerColors, singers } = data;
+              const { name: title, description, tags, songName, songVersion, songAlbum, songYear, coverImage, singerColors, singers } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
                 tags,
                 songName,
+                songVersion,
                 ...artistFieldsFromForm({ artists: data.artists ?? [], artistsChanged: data.artistsChanged }),
                 songAlbum,
                 songYear,
@@ -482,6 +483,8 @@ export default function HomePage() {
           initialDescription={editingProject?.metadata?.description || ''}
           initialTags={editingProject?.metadata?.tags || []}
           initialSongName={editingProject?.metadata?.songName || ''}
+          kind={editingProject?.kind === 'subtitles' ? 'subtitles' : 'song'}
+          initialSongVersion={editingProject?.metadata?.songVersion || ''}
           initialArtists={creditsOf(editingProject?.metadata)}
           initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
           initialSongYear={editingProject?.metadata?.songYear || ''}

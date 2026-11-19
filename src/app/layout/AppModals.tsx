@@ -26,6 +26,7 @@ interface AppModalsProps {
   handleProjectConfirm: (...args: unknown[]) => void;
   mediaTitle?: string;
   projectMetadata?: ProjectMetadata | null;
+  projectKind?: 'song' | 'subtitles';
   projectCoverImage?: string | null;
   pendingProject?: unknown;
   handleDiscardProject: () => void;
@@ -56,6 +57,7 @@ export function AppModals({
   handleProjectConfirm,
   mediaTitle,
   projectMetadata,
+  projectKind,
   projectCoverImage,
   pendingProject,
   handleDiscardProject,
@@ -91,6 +93,8 @@ export function AppModals({
             initialDescription={projectMetadata?.description}
             initialTags={projectMetadata?.tags}
             initialSongName={projectMetadata?.songName}
+            kind={projectKind}
+            initialSongVersion={projectMetadata?.songVersion}
             initialArtists={creditsOf(projectMetadata)}
             initialSongAlbum={projectMetadata?.songAlbum}
             initialSongYear={projectMetadata?.songYear}

@@ -44,6 +44,7 @@ interface ProjectMeta {
   description?: string;
   tags?: string[];
   songName?: string;
+  songVersion?: string;
   songArtist?: string;
   artists?: ArtistCredit[];
   songAlbum?: string;
@@ -70,6 +71,7 @@ interface SetupConfirmData {
   description?: string;
   tags?: string[];
   songName?: string;
+  songVersion?: string;
   artists?: ArtistCredit[];
   artistsChanged?: boolean;
   songAlbum?: string;
@@ -340,12 +342,13 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             onClose={() => setEditingProject(null)}
             onConfirm={async (data: SetupConfirmData) => {
               try {
-                const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, singerColors, singers } = data;
+                const { name: title, description, tags, songName, songVersion, songAlbum, songYear, genre, coverImage, singerColors, singers } = data;
                 const updatedMetadata = {
                   ...editingProject.metadata,
                   description,
                   tags,
                   songName,
+                  songVersion,
                   ...artistFieldsFromForm(data),
                   songAlbum,
                   songYear,
@@ -375,6 +378,8 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             initialDescription={editingProject?.metadata?.description || ''}
             initialTags={editingProject?.metadata?.tags || []}
             initialSongName={editingProject?.metadata?.songName || ''}
+            kind={editingProject?.kind === 'subtitles' ? 'subtitles' : 'song'}
+            initialSongVersion={editingProject?.metadata?.songVersion || ''}
             initialArtists={creditsOf(editingProject?.metadata)}
             initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
             initialSongYear={editingProject?.metadata?.songYear || ''}

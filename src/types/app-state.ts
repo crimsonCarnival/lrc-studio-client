@@ -12,6 +12,7 @@ export interface ProjectMetadata {
   songArtist?: string;
   /** The credits were edited this session; only then is an empty list sent (it would clear the stored artists). */
   artistsDirty?: boolean;
+  songVersion?: string;
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
