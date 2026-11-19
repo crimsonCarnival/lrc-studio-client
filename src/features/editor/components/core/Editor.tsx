@@ -88,6 +88,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_ARTISTS: string[] = [];
+
+/** Line stepping passes over section headings, and over blank lines in Words mode, which never shows them. */
+const isSteppedOver = (line: EditorLine, wordsMode: boolean) =>
+  line.type === 'section' || (wordsMode && !line.text?.trim());
 const WORDS_LOOP_KEY = 'lrc_words_loop_line';
 const PHONE_LINE_HINT_KEY = 'lrc_phone_line_hint';
 const PLAYER_HIDDEN_KEY = 'lrc_editor_player_hidden';
@@ -823,7 +827,7 @@ export default function Editor({
       } else if (matchKey(e, prevLineKey) || matchKey(e, nextLineKey)) {
         const step = matchKey(e, prevLineKey) ? -1 : 1;
         let at = state.activeLineIndex + step;
-        while (at >= 0 && at < state.lines.length && state.lines[at].type === 'section') at += step;
+        while (at >= 0 && at < state.lines.length && isSteppedOver(state.lines[at], isWordsMode)) at += step;
         if (at < 0 || at >= state.lines.length) return;
         e.preventDefault();
         setFocusedTimestamp(null);
@@ -847,12 +851,12 @@ export default function Editor({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phone, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, duplicateKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden, handleAddLine]);
+  }, [phone, isWordsMode, markKey, searchKey, loopLineKey, prevLineKey, nextLineKey, togglePlayerKey, duplicateKey, clearLoop, setLoop, seek, setActiveLineIndex, setFocusedTimestamp, togglePlayerHidden, handleAddLine]);
 
   // The lyric line `step` away from the cursor (sections are headings, never a stop), or -1.
   const lyricLineFrom = (step: 1 | -1) => {
     let at = activeLineIndex + step;
-    while (at >= 0 && at < lines.length && lines[at].type === 'section') at += step;
+    while (at >= 0 && at < lines.length && isSteppedOver(lines[at], isWordsMode)) at += step;
     return at >= 0 && at < lines.length ? at : -1;
   };
   // Moves the cursor like the previous/next line keys: a timed line is also where playback goes.

@@ -178,6 +178,17 @@ describe('applyMark — auto-advance modes', () => {
     expect(res.nextLines[3].timestamp).toBeNull();
   });
 
+  it('words mode skips blank lines on advance even with skipBlank off', () => {
+    const lines = [line('one'), line(''), line('   '), line('four')];
+    const res = mark({
+      lines,
+      activeLineIndex: 0,
+      editorMode: 'words',
+      settings: settings({ autoAdvance: { enabled: true, mode: 'next', skipBlank: false } }),
+    });
+    expect(res.nextActiveLineIndex).toBe(3);
+  });
+
   it('clamps to the last line rather than running off the end', () => {
     const res = mark({ lines: [line('one'), line('two')], activeLineIndex: 1 });
     expect(res.nextActiveLineIndex).toBe(1);
