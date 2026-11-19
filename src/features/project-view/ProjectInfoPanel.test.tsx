@@ -51,3 +51,28 @@ describe('ProjectInfoPanel name tag', () => {
     expect(screen.queryByText('Founder')).toBeNull();
   });
 });
+
+describe('ProjectInfoPanel album link', () => {
+  const renderWith = (metadata: Record<string, unknown>) =>
+    render(
+      <MemoryRouter>
+        <ProjectInfoPanel
+          project={{ publicId: 'p1', title: 'Song', metadata, user: { accountName: 'ana' } } as never}
+          isOwner={false}
+          collapsed={false}
+          onToggleCollapsed={() => {}}
+        />
+      </MemoryRouter>,
+    );
+
+  it('links the album to its catalog page when the server resolved one', () => {
+    renderWith({ songAlbum: 'Honey', catalogAlbum: { artistSlug: 'robyn', albumSlug: 'honey' } });
+    expect(screen.getByRole('link', { name: 'Honey' })).toHaveAttribute('href', '/artists/robyn/albums/honey');
+  });
+
+  it('keeps the album as plain text without a catalog match', () => {
+    renderWith({ songAlbum: 'Honey', catalogAlbum: null });
+    expect(screen.getByText('Honey')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Honey' })).toBeNull();
+  });
+});

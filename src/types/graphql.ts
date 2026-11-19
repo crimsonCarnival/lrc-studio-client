@@ -243,6 +243,11 @@ export type CatalogAlbumCard = {
   songCount: Scalars['Int']['output'];
 };
 
+export type CatalogAlbumLink = {
+  albumSlug: Scalars['String']['output'];
+  artistSlug: Scalars['String']['output'];
+};
+
 export type CatalogAlbumPage = {
   album: CatalogAlbum;
   artist: CatalogArtist;
@@ -1724,6 +1729,7 @@ export type ProjectLyricsInput = {
 export type ProjectMetadata = {
   albumArt?: Maybe<Scalars['String']['output']>;
   artists: Array<ArtistCredit>;
+  catalogAlbum?: Maybe<CatalogAlbumLink>;
   description?: Maybe<Scalars['String']['output']>;
   explicit?: Maybe<Scalars['Boolean']['output']>;
   genre?: Maybe<Scalars['String']['output']>;
