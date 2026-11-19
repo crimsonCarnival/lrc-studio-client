@@ -12,9 +12,11 @@ import type {
   CatalogImageSource,
   CatalogKind,
   DetectedAlbum,
+  GeniusAlbumMatch,
   GeniusArtistMatch,
   GeniusPhoto,
   CatalogQueue,
+  ProjectCoverProposal,
   ReviewInput,
 } from './catalog.types';
 
@@ -303,6 +305,32 @@ export async function copyGeniusPhoto(geniusId: number): Promise<GeniusPhoto> {
 }
 
 /** Album titles found in songs crediting the artist (any visibility) that the catalog does not have yet. */
+/** Genius albums matching q (at most 5, each with usable cover art). Needs catalog.manage. */
+export async function searchGeniusAlbums(q: string): Promise<GeniusAlbumMatch[]> {
+  const data = await request<{ albums: GeniusAlbumMatch[] }>(`/catalog/genius/albums?q=${encodeURIComponent(q)}`);
+  return data?.albums ?? [];
+}
+
+/** Has the server copy a Genius album cover to Cloudinary. */
+export async function copyGeniusAlbumCover(geniusId: number): Promise<GeniusPhoto> {
+  const data = await request<GeniusPhoto>('/catalog/genius/album-cover', { method: 'POST', body: JSON.stringify({ geniusId }) });
+  if (!data) throw new Error('Empty response');
+  return data;
+}
+
+/** Covers of the artist's public songs on this album (at most 5). Needs catalog.manage. */
+export async function listProjectCovers(artistId: string, title: string): Promise<ProjectCoverProposal[]> {
+  const data = await request<{ covers: ProjectCoverProposal[] }>(`/catalog/album-covers/projects?artistId=${encodeURIComponent(artistId)}&title=${encodeURIComponent(title)}`);
+  return data?.covers ?? [];
+}
+
+/** Has the server copy one of those covers into the catalog folder; the song is named by publicId, never by URL. */
+export async function copyProjectCover(input: { artistId: string; title: string; publicId: string }): Promise<{ imageUrl: string }> {
+  const data = await request<{ imageUrl: string }>('/catalog/album-covers/project', { method: 'POST', body: JSON.stringify(input) });
+  if (!data) throw new Error('Empty response');
+  return data;
+}
+
 export async function detectAlbums(artistId: string): Promise<DetectedAlbum[]> {
   const data = await gqlRequest<{ catalogDetectAlbums: DetectedAlbum[] }>(/* GraphQL */ `
     query CatalogDetectAlbums($artistId: ID!) {

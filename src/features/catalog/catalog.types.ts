@@ -5,17 +5,27 @@ import type {
   CatalogImageSource,
   CatalogKind,
   DetectedAlbum,
+  DetectedArtist,
 } from '@/types/graphql';
 
 export type CatalogArtist = GqlCatalogArtist;
 export type CatalogAlbum = GqlCatalogAlbum;
-export type { CatalogDecision, CatalogImageSource, CatalogKind, DetectedAlbum };
+export type { CatalogDecision, CatalogImageSource, CatalogKind, DetectedAlbum, DetectedArtist };
 
 /** One match from `GET /catalog/genius/artists`; the server only returns matches with a usable photo. */
 export type GeniusArtistMatch = { geniusId: number; name: string; imageUrl: string; url: string };
 
+/** One match from GET /catalog/genius/albums: the album's cover art plus the artist Genius files it under. */
+export type GeniusAlbumMatch = GeniusArtistMatch & { artistName: string };
+
 /** The Genius photo after the server copied it to Cloudinary. */
 export type GeniusPhoto = { imageUrl: string; sourceUrl: string };
+
+/** A cover already on one of the artist's songs for this album, offered as a cover for the catalog album. */
+export type ProjectCoverProposal = { publicId: string; title: string; coverUrl: string };
+
+/** What picking a cover hands back; sourceUrl is the Genius page, absent for a cover copied from a song. */
+export type PickedCover = { imageUrl: string; sourceUrl?: string };
 
 export type CatalogStatus = 'pending' | 'approved' | 'rejected';
 
