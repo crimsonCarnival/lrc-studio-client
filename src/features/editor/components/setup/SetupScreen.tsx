@@ -546,11 +546,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 title={songName || projectName}
                 onApply={(next) => setMetadataState((prev) => ({ artists: renamePrimary(prev.artists, next) }))}
               >
+                {(suggestion) => (
                 <ArtistsSection
                   ref={artistsRef}
                   idPrefix="setup-artists"
                   value={artists}
                   onChange={(next) => setMetadataState({ artists: next })}
+                  belowPrimaryInput={suggestion}
                   afterPrimary={(
                     <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
                       {/* span keeps the tooltip working while the button is disabled */}
@@ -569,6 +571,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     </Tip>
                   )}
                 />
+                )}
               </NameCheckSuggestion>
               {soleArtistName(artists) && <CatalogSuggestPrompt kind="artist" artist={soleArtistName(artists)} />}
             </div>

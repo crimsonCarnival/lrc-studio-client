@@ -436,7 +436,9 @@ export default function ProjectSetupModal({
                     title={form.songName || form.name}
                     onApply={(next) => setForm((f) => ({ ...f, artists: renamePrimary(f.artists, next) }))}
                   >
-                    <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} />
+                    {(suggestion) => (
+                      <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} belowPrimaryInput={suggestion} />
+                    )}
                   </NameCheckSuggestion>
                   <ArtistImportReview importer={artistImporter} />
                 </div>

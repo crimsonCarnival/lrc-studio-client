@@ -20,6 +20,8 @@ interface ArtistsInputProps {
   className?: string;
   /** Rendered between the Primary and Featured fields (e.g. an action that needs the primary artist). */
   afterPrimary?: ReactNode;
+  /** Rendered directly under the Primary input (e.g. a spelling suggestion for the name just typed). */
+  belowPrimaryInput?: ReactNode;
 }
 
 /** Text that is more than one name or carries a marker: parsed instead of added as a single chip. */
@@ -31,7 +33,7 @@ const NEEDS_PARSING = /[,&×]|\s(?:and|x)\s|(?:^|\s)(?:feat\.?|ft\.?|featuring)(
  * parser (so `A, B & C` and `A feat. B` become chips) and anything doubtful goes to a review
  * before it is applied. Names the user has credited before are suggested while typing.
  */
-export function ArtistsInput({ value, onChange, idPrefix, className, afterPrimary }: ArtistsInputProps) {
+export function ArtistsInput({ value, onChange, idPrefix, className, afterPrimary, belowPrimaryInput }: ArtistsInputProps) {
   const { t } = useTranslation();
   const tr = t as (k: string, o?: object) => string;
   const autoId = useId();
@@ -94,6 +96,7 @@ export function ArtistsInput({ value, onChange, idPrefix, className, afterPrimar
       onPickName={(name) => addName(name, role)}
       onRemove={remove}
       onMove={(from, to) => move(role, from, to)}
+      belowInput={role === 'primary' ? belowPrimaryInput : undefined}
     />
   );
 
@@ -127,9 +130,10 @@ interface ChipFieldProps {
   onPickName: (name: string) => void;
   onRemove: (credit: ArtistCredit) => void;
   onMove: (from: number, to: number) => void;
+  belowInput?: ReactNode;
 }
 
-function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickName, onRemove, onMove }: ChipFieldProps) {
+function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickName, onRemove, onMove, belowInput }: ChipFieldProps) {
   const { t } = useTranslation();
   const tr = t as (k: string, o?: object) => string;
   const [draft, setDraft] = useState('');
@@ -305,6 +309,7 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
           </ul>
         )}
       </div>
+      {belowInput}
     </div>
   );
 }
