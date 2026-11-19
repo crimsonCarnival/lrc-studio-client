@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import en from '@/locales/en/editor.js';
 import es from '@/locales/es/editor.js';
 import { GUIDE_SECTION_IDS } from '@/features/guide/guide-sections';
-import { EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS, REVIEW_TOUR_STEPS, WORDS_TOUR_STEPS, tourStepsFor } from './tour-steps';
+import { EDITOR_TOUR_STEPS, PHONE_TOUR_STEPS, REVIEW_TOUR_STEPS, SRT_TOUR_STEPS, WORDS_TOUR_STEPS, tourStepsFor } from './tour-steps';
 
-const ALL_STEPS = [...EDITOR_TOUR_STEPS, ...WORDS_TOUR_STEPS, ...REVIEW_TOUR_STEPS, ...PHONE_TOUR_STEPS];
+const ALL_STEPS = [...EDITOR_TOUR_STEPS, ...SRT_TOUR_STEPS, ...WORDS_TOUR_STEPS, ...REVIEW_TOUR_STEPS, ...PHONE_TOUR_STEPS];
 
 const resolve = (dict: unknown, key: string): unknown =>
   key.replace(/^editor\./, '').split('.').reduce<unknown>(
@@ -26,6 +26,17 @@ describe('tour steps', () => {
     expect(tourStepsFor(true, 'review')).toBe(REVIEW_TOUR_STEPS);
     expect(tourStepsFor(false, 'words')).toBe(PHONE_TOUR_STEPS);
     expect(tourStepsFor(false, 'review')).toBe(PHONE_TOUR_STEPS);
+    expect(tourStepsFor(true, 'srt')).toBe(SRT_TOUR_STEPS);
+    expect(tourStepsFor(false, 'srt')).toBe(PHONE_TOUR_STEPS);
+  });
+
+  it('SRT list swaps the Lines marking step for the start/end pair and keeps the rest', () => {
+    expect(SRT_TOUR_STEPS.map((s) => s.id)).toEqual([
+      'srtSync', 'srtEnd', 'player', 'modes', 'unmarkedFilter', 'tools', 'counterparts', 'sections', 'saveUndo', 'preview', 'share', 'session',
+    ]);
+    expect(SRT_TOUR_STEPS.slice(0, 2).map((s) => [s.target, s.guideAnchor])).toEqual([
+      ['editor-lines', 'srt'], ['srt-end-time', 'srt'],
+    ]);
   });
 
   it('phone list is the seven steps in order', () => {
@@ -58,7 +69,7 @@ describe('tour steps', () => {
   });
 
   it('has unique ids and targets within each list', () => {
-    for (const list of [EDITOR_TOUR_STEPS, WORDS_TOUR_STEPS, REVIEW_TOUR_STEPS, PHONE_TOUR_STEPS]) {
+    for (const list of [EDITOR_TOUR_STEPS, SRT_TOUR_STEPS, WORDS_TOUR_STEPS, REVIEW_TOUR_STEPS, PHONE_TOUR_STEPS]) {
       expect(new Set(list.map((s) => s.id)).size).toBe(list.length);
       expect(new Set(list.map((s) => s.target)).size).toBe(list.length);
     }

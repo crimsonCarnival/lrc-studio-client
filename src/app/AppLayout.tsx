@@ -306,7 +306,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           </div>
           )}
 
-          <GuidedTour steps={tourStepsFor(isLg, mobileTab === 'preview' ? 'review' : editorMode === 'words' ? 'words' : 'lines')} isOpen={isTourOpen} offerOptOut={offerOptOut}
+          <GuidedTour steps={tourStepsFor(isLg, mobileTab === 'preview' ? 'review' : editorMode === 'words' ? 'words' : editorMode === 'srt' ? 'srt' : 'lines')} isOpen={isTourOpen} offerOptOut={offerOptOut}
             narrow={!isLg}
             onClose={closeTour}
             onShown={onTourShown}

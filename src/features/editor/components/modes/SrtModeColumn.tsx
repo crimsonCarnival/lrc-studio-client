@@ -77,6 +77,7 @@ export default function SrtModeColumn({
       ) : (
         <button
           type="button"
+          data-tour="srt-end-time"
           onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'end' ? null : { lineIndex: lineIndex, type: 'end' })}
           onDoubleClick={(e) => { e.stopPropagation(); if (line.endTime != null) setEditingTimestamp('end'); }}
           // Same chip as the start time; the end reads in foam so the pair is told apart by colour too.

@@ -41,6 +41,14 @@ export const EDITOR_TOUR_STEPS: TourStep[] = [
   step('session', 'editor-session', 'sessions'),
 ];
 
+// Lines with end times (SRT is a toggle on the Lines view, not a tab of its own). Only marking
+// differs, so the first step is swapped for the start/end pair and the rest follow the Lines tour.
+export const SRT_TOUR_STEPS: TourStep[] = [
+  step('srtSync', 'editor-lines', 'srt'),
+  step('srtEnd', 'srt-end-time', 'srt'),
+  ...EDITOR_TOUR_STEPS.slice(1),
+];
+
 export const PHONE_TOUR_STEPS: TourStep[] = [
   step('phoneLines', 'phone-lines', 'sync'),
   step('phoneMark', 'phone-mark', 'sync'),
@@ -76,7 +84,7 @@ export const REVIEW_TOUR_STEPS: TourStep[] = [
   step('reviewBack', 'review-back', 'sync'),
 ];
 
-export type TourView = 'lines' | 'words' | 'review';
+export type TourView = 'lines' | 'srt' | 'words' | 'review';
 
 /**
  * The tour for the screen on show, so "Take the tour" explains what is in front of the user.
@@ -84,6 +92,7 @@ export type TourView = 'lines' | 'words' | 'review';
  */
 export const tourStepsFor = (isLg: boolean, view: TourView = 'lines'): TourStep[] => {
   if (!isLg) return PHONE_TOUR_STEPS;
+  if (view === 'srt') return SRT_TOUR_STEPS;
   if (view === 'words') return WORDS_TOUR_STEPS;
   if (view === 'review') return REVIEW_TOUR_STEPS;
   return EDITOR_TOUR_STEPS;

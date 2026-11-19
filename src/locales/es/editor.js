@@ -616,6 +616,14 @@ export default {
         title: "Sincroniza tu letra",
         body: "Reproduce el audio y presiona **Enter** (o tu tecla de marca) cuando empiece cada línea. La línea recibe el tiempo actual y la siguiente se selecciona sola, salvo que desactives el avance automático en Ajustes."
       },
+      srtSync: {
+        title: "Sincroniza tus subtítulos",
+        body: "Presiona **Enter** (o tu tecla de marca) cuando empiece una línea, y otra vez cuando termine. La siguiente línea se selecciona tras la segunda pulsación. Activa **Ajustar al siguiente** en Ajustes para pulsar una sola vez por línea: cada marca cierra también la línea anterior."
+      },
+      srtEnd: {
+        title: "Tiempos de fin",
+        body: "El segundo tiempo de cada línea es cuando desaparece su subtítulo. Nunca puede ser anterior al inicio. Haz clic en él y usa **Alt+←/→** (o tus teclas de ajuste) para moverlo, o haz doble clic para escribir un tiempo. Para quitar los tiempos de fin, desmarca **Tiempos de fin (SRT)** en el menú del editor."
+      },
       player: {
         title: "Controles del reproductor",
         body: "Reproduce, pausa, avanza y cambia la velocidad aquí. Usa un bucle A-B para repetir un pasaje difícil mientras lo sincronizas."
