@@ -19,14 +19,12 @@ type CatalogAlbumsDrawerProps = {
   onClose: () => void;
 };
 
-/** The albums of one artist, in a panel that slides over the right edge so the artist grid stays in place behind it. */
+/** The albums of one artist, in a centered modal. */
 export function CatalogAlbumsDrawer({ artist, albums, failed, onRetry, onNew, onDetect, onEdit, onDelete, onClose }: CatalogAlbumsDrawerProps) {
   const { t } = useTranslation();
   return (
     <Dialog open={artist !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent
-        className="top-0 right-0 left-auto h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 content-start overflow-y-auto rounded-none border-y-0 border-r-0 sm:max-w-md"
-      >
+      <DialogContent className="max-h-[85dvh] content-start overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('admin.catalogTab.drawer.title', { name: artist?.name ?? '' })}</DialogTitle>
           <DialogDescription>{albums ? t('admin.catalogTab.drawer.count', { count: albums.length }) : t('admin.catalogTab.drawer.description')}</DialogDescription>
