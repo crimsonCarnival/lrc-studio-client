@@ -47,7 +47,7 @@ function PickerBody({ initialQuery, onBusyChange, onPick, onClose }: Pick<Genius
   const [searched, setSearched] = useState(initialQuery);
   const [results, setResults] = useState<Results>({ status: 'loading' });
   const [copyingId, setCopyingId] = useState<number | null>(null);
-  const [copyError, setCopyError] = useState<CatalogErrorKey | null>(null);
+  const [failed, setFailed] = useState<{ geniusId: number; key: CatalogErrorKey } | null>(null);
   // Only the newest search may write results; an older, slower one is dropped.
   const latest = useRef(0);
 
@@ -65,7 +65,7 @@ function PickerBody({ initialQuery, onBusyChange, onPick, onClose }: Pick<Genius
   // User-triggered: resets to loading first.
   function search(q: string) {
     setSearched(q);
-    setCopyError(null);
+    setFailed(null);
     setResults({ status: 'loading' });
     void load(q);
   }
@@ -85,14 +85,14 @@ function PickerBody({ initialQuery, onBusyChange, onPick, onClose }: Pick<Genius
     if (copyingId !== null) return;
     setCopyingId(match.geniusId);
     onBusyChange(true);
-    setCopyError(null);
+    setFailed(null);
     try {
       const photo = await copyGeniusPhoto(match.geniusId);
       onBusyChange(false);
       onPick(photo);
       onClose();
     } catch (err) {
-      setCopyError(catalogErrorKey(err));
+      setFailed({ geniusId: match.geniusId, key: catalogErrorKey(err) });
       setCopyingId(null);
       onBusyChange(false);
     }
@@ -130,28 +130,35 @@ function PickerBody({ initialQuery, onBusyChange, onPick, onClose }: Pick<Genius
     {results.status === 'ready' && results.matches.length > 0 && (
       <ul className="flex flex-col gap-2">
         {results.matches.map((m) => (
-          <li key={m.geniusId} className="flex items-center gap-3 rounded-lg border border-border p-2">
-            <img
-              src={m.imageUrl}
-              alt={t('admin.catalogTab.genius.photoAlt', { name: m.name })}
-              referrerPolicy="no-referrer"
-              className="size-14 shrink-0 rounded-md bg-muted object-cover"
-            />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-sm font-medium text-foreground">{m.name}</span>
-              <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-                {t('admin.catalogTab.genius.openPage')}
-              </a>
+          // The copy error renders inside the row that failed, next to the button to retry.
+          <li
+            key={m.geniusId}
+            className={`flex flex-col gap-2 rounded-lg border p-2 ${failed?.geniusId === m.geniusId ? 'border-love' : 'border-border'}`}
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src={m.imageUrl}
+                alt={t('admin.catalogTab.genius.photoAlt', { name: m.name })}
+                referrerPolicy="no-referrer"
+                className="size-14 shrink-0 rounded-md bg-muted object-cover"
+              />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-medium text-foreground">{m.name}</span>
+                <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                  {t('admin.catalogTab.genius.openPage')}
+                </a>
+              </div>
+              <Button type="button" size="sm" disabled={busy} onClick={() => void use(m)}>
+                {copyingId === m.geniusId
+                  ? t('admin.catalogTab.genius.copying')
+                  : failed?.geniusId === m.geniusId ? t('admin.catalogTab.genius.retry') : t('admin.catalogTab.genius.use')}
+              </Button>
             </div>
-            <Button type="button" size="sm" disabled={busy} onClick={() => void use(m)}>
-              {copyingId === m.geniusId ? t('admin.catalogTab.genius.copying') : t('admin.catalogTab.genius.use')}
-            </Button>
+            {failed?.geniusId === m.geniusId && <p role="alert" className="text-xs text-love">{t(failed.key)}</p>}
           </li>
         ))}
       </ul>
     )}
-
-    {copyError && <p role="alert" className="text-sm text-love">{t(copyError)}</p>}
     </>
   );
 }

@@ -21,6 +21,8 @@ interface ArtistsSectionProps {
   ref?: Ref<ArtistsSectionHandle>;
   /** Passed through to ArtistsInput: rendered between the Primary and Featured fields. */
   afterPrimary?: ReactNode;
+  /** Passed through to ArtistsInput: rendered directly under the Primary input. */
+  belowPrimaryInput?: ReactNode;
 }
 
 /**
@@ -28,7 +30,7 @@ interface ArtistsSectionProps {
  * search, imported file), each confirmed before it is applied. A form drops this in and drives
  * it through the ref; the form itself only has to keep the `value`.
  */
-export function ArtistsSection({ value, onChange, idPrefix, ref, afterPrimary }: ArtistsSectionProps) {
+export function ArtistsSection({ value, onChange, idPrefix, ref, afterPrimary, belowPrimaryInput }: ArtistsSectionProps) {
   const importer = useArtistImport();
   const [offered, setOffered] = useState<{ title: string; artist: string; variant: 'apply' | 'import' } | null>(null);
   // Async results (a lookup) must merge into what is there when they arrive, not when they were asked for.
@@ -47,7 +49,7 @@ export function ArtistsSection({ value, onChange, idPrefix, ref, afterPrimary }:
 
   return (
     <div className="flex flex-col gap-3">
-      <ArtistsInput idPrefix={idPrefix} value={value} onChange={onChange} afterPrimary={afterPrimary} />
+      <ArtistsInput idPrefix={idPrefix} value={value} onChange={onChange} afterPrimary={afterPrimary} belowPrimaryInput={belowPrimaryInput} />
       <ArtistImportReview importer={importer} />
       {offered && (
         <ArtistApplyStep

@@ -119,6 +119,18 @@ describe('NameCheckSuggestion', () => {
     expect(mockedCheck).not.toHaveBeenCalled();
   });
 
+  it('a function child places the suggestion where it is rendered, not at the end', async () => {
+    render(
+      <NameCheckSuggestion field="artist" value="Adelle" title="Hello" onApply={vi.fn()}>
+        {(suggestion) => (<><input aria-label="Artist" />{suggestion}<p data-testid="after">other fields</p></>)}
+      </NameCheckSuggestion>,
+    );
+    await blur(screen.getByLabelText('Artist'));
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Did you mean Adele?');
+    expect(status.compareDocumentPosition(screen.getByTestId('after')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('keeps the same input element when the person signs in', async () => {
     auth.user = null;
     const { rerender } = render(
