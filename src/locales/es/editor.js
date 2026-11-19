@@ -537,6 +537,7 @@ export default {
     close: "Ocultar contracantos",
   },
   unmarkCounterpart: "Desmarcar contracanto",
+  markRefused: "Esa marca haría que esta línea empiece después de la siguiente. Marca antes, o mueve primero la siguiente línea.",
   draftSaveFailed: "No se pudo guardar el borrador localmente — intenta con otro navegador o desactiva el modo privado.",
   draftExpired: "Tu borrador expiró. Tus ediciones siguen en el editor — guarda nuevamente para conservarlos.",
   savingProject: "Guardando tu proyecto…",

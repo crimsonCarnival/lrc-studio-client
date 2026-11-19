@@ -534,6 +534,7 @@ export default {
     close: "Hide counterparts",
   },
   unmarkCounterpart: "Unmark counterpart",
+  markRefused: "That mark would start this line after the next line starts. Mark earlier, or move the next line first.",
   draftSaveFailed: "Couldn't save draft locally — try a different browser or disable private mode.",
   draftExpired: "Your draft expired. Your edits are still in the editor — save again to keep them.",
   savingProject: "Saving your project…",

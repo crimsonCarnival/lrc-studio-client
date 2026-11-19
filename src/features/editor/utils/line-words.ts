@@ -14,6 +14,17 @@ function keepSinger(old: EditorWord | undefined, text: string): Pick<EditorWord,
  * times (plus singer/reading where the word is unchanged) are carried over by character position.
  */
 export function ensureLineWords(line: EditorLine): EditorLine {
+  return startFirstWord(tokenizeLine(line));
+}
+
+/** A line that starts at a time has its first word start there too (words mode keeps the two as one). */
+function startFirstWord(line: EditorLine): EditorLine {
+  const first = line.words?.[0];
+  if (line.timestamp == null || !first || first.time != null) return line;
+  return { ...line, words: [{ ...first, time: line.timestamp }, ...(line.words as EditorWord[]).slice(1)] };
+}
+
+function tokenizeLine(line: EditorLine): EditorLine {
   const rawValue = (line.text || '').trim();
   if (!rawValue) return line;
 

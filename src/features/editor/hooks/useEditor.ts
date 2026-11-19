@@ -352,7 +352,9 @@ export function useEditor({
     if (editorMode === 'words') {
       const words = lines[activeLineIndex]?.words;
       if (words?.length) {
-        const idx = words.findIndex((w) => w.time == null);
+        // A line that starts somewhere already has its first word there.
+        const started = lines[activeLineIndex]?.timestamp != null;
+        const idx = words.findIndex((w, i) => w.time == null && !(i === 0 && started));
         newWordIdx = idx === -1 ? words.length : idx;
       }
     }
@@ -680,6 +682,10 @@ export function useEditor({
     };
     const result = applyMark({ ...markArgs, lines: currentLines, activeLineIndex: idx, awaitingEndMark });
 
+    if (result.refused) {
+      toast.error(t('editor.markRefused'), { id: 'mark-refused' });
+      return;
+    }
     setModifiedLines(prev => new Set(prev).add(idx));
     // `result` comes from linesRef (the last committed lines), so the index state set
     // below matches what the user saw. If the lines moved on before this update applies
@@ -725,6 +731,7 @@ export function useEditor({
     settings.editor,
     setModifiedLines,
     withLock,
+    t,
   ]);
 
   // ——— Shortcut handler (sync mode) ———

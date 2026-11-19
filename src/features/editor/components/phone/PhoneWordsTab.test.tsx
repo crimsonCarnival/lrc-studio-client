@@ -162,7 +162,8 @@ describe('Phone Words view', () => {
     fireEvent.click(chips()[2]);
     expect(chips()[2]).toHaveAttribute('aria-pressed', 'true');
     tapMark();
-    expect(wordTimes(0)).toEqual([null, null, 12.5, null]);
+    // The first word already sits on the line's start (1); only the tapped word is stamped.
+    expect(wordTimes(0)).toEqual([1, null, 12.5, null]);
     // The focused word is spent; the cursor moves on to the following word.
     expect(chips()[3]).toHaveAttribute('aria-pressed', 'true');
   });
@@ -230,7 +231,8 @@ describe('Phone Words view', () => {
     fireEvent.click(chips()[2]);
     fireEvent.click(screen.getByRole('button', { name: 'Next line' }));
     tapMark();
-    expect(stampedCount(0)).toBe(0);
+    // Only the first word (the line's own start) is set on the line left behind.
+    expect(stampedCount(0)).toBe(1);
     expect(latest.lines[1].timestamp).toBe(12.5);
   });
 
@@ -258,7 +260,7 @@ describe('Phone Words view', () => {
     expect(latest.lines[0].words?.[1].singerIndex).toBe(1);
     fireEvent.click(chips()[0]);
     const names = chips().map((c) => c.getAttribute('aria-label'));
-    expect(names[0]).toBe('Line, not stamped, next to mark');
+    expect(names[0]).toMatch(/^Line, stamped at 00:01\.00/);
     expect(names[1]).toBe('one, stamped at 00:01.50, singer Bo');
     expect(names[1]).not.toMatch(/click/i);
     expect(screen.getByRole('region', { name: 'Line 1 timing' })).toBeInTheDocument();
@@ -275,6 +277,7 @@ describe('Phone Words view', () => {
   it('skips a blank line gracefully: no chips, a note, and Mark still stamps the line', () => {
     const lines = makeLines();
     lines.splice(0, 0, { id: 'blank', text: '', timestamp: null });
+    lines[1] = { ...lines[1], timestamp: 20 };
     render(<Harness initialLines={lines} />);
     expect(screen.queryByRole('list', { name: /words in line/i })).toBeNull();
     expect(screen.getByText(/no words to time/i)).toBeInTheDocument();
