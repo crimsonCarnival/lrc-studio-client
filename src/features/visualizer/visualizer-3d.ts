@@ -18,29 +18,7 @@ import { createCymaticsPreset } from './presets-3d/cymatics';
 import { createSkylinePreset } from './presets-3d/skyline';
 import { createVinylPreset } from './presets-3d/vinyl';
 import { createInkPreset } from './presets-3d/ink';
-
-export const VISUALIZER_3D_PRESETS = [
-  'orb',
-  'terrain',
-  'galaxy',
-  'tunnel',
-  'pillars',
-  'ferrofluid',
-  'silk',
-  'plasma-globe',
-  'urchin',
-  'pond',
-  'aurora',
-  'cymatics',
-  'skyline',
-  'vinyl',
-  'ink',
-] as const;
-export type Visualizer3dPresetId = (typeof VISUALIZER_3D_PRESETS)[number];
-
-export function isVisualizer3dPreset(value: unknown): value is Visualizer3dPresetId {
-  return (VISUALIZER_3D_PRESETS as readonly unknown[]).includes(value);
-}
+import type { Visualizer3dPresetId, Visualizer3dOptions } from './visualizer-3d-presets';
 
 function parseCssColor(style: CSSStyleDeclaration, prop: string, fallback: string): THREE.Color {
   const val = style.getPropertyValue(prop).trim() || fallback;
@@ -76,10 +54,6 @@ export function readPalette3D(el: Element): Palette3D {
   };
 }
 
-export interface Visualizer3dOptions {
-  bloom?: boolean;
-  preview?: boolean;
-}
 
 interface PresetInstance {
   update: (

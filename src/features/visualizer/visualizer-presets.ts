@@ -1,6 +1,8 @@
 import { BAND_COUNT, WAVE_SAMPLES } from './visualizer-signal';
-import { VISUALIZER_3D_PRESETS, isVisualizer3dPreset, start3dVisualizer } from './visualizer-3d';
-import type { Visualizer3dPresetId, Visualizer3dOptions } from './visualizer-3d';
+// Ids only: the three.js runner (visualizer-3d) is loaded on demand in startVisualizer, so
+// importing this file never pulls three.js into the caller's chunk.
+import { VISUALIZER_3D_PRESETS, isVisualizer3dPreset } from './visualizer-3d-presets';
+import type { Visualizer3dPresetId, Visualizer3dOptions } from './visualizer-3d-presets';
 
 export const VISUALIZER_2D_PRESETS = ['bars', 'wave', 'radial', 'contour'] as const;
 export type Visualizer2dPresetId = (typeof VISUALIZER_2D_PRESETS)[number];
@@ -232,7 +234,20 @@ export function startVisualizer(
   options?: Visualizer3dOptions,
 ): () => void {
   if (isVisualizer3dPreset(preset)) {
-    return start3dVisualizer(canvas, preset, sample, options);
+    // The stop function has to exist now, but the runner arrives later: if the caller stops
+    // before the chunk lands, never start. A failed chunk load leaves the canvas blank, the
+    // same outcome as a WebGL context that cannot be created.
+    let stopped = false;
+    let stop3d: (() => void) | null = null;
+    import('./visualizer-3d')
+      .then(({ start3dVisualizer }) => {
+        if (!stopped) stop3d = start3dVisualizer(canvas, preset, sample, options);
+      })
+      .catch(() => {});
+    return () => {
+      stopped = true;
+      stop3d?.();
+    };
   }
   const ctx = canvas.getContext('2d');
   if (!ctx) return () => {};
