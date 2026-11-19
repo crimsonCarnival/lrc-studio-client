@@ -1,6 +1,5 @@
 import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
 import { NameTagPicker } from '@/features/badges/NameTagPicker';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -25,7 +24,6 @@ function blockMatches(searchTerm: string | undefined, labels: string[]) {
 export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) {
   const { t } = useTranslation();
   const { user, setUser } = useAuthContext();
-  const queryClient = useQueryClient();
 
   const tk = t as (key: string) => string;
 
@@ -62,8 +60,6 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
         value={user?.nameTagBadgeId ?? null}
         staff={(user?.permissions?.length ?? 0) > 0}
         onChange={(nameTagBadgeId) => setUser(prev => prev ? ({ ...prev, nameTagBadgeId }) : prev)}
-        // The hover card caches the mini profile (with its tag) for a while; drop the stale copy.
-        onSaved={() => { if (user?.accountName) void queryClient.invalidateQueries({ queryKey: ['profile', user.accountName, 'mini'] }); }}
       />
       <ShowcaseEditor
         userBadges={earnedBadges}
