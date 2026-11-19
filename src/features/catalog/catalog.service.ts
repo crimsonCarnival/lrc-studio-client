@@ -241,6 +241,16 @@ export async function getCatalogAlbum(artistSlug: string, albumSlug: string): Pr
   return data.catalogAlbum;
 }
 
+/** Approved albums of the one approved catalog artist with this name; empty for unknown names and homonyms. */
+export async function getCatalogAlbumSuggestions(artist: string): Promise<Array<{ id: string; name: string }>> {
+  const data = await gqlRequest<{ catalogSuggestions: Array<{ id: string; name: string }> }>(/* GraphQL */ `
+    query CatalogAlbumSuggestions($artist: String!) {
+      catalogSuggestions(kind: album, artist: $artist, limit: 20) { id name }
+    }
+  `, { artist });
+  return data.catalogSuggestions;
+}
+
 /** Catalog slugs for the artists that have an approved page; names without one are simply absent. */
 export async function getCatalogSlugs(names: string[]): Promise<Array<{ name: string; key: string; slug: string }>> {
   if (names.length === 0) return [];

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getCatalogAlbum, getCatalogArtist, getCatalogSlugs } from './catalog.service';
+import { getCatalogAlbum, getCatalogAlbumSuggestions, getCatalogArtist, getCatalogSlugs } from './catalog.service';
 
 export const MY_SUBMISSIONS_KEY = ['catalog', 'my-submissions'] as const;
 
@@ -23,6 +23,18 @@ export function useCatalogAlbum(artistSlug: string | undefined, albumSlug: strin
     queryFn: () => getCatalogAlbum(artistSlug!, albumSlug!),
     enabled: !!artistSlug && !!albumSlug,
   });
+}
+
+/** Catalog album titles for an artist name, for setup's album field. Empty while loading, on error, or with no artist. */
+export function useCatalogAlbumSuggestions(artist: string | undefined): string[] {
+  const name = artist?.trim() ?? '';
+  const { data } = useQuery({
+    queryKey: ['catalog', 'album-suggestions', name.normalize('NFC').toLowerCase()] as const,
+    queryFn: () => getCatalogAlbumSuggestions(name),
+    enabled: name.length > 0,
+    staleTime: 5 * 60_000,
+  });
+  return (data ?? []).map((a) => a.name);
 }
 
 /** name key (NFC, lower-case) -> catalog slug, for the given artist names. Empty while loading or on error. */

@@ -12,8 +12,12 @@ const suggest = vi.hoisted(() => ({
   impl: (async () => ({ total: 0, items: [] })) as (prefix: string, opts: { signal?: AbortSignal }) => Promise<{ total: number; items: Array<{ id: string; name: string }> }>,
   calls: [] as Array<{ prefix: string; signal?: AbortSignal }>,
 }));
+const catalogSuggest = vi.hoisted(() => ({
+  impl: (async () => []) as (prefix: string) => Promise<Array<{ id: string; name: string; disambiguation: string }>>,
+}));
 vi.mock('./artist-suggestions.service', () => ({
   SUGGESTION_LIMIT: 10,
+  fetchCatalogArtistSuggestions: (prefix: string) => catalogSuggest.impl(prefix),
   fetchArtistSuggestions: (prefix: string, opts: { signal?: AbortSignal } = {}) => {
     suggest.calls.push({ prefix, signal: opts.signal });
     return suggest.impl(prefix, opts);
@@ -248,6 +252,32 @@ describe('ArtistsInput: flags are confirmed, never guessed', () => {
 
 describe('ArtistsInput: autocomplete', () => {
   const advance = (ms: number) => act(async () => { await vi.advanceTimersByTimeAsync(ms); });
+  afterEach(() => { catalogSuggest.impl = async () => []; });
+
+  it('adds approved catalog artists after own names, skipping ones already there', async () => {
+    const u = user();
+    suggest.impl = async () => ({ total: 1, items: [{ id: '1', name: 'Drake' }] });
+    catalogSuggest.impl = async () => [
+      { id: 'c1', name: 'drake', disambiguation: '' },
+      { id: 'c2', name: 'Dragonforce', disambiguation: 'UK band' },
+    ];
+    render(<Harness />);
+    await u.type(primaryInput(), 'dr');
+    await advance(250);
+    const options = await screen.findAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual(['Drake', 'DragonforceUK bandCatalog']);
+  });
+
+  it('a failing catalog request still shows own names', async () => {
+    const u = user();
+    suggest.impl = async () => ({ total: 1, items: [{ id: '1', name: 'Drake' }] });
+    catalogSuggest.impl = async () => { throw new Error('down'); };
+    render(<Harness />);
+    await u.type(primaryInput(), 'dr');
+    await advance(250);
+    expect(await screen.findByRole('option', { name: 'Drake' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
 
   it('waits for a pause in typing, then asks once with the prefix', async () => {
     const u = user();
@@ -319,7 +349,7 @@ describe('ArtistsInput: autocomplete', () => {
     await advance(250);
     expect(screen.getByText('Searching…')).toBeInTheDocument();
     await act(async () => { resolve({ total: 0, items: [] }); });
-    expect(await screen.findByText('No matching artists in your library')).toBeInTheDocument();
+    expect(await screen.findByText('No matching artists')).toBeInTheDocument();
 
     suggest.impl = async () => { throw new Error('boom'); };
     await u.type(primaryInput(), 'z');

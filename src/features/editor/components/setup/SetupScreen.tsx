@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, Link } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
-import { FloatingCombobox } from '@/shared/ui/floating-combobox';
+import { FloatingCombobox, type ComboboxOption } from '@/shared/ui/floating-combobox';
+import { useCatalogAlbumSuggestions } from '@/features/catalog/catalog.queries';
 import { CollapsibleSection } from '@/shared/ui/collapsible-section';
 import { TrackNumberField } from '@/shared/ui/track-number-field';
 import { CoverDropzone } from './CoverDropzone';
@@ -360,6 +361,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     [songName, projectName, primaryText, describeLines],
   );
 
+  const catalogAlbums = useCatalogAlbumSuggestions(primaryNames(artists)[0]);
   const albumOptions = useMemo(() => {
     const seen = new Set<string>();
     // The library stores primary artists, so match on the first one.
@@ -367,10 +369,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     const base = firstPrimary
       ? musicLibrary.filter((e) => e.artist?.toLowerCase() === firstPrimary.toLowerCase())
       : musicLibrary;
-    return base
+    const own = base
       .filter((e) => !!e.album && !seen.has(e.album.toLowerCase()) && !!seen.add(e.album.toLowerCase()))
-      .map((e) => ({ value: e.album as string }));
-  }, [musicLibrary, artists]);
+      .map((e): ComboboxOption => ({ value: e.album as string }));
+    // Then the artist's approved catalog albums that the library does not already have.
+    const catalog = catalogAlbums
+      .filter((title) => !seen.has(title.toLowerCase()) && !!seen.add(title.toLowerCase()))
+      .map((title): ComboboxOption => ({ value: title, hint: t('artists.suggestions.catalog') }));
+    return [...own, ...catalog];
+  }, [musicLibrary, artists, catalogAlbums, t]);
 
   const handleAlbumSelect = useCallback((albumName: string) => {
     const match = musicLibrary.find((e) => e.album?.toLowerCase() === albumName.toLowerCase());
