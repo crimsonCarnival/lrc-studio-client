@@ -917,18 +917,30 @@ export default function Editor({
 
   // Moves where a word starts. `lineIndex` is the focused line unless a neighbouring line's word
   // is dragged from its own row. A line's first word carries the line's start with it, and the
-  // line before keeps its end when that start moves.
-  const handleSetWordTime = useCallback((wordIndex: number, time: number, lineIndex: number = activeLineIndex) => {
+  // line before keeps its end when that start moves. Likewise the word before keeps its end: one
+  // that ran up to this word is given that end before this start moves, so moving a start opens
+  // a pause or an overlap with it rather than dragging its end along. `end` (when given) is also
+  // written: a word moved as a whole keeps its length.
+  const handleSetWordTime = useCallback((wordIndex: number, time: number, lineIndex: number = activeLineIndex, end?: number | null) => {
     setLines((prev) => {
       const line = prev[lineIndex];
-      if (!line?.words?.[wordIndex]) return prev;
-      if (wordIndex === 0 && line.timestamp === time && line.words[0].time === time) return prev;
+      const word = line?.words?.[wordIndex];
+      if (!line?.words || !word) return prev;
+      if (word.time === time && (end === undefined || (word.end ?? null) === end) && (wordIndex > 0 || line.timestamp === time)) return prev;
+      let before = -1;
+      line.words.forEach((w, i) => { if (i < wordIndex && w.time != null) before = i; });
+      // Only a word that already had a time moves; stamping one for the first time pins nothing.
+      const pinBefore = word.time != null && before >= 0 && line.words[before].end == null && word.time > (line.words[before].time as number);
       const moved: EditorLine = {
         ...line,
         words: line.words.map((w, i) => {
-          // An end the new start has passed no longer means anything: the word runs on again.
-          if (i === wordIndex) return { ...w, time, ...(w.end != null && w.end <= time ? { end: null } : {}) };
-          if (i < wordIndex && w.end != null && w.end > time) return { ...w, end: null };
+          if (i === wordIndex) {
+            const ownEnd = end === undefined ? w.end : end;
+            // An end the new start has passed no longer means anything: the word runs on again.
+            const kept = ownEnd != null && ownEnd > time ? ownEnd : null;
+            return kept == null && w.end === undefined ? { ...w, time } : { ...w, time, end: kept };
+          }
+          if (i === before && pinBefore) return { ...w, end: word.time };
           return w;
         }),
       };
@@ -942,6 +954,10 @@ export default function Editor({
   const handleChangeLineTiming = useCallback((lineIndex: number, edit: LineTimingEdit) => {
     setLines((prev) => applyLineTiming(prev, lineIndex, edit, duration));
   }, [setLines, duration]);
+  const handleMoveWord = useCallback(
+    (wordIndex: number, time: number, end: number | null) => handleSetWordTime(wordIndex, time, activeLineIndex, end),
+    [handleSetWordTime, activeLineIndex],
+  );
   const handleSetNeighbourWordTime = useCallback(
     (lineIndex: number, wordIndex: number, time: number) => handleSetWordTime(wordIndex, time, lineIndex),
     [handleSetWordTime],
@@ -2219,6 +2235,7 @@ export default function Editor({
                 playingWordIndex={playingWordIndex}
                 onSetWordTime={handleSetWordTime}
                 onSetWordEnd={handleSetWordEnd}
+                onMoveWord={handleMoveWord}
                 onSetNeighbourWordTime={handleSetNeighbourWordTime}
                 onSetNeighbourWordEnd={handleSetNeighbourWordEnd}
                 startFloor={focusNeighbours.floor}

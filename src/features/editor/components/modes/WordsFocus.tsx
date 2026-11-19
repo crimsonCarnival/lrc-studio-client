@@ -338,6 +338,9 @@ interface WordTimelineProps {
   onSetWordTime: (wordIndex: number, time: number) => void;
   /** Sets where a word stops; null joins it back up with the word after it. */
   onSetWordEnd: (wordIndex: number, end: number | null) => void;
+  /** Moves a whole word, dragged by its block: where it starts and where it stops (null: it runs
+   *  up to what follows). Its length stays; it may overlap the words around it. */
+  onMoveWord?: (wordIndex: number, start: number, end: number | null) => void;
   /** Moves where a word of a neighbouring line starts, dragged from that line's own row. */
   onSetNeighbourWordTime?: (lineIndex: number, wordIndex: number, time: number) => void;
   /** Sets where a word of a neighbouring line stops, dragged from that line's own row. */
@@ -413,7 +416,8 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
   // start of the line after it.
   const moveEnd = (index: number, raw: number) => {
     const hold = index === words.length - 1 ? ghost.holdLimit ?? null : null;
-    const next = wordEndAt(segments[index], raw, hold, cap);
+    // Only the last word may run on past the line; the others may overlap the words after them.
+    const next = wordEndAt(segments[index], raw, hold, hold != null ? cap : ghost.end ?? cap);
     if (next !== (words[index].end ?? null)) onSetWordEnd?.(index, next);
   };
   const edgeTag = 'pointer-events-none absolute top-0 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums whitespace-nowrap text-background';
@@ -473,7 +477,7 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
             tabIndex={0}
             aria-label={t('editor.words.endLabel', { word: seg.word })}
             aria-valuemin={Number(seg.from.toFixed(2))}
-            aria-valuemax={Number((k === words.length - 1 && ghost.holdLimit != null ? cap : seg.gapTo).toFixed(2))}
+            aria-valuemax={Number((k === words.length - 1 && ghost.holdLimit != null ? cap : ghost.end ?? seg.gapTo).toFixed(2))}
             aria-valuenow={Number(seg.to.toFixed(2))}
             onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture(e.pointerId); setDraggingEnd(k); }}
             onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) moveEnd(k, timeAt(e.clientX)); }}
@@ -536,7 +540,7 @@ function GhostRow({ ghost, tone, caption, view, onSelect, action, floor, cap, ti
 export function WordTimeline({
   line, lineEnd, naturalEnd: naturalEndProp, duration, lineKey, lineIndex, bands, nextLine, prevLine, onSelectLine, onChangeLineTiming, onEndPrevious,
   playbackPosition, isPlaying, activeWordIndex, selectedWordIndex, playingWordIndex,
-  onSetWordTime, onSetWordEnd, onSetNeighbourWordTime, onSetNeighbourWordEnd, startFloor = 0, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
+  onSetWordTime, onSetWordEnd, onMoveWord, onSetNeighbourWordTime, onSetNeighbourWordEnd, startFloor = 0, onSelectWord, onEditLine, markKey, onPlayFrom, wordMenu, footerEnd, hints,
 }: WordTimelineProps) {
   const { t } = useTranslation();
   const { settings } = useSettings();
@@ -549,7 +553,11 @@ export function WordTimeline({
   const panRef = useRef<{ x: number; from: number } | null>(null);
   // Which edge is being dragged. The time is written to the line on every move; the undo history
   // groups changes that arrive in quick succession, so a drag is still one step back.
-  const [drag, setDrag] = useState<{ index: number; edge: 'start' | 'end' } | null>(null);
+  const [drag, setDrag] = useState<{ index: number; edge: 'start' | 'end' | 'move' } | null>(null);
+  // A word's block being dragged by its body: where it was grabbed, and whether it has moved yet
+  // (a press that barely moves is a click, which plays the word).
+  const blockRef = useRef<{ index: number; grab: number; from: number; to: number; x: number; moved: boolean } | null>(null);
+  const suppressClickRef = useRef(false);
   // A line chip in the lines lane being dragged: by one edge, or by its body to move the whole line.
   const [laneDrag, setLaneDrag] = useState<{ index: number; part: 'start' | 'end' | 'move' } | null>(null);
   const laneRef = useRef<{ part: 'start' | 'end' | 'move'; index: number; grab: number; from: number; to: number; x: number; moved: boolean } | null>(null);
@@ -712,7 +720,8 @@ export function WordTimeline({
   // Where a word's end goes when it is put at `raw`. Up against the word after it the end goes
   // away (the word runs into it again); the last word may go on past the next line's start.
   const applyEnd = (index: number, raw: number) => {
-    const next = wordEndAt(segments[index], raw, index === tailIndex ? (naturalEnd as number) : null, total);
+    const tail = index === tailIndex;
+    const next = wordEndAt(segments[index], raw, tail ? (naturalEnd as number) : null, tail ? total : end);
     if (next !== (words[index].end ?? null)) onSetWordEnd(index, next);
   };
 
@@ -807,6 +816,66 @@ export function WordTimeline({
     e.preventDefault();
     e.stopPropagation();
     if (edge === 'start') nudgeStart(index, delta); else applyEnd(index, Number((segments[index].to + delta).toFixed(3)));
+  };
+
+  // ── A word's block dragged by its body: the whole word moves, keeping its length ──
+  // It stays after the word before starts and before the word after starts (the order of the
+  // words is kept), but may overlap either of them. Only the last word may run on past the line.
+  const moveWord = (index: number, rawStart: number, length: number) => {
+    if (!onMoveWord) return;
+    const before = words.slice(0, index).reverse().find((w) => w.time != null)?.time;
+    const after = words.slice(index + 1).find((w) => w.time != null)?.time;
+    const min = before != null ? Math.max(start, before + MIN_WORD_GAP) : index === 0 ? Math.min(start, startFloor + MIN_WORD_GAP) : start;
+    const tail = index === tailIndex || index === words.length - 1;
+    const max = Math.min((after ?? Infinity) - MIN_WORD_GAP, (tail ? total : end) - length);
+    const from = Number(Math.max(min, Math.min(Math.max(min, max), rawStart)).toFixed(3));
+    const to = Number((from + length).toFixed(3));
+    // Back against what follows, the word simply runs up to it again.
+    const joinsAt = index === tailIndex ? (naturalEnd as number) : after ?? end;
+    const stored = Math.abs(to - joinsAt) <= 0.005 ? null : to;
+    if (from !== words[index].time || stored !== (words[index].end ?? null)) onMoveWord(index, from, stored);
+  };
+  const handleBlockDown = (index: number) => (e: PointerEvent<HTMLElement>) => {
+    if (e.button !== 0 || !onMoveWord) return;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    const seg = segments[index];
+    blockRef.current = { index, grab: timeAt(e.clientX), from: seg.from, to: seg.to, x: e.clientX, moved: false };
+  };
+  const handleBlockMove = (index: number) => (e: PointerEvent<HTMLElement>) => {
+    const d = blockRef.current;
+    if (!d || d.index !== index) return;
+    if (e.currentTarget.hasPointerCapture && !e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    if (!d.moved) {
+      if (Math.abs(e.clientX - d.x) <= 3) return;
+      d.moved = true;
+      setGlide(null);
+      setDrag({ index, edge: 'move' });
+    }
+    const length = d.to - d.from;
+    const raw = d.from + (timeAt(e.clientX) - d.grab);
+    // Either edge of the word may catch on something; whichever is nearer moves it.
+    const edges = edgesExcept(index);
+    const reach = snapReach();
+    const a = snapTime(raw, snap, reach, playbackPosition, edges);
+    const b = snapTime(raw + length, snap, reach, playbackPosition, edges) - length;
+    const da = Math.abs(a - raw);
+    const db = Math.abs(b - raw);
+    moveWord(index, da > 1e-9 && (db <= 1e-9 || da <= db) ? a : db > 1e-9 ? b : raw, length);
+  };
+  const handleBlockUp = () => {
+    const d = blockRef.current;
+    blockRef.current = null;
+    // The click that follows a drag must not also play the word.
+    if (d?.moved) { suppressClickRef.current = true; setDrag(null); }
+  };
+  const blockKeys = (index: number) => (e: KeyboardEvent) => {
+    const step = e.shiftKey ? 0.01 : 0.05;
+    const delta = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+    if (!delta || !onMoveWord) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const seg = segments[index];
+    moveWord(index, seg.from + delta, seg.to - seg.from);
   };
 
   // How many seconds a horizontal move of `px` pixels is on the axis.
@@ -1078,7 +1147,10 @@ export function WordTimeline({
             const morae = kana ? splitMorae(kana) : [];
             const highlight = isSelected || isPlayingWord;
             const playable = seg.timed && !!onPlayFrom;
-            const BlockTag = playable ? 'button' : 'span';
+            // Moving a word needs no audio; playing it does.
+            const movable = seg.timed && !!onMoveWord;
+            const BlockTag = playable || movable ? 'button' : 'span';
+            const movingThis = drag?.index === i && drag.edge === 'move';
             const isTail = i === tailIndex;
             // How far this word runs on over the next line.
             const over = isTail && nextStart != null && seg.to - nextStart > 0.005 ? seg.to - nextStart : null;
@@ -1150,10 +1222,28 @@ export function WordTimeline({
                         {...(playable ? {
                           type: 'button' as const,
                           'aria-label': t('editor.words.playWord', { word: seg.word, time: formatTime(seg.from) }),
-                          onClick: (e: ReactMouseEvent) => { e.stopPropagation(); onPlayFrom!(seg.from); },
+                          onClick: (e: ReactMouseEvent) => {
+                            e.stopPropagation();
+                            if (suppressClickRef.current) { suppressClickRef.current = false; return; }
+                            onPlayFrom!(seg.from);
+                          },
+                        } : {})}
+                        // Dragging the block by its body moves the whole word (arrows do the same).
+                        {...(movable ? {
+                          type: 'button' as const,
+                          ...(playable ? {} : {
+                            'aria-label': t('editor.words.moveWord', { word: seg.word }),
+                            onClick: (e: ReactMouseEvent) => { e.stopPropagation(); suppressClickRef.current = false; },
+                          }),
+                          'aria-description': t('editor.words.moveWordHint'),
+                          onPointerDown: handleBlockDown(i),
+                          onPointerMove: handleBlockMove(i),
+                          onPointerUp: handleBlockUp,
+                          onPointerCancel: handleBlockUp,
+                          onKeyDown: blockKeys(i),
                         } : {})}
                         // @container: what the block shows depends on how wide it is.
-                        className={`@container absolute ${compact ? 'inset-y-[3px]' : 'inset-y-2'} flex items-center gap-2 overflow-hidden rounded-lg pl-3 pr-2 text-left whitespace-nowrap ${playable ? 'cursor-pointer transition-colors hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus' : ''} ${isSelected
+                        className={`@container absolute ${compact ? 'inset-y-[3px]' : 'inset-y-2'} flex items-center gap-2 overflow-hidden rounded-lg pl-3 pr-2 text-left whitespace-nowrap ${playable || movable ? `${movable ? 'touch-none cursor-grab active:cursor-grabbing' : 'cursor-pointer'} transition-colors hover:brightness-125 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus` : ''} ${isSelected
                           ? 'bg-foam/25 inset-ring-[1.5px] inset-ring-foam'
                           : tooShort
                             ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
@@ -1185,6 +1275,11 @@ export function WordTimeline({
                           )
                         )}
                       </BlockTag>
+                      {movingThis && (
+                        <span className={`${timeTag} z-20 ml-2`} style={{ left: `${pct(seg.from)}%` }}>
+                          {formatTime(seg.from)} → {formatTime(seg.to)}
+                        </span>
+                      )}
                       {seg.timed && (
                         <>
                           <span
@@ -1212,7 +1307,7 @@ export function WordTimeline({
                             tabIndex={0}
                             aria-label={t('editor.words.endLabel', { word: seg.word })}
                             aria-valuemin={Number(seg.from.toFixed(2))}
-                            aria-valuemax={Number((isTail ? total : seg.gapTo).toFixed(2))}
+                            aria-valuemax={Number((isTail ? total : end).toFixed(2))}
                             aria-valuenow={Number(seg.to.toFixed(2))}
                             aria-valuetext={over != null ? t('editor.words.overlapEdge', { time: formatTime(seg.to), seconds: over.toFixed(2) }) : undefined}
                             onPointerDown={handlePointerDown(i, 'end')}

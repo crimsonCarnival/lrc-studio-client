@@ -133,10 +133,10 @@ describe('WordTimeline overlap with the next line', () => {
     expect(props.onSetWordEnd).toHaveBeenLastCalledWith(4, null);
   });
 
-  it('keeps a word in the middle of the line inside it', () => {
+  it('lets a word in the middle of the line run on over the next word (they overlap)', () => {
     const props = renderTimeline({ line: sung, ...around });
     fireEvent.keyDown(screen.getByRole('slider', { name: 'editor.words.endLabel:を' }), { key: 'ArrowRight' });
-    expect(props.onSetWordEnd).not.toHaveBeenCalled();
+    expect(props.onSetWordEnd).toHaveBeenLastCalledWith(3, 12.45);
   });
 
   it('draws the next line under the words and gives it the focus on click', () => {

@@ -236,6 +236,8 @@ export default {
     tooShort: "“{{word}}” lasts {{seconds}} s: too short, or overlapping the next word",
     playLine: "Play line",
     playWord: "Play “{{word}}” from {{time}}",
+    moveWord: "Move “{{word}}”",
+    moveWordHint: "Drag, or use the arrow keys, to move the whole word. It may overlap the words around it.",
     wordProgress: "Progress through “{{word}}”",
     pause: "Pause",
     loop: "Loop the line",

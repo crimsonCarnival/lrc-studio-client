@@ -2,7 +2,7 @@ import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
-import { isHeldAt, tailWordEnd } from '@/features/editor/utils/line-span';
+import { heldUntil, isHeldAt, tailWordEnd, wordFillEnd } from '@/features/editor/utils/line-span';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { showsInstrumentalBreak } from '@/features/editor/utils/instrumental-break';
 import { useTranslation } from 'react-i18next';
@@ -206,6 +206,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   // stays lit, and its last word goes on filling, until that word ends.
   const isHeldActive = isHeldAt(line, effectiveNextTs, playbackPosition);
   const isActive = dist === 0 || isCounterpartActive || isHeldActive;
+  // A line held over the next one goes on sounding beside it, so its fill fades out when its
+  // last word ends instead of vanishing (see PreviewLine).
+  const heldEnded = isPast && !isActive && heldUntil(line, effectiveNextTs) != null;
 
   // The viewer's own activeHighlight preference (same setting PreviewLine
   // reads) — this component used to ignore it entirely, so a public project
@@ -389,7 +392,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                 endTime = prevT + (slice * (untimedCountBefore + 1));
               }
             } else {
-              endTime = words.slice(wi + 1).find(w2 => w2.time != null)?.time ?? lastWordFillEnd;
+              endTime = wordFillEnd(words, wi, lastWordFillEnd);
             }
 
             const effSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
@@ -419,14 +422,16 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                 >
                   {renderWord(w)}
                 </span>
-                {isWordFilled && progress > 0 && (
+                {((isWordFilled && progress > 0) || heldEnded) && (
                   <span
                     className="absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow"
                     style={{
                       color: fillHighlightColor,
                       textShadow: `0 0 22px color-mix(in srgb, ${fillHighlightColor} 45%, transparent)`,
-                      clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
-                      WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                      clipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
+                      WebkitClipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
+                      opacity: heldEnded ? 0 : 1,
+                      transition: 'opacity 700ms ease-out',
                       direction: 'ltr',
                       textAlign: 'left',
                       unicodeBidi: 'plaintext',

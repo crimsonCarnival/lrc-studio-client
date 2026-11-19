@@ -48,7 +48,7 @@ function Harness() {
     <MemoryRouter><TooltipProvider>
       <Editor lines={lines} setLines={setLines} syncMode setSyncMode={vi.fn()} activeLineIndex={active} setActiveLineIndex={setActive}
         playbackPosition={22} duration={239} playerRef={{ current: null }} undo={vi.fn()} redo={vi.fn()} canUndo={false} canRedo={false} clearHistory={vi.fn()}
-        editorMode="words" setEditorMode={vi.fn()} handleRemoveAllLyrics={vi.fn()} onNewProject={vi.fn()} />
+        editorMode="words" setEditorMode={vi.fn()} hasMedia handleRemoveAllLyrics={vi.fn()} onNewProject={vi.fn()} />
     </TooltipProvider></MemoryRouter>
   );
 }
@@ -94,6 +94,28 @@ describe('words focus: one handle changes one line', () => {
         cleanup();
       }
     }
+  });
+
+  it('moving a word\'s start leaves the word before where it stops: a pause, or an overlap', () => {
+    for (const [key, to] of [['ArrowRight', 25.05], ['ArrowLeft', 24.95]] as const) {
+      render(<Harness />);
+      fireEvent.keyDown(screen.getByRole('slider', { name: /Start of “f”|Inicio de «f»/ }), { key });
+      const [e, f] = latest[2].words!;
+      // "e" ran up to "f" (25); it now has that end of its own and "f" moved alone.
+      expect(e).toMatchObject({ time: 24, end: 25 });
+      expect(f.time).toBe(to);
+      cleanup();
+    }
+  });
+
+  it('dragging a word by its block moves the whole word and keeps its length', () => {
+    render(<Harness />);
+    fireEvent.keyDown(screen.getByRole('button', { name: /^(Play|Reproducir) [“«]e[”»]/ }), { key: 'ArrowLeft' });
+    const [e, f] = latest[2].words!;
+    expect(e.time).toBe(23.95);
+    expect(e.end).toBe(24.95);
+    expect(f.time).toBe(25);
+    expect(latest[2].timestamp).toBe(23.95);
   });
 
   it('dragging the end of a line in the lines lane changes only that line\'s last word', () => {

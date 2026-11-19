@@ -239,6 +239,8 @@ export default {
     tooShort: "«{{word}}» dura {{seconds}} s: demasiado corta o se solapa con la siguiente",
     playLine: "Reproducir línea",
     playWord: "Reproducir «{{word}}» desde {{time}}",
+    moveWord: "Mover «{{word}}»",
+    moveWordHint: "Arrastra, o usa las flechas, para mover la palabra entera. Puede solaparse con las de alrededor.",
     wordProgress: "Progreso en «{{word}}»",
     pause: "Pausar",
     loop: "Repetir la línea",
