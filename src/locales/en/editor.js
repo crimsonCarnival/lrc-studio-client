@@ -590,6 +590,14 @@ export default {
         title: "Sync your lyrics",
         body: "Play the audio and press **Enter** (or your mark key) as each line starts. The line gets the current time and the next one is selected automatically, unless **Auto-Advance** is off in Settings."
       },
+      srtSync: {
+        title: "Sync your subtitles",
+        body: "Press **Enter** (or your mark key) when a line starts, and press it again when the line ends. The next line is selected after the second press. Turn on **Snap to Next** in Settings to press once per line instead: each mark then also ends the line before it."
+      },
+      srtEnd: {
+        title: "End times",
+        body: "The second time on each line is when its subtitle disappears. It can never be earlier than the start. Click it and use **Alt+←/→** (or your nudge keys) to adjust it, or double-click it to type a time. To turn end times off, untick **End times (SRT)** in the editor menu."
+      },
       player: {
         title: "Player controls",
         body: "Play, pause, seek and change the speed here. Set an A-B loop to repeat a tricky passage while you sync it."

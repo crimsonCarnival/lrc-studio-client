@@ -9,6 +9,7 @@ import PreviewViewport from './PreviewViewport';
 import PublicPlaybackBar from '@/features/project-view/PublicPlaybackBar';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import { useStartTour } from '@/app/layout/phone-editor-chrome';
+import { useTourViewHint } from '@/features/editor/tour/tour-view-hint';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
@@ -246,6 +247,8 @@ export default function Preview(props: PreviewProps) {
 
   // Desktop only: AppLayout runs the Review tour while this view is showing; phones have their own tour.
   const startTour = useStartTour();
+  // Review has no automatic tour, so its tour button pulses until the user opens it once.
+  const reviewTourHint = useTourViewHint('review');
   const statusSlot = useHeaderSlot('status', active);
   const centerSlot = useHeaderSlot('center', active);
   const actionsSlot = useHeaderSlot('actions', active);
@@ -386,10 +389,12 @@ export default function Preview(props: PreviewProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={t('editor.tour.take')}
-                onClick={startTour}
-                className="max-lg:hidden size-10 lg:size-10 text-foreground/65 hover:text-foreground"
+                onClick={() => { reviewTourHint.markSeen(); startTour(); }}
+                className={`max-lg:hidden size-10 lg:size-10 ${
+                  reviewTourHint.pulse ? 'animate-pulse-glow text-primary' : 'text-foreground/65 hover:text-foreground'
+                }`}
               >
-                <Icon name="school" size={18} />
+                <Icon name={reviewTourHint.pulse ? 'help' : 'school'} size={18} />
               </Button>
             </Tip>
           )}
