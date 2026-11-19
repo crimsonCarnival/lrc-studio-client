@@ -36,6 +36,7 @@ import { isSudoCancelled, withSudo } from './services/sudo';
 import { CatalogAlbumsDrawer } from './CatalogAlbumsDrawer';
 import { CatalogArtistCard } from './CatalogArtistCard';
 import { DetectAlbumsDialog } from './DetectAlbumsDialog';
+import { DetectArtistsDialog } from './DetectArtistsDialog';
 import { CatalogEntryDialog } from './CatalogEntryDialog';
 import type { FormTarget } from './CatalogEntryDialog';
 import { CatalogReviewCard } from './CatalogReviewCard';
@@ -210,6 +211,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [form, setForm] = useState<FormTarget | null>(null);
   const [detectFor, setDetectFor] = useState<string | null>(null);
+  const [detectingArtists, setDetectingArtists] = useState(false);
   const [deleting, setDeleting] = useState<DeleteTarget | null>(null);
   const [revokeCredit, setRevokeCredit] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -328,6 +330,9 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
           <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newArtist')}
         </Button>
       </div>
+        <Button type="button" variant="outline" onClick={() => setDetectingArtists(true)}>
+          <Icon name="search" size={14} /> {t('admin.catalogTab.detectArtists.button')}
+        </Button>
 
       {loading && artists.length === 0 ? (
         <div className="flex items-center justify-center py-16"><LogoLoader size={32} /></div>
@@ -377,6 +382,13 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
         artist={detectArtist}
         // The drawer lists the albums, so reload them to show the new one.
         onApproved={(album) => void loadAlbums(album.artistId)}
+      <DetectArtistsDialog
+        open={detectingArtists}
+        // The grid lists the artists, so reload it to show the new one.
+        onApproved={() => void loadArtists(query)}
+        onClose={() => setDetectingArtists(false)}
+      />
+
         onClose={() => setDetectFor(null)}
       />
 

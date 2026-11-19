@@ -12,6 +12,7 @@ import type {
   CatalogImageSource,
   CatalogKind,
   DetectedAlbum,
+  DetectedArtist,
   GeniusArtistMatch,
   GeniusPhoto,
   CatalogQueue,
@@ -328,4 +329,32 @@ export async function dismissDetectedAlbum(artistId: string, key: string): Promi
     }
   `, { artistId, key });
   return data.dismissDetectedAlbum;
+}
+
+/** Primary artist names on songs (any visibility) that the catalog does not have yet. */
+export async function detectArtists(): Promise<DetectedArtist[]> {
+  const data = await gqlRequest<{ catalogDetectArtists: DetectedArtist[] }>(/* GraphQL */ `
+    query CatalogDetectArtists {
+      catalogDetectArtists { key name songCount }
+    }
+  `);
+  return data.catalogDetectArtists;
+}
+
+export async function approveDetectedArtist(name: string): Promise<CatalogArtist> {
+  const data = await gqlRequest<{ approveDetectedArtist: CatalogArtist }>(/* GraphQL */ `
+    mutation ApproveDetectedArtist($name: String!) {
+      approveDetectedArtist(name: $name) { ${ARTIST_FIELDS} }
+    }
+  `, { name });
+  return data.approveDetectedArtist;
+}
+
+export async function dismissDetectedArtist(key: string): Promise<boolean> {
+  const data = await gqlRequest<{ dismissDetectedArtist: boolean }>(/* GraphQL */ `
+    mutation DismissDetectedArtist($key: String!) {
+      dismissDetectedArtist(key: $key)
+    }
+  `, { key });
+  return data.dismissDetectedArtist;
 }

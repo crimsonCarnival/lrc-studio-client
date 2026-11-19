@@ -5,11 +5,12 @@ import type {
   CatalogImageSource,
   CatalogKind,
   DetectedAlbum,
+  DetectedArtist,
 } from '@/types/graphql';
 
 export type CatalogArtist = GqlCatalogArtist;
 export type CatalogAlbum = GqlCatalogAlbum;
-export type { CatalogDecision, CatalogImageSource, CatalogKind, DetectedAlbum };
+export type { CatalogDecision, CatalogImageSource, CatalogKind, DetectedAlbum, DetectedArtist };
 
 /** One match from `GET /catalog/genius/artists`; the server only returns matches with a usable photo. */
 export type GeniusArtistMatch = { geniusId: number; name: string; imageUrl: string; url: string };

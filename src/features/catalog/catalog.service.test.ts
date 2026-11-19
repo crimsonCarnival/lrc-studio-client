@@ -151,6 +151,26 @@ describe('catalog admin tools services', () => {
     expect(call().vars).toEqual({ artistId: '7', key: 'k' });
   });
 
+  it('detectArtists queries catalogDetectArtists', async () => {
+    gqlRequest.mockResolvedValue({ catalogDetectArtists: [{ key: 'k', name: 'N', songCount: 2 }] });
+    await expect(catalog.detectArtists()).resolves.toEqual([{ key: 'k', name: 'N', songCount: 2 }]);
+    expect(call().query).toContain('catalogDetectArtists');
+  });
+
+  it('approveDetectedArtist forwards the name', async () => {
+    gqlRequest.mockResolvedValue({ approveDetectedArtist: { id: 'a1' } });
+    await expect(catalog.approveDetectedArtist('N')).resolves.toEqual({ id: 'a1' });
+    expect(call().query).toContain('approveDetectedArtist');
+    expect(call().vars).toEqual({ name: 'N' });
+  });
+
+  it('dismissDetectedArtist forwards the key', async () => {
+    gqlRequest.mockResolvedValue({ dismissDetectedArtist: true });
+    await expect(catalog.dismissDetectedArtist('k')).resolves.toBe(true);
+    expect(call().query).toContain('dismissDetectedArtist');
+    expect(call().vars).toEqual({ key: 'k' });
+  });
+
   it('adminUpdate and adminCreateArtist forward imageSource and imageSourceUrl', async () => {
     gqlRequest.mockResolvedValue({ adminUpdateCatalogEntry: true });
     await catalog.adminUpdate({ kind: 'artist', id: '1', imageSource: 'genius', imageSourceUrl: 'https://genius.com/artists/A' });
