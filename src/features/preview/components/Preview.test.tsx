@@ -28,7 +28,9 @@ afterEach(() => {
 
 const base = {
   lines: [{ id: 'a', text: 'Line one', timestamp: 1 }, { id: 'b', text: 'Line two', timestamp: 2 }],
+  setLines: vi.fn(),
   playbackPosition: 0,
+  playerRef: { current: null },
   editorMode: 'lrc',
   exportToUrl: vi.fn(),
   setShareModal: vi.fn(),

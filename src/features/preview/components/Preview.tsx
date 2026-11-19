@@ -9,7 +9,10 @@ import PreviewViewport from './PreviewViewport';
 import PublicPlaybackBar from '@/features/project-view/PublicPlaybackBar';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import { useStartTour } from '@/app/layout/phone-editor-chrome';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { PlayerHandle } from '@/features/player/player.types';
+import type { ProjectMetadata } from '@/types/app-state';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { Button } from '@ui/button';
 import {
@@ -33,17 +36,12 @@ import { artistRoster } from '@/features/artists/artist-credits';
 import { useShareFlow } from '@/features/sharing/hooks/useShareFlow';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
 
-interface PreviewLineLite {
-  secondary?: string;
-  translations?: { text?: string }[];
-  [key: string]: unknown;
-}
-
 interface PreviewProps {
-  activepublicId?: string;
+  activepublicId?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   project?: { public?: boolean; forksEnabled?: boolean; [key: string]: any };
-  lines: PreviewLineLite[];
+  lines: EditorLine[];
+  setLines: Dispatch<SetStateAction<EditorLine[]>>;
   playbackPosition: number;
   duration?: number;
   exportToUrl: () => void;
@@ -59,7 +57,7 @@ interface PreviewProps {
   /** Inside a live collab session: publish and share act on a project the doc stands in for, so they are hidden. */
   sessionMode?: boolean;
   /** Imperative player handle — forwarded to SharePanel to read the A-B loop. */
-  playerRef?: { current?: { getLoop?: () => { a: number | null; b: number | null } } | null };
+  playerRef: RefObject<PlayerHandle | null>;
   isPlaying?: boolean;
   playbackSpeed?: number;
   /** This is the workspace's visible view (it stays mounted while hidden). */
@@ -77,7 +75,12 @@ interface PreviewProps {
   setActiveLineIndex?: (index: number) => void;
   /** When 'preview', this panel owns the player dock (editor is hidden). */
   playerSlot?: PlayerSlot;
-  [key: string]: unknown;
+  /** The open project's metadata: song artists and singer colors, the same source the editor uses. */
+  projectMetadata?: ProjectMetadata;
+  /** Resolves whether the project was persisted; Share saves before publishing. */
+  handleManualSave?: (() => Promise<boolean>) | null;
+  /** A subtitle project exports subtitle files only: there is no LRC of it. */
+  projectKind?: string;
 }
 
 export default function Preview(props: PreviewProps) {
@@ -85,10 +88,10 @@ export default function Preview(props: PreviewProps) {
   const { activepublicId, project, playerSlot } = props;
   // Pre-split song artists (when driven by a project) — threaded into PreviewViewport
   // so its singer roster matches the editor pane. See buildSingerRoster.
-  const songArtists = props.projectMetadata ? artistRoster(props.projectMetadata as Parameters<typeof artistRoster>[0]) : undefined;
+  const songArtists = props.projectMetadata ? artistRoster(props.projectMetadata) : undefined;
   // Custom per-singer hex overrides — same source AppRouter threads into editorProps,
   // so Preview resolves the same colors as the Editor for a given singer.
-  const singerColors = (props.projectMetadata as { singerColors?: string[] } | undefined)?.singerColors;
+  const singerColors = props.projectMetadata?.singerColors;
   const { updateSetting } = useSettings();
 
   // Visibility is owned by the app state (read when the project loads); changing it goes
@@ -187,7 +190,7 @@ export default function Preview(props: PreviewProps) {
   const { lines, isPublic = false, onVisibilityChange, coverImage, mediaTitle, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, sessionMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
 
   // Share never publishes on its own: a private project is confirmed in PublishDialog first.
-  const handleManualSave = props.handleManualSave as (() => Promise<boolean>) | undefined;
+  const handleManualSave = props.handleManualSave ?? undefined;
   const { publishOpen, setPublishOpen, requestShare, onPublished } = useShareFlow({
     publicId: activepublicId, isPublic, showLink: exportToUrl, save: handleManualSave, onVisibilityChange,
   });
@@ -576,7 +579,7 @@ export default function Preview(props: PreviewProps) {
         {/* This view owns the desktop player dock while it is showing */}
         {playerSlot === 'preview' && (
           <div data-tour="review-player">
-            <PublicPlaybackBar lines={lines as unknown as EditorLine[]} hasInitialMedia={!!hasMedia} docked minimal />
+            <PublicPlaybackBar lines={lines} hasInitialMedia={!!hasMedia} docked minimal />
           </div>
         )}
       </div>
@@ -649,7 +652,7 @@ export default function Preview(props: PreviewProps) {
         <PublishDialog
           open={publishOpen}
           onOpenChange={setPublishOpen}
-          project={{ publicId: activepublicId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines: lines as EditorLine[] }}
+          project={{ publicId: activepublicId, isPublic, title: mediaTitle, artists: songArtists, coverImage, lines }}
           onPublished={onPublished}
           onSave={handleManualSave}
         />

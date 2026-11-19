@@ -153,8 +153,7 @@ export interface UsePreviewResult {
 
 // The hook is called with the host component's full props bag; we accept it as
 // unknown and narrow to the fields we use.
-export function usePreview(rawProps: unknown): UsePreviewResult {
-  const { lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode, projectMetadata, projectKind } = rawProps as UsePreviewParams;
+export function usePreview({ lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode, projectMetadata, projectKind }: UsePreviewParams): UsePreviewResult {
   const subtitleOnly = projectKind === 'subtitles';
   const { t } = useTranslation();
   const { settings, updateSetting } = useSettings();
