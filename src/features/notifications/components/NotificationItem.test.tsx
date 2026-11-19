@@ -158,4 +158,11 @@ describe('catalog review notifications', () => {
     expect(notificationDestination(note('catalog_rejected', null), 'ann')).toBe('/ann?tab=artists');
     expect(notificationDestination(note('catalog_approved', null))).toBeNull();
   });
+
+  it('opens the new catalog page when an approval carries its slugs', () => {
+    expect(notificationDestination(note('catalog_approved', { kind: 'artist', slug: 'bjork' }), 'ann')).toBe('/artists/bjork');
+    expect(notificationDestination(note('catalog_approved', { kind: 'album', slug: 'post', artistSlug: 'bjork' }), 'ann')).toBe('/artists/bjork/albums/post');
+    // An album without its artist's slug falls back to the Artists tab.
+    expect(notificationDestination(note('catalog_approved', { kind: 'album', slug: 'post' }), 'ann')).toBe('/ann?tab=artists');
+  });
 });

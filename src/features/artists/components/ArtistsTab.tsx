@@ -142,7 +142,7 @@ export function ArtistsTab({ accountName, isOwner, asVisitor, isVerified }: Arti
       )}
 
       {isOwner && isVerified && (
-        <MySubmissions onAddAlbum={(a) => setSubmitTarget({ kind: 'album', artistId: a.id, artistName: a.name })} />
+        <MySubmissions onAddAlbum={(a) => setSubmitTarget({ kind: 'album', artistId: a.id, artistName: a.name, artistSlug: a.slug })} />
       )}
       {submitTarget && (
         <SubmitCatalogDialog open onOpenChange={(open) => { if (!open) setSubmitTarget(null); }} target={submitTarget} />

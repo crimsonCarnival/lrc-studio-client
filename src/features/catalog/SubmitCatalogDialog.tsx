@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import toast from 'react-hot-toast';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
@@ -17,13 +18,15 @@ import { UNCHANGED } from './catalog-photo';
 import type { PhotoState } from './catalog-photo';
 import { catalogDuplicateOf, submitCatalogAlbum, submitCatalogArtist, uploadCatalogImage } from './catalog.service';
 import { MY_SUBMISSIONS_KEY } from './catalog.queries';
+import { catalogAlbumPath, catalogArtistPath } from './catalog-path';
 
 const NAME_MAX = 300;
 const TITLE_MAX = 500;
 const BIO_MAX = 1000;
 const YEAR_MAX = 4;
 
-export type SubmitTarget = { kind: 'artist' } | { kind: 'album'; artistId: string; artistName: string };
+/** `initialName` pre-fills the form; `artistSlug` lets a duplicate album error link to the existing album page. */
+export type SubmitTarget = { kind: 'artist'; initialName?: string } | { kind: 'album'; artistId: string; artistName: string; artistSlug?: string | null; initialName?: string };
 
 type SubmitCatalogDialogProps = {
   open: boolean;
@@ -31,7 +34,7 @@ type SubmitCatalogDialogProps = {
   target: SubmitTarget;
 };
 
-type FormError = { key: CatalogErrorKey; duplicate?: { name: string } };
+type FormError = { key: CatalogErrorKey; duplicate?: { name: string; href: string | null } };
 
 /** The artist / album submission form. Both end up in the review queue; nothing is public until a reviewer approves. */
 export function SubmitCatalogDialog({ open, onOpenChange, target }: SubmitCatalogDialogProps) {
@@ -55,7 +58,7 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
   const queryClient = useQueryClient();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const isAlbum = target.kind === 'album';
-  const [name, setName] = useState('');
+  const [name, setName] = useState(target.initialName ?? '');
   const [bio, setBio] = useState('');
   const [year, setYear] = useState('');
   const [photo, setPhoto] = useState<PhotoState>(UNCHANGED);
@@ -90,7 +93,10 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
       onClose();
     } catch (err) {
       const existing = catalogDuplicateOf(err);
-      setError({ key: catalogErrorKey(err), duplicate: !isAlbum && existing ? { name: existing.name } : undefined });
+      const href = !existing ? null
+        : target.kind === 'artist' ? catalogArtistPath(existing.slug)
+        : target.artistSlug ? catalogAlbumPath(target.artistSlug, existing.slug) : null;
+      setError({ key: catalogErrorKey(err), duplicate: existing ? { name: existing.name, href } : undefined });
     } finally {
       setBusy(false);
     }
@@ -133,10 +139,9 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
       {error && (
         <p role="alert" className="text-sm text-love">
           {t(error.key)}
-          {error.duplicate && (
-            // Plain text on purpose: there is no public artist page to link to until catalog step 2.
-            <> {t('catalog.errors.duplicateExisting', { name: error.duplicate.name })}</>
-          )}
+          {error.duplicate && (error.duplicate.href
+            ? <> <Link to={error.duplicate.href} onClick={onClose} className="underline">{t('catalog.errors.duplicateExisting', { name: error.duplicate.name })}</Link></>
+            : <> {t('catalog.errors.duplicateExisting', { name: error.duplicate.name })}</>)}
         </p>
       )}
 

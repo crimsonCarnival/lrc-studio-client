@@ -8,6 +8,7 @@ import { Button } from '@ui/button';
 import { useNotificationsContext } from '../NotificationsContext';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
+import { catalogAlbumPath, catalogArtistPath } from '@/features/catalog/catalog-path';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '../time-ago';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
@@ -33,7 +34,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated' | 'projects_privatized' | 'artist' | 'album'; note?: string; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated' | 'projects_privatized' | 'artist' | 'album'; note?: string; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean; slug?: string; artistSlug?: string } | null;
 }
 
 /** The target types a `report` / `report_reviewed` notification can name. */
@@ -107,7 +108,13 @@ export function notificationDestination(
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
   if (type === 'badge_awarded') return '/settings/badges';
-  // The submitter's own Artists tab, where their catalog entries and submissions live.
+  // An approval opens the page that now exists (newer notifications carry its slugs).
+  if (type === 'catalog_approved' && notification.meta?.slug) {
+    const { slug, artistSlug, kind } = notification.meta;
+    if (kind === 'album' && artistSlug) return catalogAlbumPath(artistSlug, slug);
+    if (kind === 'artist') return catalogArtistPath(slug);
+  }
+  // Otherwise the submitter's own Artists tab, where their catalog entries and submissions live.
   if ((type === 'catalog_approved' || type === 'catalog_rejected') && recipientAccountName) return `${profilePath(recipientAccountName)}?tab=artists`;
   // The author is the project's owner, so the actor supplies the account name the URL needs.
   if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
