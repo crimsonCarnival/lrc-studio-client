@@ -69,6 +69,20 @@ describe('GeniusPhotoPicker', () => {
     expect(searchGeniusArtists).toHaveBeenLastCalledWith('Other');
   });
 
+  it('a failed copy shows its error inside that row, with a Retry on the same row', async () => {
+    searchGeniusArtists.mockResolvedValue(matches);
+    copyGeniusPhoto.mockRejectedValueOnce(Object.assign(new Error('x'), { code: 'catalog_genius_upstream' }));
+    show();
+    await screen.findByText('Luna Vale');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Use this photo' })[1]);
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Genius did not respond');
+    const row = alert.closest('li') as HTMLElement;
+    expect(row).toHaveTextContent('Luna Vales');
+    expect(row.querySelector('button')).toHaveTextContent('Retry');
+    expect(screen.getAllByRole('button', { name: 'Use this photo' })).toHaveLength(1);
+  });
+
   it('rows are disabled while copying', async () => {
     searchGeniusArtists.mockResolvedValue(matches);
     copyGeniusPhoto.mockReturnValue(new Promise(() => {}));
