@@ -1,4 +1,9 @@
 export default {
+  setupPrompt: {
+    artist: "“{{name}}” isn’t in the artist catalog yet.",
+    album: "“{{name}}” isn’t among this artist’s catalog albums yet.",
+    action: "Suggest it",
+  },
   suggest: {
     button: "Suggest an artist",
     unverifiedHint: "Verify your email to suggest artists.",

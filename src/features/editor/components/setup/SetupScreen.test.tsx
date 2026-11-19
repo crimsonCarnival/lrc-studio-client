@@ -31,6 +31,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k, 
 vi.mock('@/features/editor/music-library.service', () => ({ getMyMusicLibrary: vi.fn(async () => []) }));
 const catalogAlbums = vi.hoisted(() => ({ titles: [] as string[] }));
 vi.mock('@/features/catalog/catalog.queries', () => ({ useCatalogAlbumSuggestions: () => catalogAlbums.titles }));
+vi.mock('@/features/catalog/CatalogSuggestPrompt', () => ({ CatalogSuggestPrompt: () => null }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: { id: 'me', preferences: {} } }) }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
 vi.mock('@features/editor/components/setup/YoutubeSearchPanel', () => ({ default: () => <div data-testid="yt-search" /> }));
