@@ -82,6 +82,16 @@ describe('sanitizeLines — lyric lines', () => {
     expect(sanitizeLines([{ text: 'one' }])[0].secondary).toBe('');
   });
 
+  it('fills a missing translation text or language with "" and keeps every slot in place', () => {
+    const out = sanitizeLines([{ text: 'one', translations: [{ text: 'uno' }, 'junk', { language: 'fr', text: 7 }] }]);
+    // The slot index is the language column, so a broken entry becomes empty rather than shifting the rest.
+    expect(out[0].translations).toEqual([
+      { text: 'uno', language: '' },
+      { text: '', language: '' },
+      { text: '', language: 'fr' },
+    ]);
+  });
+
   it('drops non-array singers and translations instead of wrapping them', () => {
     const out = sanitizeLines([{ text: 'one', singers: 'A', translations: 'uno' }]);
     expect(out[0].singers).toBeUndefined();

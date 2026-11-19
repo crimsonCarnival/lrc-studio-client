@@ -73,7 +73,11 @@ const SessionsPage = lazy(() => import('@features/collab/components/SessionsPage
 const JoinSessionPage = lazy(() => import('@features/collab/components/JoinSessionPage'));
 
 type EditorProps = ComponentProps<typeof Editor>;
+/** `user` is passed to the editor separately by EditorWorkspace. */
+type EditorWorkspaceEditorProps = Omit<EditorProps, 'user'>;
 type PreviewComponentProps = ComponentProps<typeof Preview>;
+/** `active` is decided by EditorWorkspace. */
+type EditorWorkspacePreviewProps = Omit<PreviewComponentProps, 'active'>;
 
 // appState is the enhanced useAppState result (App augments it with t + setup handler).
 type RouterAppState = AppState & {
@@ -83,15 +87,22 @@ type RouterAppState = AppState & {
   playbackSpeed: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RouterLayoutState = Record<string, any>;
+/** The part of App's layout state the router reads; App passes the whole object. */
+type RouterLayoutState = {
+  mobileTab: string;
+  setMobileTab: (tab: string) => void;
+  setShowNamingModal?: (open: boolean) => void;
+  /** A path to leave to once unsaved changes are resolved, or BACK_TARGET. */
+  setUnsavedModalTarget: (target: string) => void;
+};
 
 // Stable fallback for the `singerColors`/`declaredSingers` props below —
 // `projectMetadata?.singerColors || []` allocated a new array every render
 // whenever metadata had no singer colors yet, which invalidated editorProps/
 // previewProps (and therefore memo(Editor)/memo(Preview)) on every render
-// even when nothing about singers had changed.
-const EMPTY_STRING_ARRAY: readonly string[] = [];
+// even when nothing about singers had changed. Typed mutable because the editor
+// tree's props are `string[]`; it is shared, so never mutate it.
+const EMPTY_STRING_ARRAY: string[] = [];
 
 /** A lazy route's chunk is loading: the same hovering dragonfly the app gate just showed. */
 function RouteFallback() {
@@ -134,8 +145,8 @@ type WorkspaceView = 'editor' | 'preview' | 'studio';
 interface EditorWorkspaceProps {
   view: WorkspaceView;
   user?: AuthUser | null;
-  editorProps: EditorProps;
-  previewProps: PreviewComponentProps;
+  editorProps: EditorWorkspaceEditorProps;
+  previewProps: EditorWorkspacePreviewProps;
   studioProps: SubtitleStudioProps;
 }
 
@@ -540,7 +551,7 @@ export function AppRouter({
     [lines, setLines, duration, playerRef, handleManualSave, isSaving],
   );
 
-  const editorProps = useMemo(() => ({
+  const editorProps = useMemo((): EditorWorkspaceEditorProps => ({
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
     playbackPosition, playerRef,
@@ -576,7 +587,7 @@ export function AppRouter({
     isListed: projectIsListed,
     onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean, listed?: boolean) => setProjectVisibility(activepublicId, next, listed) : undefined,
     canChangeVisibility,
-  } as unknown as EditorProps), [
+  }), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
     playbackPosition, playerRef,
@@ -600,7 +611,7 @@ export function AppRouter({
     mediaTitle, projectCoverImage, projectIsPublic, projectIsListed, setProjectVisibility, canChangeVisibility, activepublicId,
   ]);
 
-  const previewProps = useMemo(() => ({
+  const previewProps = useMemo((): EditorWorkspacePreviewProps => ({
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
     editorMode, exportToUrl, isSharedProject,
@@ -613,15 +624,13 @@ export function AppRouter({
     sessionMode: sessionPublicId !== null,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
-    songArtists: rosterNames,
-    singerColors: projectMetadata?.singerColors || EMPTY_STRING_ARRAY,
     playerSlot,
     coverImage: projectCoverImage,
     isPublic: projectIsPublic,
     onVisibilityChange: canChangeVisibility && activepublicId ? (next: boolean, listed?: boolean) => setProjectVisibility(activepublicId, next, listed) : undefined,
     handleManualSave,
     projectKind,
-  } as unknown as PreviewComponentProps), [
+  }), [
     projectKind,
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
@@ -629,7 +638,7 @@ export function AppRouter({
     sharedReadOnly, setSharedReadOnly,
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
-    pendingProject, projectMetadata, rosterNames,
+    pendingProject, projectMetadata,
     showEditorView, handleViewPublic, setActiveLineIndex,
     playerSlot, collabViewer, sessionPublicId,
     projectCoverImage, projectIsPublic, setProjectVisibility, canChangeVisibility, handleManualSave,

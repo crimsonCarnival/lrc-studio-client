@@ -1,4 +1,4 @@
-import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
+import type { EditorLine, EditorTranslation, EditorWord } from '@/features/editor/editor.types';
 
 /**
  * Validates and normalizes untrusted lyric-line data into `EditorLine[]`.
@@ -43,6 +43,18 @@ function sanitizeWords(raw: unknown, keepSingerIndex: boolean): EditorWord[] | u
   });
 }
 
+/**
+ * The save API requires both fields. A broken entry becomes empty rather than
+ * being dropped, because a translation's index is its language column.
+ */
+function sanitizeTranslations(raw: unknown): EditorTranslation[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((tr) => ({
+    text: isRecord(tr) && typeof tr.text === 'string' ? tr.text : '',
+    language: isRecord(tr) && typeof tr.language === 'string' ? tr.language : '',
+  }));
+}
+
 export function sanitizeLines(raw: unknown): EditorLine[] {
   if (!Array.isArray(raw)) return [];
 
@@ -72,7 +84,7 @@ export function sanitizeLines(raw: unknown): EditorLine[] {
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
       mode: typeof l.mode === 'string' ? (l.mode as EditorLine['mode']) : undefined,
       singers: Array.isArray(l.singers) ? (l.singers as string[]) : undefined,
-      translations: Array.isArray(l.translations) ? (l.translations as EditorLine['translations']) : undefined,
+      translations: sanitizeTranslations(l.translations),
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
       // Who timed the line. Dropping it would turn AI, imported and forked lines into manual ones on the next full save.
       ...(typeof l.source === 'string' && (LINE_SOURCES as readonly string[]).includes(l.source) ? { source: l.source as EditorLine['source'] } : {}),

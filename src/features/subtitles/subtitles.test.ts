@@ -60,7 +60,7 @@ describe('buildCues', () => {
   });
 
   it('appends secondary text and the chosen translation when asked', () => {
-    const l = line('hola', 1, { endTime: 2, secondary: 'roma', translations: [{ text: 'hi' }, { text: 'hello' }] });
+    const l = line('hola', 1, { endTime: 2, secondary: 'roma', translations: [{ text: 'hi', language: '' }, { text: 'hello', language: '' }] });
     expect(buildCues([l])[0].text).toBe('hola');
     expect(buildCues([l], { includeSecondary: true, includeTranslations: true, translationIndex: 1 })[0].text).toBe('hola\nroma\nhello');
   });
@@ -226,7 +226,7 @@ describe('cue line edits', () => {
   it('refuses a merge that would drop the second line’s secondary or translation text', () => {
     const withTranslation: EditorLine[] = [
       { id: 'a', text: 'one', timestamp: 2, endTime: 4 },
-      { id: 'b', text: 'two', timestamp: 5, endTime: 7, translations: [{ text: 'dos' }] },
+      { id: 'b', text: 'two', timestamp: 5, endTime: 7, translations: [{ text: 'dos', language: '' }] },
     ];
     expect(mergeCueWithNext(withTranslation, buildCues(withTranslation), 0)).toBeNull();
     const withSecondary: EditorLine[] = [
@@ -413,7 +413,7 @@ describe('subtitle files per language', () => {
 
   it('lists the slots that have text, named by their language', () => {
     expect(translationSlots(lines)).toEqual([{ index: 0, label: 'English' }, { index: 2, label: 'Deutsch (Germany)' }]);
-    expect(translationSlots([{ text: 'x', timestamp: 1, translations: [{ text: 'y' }] }])).toEqual([{ index: 0, label: 'Translation 1' }]);
+    expect(translationSlots([{ text: 'x', timestamp: 1, translations: [{ text: 'y', language: '' }] }])).toEqual([{ index: 0, label: 'Translation 1' }]);
     expect(translationSlots([{ text: 'x', timestamp: 1 }])).toEqual([]);
   });
 
@@ -456,7 +456,7 @@ describe('translation slots in the studio', () => {
 
   it('lists slots even when empty, by the language the lines give them', () => {
     expect(studioLanguages(base)).toEqual([{ index: 0, label: 'Spanish' }]);
-    expect(studioLanguages([{ text: 'x', timestamp: 1, translations: [{ text: '' }] }])).toEqual([{ index: 0, label: 'Translation 1' }]);
+    expect(studioLanguages([{ text: 'x', timestamp: 1, translations: [{ text: '', language: '' }] }])).toEqual([{ index: 0, label: 'Translation 1' }]);
     expect(studioLanguages([{ text: 'x', timestamp: 1 }])).toEqual([]);
   });
 

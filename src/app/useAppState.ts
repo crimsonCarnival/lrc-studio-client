@@ -9,7 +9,7 @@ import { useDragAndDrop } from '@/shared/hooks/useDragAndDrop';
 import { useGlobalShortcuts } from '@/shared/hooks/useGlobalShortcuts';
 import { useLoopCurrentLine } from '@/features/editor/hooks/useLoopCurrentLine';
 import { useAutosave } from '@/features/editor/hooks/useAutosave';
-import { useManualSave, buildProjectPatch, updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
+import { useManualSave, buildProjectPatch, updateServerSnapshot, type ProjectSnapshot } from '@/features/editor/hooks/useManualSave';
 import { useSharedProject } from '@/features/sharing/hooks/useSharedProject';
 import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
@@ -256,8 +256,7 @@ export function useAppState(user?: AuthUserType | null) {
     return () => { socket.off('project:visibility', onVisibility); };
   }, [projectIsPublic, activepublicId, setProjectVisibility]);
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lastServerSnapshotRef = useRef<any>(null);
+  const lastServerSnapshotRef = useRef<ProjectSnapshot | null>(null);
   // The snapshot is replaced on load and after every successful save, so its saveTime is
   // "last saved". A getter, since the ref changes without a render of its own.
   const getLastSaveTime = useCallback((): string | null => lastServerSnapshotRef.current?.state?.saveTime ?? null, []);
