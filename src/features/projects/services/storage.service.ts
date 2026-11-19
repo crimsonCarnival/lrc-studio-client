@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
   REMEMBER_ME: 'lrc-studio-remember-me',
   HAS_SESSION: 'lrc-studio-has-session',
   TUTORIAL_SEEN: 'lrc-studio-editor-tutorial-seen',
+  /** Views (words, review) whose first-visit tour hint has been used on this browser. */
+  TOUR_VIEW_HINTS: 'lrc-studio-tour-view-hints',
 } as const;
 
 /** Device-level look-and-feel inside the stored settings: it belongs to the browser, not the account. */

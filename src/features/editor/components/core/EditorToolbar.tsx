@@ -8,6 +8,7 @@ import { hasKanji } from '@/shared/utils/furigana';
 import { LogoLoader } from '@ui/LogoLoader';
 import { SessionControl, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
 import type { CollabLockInput } from '@/features/collab/collab.types';
+import { useTourViewHint } from '@/features/editor/tour/tour-view-hint';
 
 interface EditorToolbarProps {
   editorMode: string;
@@ -81,6 +82,9 @@ export default function EditorToolbar({
   }, [lines, editorMode]);
 
   const isWordsMode = editorMode === 'words';
+  // Words has no automatic tour, so its tour button pulses until the user opens it once.
+  const wordsTourHint = useTourViewHint('words');
+  const showWordsTourHint = isWordsMode && wordsTourHint.pulse;
 
   // Why the button can't run right now — null when it can. Drives both the
   // tooltip text and the aria-disabled state.
@@ -173,10 +177,12 @@ export default function EditorToolbar({
             variant="ghost"
             size="icon"
             aria-label={t('editor.tour.take')}
-            onClick={onStartTour}
-            className={`${fullRow ? 'ml-auto' : 'ml-2'} h-9 coarse:h-11 w-9 coarse:w-11 shrink-0 text-zinc-400 hover:text-zinc-200`}
+            onClick={() => { if (isWordsMode) wordsTourHint.markSeen(); onStartTour(); }}
+            className={`${fullRow ? 'ml-auto' : 'ml-2'} h-9 coarse:h-11 w-9 coarse:w-11 shrink-0 ${
+              showWordsTourHint ? 'animate-pulse-glow text-primary' : 'text-zinc-400 hover:text-zinc-200'
+            }`}
           >
-            <Icon name="school" size={18} />
+            <Icon name={showWordsTourHint ? 'help' : 'school'} size={18} />
           </Button>
         </Tip>
       )}
