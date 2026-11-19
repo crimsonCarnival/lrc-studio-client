@@ -326,13 +326,13 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
             className="pl-9 lg:pl-9"
           />
         </div>
+        <Button type="button" variant="outline" onClick={() => setDetectingArtists(true)}>
+          <Icon name="search" size={14} /> {t('admin.catalogTab.detectArtists.button')}
+        </Button>
         <Button type="button" onClick={() => setForm({ mode: 'create', kind: 'artist' })}>
           <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newArtist')}
         </Button>
       </div>
-        <Button type="button" variant="outline" onClick={() => setDetectingArtists(true)}>
-          <Icon name="search" size={14} /> {t('admin.catalogTab.detectArtists.button')}
-        </Button>
 
       {loading && artists.length === 0 ? (
         <div className="flex items-center justify-center py-16"><LogoLoader size={32} /></div>
@@ -378,10 +378,6 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
         onClose={() => setDrawerId(null)}
       />
 
-      <DetectAlbumsDialog
-        artist={detectArtist}
-        // The drawer lists the albums, so reload them to show the new one.
-        onApproved={(album) => void loadAlbums(album.artistId)}
       <DetectArtistsDialog
         open={detectingArtists}
         // The grid lists the artists, so reload it to show the new one.
@@ -389,6 +385,10 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
         onClose={() => setDetectingArtists(false)}
       />
 
+      <DetectAlbumsDialog
+        artist={detectArtist}
+        // The drawer lists the albums, so reload them to show the new one.
+        onApproved={(album) => void loadAlbums(album.artistId)}
         onClose={() => setDetectFor(null)}
       />
 
