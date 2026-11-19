@@ -18,6 +18,7 @@ import type { ProjectKind } from '@/types';
 import { projectStatus } from '@/features/projects/project-status';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
 import { projectEditedAt } from '@/features/projects/project-edited-at';
+import { projectDisplayTitle } from '@/features/projects/project-title';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -38,7 +39,7 @@ export interface CardProject {
   createdAt?: string | number;
   updatedAt?: string | number;
   contentUpdatedAt?: string | number | null;
-  metadata?: { genre?: string; songArtist?: string; artists?: ArtistCredit[] };
+  metadata?: { songName?: string; genre?: string; songArtist?: string; artists?: ArtistCredit[] };
   forkedFrom?: { publicId?: string; accountName?: string };
   user?: { accountName?: string | null } | null;
   upload?: { fileName?: string; duration?: number; source?: string };
@@ -125,7 +126,7 @@ function ProjectCard({
   const handleSwipeDelete = useCallback(() => {
     if (!onDelete) return;
     requestConfirm(
-      t('confirm.deleteProject', { title: project.title || t('library.untitled') }),
+      t('confirm.deleteProject', { title: projectDisplayTitle(project, t('library.untitled')) }),
       () => {
         onDelete(project.publicId);
       },
@@ -204,7 +205,7 @@ function ProjectCard({
           ref={cardRef}
           role="button"
           tabIndex={0}
-          aria-label={project.title || project.upload?.fileName || t('library.untitled')}
+          aria-label={projectDisplayTitle(project, t('library.untitled'))}
           onClick={openProject}
           onKeyDown={handleKeyDown}
           onTouchStart={handleTouchStart}
@@ -223,7 +224,7 @@ function ProjectCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-zinc-100 truncate">
-                {project.title || project.upload?.fileName || t('library.untitled')}
+                {projectDisplayTitle(project, t('library.untitled'))}
               </span>
               <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded-xs flex-shrink-0">
                 {project.editorMode}
@@ -342,7 +343,7 @@ function ProjectCard({
         ref={cardRef}
         role="button"
         tabIndex={0}
-        aria-label={project.title || project.upload?.fileName || t('library.untitled')}
+        aria-label={projectDisplayTitle(project, t('library.untitled'))}
         onClick={openProject}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
@@ -389,7 +390,7 @@ function ProjectCard({
         <div className="flex flex-1 flex-col gap-3 py-4 pr-4 pb-[18px] pl-[18px]">
           <div className="flex items-start gap-2">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <h3 className="truncate font-heading text-[19px] font-bold tracking-tight text-foreground">{project.title || project.upload?.fileName || t('library.untitled')}</h3>
+              <h3 className="truncate font-heading text-[19px] font-bold tracking-tight text-foreground">{projectDisplayTitle(project, t('library.untitled'))}</h3>
               <ArtistText metadata={project.metadata} className="truncate text-[15px] text-subtle" fallback={t('home.noArtist')} />
             </div>
             {/* Quick actions on hover; the menu button holds the same actions for touch and keyboard. */}
