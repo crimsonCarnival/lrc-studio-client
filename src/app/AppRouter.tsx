@@ -65,6 +65,7 @@ const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const AllListsPage = lazy(() => import('@features/playlists/AllListsPage'));
 const CatalogArtistPage = lazy(() => import('@features/catalog/CatalogArtistPage'));
 const CatalogAlbumPage = lazy(() => import('@features/catalog/CatalogAlbumPage'));
+const CatalogBrowsePage = lazy(() => import('@features/catalog/CatalogBrowsePage'));
 const ArtistPage = lazy(() => import('@features/artists/components/ArtistPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
@@ -763,6 +764,11 @@ export function AppRouter({
       <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<RouteFallback />}>
           <ListPage />
+        </Suspense>
+      } />
+      <Route path="artists" element={
+        <Suspense fallback={<RouteFallback />}>
+          <CatalogBrowsePage />
         </Suspense>
       } />
       <Route path="artists/:slug" element={

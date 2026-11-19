@@ -242,6 +242,21 @@ export async function getCatalogAlbum(artistSlug: string, albumSlug: string): Pr
   return data.catalogAlbum;
 }
 
+export const BROWSE_PAGE = 24;
+
+/** One page of approved catalog artists, A to Z; `query` matches anywhere in the name. Public. */
+export async function browseCatalogArtists(query: string, offset: number): Promise<{ items: CatalogArtist[]; total: number }> {
+  const data = await gqlRequest<{ catalogArtists: { items: CatalogArtist[]; total: number } }>(/* GraphQL */ `
+    query CatalogArtists($query: String, $offset: Int, $limit: Int) {
+      catalogArtists(query: $query, offset: $offset, limit: $limit) {
+        total
+        items { id name disambiguation slug imageUrl }
+      }
+    }
+  `, { query: query || undefined, offset, limit: BROWSE_PAGE });
+  return data.catalogArtists;
+}
+
 /** Approved catalog artists named exactly `name` (case-insensitive): several only for homonyms. */
 export async function getCatalogArtistsNamed(name: string): Promise<Array<{ id: string; name: string; slug: string | null }>> {
   const data = await gqlRequest<{ catalogSuggestions: Array<{ id: string; name: string; slug: string | null }> }>(/* GraphQL */ `

@@ -45,7 +45,8 @@ describe('CatalogArtistPage photo credit', () => {
   it('no link for a non-genius.com source URL', async () => {
     renderPage({ imageSource: 'genius', imageSourceUrl: 'https://evil.example/genius.com/' });
     await screen.findByRole('heading', { name: 'Ada' });
-    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('link', { name: /genius/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /evil/i })).toBeNull();
   });
 });
 
@@ -89,5 +90,12 @@ describe('CatalogArtistPage personal link', () => {
     renderPage({}, { viewerShelf: null });
     await screen.findByRole('heading', { name: 'Ada' });
     expect(screen.queryByRole('link', { name: /Your/ })).toBeNull();
+  });
+});
+
+describe('CatalogArtistPage browse link', () => {
+  it('links back to the catalog index', async () => {
+    renderPage({});
+    expect(await screen.findByRole('link', { name: 'All artists' })).toHaveAttribute('href', '/artists');
   });
 });
