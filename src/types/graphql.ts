@@ -438,6 +438,13 @@ export type DetectedAlbum = {
   year?: Maybe<Scalars['String']['output']>;
 };
 
+/** Aggregate only: no project ids, titles or owners. */
+export type DetectedArtist = {
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  songCount: Scalars['Int']['output'];
+};
+
 export type DisplaySettings = {
   activeHighlight?: Maybe<Scalars['String']['output']>;
   dualLine?: Maybe<Scalars['Boolean']['output']>;
@@ -798,6 +805,7 @@ export type Mutation = {
   adminUpdateBadge: BadgeDef;
   adminUpdateCatalogEntry: Scalars['Boolean']['output'];
   approveDetectedAlbum: CatalogAlbum;
+  approveDetectedArtist: CatalogArtist;
   blockUser: Scalars['Boolean']['output'];
   /** The wall's owner blocks a commenter and removes everything they wrote on the wall. Returns how many. */
   blockWallCommenter: Scalars['Int']['output'];
@@ -811,6 +819,7 @@ export type Mutation = {
   deleteProject: Scalars['Boolean']['output'];
   deleteWallComment: Scalars['Boolean']['output'];
   dismissDetectedAlbum: Scalars['Boolean']['output'];
+  dismissDetectedArtist: Scalars['Boolean']['output'];
   /** The author only, shortly after posting. */
   editWallComment: WallComment;
   endCollabSession: Scalars['Boolean']['output'];
@@ -1029,6 +1038,11 @@ export type MutationApproveDetectedAlbumArgs = {
 };
 
 
+export type MutationApproveDetectedArtistArgs = {
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationBlockUserArgs = {
   accountName: Scalars['String']['input'];
 };
@@ -1082,6 +1096,11 @@ export type MutationDeleteWallCommentArgs = {
 
 export type MutationDismissDetectedAlbumArgs = {
   artistId: Scalars['ID']['input'];
+  key: Scalars['String']['input'];
+};
+
+
+export type MutationDismissDetectedArtistArgs = {
   key: Scalars['String']['input'];
 };
 
@@ -1882,6 +1901,8 @@ export type Query = {
   catalogArtistSlugs: Array<CatalogArtistRef>;
   catalogArtists: CatalogArtistList;
   catalogDetectAlbums: Array<DetectedAlbum>;
+  /** Primary artist names on songs that have no catalog entry and were not dismissed. */
+  catalogDetectArtists: Array<DetectedArtist>;
   catalogReviewQueue: CatalogQueue;
   catalogSuggestions: Array<CatalogSuggestion>;
   /** The live session, for its owner or a signed-in member; null otherwise. */

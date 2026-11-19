@@ -36,6 +36,7 @@ import { isSudoCancelled, withSudo } from './services/sudo';
 import { CatalogAlbumsDrawer } from './CatalogAlbumsDrawer';
 import { CatalogArtistCard } from './CatalogArtistCard';
 import { DetectAlbumsDialog } from './DetectAlbumsDialog';
+import { DetectArtistsDialog } from './DetectArtistsDialog';
 import { CatalogEntryDialog } from './CatalogEntryDialog';
 import type { FormTarget } from './CatalogEntryDialog';
 import { CatalogReviewCard } from './CatalogReviewCard';
@@ -210,6 +211,7 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [form, setForm] = useState<FormTarget | null>(null);
   const [detectFor, setDetectFor] = useState<string | null>(null);
+  const [detectingArtists, setDetectingArtists] = useState(false);
   const [deleting, setDeleting] = useState<DeleteTarget | null>(null);
   const [revokeCredit, setRevokeCredit] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -324,6 +326,9 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
             className="pl-9 lg:pl-9"
           />
         </div>
+        <Button type="button" variant="outline" onClick={() => setDetectingArtists(true)}>
+          <Icon name="search" size={14} /> {t('admin.catalogTab.detectArtists.button')}
+        </Button>
         <Button type="button" onClick={() => setForm({ mode: 'create', kind: 'artist' })}>
           <Icon name="add" size={14} /> {t('admin.catalogTab.browse.newArtist')}
         </Button>
@@ -371,6 +376,13 @@ function BrowseView({ onArtists }: { onArtists: (artists: CatalogArtist[]) => vo
         onEdit={(album) => setForm({ mode: 'edit', kind: 'album', entry: album })}
         onDelete={(album) => askDelete({ kind: 'album', id: album.id, name: album.title, community: album.source === 'community', creditKnown: true })}
         onClose={() => setDrawerId(null)}
+      />
+
+      <DetectArtistsDialog
+        open={detectingArtists}
+        // The grid lists the artists, so reload it to show the new one.
+        onApproved={() => void loadArtists(query)}
+        onClose={() => setDetectingArtists(false)}
       />
 
       <DetectAlbumsDialog
