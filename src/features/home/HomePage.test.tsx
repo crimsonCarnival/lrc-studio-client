@@ -41,6 +41,7 @@ vi.mock('@ui/select-field', () => ({
 vi.mock('@/shared/hooks/useHapticFeedback', () => ({ default: () => ({ trigger: vi.fn() }) }));
 
 import HomePage from './HomePage';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
 
@@ -51,7 +52,12 @@ const PROJECTS = [
 ];
 
 async function renderHome() {
-  render(<MemoryRouter><HomePage /></MemoryRouter>);
+  // A fresh client per render: a shared cache would carry one test's projects into the next.
+  render(
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter><HomePage /></MemoryRouter>
+    </QueryClientProvider>,
+  );
   await screen.findAllByText('Alpha Song');
 }
 

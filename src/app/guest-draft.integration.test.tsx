@@ -9,6 +9,7 @@ import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { resetGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import App from './App';
 import { markGuestLyricsCleared } from '@/features/projects/services/guest-draft';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // The real App (useAppState + AppRouter + the POP reset effect + handleSetupComplete) under a
 // MemoryRouter. Only the outside world is stubbed: settings, auth, sockets, the player and the
@@ -80,12 +81,14 @@ function Probe() {
 
 function mount(path = '/project/local') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <TooltipProvider>
-        <Probe />
-        <App />
-      </TooltipProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter initialEntries={[path]}>
+        <TooltipProvider>
+          <Probe />
+          <App />
+        </TooltipProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

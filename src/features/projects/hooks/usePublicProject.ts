@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
 import type { Project } from '@/types';
 
@@ -31,27 +31,24 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
   }
 `;
 
+/**
+ * Deliberately outside the `['projects', …]` family: cache-sync's projectsChanged() invalidates that
+ * prefix after every star, and a refetch landing mid-view would add the server's new star count to
+ * the page's own optimistic delta. Staleness is covered anyway — staleTime 0 revalidates on mount.
+ */
+export const publicProjectKey = (publicId: string) => ['publicProject', publicId] as const;
+
 export function usePublicProject(publicId: string | null | undefined) {
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const query = useQuery({
+    queryKey: publicProjectKey(publicId ?? ''),
+    queryFn: () => gqlRequest<{ publicProject: Project | null }>(GET_PUBLIC_PROJECT, { publicId }).then((d) => d?.publicProject ?? null),
+    enabled: !!publicId,
+  });
 
-  useEffect(() => {
-    if (!publicId) return;
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    setNotFound(false);
-    gqlRequest<{ publicProject: Project | null }>(GET_PUBLIC_PROJECT, { publicId })
-      .then(data => {
-        if (cancelled) return;
-        if (!data?.publicProject) { setNotFound(true); return; }
-        setProject(data.publicProject);
-      })
-      .catch(() => { if (!cancelled) setNotFound(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [publicId]);
-
-  return { project, loading, notFound };
+  // Same contract as before: no id → still loading; any failure or a null project → not found.
+  return {
+    project: query.data ?? null,
+    loading: !publicId || query.isPending,
+    notFound: query.isError || query.data === null,
+  };
 }

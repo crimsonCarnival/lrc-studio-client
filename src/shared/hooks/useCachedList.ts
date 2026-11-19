@@ -11,9 +11,13 @@ const EMPTY: never[] = [];
  * `setItems` takes the same updater a `useState` setter would, so those local
  * edits stay one-liners while the list itself survives navigation.
  */
-export function useCachedList<T>(queryKey: QueryKey, queryFn: () => Promise<T[] | null | undefined>) {
+export function useCachedList<T>(
+  queryKey: QueryKey,
+  queryFn: () => Promise<T[] | null | undefined>,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   const queryClient = useQueryClient();
-  const query = useQuery({ queryKey, queryFn: async () => (await queryFn()) ?? [] });
+  const query = useQuery({ queryKey, queryFn: async () => (await queryFn()) ?? [], enabled });
 
   // queryKey is a fresh array each render; its serialized form is the real identity.
   const keyHash = JSON.stringify(queryKey);
@@ -30,7 +34,8 @@ export function useCachedList<T>(queryKey: QueryKey, queryFn: () => Promise<T[] 
 
   return {
     items: query.data ?? (EMPTY as T[]),
-    loading: query.isPending,
+    // A disabled query stays pending forever; it isn't loading anything.
+    loading: enabled && query.isPending,
     error: query.isError,
     reload,
     setItems,

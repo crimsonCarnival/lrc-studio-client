@@ -19,7 +19,8 @@ import { ListTrackStrip } from './ListTrackStrip';
 import ListAutoplay from './ListAutoplay';
 import { listTrackHref, type ListNav } from './list-nav';
 import type { Playlist, Project } from '@/types';
-import { usePublicProject } from '@/features/projects/hooks/usePublicProject';
+import { usePublicProject, publicProjectKey } from '@/features/projects/hooks/usePublicProject';
+import { useQueryClient } from '@tanstack/react-query';
 import { useStarredPlaylist } from '@/features/projects/hooks/useStarredPlaylist';
 import PublicLyrics, { type DisplayLine } from './PublicLyrics';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -103,6 +104,7 @@ function ProjectViewPageInner() {
   const actionsSlot = useHeaderSlot('actions');
 
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
   const { project, loading, notFound } = usePublicProject(publicId) as { project: PublicProject | null; loading: boolean; notFound: boolean };
   // An unlisted project is for people who have the link: tell search engines that render this page to skip it.
   const unlisted = (project as { listed?: boolean | null } | null)?.listed === false;
@@ -260,8 +262,13 @@ function ProjectViewPageInner() {
   }, [project?.publicId]);
 
   // ── Derived data ─────────────────────────────────────────────
+  // Keyed on the nested fields, not `project`: the cached project is revalidated on every visit,
+  // and the refetch differs at the top level (view count) while structural sharing keeps unchanged
+  // lyrics/upload objects identical. Keying on `project` would mint fresh line ids and hand the
+  // player a new initialMedia mid-playback.
+  const lyricsSections = project?.lyrics?.sections;
   const lines = useMemo(() => {
-    const raw = sectionsToFlat(project?.lyrics?.sections || []);
+    const raw = sectionsToFlat(lyricsSections || []);
     const result: EditorLine[] = [];
     let currentSingers: string[] | undefined = undefined;
     for (const l of raw) {
@@ -269,7 +276,7 @@ function ProjectViewPageInner() {
       result.push({ ...l, id: l.id || crypto.randomUUID(), singers: l.singers ?? currentSingers });
     }
     return result;
-  }, [project]);
+  }, [lyricsSections]);
   const editorMode = project?.lyrics?.editorMode || 'lrc';
   const projectTitle = project?.metadata?.songName || project?.title || '';
 
@@ -300,8 +307,8 @@ function ProjectViewPageInner() {
   );
   const singerColors = (project?.metadata?.singerColors as string[] | undefined) || [];
 
+  const upload = project?.upload;
   const initialMedia = useMemo(() => {
-    const upload = project?.upload;
     if (!upload) return null;
     if (upload.source === 'youtube' && upload.uploadUrl)
       return { type: 'youtube', url: upload.uploadUrl };
@@ -310,7 +317,7 @@ function ProjectViewPageInner() {
                fileName: upload.fileName, title: upload.title,
                duration: upload.duration ?? null, publicId: upload.publicId ?? null };
     return null;
-  }, [project]);
+  }, [upload]);
 
   const [mediaTitleOverride, setMediaTitle] = useState<string | null>(null);
   const mediaTitle = mediaTitleOverride ?? projectTitle;
@@ -418,13 +425,16 @@ function ProjectViewPageInner() {
     setStarredOverride(!wasStarred);
     setStarDelta((d) => wasStarred ? d - 1 : d + 1);
     try {
-      if (wasStarred) {
-        await projectsApi.unstar(project.publicId);
-        removeFromStarred(project.publicId);
-      } else {
-        await projectsApi.star(project.publicId);
-        addToStarred(project.publicId);
-      }
+      const pid = project.publicId;
+      const res = wasStarred ? await projectsApi.unstar(pid) : await projectsApi.star(pid);
+      if (wasStarred) removeFromStarred(pid);
+      else addToStarred(pid);
+      // Move the confirmed state into the cached project and drop the optimistic layer, so the
+      // count isn't applied twice and a later visit doesn't open on the pre-star copy.
+      queryClient.setQueryData<PublicProject | null>(publicProjectKey(pid), (prev) =>
+        prev ? { ...prev, starCount: res.starCount ?? prev.starCount, isStarredByMe: res.isStarredByMe ?? !wasStarred } : prev);
+      setStarredOverride(null);
+      setStarDelta(0);
     } catch {
       setStarredOverride(wasStarred);
       setStarDelta((d) => wasStarred ? d + 1 : d - 1);

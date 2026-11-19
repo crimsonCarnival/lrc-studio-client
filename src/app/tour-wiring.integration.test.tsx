@@ -9,6 +9,7 @@ import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { resetGuestLyricsCleared } from '@/features/projects/services/guest-draft';
 import { consumeNewProject, consumeTourReplay, markNewProject, requestTourReplay } from '@/features/editor/tour/tour-launch';
 import App from './App';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // The real App + SettingsProvider under a MemoryRouter, as in guest-draft.integration.test.tsx.
 // Stubbed: auth (a guest), sockets, the player, and the breakpoint, so a test can cross `lg`.
@@ -58,13 +59,15 @@ const storedInterface = () => (JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 
 
 function mount(path = '/project/local') {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <SettingsProvider>
-        <TooltipProvider>
-          <App />
-        </TooltipProvider>
-      </SettingsProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter initialEntries={[path]}>
+        <SettingsProvider>
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
+        </SettingsProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

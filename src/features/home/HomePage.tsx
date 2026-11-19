@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import { ArtistText } from '@/features/artists/ArtistText';
 import type { TFunction } from 'i18next';
@@ -9,6 +9,7 @@ import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
+import { useCachedList } from '@/shared/hooks/useCachedList';
 import { Icon } from '@/shared/ui/Icon';
 import { SearchField } from '@ui/search-field';
 import { Button } from '@ui/button';
@@ -85,8 +86,12 @@ export default function HomePage() {
   // Below lg the page swaps its tall cards for compact rows; desktop keeps the original layout.
   const narrow = useIsNarrow();
 
-  const [items, setItems] = useState<HomeProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Same cache entry as Library (and the avatar menu's counts), so moving between them is instant.
+  const { items, loading, setItems } = useCachedList<HomeProject>(
+    ['projects', 'mine'],
+    () => projects.list() as Promise<HomeProject[] | null>,
+    { enabled: !!user },
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<HomeFilterTab>('all');
   const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
@@ -109,32 +114,11 @@ export default function HomePage() {
     } finally {
       setDeletingId(null);
     }
-  }, [t]);
+  }, [t, setItems]);
 
   const handleSelect = useCallback((_publicId: string, editPath: string | null) => {
     if (editPath) navigate(editPath);
   }, [navigate]);
-
-  const fetchProjects = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const list = await projects.list() as HomeProject[] || [];
-      setItems(list || []);
-    } catch (err) {
-      console.error('Failed to fetch projects', err);
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProjects();
-  }, [fetchProjects]);
 
   const searchMatched = items.filter(p => {
     const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
