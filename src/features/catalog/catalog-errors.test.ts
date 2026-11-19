@@ -20,6 +20,7 @@ describe('catalogErrorKey', () => {
     ['catalog_genius_upstream', 'catalog.errors.geniusUpstream'],
     ['catalog_genius_not_found', 'catalog.errors.geniusNotFound'],
     ['catalog_genius_image_rejected', 'catalog.errors.geniusImageRejected'],
+    ['catalog_cover_proposal_not_found', 'catalog.errors.coverProposalNotFound'],
   ])('maps %s', (code, key) => {
     expect(catalogErrorKey(Object.assign(new Error('raw server text'), { code }))).toBe(key);
   });
