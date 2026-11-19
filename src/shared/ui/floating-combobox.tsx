@@ -10,6 +10,8 @@ const DROPDOWN_MAX_HEIGHT = 240
 export interface ComboboxOption {
   value: string
   label?: string
+  /** Muted tag shown beside the option in the list only (e.g. its source). */
+  hint?: string
 }
 
 interface FloatingComboboxProps {
@@ -215,7 +217,12 @@ export function FloatingCombobox({
             i < filtered.length - 1 && 'border-b border-zinc-800/60'
           )}
         >
-          {opt.label || opt.value}
+          {opt.hint ? (
+            <span className="flex items-baseline gap-2">
+              <span className="min-w-0 truncate">{opt.label || opt.value}</span>
+              <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wide opacity-60">{opt.hint}</span>
+            </span>
+          ) : (opt.label || opt.value)}
         </button>
       ))}
     </div>

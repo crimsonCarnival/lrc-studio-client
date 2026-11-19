@@ -29,6 +29,8 @@ vi.mock('@/app/api', () => ({
 vi.mock('@/shared/hooks/useReducedMotion', () => ({ useReducedMotion: () => true }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }) }));
 vi.mock('@/features/editor/music-library.service', () => ({ getMyMusicLibrary: vi.fn(async () => []) }));
+const catalogAlbums = vi.hoisted(() => ({ titles: [] as string[] }));
+vi.mock('@/features/catalog/catalog.queries', () => ({ useCatalogAlbumSuggestions: () => catalogAlbums.titles }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: { id: 'me', preferences: {} } }) }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
 vi.mock('@features/editor/components/setup/YoutubeSearchPanel', () => ({ default: () => <div data-testid="yt-search" /> }));
@@ -462,5 +464,18 @@ describe('SetupScreen: phone step bar focus and rules', () => {
     const input = document.getElementById('setup-lyrics-input')!;
     fireEvent.change(input, { target: { files: [new File(['x'], 'a.lrc')] } });
     await waitFor(() => expect(screen.getByText('setup.lyricsTimed')).toBeInTheDocument());
+  });
+});
+
+describe('SetupScreen catalog album suggestions', () => {
+  it('offers catalog albums of the artist in the album list, tagged as catalog', async () => {
+    catalogAlbums.titles = ['Honey'];
+    renderSetup();
+    fireEvent.click(await screen.findByRole('button', { name: /setup.moreDetails/ }));
+    const album = document.getElementById('song-album') as HTMLInputElement;
+    fireEvent.focus(album);
+    const option = await screen.findByRole('option', { name: /Honey/ });
+    expect(option).toHaveTextContent('artists.suggestions.catalog');
+    catalogAlbums.titles = [];
   });
 });
