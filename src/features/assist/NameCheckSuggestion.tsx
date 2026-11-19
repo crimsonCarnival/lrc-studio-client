@@ -10,14 +10,16 @@ type Props = {
   value: string;
   title: string;
   onApply: (next: string) => void;
+  /** For an album: the artist it belongs to, so catalog albums of that artist can be suggested. */
+  artist?: string;
   children: ReactNode;
 };
 
 /** Wraps an artist or album input; on blur it may offer a spelling fix. Never applied on its own. */
-export function NameCheckSuggestion({ field, value, title, onApply, children }: Props) {
+export function NameCheckSuggestion({ field, value, title, onApply, artist, children }: Props) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
-  const { suggestion, check, cancel, keep } = useNameCheck({ field, value, title, enabled: !!user });
+  const { suggestion, check, cancel, keep } = useNameCheck({ field, value, title, artist, enabled: !!user });
 
   const onBlurCapture = (e: FocusEvent<HTMLDivElement>) => {
     if (!e.currentTarget.contains(e.relatedTarget as Node | null)) check();

@@ -609,7 +609,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             >
               <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3 items-start">
                 <div className="col-span-2 sm:col-span-1">
-                  <NameCheckSuggestion field="album" value={songAlbum} title={songName || projectName} onApply={(next) => setMetadataState({ songAlbum: next })}>
+                  <NameCheckSuggestion field="album" value={songAlbum} title={songName || projectName} artist={primaryNames(artists)[0]} onApply={(next) => setMetadataState({ songAlbum: next })}>
                     <FloatingCombobox
                       id="song-album"
                       label={t('setup.songAlbum')}
