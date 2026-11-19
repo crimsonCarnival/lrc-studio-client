@@ -219,6 +219,7 @@ export async function getCatalogArtist(slug: string): Promise<CatalogArtistPage 
         artist { id name disambiguation slug imageUrl imageSource imageSourceUrl bio }
         albums { id artistId title slug year coverUrl }
         albumCards { songCount coverUrl album { id artistId title slug year coverUrl } }
+        viewerShelf { artistId songCount }
         songs { ...ProjectListFields user { accountName } }
       }
     }

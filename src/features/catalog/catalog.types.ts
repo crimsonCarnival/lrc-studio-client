@@ -60,6 +60,8 @@ export type CatalogArtistPage = {
   albums: CatalogAlbum[];
   /** What the page shows: approved catalog albums only, never album titles taken from songs. */
   albumCards: CatalogAlbumCard[];
+  /** The signed-in viewer's own artist for this name and their song count; null otherwise. */
+  viewerShelf?: { artistId: string; songCount: number } | null;
   /** Every public song crediting the artist, from any user. */
   songs: CatalogSong[];
 };

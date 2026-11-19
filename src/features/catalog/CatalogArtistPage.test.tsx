@@ -6,7 +6,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 const { getCatalogArtist } = vi.hoisted(() => ({ getCatalogArtist: vi.fn() }));
 vi.mock('./catalog.service', async (importOriginal) => ({ ...(await importOriginal<object>()), getCatalogArtist }));
-vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: null }) }));
+const auth = vi.hoisted(() => ({ user: null as null | { accountName: string; isVerified?: boolean } }));
+vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: auth.user }) }));
 
 import CatalogArtistPage from './CatalogArtistPage';
 
@@ -70,5 +71,23 @@ describe('CatalogArtistPage albums', () => {
     renderPage({}, { albumCards: [card('Loose', null, null, 0)] });
     await screen.findByText('Loose');
     expect(screen.queryByRole('link', { name: /Loose/ })).toBeNull();
+  });
+});
+
+describe('CatalogArtistPage personal link', () => {
+  beforeEach(() => { vi.clearAllMocks(); auth.user = null; });
+
+  it('links a signed-in viewer to their own artist page with their song count', async () => {
+    auth.user = { accountName: 'ana' };
+    renderPage({}, { viewerShelf: { artistId: 'x1', songCount: 3 } });
+    const link = await screen.findByRole('link', { name: /Your 3 songs by Ada/ });
+    expect(link).toHaveAttribute('href', '/ana/artists/x1');
+  });
+
+  it('shows no personal link without viewerShelf', async () => {
+    auth.user = { accountName: 'ana' };
+    renderPage({}, { viewerShelf: null });
+    await screen.findByRole('heading', { name: 'Ada' });
+    expect(screen.queryByRole('link', { name: /Your/ })).toBeNull();
   });
 });

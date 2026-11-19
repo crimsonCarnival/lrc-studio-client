@@ -243,6 +243,11 @@ export type CatalogAlbumCard = {
   songCount: Scalars['Int']['output'];
 };
 
+export type CatalogAlbumLink = {
+  albumSlug: Scalars['String']['output'];
+  artistSlug: Scalars['String']['output'];
+};
+
 export type CatalogAlbumPage = {
   album: CatalogAlbum;
   artist: CatalogArtist;
@@ -272,6 +277,7 @@ export type CatalogArtistPage = {
   albums: Array<CatalogAlbum>;
   artist: CatalogArtist;
   songs: Array<Project>;
+  viewerShelf?: Maybe<CatalogViewerShelf>;
 };
 
 export type CatalogArtistRef = {
@@ -295,6 +301,18 @@ export type CatalogKind =
 export type CatalogQueue = {
   albums: Array<CatalogAlbum>;
   artists: Array<CatalogArtist>;
+};
+
+export type CatalogSuggestion = {
+  disambiguation: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  slug?: Maybe<Scalars['String']['output']>;
+};
+
+export type CatalogViewerShelf = {
+  artistId: Scalars['ID']['output'];
+  songCount: Scalars['Int']['output'];
 };
 
 export type CollabInvite = {
@@ -1717,6 +1735,7 @@ export type ProjectLyricsInput = {
 export type ProjectMetadata = {
   albumArt?: Maybe<Scalars['String']['output']>;
   artists: Array<ArtistCredit>;
+  catalogAlbum?: Maybe<CatalogAlbumLink>;
   description?: Maybe<Scalars['String']['output']>;
   explicit?: Maybe<Scalars['Boolean']['output']>;
   genre?: Maybe<Scalars['String']['output']>;
@@ -1858,6 +1877,7 @@ export type Query = {
   catalogArtistSlugs: Array<CatalogArtistRef>;
   catalogDetectAlbums: Array<DetectedAlbum>;
   catalogReviewQueue: CatalogQueue;
+  catalogSuggestions: Array<CatalogSuggestion>;
   /** The live session, for its owner or a signed-in member; null otherwise. */
   collabSession?: Maybe<CollabSession>;
   exploreStats: ExploreStats;
@@ -1979,6 +1999,14 @@ export type QueryCatalogArtistSlugsArgs = {
 
 export type QueryCatalogDetectAlbumsArgs = {
   artistId: Scalars['ID']['input'];
+};
+
+
+export type QueryCatalogSuggestionsArgs = {
+  artist?: InputMaybe<Scalars['String']['input']>;
+  kind: CatalogKind;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  prefix?: InputMaybe<Scalars['String']['input']>;
 };
 
 

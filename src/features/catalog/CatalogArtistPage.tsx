@@ -9,6 +9,7 @@ import { SubmitCatalogDialog } from './SubmitCatalogDialog';
 import { useCatalogArtist } from './catalog.queries';
 import { CatalogSongList } from './CatalogSongList';
 import { catalogAlbumPath } from './catalog-path';
+import { artistPath } from '@/features/artists/shelf-path';
 import type { CatalogAlbumCard } from './catalog.types';
 
 /** Newest first; undated albums last, then by title. */
@@ -55,6 +56,12 @@ export default function CatalogArtistPage() {
             <h1 className="break-words font-heading text-4xl font-bold text-foreground">{artist.name}</h1>
             {artist.disambiguation && <span className="text-sm text-muted-foreground">{artist.disambiguation}</span>}
             {artist.bio && <p className="max-w-2xl whitespace-pre-line text-sm text-muted-foreground">{artist.bio}</p>}
+            {data.viewerShelf && user?.accountName && (
+              <Link to={artistPath(user.accountName, data.viewerShelf.artistId)} className="flex w-fit items-center gap-1 text-sm text-primary hover:underline">
+                {t('catalog.page.yourSongs', { count: data.viewerShelf.songCount, name: artist.name })}
+                <Icon name="arrow_forward" size={14} />
+              </Link>
+            )}
           </div>
         </header>
 
