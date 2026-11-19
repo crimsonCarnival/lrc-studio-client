@@ -573,7 +573,14 @@ export function WordTimeline({
 
   const start = line.timestamp;
   const words = useMemo(() => line.words ?? [], [line.words]);
-  const span = start != null && lineEnd != null && lineEnd > start ? lineEnd - start : null;
+  // A line re-stamped past the start of the line after it (or past its own end) has no valid
+  // end of its own. Its words are still timed, so keep them on screen: show the line up to a
+  // little after its last mark instead of falling back to the "mark the start" prompt.
+  const lastMark = words.reduce((m, w) => Math.max(m, w.time ?? 0, w.end ?? 0), start ?? 0);
+  const effectiveEnd = start != null && words.some((w) => w.time != null) && !(lineEnd != null && lineEnd > start)
+    ? lastMark + 1
+    : lineEnd;
+  const span = start != null && effectiveEnd != null && effectiveEnd > start ? effectiveEnd - start : null;
   const end = start != null && span != null ? start + span : null;
   const naturalEnd = naturalEndProp ?? end;
   const nextStart = nextLine?.line.timestamp ?? null;
