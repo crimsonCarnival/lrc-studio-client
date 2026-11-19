@@ -682,7 +682,10 @@ export function useEditor({
     };
     const result = applyMark({ ...markArgs, lines: currentLines, activeLineIndex: idx, awaitingEndMark });
 
-    if (result.refused) return;
+    if (result.refused) {
+      toast.error(t('editor.markRefused'), { id: 'mark-refused' });
+      return;
+    }
     setModifiedLines(prev => new Set(prev).add(idx));
     // `result` comes from linesRef (the last committed lines), so the index state set
     // below matches what the user saw. If the lines moved on before this update applies
@@ -728,6 +731,7 @@ export function useEditor({
     settings.editor,
     setModifiedLines,
     withLock,
+    t,
   ]);
 
   // ——— Shortcut handler (sync mode) ———
