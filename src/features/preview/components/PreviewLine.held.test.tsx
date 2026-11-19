@@ -44,7 +44,8 @@ function renderLine(playbackPosition: number | null, words = line.words) {
       />
     </TooltipProvider>,
   );
-  return container.querySelectorAll('.karaoke-fill-glow').length;
+  // A fill fading out after the held word ended is still mounted, at opacity 0: count the shown ones.
+  return [...container.querySelectorAll<HTMLElement>('.karaoke-fill-glow')].filter((el) => el.style.opacity !== '0').length;
 }
 
 describe('PreviewLine with a last word held over the next line', () => {
@@ -54,6 +55,13 @@ describe('PreviewLine with a last word held over the next line', () => {
 
   it('stops once the held word has ended', () => {
     expect(renderLine(25.2)).toBe(0);
+  });
+
+  it('fades the held line out instead of dropping its fill at once', () => {
+    renderLine(25.2);
+    const fills = [...document.querySelectorAll<HTMLElement>('.karaoke-fill-glow')];
+    expect(fills.length).toBeGreaterThan(0);
+    expect(fills.every((el) => el.style.opacity === '0' && el.style.transition.includes('opacity'))).toBe(true);
   });
 
   it('leaves a line that ends where the next one starts alone', () => {

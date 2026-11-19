@@ -6,7 +6,7 @@ import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
-import { isHeldAt, tailWordEnd } from '@/features/editor/utils/line-span';
+import { heldUntil, isHeldAt, tailWordEnd, wordFillEnd } from '@/features/editor/utils/line-span';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
@@ -209,6 +209,9 @@ export default function PreviewLine({
 
   const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isCounterpartActive || isHeldActive;
   const isPast = effectiveTimestamp != null && i < displayedActiveIndex && !isHeldActive;
+  // A line held over the next one goes on sounding beside it, so its end is not hidden behind the
+  // next line lighting up: its fill fades out instead of vanishing the moment its last word ends.
+  const heldEnded = isPast && !isActive && heldUntil(line, nextTimestamp) != null;
   const isLocked = lockedLineIndex === i;
 
   const focusContrast = settings.interface?.focusContrast ?? 'medium';
@@ -308,7 +311,7 @@ export default function PreviewLine({
         <>
           <div className="flex-1 min-w-0 flex flex-col">
             <MainTrack
-              line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
+              line={line} isActive={isActive} isPast={isPast} heldEnded={heldEnded} hasWordTimestamps={!!hasWordTimestamps}
               playbackPosition={playbackPosition ?? 0} activeFontSizes={activeFontSizes}
               inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
               settings={settings} showFuriganaInPreview={showFuriganaInPreview}
@@ -341,7 +344,7 @@ export default function PreviewLine({
       ) : (
         <>
           <MainTrack
-            line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
+            line={line} isActive={isActive} isPast={isPast} heldEnded={heldEnded} hasWordTimestamps={!!hasWordTimestamps}
             playbackPosition={playbackPosition ?? 0} activeFontSizes={activeFontSizes}
             inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
             settings={settings} showFuriganaInPreview={showFuriganaInPreview}
@@ -473,6 +476,8 @@ interface MainTrackProps {
   editorMode?: string;
   review?: boolean;
   muted?: boolean;
+  /** The line was held over the next one and has just stopped: its fill fades out. */
+  heldEnded?: boolean;
 }
 
 // ——— Render main text track with karaoke fill ———
@@ -481,7 +486,7 @@ interface MainTrackProps {
 // timestamp, even before a single word was stamped: the words were split from
 // line.text with no `.time` on any of them, so the fill interpolated blindly
 // across the whole line as if evenly spaced, which is not what was recorded.
-function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode: _editorMode, review = false, muted = false }: MainTrackProps) {
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode: _editorMode, review = false, muted = false, heldEnded = false }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
   const skipMainFill = isActive && fillTrack === 'secondary';
 
@@ -574,8 +579,8 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
               endTime = prevT + (slice * (untimedCountBefore + 1));
             }
           } else {
-            // Timed word: ends when next timed word starts
-            endTime = words.slice(wi + 1).find((w2) => w2.time != null)?.time ?? lastWordFillEnd;
+            // Timed word: ends at its own end (a pause, or an overlap), else when the next timed word starts
+            endTime = wordFillEnd(words, wi, lastWordFillEnd);
           }
           const nextWord = words[wi + 1];
           const addSpace = needsSpaceAfter(w.word, nextWord?.word);
@@ -603,13 +608,15 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
             <React.Fragment key={wi}>
               <span className={`relative inline-block ${wordSingerColorClass}`} style={wordSingerColorStyle}>
                 <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-300' : 'text-zinc-500 transition-colors duration-300') : ''}>{wordContent}</span>
-                {isActive && progress > 0 && (
+                {((isActive && progress > 0) || heldEnded) && (
                   <span
                     className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? fillColorClass : '')}`}
                     style={{
                       ...(customHex ? getCustomColorStyle(customHex, true) : {}),
-                      clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
-                      WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                      clipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
+                      WebkitClipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
+                      opacity: heldEnded ? 0 : 1,
+                      transition: 'opacity 700ms ease-out',
                       direction: 'ltr',
                       textAlign: 'left',
                       unicodeBidi: 'plaintext',
@@ -745,7 +752,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
           }
         } else {
           // Timed word: ends when next timed word starts
-          endTime = secWords.slice(wi + 1).find((w2) => w2.time != null)?.time ?? lastSecWordFillEnd;
+          endTime = wordFillEnd(secWords, wi, lastSecWordFillEnd);
         }
         const addSpace = wi < secWords.length - 1;
         let progress = 0;
