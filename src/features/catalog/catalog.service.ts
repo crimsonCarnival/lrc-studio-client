@@ -242,6 +242,17 @@ export async function getCatalogAlbum(artistSlug: string, albumSlug: string): Pr
   return data.catalogAlbum;
 }
 
+/** Approved catalog artists named exactly `name` (case-insensitive): several only for homonyms. */
+export async function getCatalogArtistsNamed(name: string): Promise<Array<{ id: string; name: string; slug: string | null }>> {
+  const data = await gqlRequest<{ catalogSuggestions: Array<{ id: string; name: string; slug: string | null }> }>(/* GraphQL */ `
+    query CatalogArtistsNamed($prefix: String!) {
+      catalogSuggestions(kind: artist, prefix: $prefix, limit: 20) { id name slug }
+    }
+  `, { prefix: name });
+  const key = name.normalize('NFC').toLowerCase();
+  return data.catalogSuggestions.filter((a) => a.name.normalize('NFC').toLowerCase() === key);
+}
+
 /** Approved albums of the one approved catalog artist with this name; empty for unknown names and homonyms. */
 export async function getCatalogAlbumSuggestions(artist: string): Promise<Array<{ id: string; name: string }>> {
   const data = await gqlRequest<{ catalogSuggestions: Array<{ id: string; name: string }> }>(/* GraphQL */ `

@@ -7,6 +7,7 @@ import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingCombobox, type ComboboxOption } from '@/shared/ui/floating-combobox';
 import { useCatalogAlbumSuggestions } from '@/features/catalog/catalog.queries';
+import { CatalogSuggestPrompt } from '@/features/catalog/CatalogSuggestPrompt';
 import { CollapsibleSection } from '@/shared/ui/collapsible-section';
 import { TrackNumberField } from '@/shared/ui/track-number-field';
 import { CoverDropzone } from './CoverDropzone';
@@ -569,6 +570,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   )}
                 />
               </NameCheckSuggestion>
+              {soleArtistName(artists) && <CatalogSuggestPrompt kind="artist" artist={soleArtistName(artists)} />}
             </div>
 
             {/* Only shown once a lookup actually populated one of these — neither
@@ -627,6 +629,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       maxLength={300}
                     />
                   </NameCheckSuggestion>
+                  {primaryNames(artists)[0] && <CatalogSuggestPrompt kind="album" artist={primaryNames(artists)[0]} album={songAlbum} />}
                 </div>
                 <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
                   onChange={(e) => {
