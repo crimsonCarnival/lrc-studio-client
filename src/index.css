@@ -1027,6 +1027,8 @@ audio::-webkit-media-controls-panel {
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Fill of form fields. Built-in themes: the card well; palette themes: transparent (see themes.ts). */
+  --color-field: var(--field);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   /* Rosé Pine palette + roles (redesign sheet 01). Values live in :root / .dark. */
@@ -1533,6 +1535,7 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --background: #faf4ed;
   --foreground: #1a1826;
   --card: #fffaf3;
+  --field: var(--card);
   --card-foreground: #1a1826;
   --popover: #fffaf3;
   --popover-foreground: #1a1826;
@@ -1626,6 +1629,7 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --background: #232136;
   --foreground: #f0eeff;
   --card: #1a1826;
+  --field: var(--card);
   --card-foreground: #f0eeff;
   --popover: #2a273f;
   --popover-foreground: #f0eeff;

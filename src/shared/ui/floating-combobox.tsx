@@ -2,6 +2,7 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/shared/utils/utils'
 import { Input } from './input'
+import { NotchedOutline } from './notched-outline'
 import { Icon } from '@/shared/ui/Icon'
 
 /** Tallest the option list is allowed to get; it shrinks to fit the viewport. */
@@ -257,18 +258,22 @@ export function FloatingCombobox({
         className={cn(
           'w-full focus:ring-0 transition-all',
           // Same field as FloatingInput (redesign sheet 05), so the two sit side by side evenly.
-          size === 'default' && 'h-[52px] lg:h-[52px] rounded-[var(--radius-control)] border-0 bg-card px-4 lg:px-4 text-[17px] md:text-[17px] lg:text-[17px] font-medium text-foreground inset-ring inset-ring-hl hover:inset-ring-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary',
+          // Outline drawn by NotchedOutline (gap for the label), so the fill can follow the theme.
+          size === 'default' && 'h-[52px] lg:h-[52px] rounded-[var(--radius-control)] border-0 bg-field px-4 lg:px-4 text-[17px] md:text-[17px] lg:text-[17px] font-medium text-foreground focus-visible:ring-0 aria-invalid:border-0 aria-invalid:ring-0',
           size === 'default' && hasOptions && 'pr-9 lg:pr-9',
           size === 'sm' && 'h-6 bg-zinc-800 border-zinc-600/50 text-zinc-500 text-[10px] focus:border-primary/60 rounded-xs px-1.5 pr-6',
-          error && (size === 'default' ? 'inset-ring-2 inset-ring-love' : 'border-destructive/50 focus:border-destructive/80')
+          error && size === 'sm' && 'border-destructive/50 focus:border-destructive/80'
         )}
       />
+      {size === 'default' && (
+        <NotchedOutline label={label ?? ''} raised={!!label && !!(focused || hasValue || value)} focused={focused} error={error} className="bottom-auto h-[57px]" />
+      )}
       {size === 'default' && label && (
         <label
           htmlFor={id}
           className={cn(
             // top-[26px] = half of the 52px field, not top-1/2: see floating-input.tsx.
-            'absolute left-4 -ml-1 -translate-y-1/2 pointer-events-none rounded-sm bg-card px-1 text-subtle transition-all duration-[var(--duration-state)] ease-state',
+            'absolute left-4 -ml-1 -translate-y-1/2 pointer-events-none px-1 text-subtle transition-all duration-[var(--duration-state)] ease-state',
             (focused || hasValue || value)
               ? 'top-0 text-[11px] font-semibold uppercase leading-none tracking-[0.08em]'
               : 'top-[26px] text-[17px] font-medium',

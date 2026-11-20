@@ -203,6 +203,8 @@ export function themeTokens(p: ThemePalette, overrides: ThemeOverrides = {}): { 
       '--background': bg,
       '--foreground': fg,
       '--card': card,
+      // Fields show the panel they sit on in dark palettes (their outline marks them out); light keeps the raised fill.
+      '--field': light ? card : 'transparent',
       '--card-foreground': fg,
       '--popover': raised,
       '--popover-foreground': fg,

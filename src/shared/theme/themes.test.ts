@@ -24,6 +24,12 @@ describe('palette themes', () => {
     expect(themeTokens(THEME_PALETTES.find((p) => p.id === 'paper')!).dark).toBe(false)
     expect(themeTokens(THEME_PALETTES.find((p) => p.id === 'dracula')!).dark).toBe(true)
   })
+
+  it('lets fields show their panel on dark palettes and keeps the raised fill on light ones', () => {
+    const vars = (id: string) => themeTokens(THEME_PALETTES.find((p) => p.id === id)!).vars
+    expect(vars('bento')['--field']).toBe('transparent')
+    expect(vars('paper')['--field']).toBe(vars('paper')['--card'])
+  })
 })
 
 describe('theme shapes', () => {
