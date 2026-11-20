@@ -73,6 +73,10 @@ const GET_SETTINGS = /* GraphQL */ `
         mobileTab
         toastPosition
         keepThemeOnSignOut
+        miniPlayer
+        miniPlayerPosition
+        miniPlayerKeepPlaying
+        miniPlayerLyrics
         editorTourShown
         editorTourEnabled
       }

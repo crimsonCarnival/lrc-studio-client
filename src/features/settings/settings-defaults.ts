@@ -79,6 +79,11 @@ export const DEFAULT_SETTINGS = {
     mobileTab: 'editor',
     toastPosition: 'bottom-right',
     keepThemeOnSignOut: true,
+    // The floating player after leaving the editor with media loaded.
+    miniPlayer: true,
+    miniPlayerPosition: 'bottom-right',
+    miniPlayerKeepPlaying: true,
+    miniPlayerLyrics: true,
     editorTourShown: 0,
     editorTourEnabled: true
   },

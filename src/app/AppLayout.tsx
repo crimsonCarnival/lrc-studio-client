@@ -18,6 +18,8 @@ import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import { MiniPlayer } from '@/features/player/components/MiniPlayer';
+import { miniPlayerSettings, nextReturnPath, ownsPlayer } from '@/features/player/mini-player';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
@@ -108,6 +110,27 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // No bottom bar in the editor workspace, setup, the local draft or the public project
   // view, nor while the phone editor draws its own chrome (see showsBottomBar).
   const showMobileNav = showsBottomBar(location.pathname, phoneEditorMounted);
+
+  // The mini player: the editor page last left, kept while browsing other pages, dropped once a
+  // page that owns the player opens again. Derived during render from the previous path, as the
+  // route change is the event that sets it.
+  const mini = miniPlayerSettings(settings.interface as Record<string, unknown> | undefined);
+  const [miniNav, setMiniNav] = useState<{ path: string; returnTo: string | null }>({ path: location.pathname, returnTo: null });
+  if (miniNav.path !== location.pathname) {
+    setMiniNav({ path: location.pathname, returnTo: nextReturnPath(miniNav.path, location.pathname, miniNav.returnTo) });
+  }
+  const miniReturnTo = mini.enabled ? miniNav.returnTo : null;
+  const closeMini = useCallback(() => {
+    setMiniNav((prev) => ({ ...prev, returnTo: null }));
+  }, []);
+
+  // Pages that do not own the player stop it, unless the mini player is carrying it. The public
+  // project view pauses it too (below): it mounts a player of its own.
+  useEffect(() => {
+    if (ownsPlayer(location.pathname)) return;
+    if (miniReturnTo && mini.keepPlaying) return;
+    playerRef.current?.pause?.();
+  }, [location.pathname, miniReturnTo, mini.keepPlaying, playerRef]);
 
   // Compute dynamic bottom padding only for the mobile dock. Desktop slots (editor/header)
   // are in-flow — no space reservation needed. Above the bottom bar the dock sits at
@@ -371,6 +394,16 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               onHeightChange={setPlayerHeight}
               playerSlot={playerSlot}
               aboveNav={showMobileNav}
+            />
+          )}
+
+          {miniReturnTo && (
+            <MiniPlayer
+              returnTo={miniReturnTo}
+              title={headerTitle}
+              settings={mini}
+              aboveNav={showMobileNav}
+              onClose={closeMini}
             />
           )}
 

@@ -1,4 +1,16 @@
 export default {
+  // The floating player shown after leaving the editor with something playing.
+  mini: {
+    label: "Mini player",
+    backTo: "Back to {{title}}",
+    open: "Back to the editor",
+    close: "Close and stop",
+    play: "Play",
+    pause: "Pause",
+    previousLine: "Previous line",
+    nextLine: "Next line",
+    progress: "Playback position",
+  },
   title: "Player",
   localFile: "Local File",
   youtube: "YouTube",

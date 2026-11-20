@@ -8,6 +8,7 @@ import { useState } from 'react';
 import ThemeSelector from '../theme/ThemeSelector';
 import ThemeModal from '../theme/ThemeModal';
 import { ColorPicker } from '@ui/color-picker';
+import { miniPlayerSettings, MINI_PLAYER_POSITIONS } from '@/features/player/mini-player';
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -28,6 +29,9 @@ const TOAST_POSITIONS = [
   { value: 'bottom-center', labelKey: 'bottomCenter', v: 'items-end', h: 'justify-center' },
   { value: 'bottom-right', labelKey: 'bottomRight', v: 'items-end', h: 'justify-end' },
 ] as const;
+
+// 'bottom-right' -> 'bottomRight', the key settings.options.positions uses.
+const positionKey = (p: string) => p.replace(/-(\w)/, (_, c: string) => c.toUpperCase());
 
 // Illustrative sizing for the live preview; the real editor uses its own scale.
 const PREVIEW_FONT: Record<string, number> = { small: 16, normal: 19, large: 23, xlarge: 28 };
@@ -60,6 +64,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
   const toastPosition = ui.toastPosition ?? 'bottom-right';
   const highlight = display.activeHighlight ?? 'glow';
   const toastLabel = tk(`settings.options.positions.${TOAST_POSITIONS.find((p) => p.value === toastPosition)?.labelKey ?? 'bottomRight'}`);
+  const mini = miniPlayerSettings(ui);
   const dualLine = display.dualLine ?? false;
   const singerColors: string[] = display.singerColors ?? [];
 
@@ -133,6 +138,47 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
               );
             })}
           </div>
+        </SettingRow>
+      </Section>
+
+      <Section title={t('settings.interface.miniPlayerSection')} searchTerm={searchTerm}>
+        <SettingRow label={t('settings.interface.miniPlayer')} description={t('settings.interface.miniPlayerDesc')}>
+          <Toggle id="toggle-mini-player" label={t('settings.interface.miniPlayer')} checked={mini.enabled} onChange={(v: boolean) => updateSetting('interface.miniPlayer', v)} />
+        </SettingRow>
+        <SettingRow label={t('settings.interface.miniPlayerPosition')} description={tk(`settings.options.positions.${positionKey(mini.position)}`)}>
+          {/* A miniature screen: the lit corner is where the player sits. */}
+          <div
+            role="radiogroup"
+            aria-label={t('settings.interface.miniPlayerPosition')}
+            aria-disabled={!mini.enabled}
+            className={cn('grid grid-cols-2 gap-1 w-[120px] h-[72px] p-1 rounded-[calc(var(--radius)*1)] border border-zinc-700 bg-zinc-950', !mini.enabled && 'opacity-50')}
+          >
+            {MINI_PLAYER_POSITIONS.map((p) => {
+              const on = mini.position === p;
+              const label = tk(`settings.options.positions.${positionKey(p)}`);
+              return (
+                <Tip key={p} content={label}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={label}
+                    disabled={!mini.enabled}
+                    onClick={() => updateSetting('interface.miniPlayerPosition', p)}
+                    className={cn('flex p-1 rounded-md', p.startsWith('top') ? 'items-start' : 'items-end', p.endsWith('left') ? 'justify-start' : 'justify-end', on ? 'bg-zinc-800' : 'hover:bg-zinc-900')}
+                  >
+                    <span className={cn('block w-[22px] h-3 rounded-[calc(var(--radius)*0.3)]', on ? 'bg-primary' : 'bg-zinc-700')} />
+                  </button>
+                </Tip>
+              );
+            })}
+          </div>
+        </SettingRow>
+        <SettingRow label={t('settings.interface.miniPlayerKeepPlaying')} description={t('settings.interface.miniPlayerKeepPlayingDesc')}>
+          <Toggle id="toggle-mini-player-keep-playing" label={t('settings.interface.miniPlayerKeepPlaying')} checked={mini.keepPlaying} disabled={!mini.enabled} onChange={(v: boolean) => updateSetting('interface.miniPlayerKeepPlaying', v)} />
+        </SettingRow>
+        <SettingRow label={t('settings.interface.miniPlayerLyrics')} description={t('settings.interface.miniPlayerLyricsDesc')}>
+          <Toggle id="toggle-mini-player-lyrics" label={t('settings.interface.miniPlayerLyrics')} checked={mini.lyrics} disabled={!mini.enabled} onChange={(v: boolean) => updateSetting('interface.miniPlayerLyrics', v)} />
         </SettingRow>
       </Section>
 

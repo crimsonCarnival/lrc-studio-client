@@ -1,4 +1,16 @@
 export default {
+  // El reproductor flotante que aparece al salir del editor con algo sonando.
+  mini: {
+    label: "Minirreproductor",
+    backTo: "Volver a {{title}}",
+    open: "Volver al editor",
+    close: "Cerrar y detener",
+    play: "Reproducir",
+    pause: "Pausar",
+    previousLine: "Línea anterior",
+    nextLine: "Línea siguiente",
+    progress: "Posición de reproducción",
+  },
   title: "Reproductor",
   localFile: "Archivo Local",
   youtube: "YouTube",
