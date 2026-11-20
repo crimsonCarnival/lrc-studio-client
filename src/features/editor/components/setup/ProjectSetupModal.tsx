@@ -20,13 +20,14 @@ import { NameCheckSuggestion } from '@/features/assist/NameCheckSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { useArtistImport } from '@/features/artists/useArtistImport';
 import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renamePrimary, soleArtistName, renumber } from '@/features/artists/artist-credits';
-import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
+import { featuredNames, formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { MAX_TAGS, PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { PublishDialog } from '@/features/projects/components/PublishDialog';
 import toast from 'react-hot-toast';
-import { songMetadata } from '@/app/api';
 import SingersInput from './SingersInput';
+import { SongInfoSuggestions } from './SongInfoSuggestions';
+import { useSongInfoSearch, type TrackSuggestion } from './useSongInfoSearch';
 import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { SelectField } from '@ui/select-field';
@@ -180,7 +181,6 @@ export default function ProjectSetupModal({
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [imageUploading, setImageUploading] = useState(false);
-  const [metaSearching, setMetaSearching] = useState(false);
   const artistImporter = useArtistImport();
   // Callers build `initialArtists` on every render; compare by content so the form is not reset under the user.
   const initialArtistsKey = JSON.stringify(initialArtists.map((c) => [c.name, c.role]));
@@ -280,39 +280,39 @@ export default function ProjectSetupModal({
     if (file) void uploadImage(field, file);
   };
 
-  const handleFetchSongInfo = useCallback(async () => {
+  // "Find song info" lists the tracks it found; nothing changes until the person picks one.
+  const { searching: metaSearching, results: songResults, query: songQuery, search: searchSongs, close: closeSongs } = useSongInfoSearch();
+  // The cover the last pick filled in: a later pick may replace it, a cover the person chose stays.
+  const lookupCoverRef = useRef<string | null>(null);
+
+  const handleFetchSongInfo = useCallback(() => {
     if (!form.songName.trim() || !primaryText.trim() || metaSearching) return;
-    setMetaSearching(true);
-    try {
-      const meta = await songMetadata.lookupTrack(form.songName.trim(), primaryText.trim()) as {
-        error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string;
+    void searchSongs({ songName: form.songName.trim(), artist: primaryText.trim(), featured: featuredNames(form.artists) });
+  }, [form.songName, form.artists, primaryText, metaSearching, searchSongs]);
+
+  const handlePickSong = useCallback((meta: TrackSuggestion) => {
+    closeSongs();
+    const mappedGenre = matchGenreFromTags(meta.genres || []);
+    setForm((f) => {
+      const coverIsOurs = !f.coverImage || f.coverImage === lookupCoverRef.current;
+      if (coverIsOurs && meta.albumArt) lookupCoverRef.current = meta.albumArt;
+      return {
+        ...f,
+        songName: meta.name || f.songName,
+        songAlbum: meta.album || f.songAlbum,
+        songYear: meta.releaseYear || f.songYear,
+        ...(mappedGenre ? { genre: mappedGenre } : {}),
+        ...(coverIsOurs && meta.albumArt ? { coverImage: meta.albumArt } : {}),
       };
-      if (meta && !meta.error) {
-        const mappedGenre = matchGenreFromTags(meta.genres || []);
-        setForm(f => ({
-          ...f,
-          songName: meta.name || f.songName,
-          songAlbum: meta.album || f.songAlbum,
-          songYear: meta.releaseYear || f.songYear,
-          ...(mappedGenre ? { genre: mappedGenre } : {}),
-          ...(!f.coverImage && meta.albumArt ? { coverImage: meta.albumArt } : {}),
-        }));
-      } else {
-        toast.error(t('setup.metaSearchFailed'));
-      }
-      // One provider string ("A, B") becomes credits; anything doubtful waits for a confirmation.
-      if (meta && !meta.error && meta.artist) {
-        artistImporter.propose({ artist: meta.artist }, (incoming) => {
-          const known = new Set(incoming.map((c) => nameKey(c.name)));
-          setForm((f) => ({ ...f, artists: renumber([...incoming, ...f.artists.filter((c) => !known.has(nameKey(c.name)))]) }));
-        });
-      }
-    } catch {
-      toast.error(t('setup.metaSearchFailed'));
-    } finally {
-      setMetaSearching(false);
+    });
+    // One provider string ("A, B") becomes credits; anything doubtful waits for a confirmation.
+    if (meta.artist) {
+      artistImporter.propose({ artist: meta.artist }, (incoming) => {
+        const known = new Set(incoming.map((c) => nameKey(c.name)));
+        setForm((f) => ({ ...f, artists: renumber([...incoming, ...f.artists.filter((c) => !known.has(nameKey(c.name)))]) }));
+      });
     }
-  }, [form.songName, primaryText, metaSearching, t, artistImporter]);
+  }, [closeSongs, artistImporter]);
 
   const isSubtitles = kind === 'subtitles';
   const hasIdentity = hasProjectIdentity({ title: form.songName, metadata: { songName: form.songName, songArtist: formatArtistDisplay(form.artists) } });
@@ -443,6 +443,9 @@ export default function ProjectSetupModal({
                   </span>
                 </Tip>
               </div>
+              {songResults && (
+                <SongInfoSuggestions results={songResults} artist={songQuery?.artist ?? primaryText} onPick={handlePickSong} onClose={closeSongs} />
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2 flex flex-col gap-3">
                   <NameCheckSuggestion

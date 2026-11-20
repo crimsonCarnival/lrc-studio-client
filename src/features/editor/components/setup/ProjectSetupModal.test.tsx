@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }) }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
-vi.mock('@/app/api', () => ({ songMetadata: { lookupTrack: vi.fn() } }));
+const api = vi.hoisted(() => ({ songMetadata: { lookupTrack: vi.fn(), searchTracks: vi.fn() } }));
+vi.mock('@/app/api', () => api);
 vi.mock('@/features/artists/ArtistsInput', () => ({ ArtistsInput: () => null }));
 vi.mock('@/features/artists/ArtistImportReview', () => ({ ArtistImportReview: () => null }));
 vi.mock('@/features/assist/NameCheckSuggestion', () => ({ NameCheckSuggestion: ({ children }: { children: unknown }) => children }));
@@ -46,5 +47,44 @@ describe('ProjectSetupModal visibility', () => {
     fireEvent.click(screen.getByText('publish-dialog:abc1234567'));
     expect(onVisibilityChange).toHaveBeenCalledWith(true, undefined);
     expect(screen.getByText('project.visibilityPublic')).toBeInTheDocument();
+  });
+});
+
+describe('ProjectSetupModal song search', () => {
+  const suggestion = (over: Record<string, unknown>) => ({
+    provider: 'itunes', trackId: '1', name: '', artist: '', album: '', duration: 0, albumArt: null, releaseYear: null,
+    totalTracks: null, trackNumber: null, previewUrl: null, explicit: false, genres: [], score: 0,
+    artistMatch: true, featuredMatch: false, titleMatch: true, ...over,
+  });
+
+  it('lists the tracks, sends the featured artists, and applies only the one picked', async () => {
+    api.songMetadata.searchTracks.mockResolvedValue([
+      suggestion({ trackId: '2', name: 'castles', artist: 'Lil Peep & Lil Tracy', album: 'Castles', releaseYear: '2016', featuredMatch: true }),
+      suggestion({ trackId: '3', name: 'Castles (feat. SNIIMA BEATS)', artist: 'Lil Peep', album: 'Other' }),
+      suggestion({ trackId: '1', name: 'Castles', artist: 'Tom MacDonald', album: 'Tom', artistMatch: false }),
+    ]);
+    renderModal({
+      initialSongName: 'castles',
+      initialArtists: [{ name: 'Lil Peep', role: 'primary', order: 0 }, { name: 'Lil Tracy', role: 'featured', order: 1 }],
+    });
+    fireEvent.click(screen.getByText('setup.fetchInfo'));
+    await screen.findByText('setup.songSuggestions.title');
+    expect(api.songMetadata.searchTracks).toHaveBeenCalledWith('castles', 'Lil Peep', ['Lil Tracy']);
+    expect(screen.getByText('setup.songSuggestions.otherArtists')).toBeInTheDocument();
+    // Nothing applied yet.
+    expect((document.getElementById('song-album') as HTMLInputElement).value).toBe('');
+
+    fireEvent.click(screen.getByText('Castles (feat. SNIIMA BEATS)'));
+    await waitFor(() => expect(screen.queryByText('setup.songSuggestions.title')).not.toBeInTheDocument());
+    expect((document.getElementById('song-album') as HTMLInputElement).value).toBe('Other');
+    expect((document.getElementById('song-name') as HTMLInputElement).value).toBe('Castles (feat. SNIIMA BEATS)');
+  });
+
+  it('says so when no track is by the artist', async () => {
+    api.songMetadata.searchTracks.mockResolvedValue([suggestion({ name: 'Castles', artist: 'Tom MacDonald', artistMatch: false })]);
+    renderModal({ initialSongName: 'castles', initialArtists: [{ name: 'Lil Peep', role: 'primary', order: 0 }] });
+    fireEvent.click(screen.getByText('setup.fetchInfo'));
+    expect(await screen.findByText('setup.songSuggestions.noArtistMatch')).toBeInTheDocument();
+    expect(screen.queryByText('setup.songSuggestions.best')).not.toBeInTheDocument();
   });
 });
