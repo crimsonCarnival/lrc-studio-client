@@ -34,7 +34,7 @@ vi.mock('@/features/catalog/catalog.queries', () => ({ useCatalogAlbumSuggestion
 vi.mock('@/features/catalog/CatalogSuggestPrompt', () => ({ CatalogSuggestPrompt: () => null }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: { id: 'me', preferences: {} } }) }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
-vi.mock('@features/editor/components/setup/YoutubeSearchPanel', () => ({ default: () => <div data-testid="yt-search" /> }));
+vi.mock('@features/editor/components/setup/YoutubeSearchPanel', () => ({ default: ({ subject }: { subject?: string }) => <div data-testid="yt-search" data-subject={subject ?? 'song'} /> }));
 vi.mock('../lyrics-search/LyricsSearchBar', () => ({ default: () => null }));
 vi.mock('@/features/artists/ArtistsSection', () => ({ ArtistsSection: () => null }));
 vi.mock('@/features/artists/TitleFeatSuggestion', () => ({ TitleFeatSuggestion: () => null }));
@@ -98,6 +98,18 @@ describe('SetupScreen', () => {
     expect(screen.getByRole('radio', { name: 'setup.kindSubtitles' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByLabelText('setup.subtitleTitle')).toBeInTheDocument();
     expect(document.getElementById('song-version')).not.toBeInTheDocument();
+  });
+
+  it('asks a subtitles project for a video and a script, not a song and lyrics', () => {
+    renderSetup(undefined, '?kind=subtitles');
+    expect(screen.getByText('setup.tabVideo')).toBeInTheDocument();
+    expect(screen.queryByText('setup.tabLyrics')).not.toBeInTheDocument();
+    expect(screen.getByTestId('yt-search')).toHaveAttribute('data-subject', 'video');
+    fireEvent.click(screen.getByText('setup.tabScript'));
+    expect(screen.getByLabelText('setup.tabScript')).toBeInTheDocument();
+    // No lyrics search, no singer syntax bar, and no .lrc import.
+    expect(screen.queryByText('lyricsSearch.tabLabel')).not.toBeInTheDocument();
+    expect(document.getElementById('setup-script-input')).toHaveAttribute('accept', '.srt,.txt');
   });
 
   it('preselects the upload passed from the uploads library', async () => {

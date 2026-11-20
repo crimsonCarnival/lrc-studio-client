@@ -779,7 +779,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       <Icon name="check" size={24} className="text-green-400" />
                     </div>
                     <div className="text-center px-4">
-                      <p className="text-sm font-semibold text-zinc-200">{t('setup.audioReady')}</p>
+                      <p className="text-sm font-semibold text-zinc-200">{t(isSubtitles ? 'setup.videoReady' : 'setup.audioReady')}</p>
                       <p className="text-xs text-zinc-400 truncate max-w-xs mt-0.5">{audioName}</p>
                       {audioSource === 'youtube' && ytCheck.state === 'unverified' && (
                         <p role="status" className="flex items-center justify-center gap-1.5 text-xs text-warning mt-2 max-w-xs">
@@ -800,7 +800,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         onClick={() => setRightTab('lyrics')}
                         className="h-8 coarse:h-11 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
                       >
-                        {t('setup.nextLyrics')}
+                        {t(isSubtitles ? 'setup.nextScript' : 'setup.nextLyrics')}
                         <Icon name="arrow_forward" size={12} />
                       </Button>
                     </div>
@@ -810,7 +810,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     {audioTab === 'youtube' && (
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
                         <YoutubeSearchPanel
-                          initialQuery={[songName, primaryText].filter(Boolean).join(' ').trim()}
+                          // A subtitles project is any video: search by its title, and don't talk about songs.
+                          initialQuery={isSubtitles ? songName.trim() : [songName, primaryText].filter(Boolean).join(' ').trim()}
+                          subject={isSubtitles ? 'video' : 'song'}
                           onSelect={({ videoId, url, title }: { videoId: string; url: string; title?: string }) => {
                             loadYouTubeVerified(videoId, url, { ytUrl: url, name: title || t('setup.youtubeVideo') });
                           }}
@@ -823,12 +825,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         {/* URL + file input */}
                         <FileDropZone onFile={loadAudioFile} className="rounded-2xl shrink-0">
                         <div className="flex items-center gap-2 bg-field p-2 rounded-2xl border border-hl focus-within:border-primary/40 transition-all">
-                          <Tip content={t('setup.uploadAudio')}>
+                          <Tip content={t(isSubtitles ? 'setup.uploadVideo' : 'setup.uploadAudio')}>
                             <Button
                               variant="outline"
                               size="icon"
                               onClick={() => audioInputRef.current?.click()}
-                              aria-label={t('setup.uploadAudio')}
+                              aria-label={t(isSubtitles ? 'setup.uploadVideo' : 'setup.uploadAudio')}
                               className="size-11 lg:size-11"
                             >
                               <Icon name="folder_open" size={20} />
@@ -839,7 +841,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                             <FloatingInput
                               id="setup-media-url"
                               type="text"
-                              label={t('setup.urlPlaceholder')}
+                              label={t(isSubtitles ? 'setup.urlPlaceholderVideo' : 'setup.urlPlaceholder')}
                               hasIcon={true}
                               value={ytUrl}
                               onChange={(e) => {
@@ -1003,6 +1005,55 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               </div>
   );
 
+  // Subtitles: the editor times lines that already exist, so a script is still needed, but not
+  // song lyrics. No lyrics search and no singer/section syntax; .lrc is a lyrics format.
+  const scriptPanel = (
+              <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
+                {parsedLines ? (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4 bg-zinc-900/30 rounded-xl border border-zinc-800/50 min-h-[140px]">
+                    <div className="size-11 rounded-full bg-green-500/15 flex items-center justify-center ring-4 ring-green-500/5">
+                      <Icon name="check" size={24} className="text-green-400" />
+                    </div>
+                    <div className="text-center px-4">
+                      <p className="text-sm font-semibold text-zinc-200">{t('setup.scriptReady')}</p>
+                      <p className="text-xs text-zinc-500 mt-0.5">{t('setup.captionsCount', { count: parsedLines.length })}</p>
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-pill bg-zinc-800 text-[10px] font-semibold uppercase tracking-wider text-zinc-300">{parsedLines.some((l) => l.timestamp != null) ? t('setup.lyricsTimed') : t('setup.lyricsPlain')}</span>
+                      {lyricsFileName && <p className="text-xs text-zinc-400 truncate max-w-xs mt-0.5">{lyricsFileName}</p>}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => { setLyricsState({ parsedLines: null, fileName: '', text: '' }); }}
+                      className="h-8 coarse:h-11 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
+                    >
+                      {t('setup.changeLyrics')}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-zinc-500 shrink-0">{t('setup.scriptHint')}</p>
+                    <Textarea
+                      ref={lyricsTextareaRef}
+                      value={lyricsText}
+                      onChange={(e) => setLyricsState({ text: e.target.value })}
+                      placeholder={t('setup.pasteScriptDesc')}
+                      aria-label={t('setup.tabScript')}
+                      className="flex-1 min-h-0 resize-none text-sm p-3 leading-relaxed overflow-y-auto scrollbar-thin"
+                    />
+                    <label
+                      htmlFor="setup-script-input"
+                      className="flex items-center gap-2 px-3 py-2.5 cursor-pointer group transition-colors rounded-xl bg-zinc-800/40 border border-zinc-700/40 hover:border-primary/30 hover:bg-zinc-800/80 shrink-0"
+                    >
+                      <Icon name="upload" size={16} className="text-zinc-500 group-hover:text-primary transition-colors" />
+                      <span className="text-sm font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('setup.importCaptions')}</span>
+                      <span className="text-[10px] text-zinc-500 ml-1 hidden sm:inline">.srt, .txt</span>
+                      <input ref={lyricsInputRef} id="setup-script-input" type="file" accept=".srt,.txt" onChange={handleLyricsFile} className="hidden" />
+                    </label>
+                  </>
+                )}
+              </div>
+  );
+  const textPanel = isSubtitles ? scriptPanel : lyricsPanel;
+
   if (isPhone) {
     return (
       <SetupStepper
@@ -1015,7 +1066,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
         notice={rollbackNotice}
         song={songFields}
         audio={mediaPanel}
-        lyrics={lyricsPanel}
+        lyrics={textPanel}
+        subtitles={isSubtitles}
       />
     );
   }
@@ -1090,7 +1142,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  {tab === 'media' ? t('setup.tabMedia') : t('setup.tabLyrics')}
+                  {tab === 'media' ? t(isSubtitles ? 'setup.tabVideo' : 'setup.tabMedia') : t(isSubtitles ? 'setup.tabScript' : 'setup.tabLyrics')}
                 </button>
               ))}
             </div>
@@ -1098,8 +1150,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             {/* MEDIA PANEL */}
             {rightTab === 'media' && mediaPanel}
 
-            {/* LYRICS PANEL */}
-            {rightTab === 'lyrics' && lyricsPanel}
+            {/* LYRICS / SCRIPT PANEL */}
+            {rightTab === 'lyrics' && textPanel}
           </div>
         </div>
       </div>

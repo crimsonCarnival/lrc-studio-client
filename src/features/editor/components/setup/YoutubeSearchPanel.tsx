@@ -53,9 +53,11 @@ interface YoutubeSearchPanelProps {
   onSelect: (selection: YtSelection) => void;
   onClose?: () => void;
   initialQuery?: string;
+  /** What the person is looking for: a song (lyrics projects) or any video (subtitles). Only changes the wording. */
+  subject?: 'song' | 'video';
 }
 
-export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '' }: YoutubeSearchPanelProps) {
+export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '', subject = 'song' }: YoutubeSearchPanelProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<YtResult[]>([]);
@@ -181,7 +183,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           onValueChange={handleQueryChange}
           onKeyDown={handleKeyDown}
           label={t('home.searchYoutube')}
-          placeholder={t('home.searchYoutubePlaceholder')}
+          placeholder={subject === 'video' ? t('home.searchYoutubeVideoPlaceholder') : t('home.searchYoutubePlaceholder')}
           clearLabel={t('common.clear')}
           leading={<YtIcon className="size-4 text-red-500 shrink-0" />}
           className="flex-1"
@@ -220,7 +222,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
         {!searched && !loading && (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-zinc-600">
             <YtIcon className="size-10 text-red-500/30" />
-            <p className="text-sm">{t('home.ytSearchPrompt')}</p>
+            <p className="text-sm">{subject === 'video' ? t('home.ytSearchVideoPrompt') : t('home.ytSearchPrompt')}</p>
           </div>
         )}
 

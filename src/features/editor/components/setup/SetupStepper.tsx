@@ -20,10 +20,13 @@ type SetupStepperProps = {
   song: ReactNode;
   audio: ReactNode;
   lyrics: ReactNode;
+  /** A subtitles project: the steps are Details / Video / Script, not Song / Audio / Lyrics. */
+  subtitles?: boolean;
 };
 
 const STEPS: SetupStep[] = [1, 2, 3];
 const STEP_KEYS = { 1: 'setup.stepSong', 2: 'setup.stepAudio', 3: 'setup.stepLyrics' } as const;
+const SUBTITLE_STEP_KEYS = { 1: 'setup.stepDetails', 2: 'setup.stepVideo', 3: 'setup.stepScript' } as const;
 const DONE_KEY = { 1: 'identity', 2: 'audio', 3: 'lyrics' } as const;
 // Typed i18next rejects computed keys.
 type TkFn = (k: string) => string;
@@ -35,7 +38,8 @@ type TkFn = (k: string) => string;
  * first time it is visited and is then only hidden, so search results and open sections survive
  * moving back and forth.
  */
-export default function SetupStepper({ step, onStepChange, done, canStart, onStart, onFocusName, notice, song, audio, lyrics }: SetupStepperProps) {
+export default function SetupStepper({ step, onStepChange, done, canStart, onStart, onFocusName, notice, song, audio, lyrics, subtitles = false }: SetupStepperProps) {
+  const stepKeys = subtitles ? SUBTITLE_STEP_KEYS : STEP_KEYS;
   const { t } = useTranslation();
   const keyboard = useKeyboardInset();
   const [visited, setVisited] = useState<ReadonlySet<SetupStep>>(() => new Set([step]));
@@ -70,9 +74,9 @@ export default function SetupStepper({ step, onStepChange, done, canStart, onSta
 
   const missing = !done.identity ? 'identity' : !done.audio ? 'audio' : !done.lyrics ? 'lyrics' : null;
   const missingStep: SetupStep | null = missing === 'identity' ? 1 : missing === 'audio' ? 2 : missing === 'lyrics' ? 3 : null;
-  const message = missing === 'identity' ? t('setup.stepNeedIdentity')
-    : missing === 'audio' ? t('setup.stepNeedAudio')
-    : missing === 'lyrics' ? t('setup.stepNeedLyrics')
+  const message = missing === 'identity' ? t(subtitles ? 'setup.stepNeedTitle' : 'setup.stepNeedIdentity')
+    : missing === 'audio' ? t(subtitles ? 'setup.stepNeedVideo' : 'setup.stepNeedAudio')
+    : missing === 'lyrics' ? t(subtitles ? 'setup.stepNeedScript' : 'setup.stepNeedLyrics')
     : t('setup.stepReady');
 
   const jumpToMissing = () => {
@@ -147,7 +151,7 @@ export default function SetupStepper({ step, onStepChange, done, canStart, onSta
               >
                 {complete && !active ? <Icon name="check" size={12} /> : n}
               </span>
-              <span className="truncate">{(t as TkFn)(STEP_KEYS[n])}</span>
+              <span className="truncate">{(t as TkFn)(stepKeys[n])}</span>
               {complete && !active && <span className="sr-only">{t('setup.stepDone')}</span>}
             </button>
           );
@@ -173,7 +177,7 @@ export default function SetupStepper({ step, onStepChange, done, canStart, onSta
               tabIndex={-1}
               className="sr-only"
             >
-              {(t as TkFn)(STEP_KEYS[n])}
+              {(t as TkFn)(stepKeys[n])}
             </h2>
             {visited.has(n) && panels[n]}
           </section>
