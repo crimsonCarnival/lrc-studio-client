@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lyricAfter, lyricAt, miniPlayerSettings, nextReturnPath } from './mini-player';
+import { isSwipeAway, lineBoundsAt, loadMiniPlayer, lyricAfter, lyricAt, miniPlayerSettings, nearestCorner, nextReturnPath, restoredEditorMatches, saveMiniPlayer } from './mini-player';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const EDIT = '/ana/projects/band-song-abcdefghij/edit';
@@ -57,5 +57,57 @@ describe('miniPlayerSettings', () => {
     expect(miniPlayerSettings({ miniPlayer: false, miniPlayerPosition: 'top-left', miniPlayerKeepPlaying: false, miniPlayerLyrics: false }))
       .toEqual({ enabled: false, position: 'top-left', keepPlaying: false, lyrics: false });
     expect(miniPlayerSettings({ miniPlayerPosition: 'middle' }).position).toBe('bottom-right');
+  });
+});
+
+describe('nearestCorner', () => {
+  it('picks the quarter of the screen the point is in', () => {
+    expect(nearestCorner(100, 100, 1000, 800)).toBe('top-left');
+    expect(nearestCorner(900, 100, 1000, 800)).toBe('top-right');
+    expect(nearestCorner(100, 700, 1000, 800)).toBe('bottom-left');
+    expect(nearestCorner(900, 700, 1000, 800)).toBe('bottom-right');
+  });
+});
+
+describe('isSwipeAway', () => {
+  it('needs most of the card off screen', () => {
+    expect(isSwipeAway(-50, 250, 390)).toBe(false);
+    expect(isSwipeAway(-200, 100, 390)).toBe(true);
+    expect(isSwipeAway(300, 600, 390)).toBe(true);
+  });
+});
+
+describe('lineBoundsAt', () => {
+  const timed = [
+    { id: 'a', text: 'A', timestamp: 1 },
+    { id: 'b', text: 'B', timestamp: 4, endTime: 6 },
+    { id: 'c', text: 'C', timestamp: 8 },
+  ] as EditorLine[];
+
+  it('runs to the next line, the line\'s own end, or the end of the media', () => {
+    expect(lineBoundsAt(timed, 2, 20)).toEqual({ a: 1, b: 4 });
+    expect(lineBoundsAt(timed, 5, 20)).toEqual({ a: 4, b: 6 });
+    expect(lineBoundsAt(timed, 9, 20)).toEqual({ a: 8, b: 20 });
+    expect(lineBoundsAt(timed, 0.5, 20)).toBeNull();
+  });
+});
+
+describe('saveMiniPlayer / loadMiniPlayer', () => {
+  it('round-trips and rejects junk', () => {
+    saveMiniPlayer({ kind: 'editor', returnTo: EDIT });
+    expect(loadMiniPlayer()).toEqual({ kind: 'editor', returnTo: EDIT });
+    sessionStorage.setItem('lrc.miniPlayer', '{"kind":"view"}');
+    expect(loadMiniPlayer()).toBeNull();
+    saveMiniPlayer(null);
+    expect(loadMiniPlayer()).toBeNull();
+  });
+});
+
+describe('restoredEditorMatches', () => {
+  it('only brings back the editor of the project the app restored', () => {
+    expect(restoredEditorMatches(EDIT, 'abcdefghij')).toBe(true);
+    expect(restoredEditorMatches(EDIT, 'zzzzzzzzzz')).toBe(false);
+    expect(restoredEditorMatches('/session/abcdefghij', 'abcdefghij')).toBe(false);
+    expect(restoredEditorMatches(EDIT, null)).toBe(false);
   });
 });

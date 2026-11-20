@@ -17,6 +17,7 @@ import { parseDeepLink } from '@/shared/utils/url-params';
 import { UpNextPanel } from './UpNextPanel';
 import { ListTrackStrip } from './ListTrackStrip';
 import ListAutoplay from './ListAutoplay';
+import MiniPlayerHandoff from './MiniPlayerHandoff';
 import { listTrackHref, type ListNav } from './list-nav';
 import type { Playlist, Project } from '@/types';
 import { usePublicProject, publicProjectKey } from '@/features/projects/hooks/usePublicProject';
@@ -513,6 +514,16 @@ function ProjectViewPageInner() {
     >
     <VisualizerProvider>
     <VisualizerPicker />
+    {initialMedia && (
+      <MiniPlayerHandoff
+        returnTo={location.pathname + location.search}
+        title={projectDisplayName({ title: project.title, metadata: meta as Parameters<typeof projectDisplayName>[0]['metadata'] }) || projectTitle}
+        cover={cover || null}
+        media={initialMedia}
+        lines={lines}
+        metadata={meta as Record<string, unknown>}
+      />
+    )}
     <PublicShortcuts
       onAlign={changeAlignment}
       onToggleFullLyrics={toggleFullLyrics}

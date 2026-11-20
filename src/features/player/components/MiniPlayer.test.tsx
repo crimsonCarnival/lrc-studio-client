@@ -10,6 +10,8 @@ vi.mock('react-i18next', () => ({
 }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => m.navigate }));
 vi.mock('../PlayerContext', () => ({ usePlayer: () => m.player }));
+vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { shortcuts: {}, playback: { seekTime: 5 } } }) }));
+vi.mock('./MiniPlayerSessionMembers', () => ({ MiniPlayerSessionMembers: ({ publicId }: { publicId: string }) => <div>members:{publicId}</div> }));
 
 import { MiniPlayer } from './MiniPlayer';
 
@@ -20,16 +22,17 @@ const lines = [
 ];
 const named = (label: string) => new RegExp(label.replace(/\./g, '\\.'));
 
-function show(over: Partial<PlayerContextValue> = {}, props: Partial<Parameters<typeof MiniPlayer>[0]> = {}) {
+function show(over: Partial<PlayerContextValue> = {}, props: Partial<Omit<Parameters<typeof MiniPlayer>[0], 'onPositionChange'>> = {}) {
   m.player = {
     hasMedia: true, isPlaying: true, currentTime: 2, duration: 100, source: 'local', local: { isVideo: false },
     lines: lines as PlayerContextValue['lines'], togglePlay: vi.fn(), seek: vi.fn(), registerVideoStage: vi.fn(),
+    loopA: null, loopB: null, setLoop: vi.fn(), clearLoop: vi.fn(),
     ...over,
   };
   const onClose = vi.fn();
   render(
     <TooltipProvider>
-      <MiniPlayer returnTo="/ana/projects/song-abcdefghij/edit" title="Song – Band" settings={settings} aboveNav={false} onClose={onClose} {...props} />
+      <MiniPlayer returnTo="/ana/projects/song-abcdefghij/edit" title="Song – Band" settings={settings} aboveNav={false} onClose={onClose} onPositionChange={vi.fn()} {...props} />
     </TooltipProvider>,
   );
   return { onClose, player: m.player };
@@ -79,5 +82,53 @@ describe('MiniPlayer', () => {
   it('renders nothing without media', () => {
     show({ hasMedia: false });
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
+  });
+
+  it('opens the whole lyrics, and a tap on a line jumps there', async () => {
+    const { player } = show();
+    await userEvent.click(screen.getAllByRole('button', { name: named('player.mini.showLyrics') })[0]);
+    const list = screen.getByRole('list', { name: 'player.mini.lyrics' });
+    expect(list.querySelector('[aria-current="true"]')).toHaveTextContent('First line');
+    await userEvent.click(screen.getByRole('button', { name: 'Second line' }));
+    expect(player.seek).toHaveBeenCalledWith(5);
+  });
+
+  it('loops the line being sung, and stops looping', async () => {
+    const { player } = show();
+    await userEvent.click(screen.getByRole('button', { name: named('player.mini.loopLine') }));
+    expect(player.setLoop).toHaveBeenCalledWith({ a: 1, b: 5 });
+  });
+
+  it('stops an active loop', async () => {
+    const { player } = show({ loopA: 1, loopB: 5 });
+    await userEvent.click(screen.getByRole('button', { name: named('player.mini.loopLine') }));
+    expect(player.clearLoop).toHaveBeenCalled();
+  });
+
+  it('shrinks to a bubble and back', async () => {
+    show();
+    await userEvent.click(screen.getByRole('button', { name: named('player.mini.minimize') }));
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: named('player.mini.restore:Song – Band') }));
+    expect(screen.getByRole('region')).toBeInTheDocument();
+  });
+
+  it('answers the player keys while browsing', async () => {
+    const { player } = show();
+    await userEvent.keyboard(' ');
+    expect(player.togglePlay).toHaveBeenCalled();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(player.seek).toHaveBeenCalledWith(7);
+  });
+
+  it('leaves the page-scrolling arrows alone', async () => {
+    const { player } = show();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(player.seek).not.toHaveBeenCalled();
+  });
+
+  it('shows who is in the session it came from', () => {
+    show({}, { returnTo: '/session/abc123' });
+    expect(screen.getByText('members:abc123')).toBeInTheDocument();
   });
 });

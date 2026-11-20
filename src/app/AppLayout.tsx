@@ -17,9 +17,12 @@ import { BOTTOM_BAR_CLEARANCE, showsBottomBar } from './layout/nav-items';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
+import { usePlayer } from '@/features/player/PlayerContext';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { MiniPlayer } from '@/features/player/components/MiniPlayer';
-import { miniPlayerSettings, nextReturnPath, ownsPlayer } from '@/features/player/mini-player';
+import { loadMiniPlayer, miniPlayerSettings, nextReturnPath, ownsPlayer, restoredEditorMatches, saveMiniPlayer, type MiniPlayerPosition, type ViewSnapshot } from '@/features/player/mini-player';
+import { clearHandoff, useHandoff } from '@/features/player/mini-handoff';
+import ListAutoplay from '@/features/project-view/ListAutoplay';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
@@ -115,14 +118,40 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   // page that owns the player opens again. Derived during render from the previous path, as the
   // route change is the event that sets it.
   const mini = miniPlayerSettings(settings.interface as Record<string, unknown> | undefined);
-  const [miniNav, setMiniNav] = useState<{ path: string; returnTo: string | null }>({ path: location.pathname, returnTo: null });
+  // A reload brings back the editor page the tab was carrying (`restored`), shown only once the
+  // app has restored that same project, so the card never plays one song under another's name.
+  const [miniNav, setMiniNav] = useState<{ path: string; returnTo: string | null; restored: boolean }>(() => {
+    const stored = loadMiniPlayer();
+    const returnTo = stored?.kind === 'editor' && !ownsPlayer(location.pathname) ? stored.returnTo : null;
+    return { path: location.pathname, returnTo, restored: returnTo !== null };
+  });
   if (miniNav.path !== location.pathname) {
-    setMiniNav({ path: location.pathname, returnTo: nextReturnPath(miniNav.path, location.pathname, miniNav.returnTo) });
+    const returnTo = nextReturnPath(miniNav.path, location.pathname, miniNav.returnTo);
+    setMiniNav({ path: location.pathname, returnTo, restored: returnTo !== null && returnTo === miniNav.returnTo && miniNav.restored });
   }
-  const miniReturnTo = mini.enabled ? miniNav.returnTo : null;
+  const miniReturnTo = mini.enabled && miniNav.returnTo && (!miniNav.restored || restoredEditorMatches(miniNav.returnTo, activepublicId))
+    ? miniNav.returnTo
+    : null;
   const closeMini = useCallback(() => {
     setMiniNav((prev) => ({ ...prev, returnTo: null }));
   }, []);
+  const moveMini = useCallback((position: MiniPlayerPosition) => updateSetting('interface.miniPlayerPosition', position), [updateSetting]);
+
+  // The public project view's playback, handed over as it was left (MiniPlayerHandoff). Gone
+  // once a page that owns a player opens.
+  const handoff = useHandoff();
+  const onPlayerPage = ownsPlayer(location.pathname);
+  useEffect(() => {
+    if (onPlayerPage) clearHandoff();
+  }, [onPlayerPage]);
+  const viewMini = mini.enabled && !onPlayerPage ? handoff : null;
+
+  // Kept per tab, so a reload brings the mini player back (paused).
+  useEffect(() => {
+    if (viewMini) saveMiniPlayer({ kind: 'view', snapshot: viewMini });
+    else if (miniReturnTo) saveMiniPlayer({ kind: 'editor', returnTo: miniReturnTo });
+    else saveMiniPlayer(null);
+  }, [viewMini, miniReturnTo]);
 
   // Pages that do not own the player stop it, unless the mini player is carrying it. The public
   // project view pauses it too (below): it mounts a player of its own.
@@ -401,10 +430,15 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             <MiniPlayer
               returnTo={miniReturnTo}
               title={headerTitle}
+              artist={artistDisplay(projectMetadata)}
               settings={mini}
               aboveNav={showMobileNav}
               onClose={closeMini}
+              onPositionChange={moveMini}
             />
+          )}
+          {viewMini && (
+            <HandoffMiniPlayer key={viewMini.returnTo} snapshot={viewMini} settings={mini} aboveNav={showMobileNav} onPositionChange={moveMini} />
           )}
 
           {showMobileNav && (
@@ -452,4 +486,52 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       </PlayerEngineProvider>
     </SafeAreaContainer>
   );
+}
+
+/**
+ * The mini player for a public project view that was left: a player of its own, started from
+ * the view's media at the position it had, playing on if it was (and the settings say so).
+ */
+function HandoffMiniPlayer({ snapshot, settings, aboveNav, onPositionChange }: {
+  snapshot: ViewSnapshot;
+  settings: ReturnType<typeof miniPlayerSettings>;
+  aboveNav: boolean;
+  onPositionChange: (p: MiniPlayerPosition) => void;
+}) {
+  return (
+    <PlayerEngineProvider
+      initialMedia={snapshot.media as Parameters<typeof PlayerEngineProvider>[0]['initialMedia']}
+      initialSeek={snapshot.time}
+      initialSpeed={1}
+      lines={snapshot.lines as Parameters<typeof PlayerEngineProvider>[0]['lines']}
+      syncMode={false}
+      projectMetadata={snapshot.metadata}
+      projectCoverImage={snapshot.cover ?? undefined}
+      viewerMode
+    >
+      <ListAutoplay startOnReady={snapshot.playing && settings.keepPlaying} />
+      <HandoffPersist snapshot={snapshot} />
+      <MiniPlayer
+        returnTo={snapshot.returnTo}
+        title={snapshot.title}
+        settings={settings}
+        aboveNav={aboveNav}
+        onClose={clearHandoff}
+        onPositionChange={onPositionChange}
+      />
+    </PlayerEngineProvider>
+  );
+}
+
+/** Writes the handed-over player's position as the tab unloads, so a reload resumes there. */
+function HandoffPersist({ snapshot }: { snapshot: ViewSnapshot }) {
+  const { currentTime } = usePlayer();
+  const time = useRef(currentTime);
+  useEffect(() => { time.current = currentTime; });
+  useEffect(() => {
+    const save = () => saveMiniPlayer({ kind: 'view', snapshot: { ...snapshot, time: time.current, playing: false } });
+    window.addEventListener('pagehide', save);
+    return () => window.removeEventListener('pagehide', save);
+  }, [snapshot]);
+  return null;
 }
