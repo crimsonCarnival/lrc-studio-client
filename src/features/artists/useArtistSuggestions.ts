@@ -3,16 +3,16 @@ import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { fetchArtistSuggestions, fetchCatalogArtistSuggestions, SUGGESTION_LIMIT } from './artist-suggestions.service';
 
 /** One autocomplete row: a name the user credited before, or an approved catalog artist. */
-export type SuggestionItem = { key: string; name: string; source: 'own' | 'catalog'; detail?: string };
+export type SuggestionItem = { key: string; name: string; source: 'own' | 'catalog'; detail?: string; imageUrl?: string };
 
 const lower = (s: string) => s.normalize('NFC').toLowerCase();
 
 /** Own names first (they are what this person uses), then catalog names not already among them. */
-export function mergeSuggestions(own: Array<{ id: string; name: string }>, catalog: Array<{ id: string; name: string; disambiguation: string }>): SuggestionItem[] {
+export function mergeSuggestions(own: Array<{ id: string; name: string }>, catalog: Array<{ id: string; name: string; disambiguation: string; imageUrl?: string | null }>): SuggestionItem[] {
   const seen = new Set(own.map((o) => lower(o.name)));
   const fromCatalog = catalog
     .filter((c) => !seen.has(lower(c.name)))
-    .map((c): SuggestionItem => ({ key: `catalog:${c.id}`, name: c.name, source: 'catalog', detail: c.disambiguation || undefined }));
+    .map((c): SuggestionItem => ({ key: `catalog:${c.id}`, name: c.name, source: 'catalog', detail: c.disambiguation || undefined, imageUrl: c.imageUrl || undefined }));
   return [...own.map((o): SuggestionItem => ({ key: `own:${o.id}`, name: o.name, source: 'own' })), ...fromCatalog].slice(0, SUGGESTION_LIMIT);
 }
 

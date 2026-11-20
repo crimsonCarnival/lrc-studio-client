@@ -268,6 +268,20 @@ describe('ArtistsInput: autocomplete', () => {
     expect(options.map((o) => o.textContent)).toEqual(['Drake', 'DragonforceUK bandCatalog']);
   });
 
+  it('shows a catalog artist picture only when it has one', async () => {
+    const u = user();
+    catalogSuggest.impl = async () => [
+      { id: 'c1', name: 'Dragonforce', disambiguation: '', imageUrl: 'https://res.cloudinary.com/x/df.jpg' },
+      { id: 'c2', name: 'Drake', disambiguation: '', imageUrl: null },
+    ];
+    render(<Harness />);
+    await u.type(primaryInput(), 'dr');
+    await advance(250);
+    const options = await screen.findAllByRole('option');
+    expect(options[0].querySelector('img')?.getAttribute('src')).toBe('https://res.cloudinary.com/x/df.jpg');
+    expect(options[1].querySelector('img')).toBeNull();
+  });
+
   it('a failing catalog request still shows own names', async () => {
     const u = user();
     suggest.impl = async () => ({ total: 1, items: [{ id: '1', name: 'Drake' }] });

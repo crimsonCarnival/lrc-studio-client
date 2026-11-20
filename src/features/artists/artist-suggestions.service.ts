@@ -11,11 +11,11 @@ const MY_ARTIST_SUGGESTIONS = /* GraphQL */ `
 
 export interface ArtistSuggestion { id: string; name: string }
 /** An approved catalog artist; `disambiguation` tells namesakes apart. */
-export interface CatalogArtistSuggestion { id: string; name: string; disambiguation: string }
+export interface CatalogArtistSuggestion { id: string; name: string; disambiguation: string; imageUrl?: string | null }
 
 const CATALOG_ARTIST_SUGGESTIONS = /* GraphQL */ `
   query CatalogArtistSuggestions($prefix: String!, $limit: Int) {
-    catalogSuggestions(kind: artist, prefix: $prefix, limit: $limit) { id name disambiguation }
+    catalogSuggestions(kind: artist, prefix: $prefix, limit: $limit) { id name disambiguation imageUrl }
   }
 `;
 

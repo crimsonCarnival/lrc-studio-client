@@ -311,6 +311,8 @@ export type CatalogQueue = {
 export type CatalogSuggestion = {
   disambiguation: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Artists only; null when the artist has no photo. */
+  imageUrl?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   slug?: Maybe<Scalars['String']['output']>;
 };
@@ -438,6 +440,7 @@ export type DetectedAlbum = {
   year?: Maybe<Scalars['String']['output']>;
 };
 
+/** Aggregate only: no project ids, titles or owners. */
 export type DetectedArtist = {
   key: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -1902,6 +1905,7 @@ export type Query = {
   catalogArtistSlugs: Array<CatalogArtistRef>;
   catalogArtists: CatalogArtistList;
   catalogDetectAlbums: Array<DetectedAlbum>;
+  /** Primary artist names on songs that have no catalog entry and were not dismissed. */
   catalogDetectArtists: Array<DetectedArtist>;
   catalogReviewQueue: CatalogQueue;
   catalogSuggestions: Array<CatalogSuggestion>;

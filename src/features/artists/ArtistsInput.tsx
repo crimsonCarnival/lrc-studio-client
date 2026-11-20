@@ -296,7 +296,8 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
                 onMouseDown={(e) => { e.preventDefault(); onPickName(s.name); setDraft(''); setActive(-1); }}
                 className={cn('cursor-pointer rounded-xs px-2 py-1.5 text-sm text-foreground', i === active && 'bg-primary-soft text-primary-ink')}
               >
-                <span className="flex items-baseline gap-2">
+                <span className="flex items-center gap-2">
+                  {s.imageUrl && <img src={s.imageUrl} alt="" loading="lazy" className="size-6 shrink-0 rounded-full object-cover" />}
                   <span className="min-w-0 truncate">{s.name}</span>
                   {s.detail && <span className="min-w-0 truncate text-xs text-subtle">{s.detail}</span>}
                   {s.source === 'catalog' && <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wide text-subtle">{tr('artists.suggestions.catalog')}</span>}
