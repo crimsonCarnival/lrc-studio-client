@@ -252,7 +252,7 @@ export default {
   nextScript: "Next: Script",
   uploadVideo: "Upload video",
   urlPlaceholderVideo: "YouTube or video URL",
-  scriptHint: "The captions to time, one per line. You set when each one shows and hides in the studio.",
+  scriptHint: "Optional. Paste the captions to time, one per line, or leave this empty and add them one by one in the studio.",
   pasteScriptDesc: "Paste the script or transcript here, one caption per line...",
   importCaptions: "Import captions",
   scriptReady: "Captions loaded",
@@ -262,7 +262,6 @@ export default {
   stepScript: "Script",
   stepNeedTitle: "Add a title to start syncing.",
   stepNeedVideo: "Pick the video to start syncing.",
-  stepNeedScript: "Add the script to start syncing.",
   lyricsTimed: "Timed",
   lyricsPlain: "Plain text",
 };

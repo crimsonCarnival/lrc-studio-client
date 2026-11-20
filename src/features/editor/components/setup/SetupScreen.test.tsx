@@ -112,6 +112,32 @@ describe('SetupScreen', () => {
     expect(document.getElementById('setup-script-input')).toHaveAttribute('accept', '.srt,.txt');
   });
 
+  it('lets a subtitles project start with no script', () => {
+    const onComplete = vi.fn();
+    const playerRef = { current: { loadFromUrl: vi.fn(), loadYouTube: vi.fn(), loadLocalAudio: vi.fn() } };
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/project/new', search: '?kind=subtitles' }]}>
+        <TooltipProvider><SetupScreen onComplete={onComplete} playerRef={playerRef} /></TooltipProvider>
+      </MemoryRouter>,
+    );
+    const start = () => screen.getByText('setup.startToSync').closest('button')!;
+    fireEvent.change(screen.getByLabelText('setup.subtitleTitle'), { target: { value: 'Interview' } });
+    expect(start()).toBeDisabled(); // still needs the video
+    fireEvent.click(screen.getByText('setup.tabLocal'));
+    fireEvent.change(document.getElementById('setup-audio-input')!, { target: { files: [new File(['x'], 'interview.mp4', { type: 'video/mp4' })] } });
+    expect(start()).toBeEnabled();
+    fireEvent.click(start());
+    expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ kind: 'subtitles', lines: [], editorMode: 'srt' }));
+  });
+
+  it('still needs lyrics for a song project', () => {
+    renderSetup();
+    fireEvent.change(screen.getByLabelText('setup.songName'), { target: { value: 'Song' } });
+    fireEvent.click(screen.getByText('setup.tabLocal'));
+    fireEvent.change(document.getElementById('setup-audio-input')!, { target: { files: [new File(['x'], 'song.mp3', { type: 'audio/mpeg' })] } });
+    expect(screen.getByText('setup.startToSync').closest('button')).toBeDisabled();
+  });
+
   it('preselects the upload passed from the uploads library', async () => {
     const playerRef = renderSetup({ uploadId: 'u2' });
     await waitFor(() => expect(screen.getByText('setup.audioReady')).toBeInTheDocument());

@@ -76,7 +76,7 @@ export default function SetupStepper({ step, onStepChange, done, canStart, onSta
   const missingStep: SetupStep | null = missing === 'identity' ? 1 : missing === 'audio' ? 2 : missing === 'lyrics' ? 3 : null;
   const message = missing === 'identity' ? t(subtitles ? 'setup.stepNeedTitle' : 'setup.stepNeedIdentity')
     : missing === 'audio' ? t(subtitles ? 'setup.stepNeedVideo' : 'setup.stepNeedAudio')
-    : missing === 'lyrics' ? t(subtitles ? 'setup.stepNeedScript' : 'setup.stepNeedLyrics')
+    : missing === 'lyrics' ? t('setup.stepNeedLyrics')
     : t('setup.stepReady');
 
   const jumpToMissing = () => {

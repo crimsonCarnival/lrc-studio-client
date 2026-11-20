@@ -251,7 +251,7 @@ export default {
   nextScript: "Siguiente: Guion",
   uploadVideo: "Subir video",
   urlPlaceholderVideo: "URL de YouTube o de video",
-  scriptHint: "Los subtítulos a sincronizar, uno por línea. En el estudio decides cuándo aparece y desaparece cada uno.",
+  scriptHint: "Opcional. Pega los subtítulos a sincronizar, uno por línea, o déjalo vacío y añádelos uno a uno en el estudio.",
   pasteScriptDesc: "Pega aquí el guion o la transcripción, un subtítulo por línea...",
   importCaptions: "Importar subtítulos",
   scriptReady: "Subtítulos cargados",
@@ -261,7 +261,6 @@ export default {
   stepScript: "Guion",
   stepNeedTitle: "Añade un título para empezar a sincronizar.",
   stepNeedVideo: "Elige el video para empezar a sincronizar.",
-  stepNeedScript: "Añade el guion para empezar a sincronizar.",
   lyricsTimed: "Con tiempos",
   lyricsPlain: "Texto plano",
 };

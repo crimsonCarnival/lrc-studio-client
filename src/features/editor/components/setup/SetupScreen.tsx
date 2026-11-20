@@ -278,7 +278,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
   // Subtitles have no song or artist fields to fall back on: the name is the identity.
   const hasIdentity = hasProjectIdentity({ title: songName, metadata: isSubtitles ? { songName } : { songName, songArtist: formatArtistDisplay(artists) } });
-  const canContinue = audioReady && hasLyrics && hasIdentity;
+  // Subtitles can start with no script: the studio adds captions one at a time ("Add subtitle").
+  const needsText = !isSubtitles;
+  const canContinue = audioReady && (hasLyrics || !needsText) && hasIdentity;
 
   // Fetch music library for artist/album autofill
   useEffect(() => {
@@ -432,7 +434,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const handleProceed = () => {
     let finalLines = parsedLines;
     if (!finalLines) {
-      finalLines = parseRawLyricsText(lyricsText, singers);
+      // No script (subtitles may start empty) means no lines, not one blank caption.
+      finalLines = lyricsText.trim() ? parseRawLyricsText(lyricsText, singers) : [];
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
@@ -1005,8 +1008,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               </div>
   );
 
-  // Subtitles: the editor times lines that already exist, so a script is still needed, but not
-  // song lyrics. No lyrics search and no singer/section syntax; .lrc is a lyrics format.
+  // Subtitles: an optional script (the studio can also start empty and add captions as you go).
+  // No lyrics search and no singer/section syntax; .lrc is a lyrics format.
   const scriptPanel = (
               <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
                 {parsedLines ? (
@@ -1059,7 +1062,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
       <SetupStepper
         step={phoneStep}
         onStepChange={setPhoneStep}
-        done={{ identity: hasIdentity, audio: audioReady, lyrics: hasLyrics }}
+        done={{ identity: hasIdentity, audio: audioReady, lyrics: hasLyrics || !needsText }}
         canStart={canContinue}
         onStart={handleProceed}
         onFocusName={() => songNameInputRef.current?.focus()}
