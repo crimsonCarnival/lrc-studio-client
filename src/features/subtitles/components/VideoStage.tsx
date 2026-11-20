@@ -109,7 +109,14 @@ export function VideoStage({ cues, full, onToggleFull, onChooseMedia, controls }
     >
       {!hasPicture && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-sm leading-snug text-white/55">
-          <Icon name={hasMedia ? 'music_note' : 'smart_display'} size={32} />
+          {/* Audio only: the play/pause disc leads the message instead of floating over it. */}
+          {hasMedia ? (
+            <span aria-hidden className="grid size-[72px] place-items-center rounded-full bg-white/10 text-white">
+              <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={34} />
+            </span>
+          ) : (
+            <Icon name="smart_display" size={32} />
+          )}
           {hasMedia ? t('editor.studio.audioOnly') : t('editor.studio.noMedia')}
           {!hasMedia && (
             <Button variant="outline" onClick={onChooseMedia} className="relative z-10 h-11 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent px-3.5 text-xs font-semibold text-foreground">
@@ -132,7 +139,7 @@ export function VideoStage({ cues, full, onToggleFull, onChooseMedia, controls }
           className="absolute inset-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60"
         />
       )}
-      {hasMedia && !isPlaying && (
+      {hasMedia && hasPicture && !isPlaying && (
         <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white">
           <Icon name="play_arrow" size={34} />
         </span>
