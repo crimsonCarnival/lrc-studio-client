@@ -266,7 +266,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.badgeId')}</span>
                   <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                     placeholder={t('admin.badges.badgeIdPlaceholder')}
                     value={form.id}
                     onChange={e => set('id', e.target.value)}
@@ -283,7 +283,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                     {t('admin.badges.label')} (EN)
                   </span>
                   <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                     placeholder={t('admin.placeholderEn', { field: t('admin.badges.label') })}
                     value={form.label.en}
                     onChange={e => set('label', { ...form.label, en: e.target.value })}
@@ -297,7 +297,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                     {t('admin.badges.label')} (ES)
                   </span>
                   <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                     placeholder={t('admin.placeholderEs', { field: t('admin.badges.label') })}
                     value={form.label.es}
                     onChange={e => set('label', { ...form.label, es: e.target.value })}
@@ -312,7 +312,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   {t('admin.badges.description')} (EN)
                 </span>
                 <input
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                  className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                   placeholder={t('admin.placeholderEn', { field: t('admin.badges.description') })}
                   value={form.description.en}
                   onChange={e => set('description', { ...form.description, en: e.target.value })}
@@ -326,7 +326,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   {t('admin.badges.description')} (ES)
                 </span>
                 <input
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                  className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                   placeholder={t('admin.placeholderEs', { field: t('admin.badges.description') })}
                   value={form.description.es}
                   onChange={e => set('description', { ...form.description, es: e.target.value })}
@@ -396,7 +396,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   <input
                     type="number"
                     min={1}
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
                     value={form.conditionValue ?? ''}
                     onChange={e => set('conditionValue', e.target.value)}
                     required
@@ -411,7 +411,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   type="number"
                   min={0}
                   step={25}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+                  className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
                   value={form.xpReward ?? 50}
                   onChange={e => set('xpReward', e.target.value)}
                 />
@@ -612,7 +612,7 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
           <label className="flex flex-col gap-1">
             <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.accountNameLabel')}</span>
             <input
-              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+              className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
               placeholder={t('admin.badges.accountNamePlaceholder')}
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
@@ -623,7 +623,7 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
             <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.grantExpires')}</span>
             <input
               type="date"
-              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+              className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
               min={today}
               value={expires}
               onChange={e => setExpires(e.target.value)}

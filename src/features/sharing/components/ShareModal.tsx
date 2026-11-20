@@ -322,7 +322,7 @@ export function SharePanel({
                   pattern="[0-9]*"
                   value={customTime}
                   onChange={handleManualTimeChange}
-                  className="h-8 pl-8 bg-zinc-950/50 border-zinc-800 text-[11px] font-mono focus:ring-primary/20"
+                  className="h-8 pl-8 bg-field border-hl text-[11px] font-mono focus:ring-primary/20"
                   placeholder={t('share.secondsPlaceholder')}
                 />
               </div>
@@ -378,7 +378,7 @@ export function SharePanel({
             readOnly
             value={url}
             onClick={() => inputRef.current?.select()}
-            className="w-full bg-zinc-950/50 border border-zinc-800 hover:border-zinc-700/80 rounded-xl px-3 py-2.5 text-[11px] font-mono text-zinc-300 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-text transition-all"
+            className="w-full bg-field border border-hl hover:border-zinc-700/80 rounded-xl px-3 py-2.5 text-[11px] font-mono text-zinc-300 focus:outline-none focus:ring-1 focus:ring-primary/30 cursor-text transition-all"
           />
           <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-zinc-950/50 to-transparent pointer-events-none rounded-r-xl" />
         </div>

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Input } from '@ui/input';
-import { Textarea } from '@ui/textarea';
+import { FloatingInput } from '@ui/floating-input';
+import { FloatingTextarea } from '@ui/floating-textarea';
 
 type ProfileFormProps = {
   values: { displayName: string; bio: string };
@@ -18,15 +18,12 @@ export default function ProfileForm({ values, onChange, identifier, show = { dis
       {(show.displayName || show.identifier) && (
       <div className="grid gap-[18px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
         {show.displayName && <div>
-          <label htmlFor="settings-display-name" className="block text-[13px] font-bold text-zinc-100 mb-2">
-            {t('profile.displayName')}
-          </label>
-          <Input
+          <FloatingInput label={t('profile.displayName')}
             id="settings-display-name"
             value={values.displayName}
             onChange={(e) => onChange('displayName', e.target.value)}
             placeholder={t('profile.displayNamePlaceholder')}
-            className="bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] h-11 text-[15px]"
+            
             maxLength={50}
           />
         </div>}
@@ -36,10 +33,9 @@ export default function ProfileForm({ values, onChange, identifier, show = { dis
 
       {show.bio && <div>
         <div className="flex justify-between items-baseline mb-2 px-1">
-          <label htmlFor="settings-bio" className="text-[15px] font-semibold text-foreground">{t('profile.bio')}</label>
           <span className="font-mono text-xs text-subtle">{values.bio.length}/160</span>
         </div>
-        <Textarea
+        <FloatingTextarea label={t('profile.bio')}
           id="settings-bio"
           value={values.bio}
           onChange={(e) => onChange('bio', e.target.value.slice(0, 160))}

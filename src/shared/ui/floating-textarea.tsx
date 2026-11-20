@@ -48,6 +48,8 @@ function FloatingTextarea({ className, label, value, error, onFocus, onBlur, ref
       />
       <NotchedOutline label={label} raised={isFocused || hasValue} focused={isFocused} error={error} />
       <label
+        // Names the textarea for assistive tech, as in FloatingInput.
+        htmlFor={props.id}
         className={cn(
           // Same label behaviour as FloatingInput: it sits in the outline's gap, no fill of its own.
           "absolute -translate-y-1/2 pointer-events-none px-1 -ml-1 left-4 transition-all duration-[var(--duration-state)] ease-state",

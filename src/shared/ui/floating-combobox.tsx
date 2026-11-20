@@ -261,7 +261,7 @@ export function FloatingCombobox({
           // Outline drawn by NotchedOutline (gap for the label), so the fill can follow the theme.
           size === 'default' && 'h-[52px] lg:h-[52px] rounded-[var(--radius-control)] border-0 bg-field px-4 lg:px-4 text-[17px] md:text-[17px] lg:text-[17px] font-medium text-foreground focus-visible:ring-0 aria-invalid:border-0 aria-invalid:ring-0',
           size === 'default' && hasOptions && 'pr-9 lg:pr-9',
-          size === 'sm' && 'h-6 bg-zinc-800 border-zinc-600/50 text-zinc-500 text-[10px] focus:border-primary/60 rounded-xs px-1.5 pr-6',
+          size === 'sm' && 'h-6 bg-field border-hl text-zinc-500 text-[10px] focus:border-primary/60 rounded-xs px-1.5 pr-6',
           error && size === 'sm' && 'border-destructive/50 focus:border-destructive/80'
         )}
       />

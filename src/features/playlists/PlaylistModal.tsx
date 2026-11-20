@@ -90,7 +90,7 @@ type PlaylistModalProps = {
 };
 
 // The field look of the shared Textarea (redesign sheet 05), for the single-line inputs.
-const FIELD = 'h-11 lg:h-11 px-3.5 lg:px-3.5 text-[15px] lg:text-[15px] rounded-[var(--radius-control)] border-0 bg-card text-foreground inset-ring inset-ring-hl hover:inset-ring-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary placeholder:text-faint';
+const FIELD = 'h-11 lg:h-11 px-3.5 lg:px-3.5 text-[15px] lg:text-[15px] rounded-[var(--radius-control)] border-0 bg-field text-foreground inset-ring inset-ring-hl hover:inset-ring-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary placeholder:text-faint';
 
 function FieldLabel({ htmlFor, label, extra, counter }: { htmlFor?: string; label: ReactNode; extra?: ReactNode; counter?: ReactNode }) {
   return (
@@ -409,7 +409,7 @@ export function PlaylistModal({ playlist, onClose, onSave, onProjectsChange }: P
 
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor={`${uid}-tag`} label={t('playlists.modal.tags')} counter={t('playlists.modal.tagsHint', { count: form.tags.length })} />
-        <div className="flex flex-wrap items-center gap-1.5 min-h-11 rounded-[var(--radius-control)] bg-card inset-ring inset-ring-hl px-2.5 py-2 focus-within:inset-ring-2 focus-within:inset-ring-primary">
+        <div className="flex flex-wrap items-center gap-1.5 min-h-11 rounded-[var(--radius-control)] bg-field inset-ring inset-ring-hl px-2.5 py-2 focus-within:inset-ring-2 focus-within:inset-ring-primary">
           {form.tags.map(tag => (
             <span key={tag} className="flex items-center gap-1 text-[13px] pl-2.5 pr-1.5 py-0.5 rounded-pill bg-primary/15 text-primary">
               {tag}
@@ -495,7 +495,7 @@ export function PlaylistModal({ playlist, onClose, onSave, onProjectsChange }: P
 
   const pickerControls = (
     <div className="flex flex-col gap-3">
-      <label className="flex items-center gap-2.5 h-11 px-3.5 rounded-[var(--radius-control)] bg-card inset-ring inset-ring-hl text-faint focus-within:inset-ring-2 focus-within:inset-ring-primary">
+      <label className="flex items-center gap-2.5 h-11 px-3.5 rounded-[var(--radius-control)] bg-field inset-ring inset-ring-hl text-faint focus-within:inset-ring-2 focus-within:inset-ring-primary">
         <Icon name="search" size={18} />
         <input
           type="search"

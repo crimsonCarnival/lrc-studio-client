@@ -85,7 +85,7 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
                 }
               }}
               placeholder={t('editor.sectionLabelPlaceholder')}
-              className="flex-1 min-w-0 bg-zinc-800/60 border border-zinc-700/60 text-zinc-200 text-xs rounded-md px-2 py-1 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50"
+              className="flex-1 min-w-0 bg-field border border-hl text-zinc-200 text-xs rounded-md px-2 py-1 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50"
             />
             <Button
               disabled={!customLabel.trim()}

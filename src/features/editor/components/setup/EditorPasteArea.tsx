@@ -155,7 +155,7 @@ export default function EditorPasteArea({
               onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
               placeholder={t('import.urlPlaceholder')}
               aria-label={t('import.fromUrl')}
-              className="flex-1 h-10 coarse:h-11 bg-zinc-950/60 border border-zinc-700 text-zinc-200 text-xs rounded-[calc(var(--radius)*1)] px-3 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
+              className="flex-1 h-10 coarse:h-11 bg-field border border-hl text-zinc-200 text-xs rounded-[calc(var(--radius)*1)] px-3 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
               disabled={urlFetching}
             />
             <Tip content={t('import.fromUrl')}>

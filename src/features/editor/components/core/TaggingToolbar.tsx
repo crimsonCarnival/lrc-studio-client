@@ -277,7 +277,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, recordI
                 }
               }}
               placeholder={t('editor.addSinger')}
-              className="h-7 w-32 px-3 text-[13px] rounded-[calc(var(--radius)*1.4)] border bg-zinc-800 border-zinc-600 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-primary/60 transition-colors ml-1"
+              className="h-7 w-32 px-3 text-[13px] rounded-[calc(var(--radius)*1.4)] border bg-field border-hl text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-primary/60 transition-colors ml-1"
             />
           </div>
           {canSuggest && (

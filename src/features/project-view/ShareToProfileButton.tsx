@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
-import { Textarea } from '@ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import { projectsService } from '@/features/projects/services/projects.service.js';
 import toast from 'react-hot-toast';
 import { cn } from '@/shared/utils/utils';
 import type { ProfileShareNote } from '@/types';
+import { FloatingTextarea } from '@ui/floating-textarea';
 
 // Mirrors the server's normalizeShareNote, which rejects anything past these.
 const DESCRIPTION_MAX = 500;
@@ -172,17 +172,14 @@ export function ShareToProfileButton({ publicId, initialShare = null, initialCou
         )}
 
         <div className="flex flex-col gap-1">
-          <label htmlFor={`share-desc-${publicId}`} className="text-xs text-muted-foreground">
-            {t('projectView.shareDescriptionLabel')}
-          </label>
-          <Textarea
+          <FloatingTextarea label={t('projectView.shareDescriptionLabel')}
             id={`share-desc-${publicId}`}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={DESCRIPTION_MAX}
             rows={3}
             placeholder={t('projectView.shareDescriptionPlaceholder')}
-            className="resize-none text-sm"
+            className="resize-none"
           />
           <span className="self-end font-mono text-[11px] tabular-nums text-subtle">
             {description.length}/{DESCRIPTION_MAX}

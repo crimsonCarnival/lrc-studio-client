@@ -94,7 +94,7 @@ export default function CounterpartsDemo() {
             onChange={(e) => setDraft(e.target.value)}
             aria-label={t('editor.counterpart.nameLabel')}
             placeholder={t('editor.counterpart.namePlaceholder')}
-            className="h-11 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-11 rounded-lg border border-hl bg-field px-3 text-sm text-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
           <div className="flex flex-wrap gap-2">
             {FREQUENTS.map((word) => (

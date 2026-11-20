@@ -54,7 +54,7 @@ function RequestComposer({ types, onClose, onSubmitted }: { types: ComposerType[
     }
   };
 
-  const inputCls = 'bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none';
+  const inputCls = 'bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none';
 
   return createPortal(
     <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
@@ -288,7 +288,7 @@ export default function AdminRequestsTab() {
                         value={rejectNote}
                         onChange={e => setRejectNote(e.target.value)}
                         placeholder={t('admin.requests.rejectNote')}
-                        className="w-48 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                        className="w-48 bg-field border border-hl rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                       />
                       <Button
                         type="button"

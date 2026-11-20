@@ -75,7 +75,7 @@ export const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent
             onChange={(e) => { onYtUrlChange(e.target.value); onYtErrorChange(''); }}
             onKeyDown={(e) => { if (e.key === 'Enter') onUrlLoad(); }}
             placeholder={t('player.pasteCdnUrl')}
-            className="h-8 pl-6 text-xs bg-zinc-800/60 border-zinc-700"
+            className="h-8 pl-6 text-xs bg-field border-hl"
           />
         </div>
         <Button
@@ -355,7 +355,7 @@ export default function PlayerControls({ variant, compact = false }: { variant: 
                       // lg:pl-8 as well as pl-8: the base Input sets lg:px-2.5, which at that
                       // breakpoint overrides the plain pl-8 and let the link icon sit under the
                       // placeholder text. padding-left beats padding-inline in Tailwind's order.
-                      className="pl-8 lg:pl-8 bg-zinc-900/50 border-zinc-700/50 text-sm h-10 rounded-xl shadow-inner w-full"
+                      className="pl-8 lg:pl-8 bg-field border-hl text-sm h-10 rounded-xl shadow-inner w-full"
                     />
                   </div>
                   <Button
@@ -813,7 +813,7 @@ export default function PlayerControls({ variant, compact = false }: { variant: 
                           onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
                           onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
                           placeholder={t('player.pasteCdnUrl')}
-                          className="flex-1 h-9 pl-6 bg-zinc-800/60 text-zinc-100 placeholder-zinc-500 border-zinc-700 text-xs"
+                          className="flex-1 h-9 pl-6 bg-field text-zinc-100 placeholder-zinc-500 border-hl text-xs"
                         />
                       </div>
                       <Button

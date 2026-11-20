@@ -162,7 +162,7 @@ export function DateTimePicker({
           aria-label={ariaLabel}
           aria-haspopup="dialog"
           className={cn(
-            'flex h-11 w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border-0 bg-card px-3 text-left text-sm font-medium text-foreground inset-ring inset-ring-hl outline-none transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint focus-visible:inset-ring-2 focus-visible:inset-ring-primary data-[state=open]:inset-ring-2 data-[state=open]:inset-ring-primary disabled:cursor-not-allowed disabled:opacity-50 lg:h-8',
+            'flex h-11 w-full items-center justify-between gap-2 rounded-[var(--radius-control)] border-0 bg-field px-3 text-left text-sm font-medium text-foreground inset-ring inset-ring-hl outline-none transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint focus-visible:inset-ring-2 focus-visible:inset-ring-primary data-[state=open]:inset-ring-2 data-[state=open]:inset-ring-primary disabled:cursor-not-allowed disabled:opacity-50 lg:h-8',
             !triggerText && 'text-faint',
             className,
           )}
@@ -346,7 +346,7 @@ function TimeField({ label, value, min, max, onCommit }: TimeFieldProps) {
           setText(null);
         }
       }}
-      className="h-8 w-10 rounded-lg bg-card text-center font-mono text-sm tabular-nums text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
+      className="h-8 w-10 rounded-lg bg-field text-center font-mono text-sm tabular-nums text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
     />
   );
 }

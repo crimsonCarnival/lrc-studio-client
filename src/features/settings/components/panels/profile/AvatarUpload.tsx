@@ -117,7 +117,7 @@ export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps)
               onChange={e => setUrlValue(e.target.value)}
               placeholder={t('profile.avatarUrlPlaceholder')}
               aria-label={t('profile.setAvatarUrl')}
-              className="bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] px-3 h-10 text-sm text-zinc-100 outline-none focus:border-primary/60 w-full"
+              className="bg-field border border-hl rounded-[calc(var(--radius)*1)] px-3 h-10 text-sm text-zinc-100 outline-none focus:border-primary/60 w-full"
               disabled={uploading}
             />
             <div className="flex gap-2">

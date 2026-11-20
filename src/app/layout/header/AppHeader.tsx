@@ -47,6 +47,8 @@ interface AppHeaderProps {
   isReady: boolean;
   lines: EditorLine[];
   mediaTitle: string;
+  /** What the breadcrumb shows: "Song (Version) – Artist", falling back to mediaTitle. */
+  headerTitle?: string;
   setMediaTitle: (title: string) => void;
   triggerImportSave: (opts: { title?: string }) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,6 +103,7 @@ export function AppHeader({
   isReady,
   lines,
   mediaTitle,
+  headerTitle,
   setMediaTitle,
   triggerImportSave,
   buildProjectPayload,
@@ -256,7 +259,7 @@ export function AppHeader({
             {!(isWorkspace && workspaceView === 'preview') && (
             <HeaderBreadcrumb
               isReady={isReady}
-              mediaTitle={mediaTitle}
+              mediaTitle={headerTitle || mediaTitle}
               setMediaTitle={setMediaTitle}
               triggerImportSave={triggerImportSave}
               forkedFrom={forkedFrom}

@@ -12,6 +12,7 @@ import {
 } from '@ui/alert-dialog';
 import { onSudoPrompt, submitSudoPassword, submitSudoPasskey, cancelSudo, getSudoFactors } from './services/sudo';
 import { Button } from '@ui/button';
+import { FloatingInput } from '@ui/floating-input';
 
 interface SudoFactors {
   hasPassword: boolean;
@@ -121,13 +122,13 @@ export default function SudoPasswordModal() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                   {t('admin.sudo.passwordLabel')}
                 </span>
-                <input
+                <FloatingInput
                   type="password"
                   autoFocus
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('admin.sudo.passwordPlaceholder')}
-                  className="h-10 px-3 text-sm rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50"
+                  id="sudo-password-passwordplaceholder"
+                  label={t('admin.sudo.passwordPlaceholder')}
                 />
               </label>
               <Button

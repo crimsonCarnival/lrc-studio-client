@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
-import { Input } from '@ui/input';
 import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
 import type { ApiError } from '@/types/api/error';
+import { FloatingInput } from '@ui/floating-input';
 
 export default function EmailSection() {
   const { t } = useTranslation();
@@ -65,14 +65,13 @@ export default function EmailSection() {
       <p className="text-sm text-zinc-400 mt-1.5">{t('profile.emailPrivateDesc')}</p>
 
       <div className="flex flex-wrap gap-2.5 mt-4">
-        <label htmlFor="settings-email" className="sr-only">{t('profile.emailSection')}</label>
-        <Input
+        <FloatingInput label={t('profile.emailSection')}
           id="settings-email"
           type="email"
           value={value}
           onChange={(e) => { setValue(e.target.value); setError(''); }}
           placeholder={t('profile.email')}
-          className="flex-1 basis-64 bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] h-11 text-[15px]"
+          className="flex-1"
         />
         {user?.email && (
           <span className={`flex items-center gap-1.5 px-3 h-11 rounded-[calc(var(--radius)*1)] text-[13px] font-semibold ${verified ? 'bg-teal-950 text-teal-300' : 'bg-amber-950 text-amber-300'}`}>

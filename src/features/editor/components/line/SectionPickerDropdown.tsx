@@ -82,7 +82,7 @@ export default function SectionPickerDropdown({ value, onChange }: SectionPicker
           onChange={handleCustomChange}
           placeholder={t('editor.sectionLabelPlaceholder')}
           autoFocus
-          className="text-xs px-2 py-0.5 rounded-xs border bg-zinc-800 border-zinc-600 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/60 w-full min-w-[220px]"
+          className="text-xs px-2 py-0.5 rounded-xs border bg-field border-hl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/60 w-full min-w-[220px]"
         />
       )}
     </div>

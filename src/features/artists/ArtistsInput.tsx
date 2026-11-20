@@ -275,7 +275,7 @@ function ChipField({ role, id, credits, allNames, disabled, onAddText, onPickNam
           onBlur={() => { setOpen(false); if (draft.trim()) submit(); }}
           onKeyDown={onInputKeyDown}
           onPaste={onPaste}
-          className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+          className="h-9 w-full rounded-md border border-hl bg-field px-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
         />
         <p id={`${id}-hint`} className="mt-1 text-xs text-faint">{tr(`artists.${role}.help`)} {credits.length > 1 ? tr('artists.reorderHint') : ''}</p>
 

@@ -8,9 +8,6 @@ import toast from 'react-hot-toast';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@ui/dialog';
-import { Input } from '@ui/input';
-import { Label } from '@ui/label';
-import { Textarea } from '@ui/textarea';
 import { catalogErrorKey, uploadErrorKey } from './catalog-errors';
 import type { CatalogErrorKey } from './catalog-errors';
 import { CatalogPhotoField } from './CatalogPhotoField';
@@ -19,6 +16,8 @@ import type { PhotoState } from './catalog-photo';
 import { catalogDuplicateOf, submitCatalogAlbum, submitCatalogArtist, uploadCatalogImage } from './catalog.service';
 import { MY_SUBMISSIONS_KEY } from './catalog.queries';
 import { catalogAlbumPath, catalogArtistPath } from './catalog-path';
+import { FloatingInput } from '@ui/floating-input';
+import { FloatingTextarea } from '@ui/floating-textarea';
 
 const NAME_MAX = 300;
 const TITLE_MAX = 500;
@@ -109,19 +108,16 @@ function SubmitForm({ target, onClose }: { target: SubmitTarget; onClose: () => 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={nameId}>{isAlbum ? t('catalog.dialog.albumTitleLabel') : t('catalog.dialog.nameLabel')}</Label>
-        <Input id={nameId} value={name} maxLength={isAlbum ? TITLE_MAX : NAME_MAX} onChange={(e) => setName(e.target.value)} autoFocus />
+        <FloatingInput label={isAlbum ? t('catalog.dialog.albumTitleLabel') : t('catalog.dialog.nameLabel')} id={nameId} value={name} maxLength={isAlbum ? TITLE_MAX : NAME_MAX} onChange={(e) => setName(e.target.value)} autoFocus />
       </div>
 
       {isAlbum ? (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={yearId}>{t('catalog.dialog.yearLabel')}</Label>
-          <Input id={yearId} value={year} maxLength={YEAR_MAX} inputMode="numeric" onChange={(e) => setYear(e.target.value)} />
+          <FloatingInput label={t('catalog.dialog.yearLabel')} id={yearId} value={year} maxLength={YEAR_MAX} inputMode="numeric" onChange={(e) => setYear(e.target.value)} />
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={bioId}>{t('catalog.dialog.bioLabel')}</Label>
-          <Textarea id={bioId} value={bio} maxLength={BIO_MAX} onChange={(e) => setBio(e.target.value)} />
+          <FloatingTextarea label={t('catalog.dialog.bioLabel')} id={bioId} value={bio} maxLength={BIO_MAX} onChange={(e) => setBio(e.target.value)} />
           <span className="self-end text-xs tabular-nums text-muted-foreground" aria-live="polite">
             {t('catalog.dialog.bioCounter', { count: bio.length, max: BIO_MAX })}
           </span>

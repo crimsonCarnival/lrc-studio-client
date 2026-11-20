@@ -15,7 +15,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"tex
         "lg:min-h-[100px] lg:px-4 lg:py-3 lg:text-base md:text-base",
         // Field look (redesign sheet 05): ring is an inset shadow so it can thicken on focus
         // without shifting layout.
-        "flex field-sizing-content w-full rounded-[var(--radius-control)] border-0 bg-card font-medium leading-snug text-foreground inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state outline-none placeholder:text-faint hover:inset-ring-faint",
+        "flex field-sizing-content w-full rounded-[var(--radius-control)] border-0 bg-field font-medium leading-snug text-foreground inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state outline-none placeholder:text-faint hover:inset-ring-faint",
         // Focus & disabled
         "focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary disabled:cursor-not-allowed disabled:opacity-50",
         // Validation

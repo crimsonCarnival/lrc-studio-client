@@ -6,9 +6,6 @@ import toast from 'react-hot-toast';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@ui/dialog';
-import { Input } from '@ui/input';
-import { Label } from '@ui/label';
-import { Textarea } from '@ui/textarea';
 import { adminCreateAlbum, adminCreateArtist, adminUpdate, uploadCatalogImage } from '@/features/catalog/catalog.service';
 import { catalogErrorKey, uploadErrorKey } from '@/features/catalog/catalog-errors';
 import type { CatalogErrorKey } from '@/features/catalog/catalog-errors';
@@ -17,6 +14,8 @@ import { CatalogPhotoField } from '@/features/catalog/CatalogPhotoField';
 import { UNCHANGED } from '@/features/catalog/catalog-photo';
 import type { PhotoState } from '@/features/catalog/catalog-photo';
 import type { CatalogAlbum, CatalogArtist } from '@/features/catalog/catalog.types';
+import { FloatingInput } from '@ui/floating-input';
+import { FloatingTextarea } from '@ui/floating-textarea';
 
 const NAME_MAX = 300;
 const TITLE_MAX = 500;
@@ -151,20 +150,17 @@ function EntryForm({ target, artistName, onDone, onClose }: { target: FormTarget
       {photoError && <p role="alert" className="text-sm text-love">{t(photoError)}</p>}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${idPrefix}-name`}>{isAlbum ? t('admin.catalogTab.form.title') : t('admin.catalogTab.form.name')}</Label>
-        <Input id={`${idPrefix}-name`} value={name} maxLength={isAlbum ? TITLE_MAX : NAME_MAX} onChange={(e) => setName(e.target.value)} autoFocus />
+        <FloatingInput label={isAlbum ? t('admin.catalogTab.form.title') : t('admin.catalogTab.form.name')} id={`${idPrefix}-name`} value={name} maxLength={isAlbum ? TITLE_MAX : NAME_MAX} onChange={(e) => setName(e.target.value)} autoFocus />
       </div>
 
       {isAlbum ? (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-year`}>{t('admin.catalogTab.form.year')}</Label>
-          <Input id={`${idPrefix}-year`} value={year} maxLength={YEAR_MAX} inputMode="numeric" onChange={(e) => setYear(e.target.value)} />
+          <FloatingInput label={t('admin.catalogTab.form.year')} id={`${idPrefix}-year`} value={year} maxLength={YEAR_MAX} inputMode="numeric" onChange={(e) => setYear(e.target.value)} />
         </div>
       ) : (
         <>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${idPrefix}-disambiguation`}>{t('admin.catalogTab.form.disambiguation')}</Label>
-            <Input
+            <FloatingInput label={t('admin.catalogTab.form.disambiguation')}
               id={`${idPrefix}-disambiguation`}
               value={disambiguation}
               maxLength={DISAMBIGUATION_MAX}
@@ -175,8 +171,7 @@ function EntryForm({ target, artistName, onDone, onClose }: { target: FormTarget
             <span id={`${idPrefix}-disambiguation-hint`} className="text-xs text-muted-foreground">{t('admin.catalogTab.form.disambiguationHint')}</span>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${idPrefix}-bio`}>{t('admin.catalogTab.form.bio')}</Label>
-            <Textarea id={`${idPrefix}-bio`} value={bio} maxLength={BIO_MAX} onChange={(e) => setBio(e.target.value)} />
+            <FloatingTextarea label={t('admin.catalogTab.form.bio')} id={`${idPrefix}-bio`} value={bio} maxLength={BIO_MAX} onChange={(e) => setBio(e.target.value)} />
             <span className="self-end text-xs tabular-nums text-muted-foreground" aria-live="polite">{t('admin.catalogTab.form.bioCounter', { count: bio.length, max: BIO_MAX })}</span>
           </div>
         </>

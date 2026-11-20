@@ -48,7 +48,7 @@ export default function FullEmojiPicker({ onSelect }: { onSelect: (emoji: string
         autoFocus
         aria-label={t('reactions.searchEmoji')}
         placeholder={t('reactions.searchEmoji')}
-        className="h-10 w-full shrink-0 appearance-none rounded-[var(--radius-control)] bg-card px-3 text-[15px] font-medium text-foreground outline-none inset-ring inset-ring-hl placeholder:text-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-iris [&::-webkit-search-cancel-button]:hidden"
+        className="h-10 w-full shrink-0 appearance-none rounded-[var(--radius-control)] bg-field px-3 text-[15px] font-medium text-foreground outline-none inset-ring inset-ring-hl placeholder:text-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-iris [&::-webkit-search-cancel-button]:hidden"
       />
       <EmojiPicker.Viewport className="settings-scroll relative min-h-0 flex-1 outline-none">
         <EmojiPicker.Loading className="absolute inset-0 grid place-items-center text-sm text-subtle">

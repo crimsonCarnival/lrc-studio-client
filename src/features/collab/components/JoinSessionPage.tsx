@@ -4,8 +4,6 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { Button } from '@ui/button'
-import { Input } from '@ui/input'
-import { Label } from '@ui/label'
 import { LogoLoader } from '@ui/LogoLoader'
 import { Icon } from '@/shared/ui/Icon'
 import { useNameRoll } from '@/shared/hooks/useNameRoll'
@@ -14,6 +12,7 @@ import { isApiError } from '@/types'
 import { sessionPath } from '@/features/projects/project-path'
 import { joinSession } from '../collab.service'
 import { Tip } from '@ui/tip';
+import { FloatingInput } from '@ui/floating-input';
 
 // Matches the server (collab.service MAX_NAME): 1-40 characters after trimming.
 const nameSchema = z.string().trim().min(1).max(40)
@@ -156,9 +155,8 @@ export default function JoinSessionPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t('collab.join.body')}</p>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="collab-join-name">{t('collab.join.nameLabel')}</Label>
         <div className="flex gap-2">
-          <Input
+          <FloatingInput label={t('collab.join.nameLabel')}
             id="collab-join-name"
             value={name}
             onChange={(e) => setName(e.target.value)}

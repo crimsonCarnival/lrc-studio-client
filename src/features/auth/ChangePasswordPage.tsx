@@ -7,6 +7,7 @@ import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength';
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
+import { FloatingInput } from '@ui/floating-input';
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation();
@@ -130,43 +131,43 @@ export default function ChangePasswordPage() {
 
           {!isSetMode && (
             <div>
-              <input
+              <FloatingInput
                 type="password"
                 autoComplete="current-password"
-                placeholder={t('auth.changePassword.currentPassword')}
+                id="change-password-currentpassword"
+                label={t('auth.changePassword.currentPassword')}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
                 disabled={submitting}
-                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:border-primary/50"
               />
             </div>
           )}
 
           <div>
-            <input
+            <FloatingInput
               type="password"
               autoComplete="new-password"
-              placeholder={t('auth.changePassword.newPassword')}
+              id="change-password-newpassword"
+              label={t('auth.changePassword.newPassword')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               disabled={submitting}
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:border-primary/50"
             />
             <PasswordStrength password={newPassword} />
           </div>
 
           <div>
-            <input
+            <FloatingInput
               type="password"
               autoComplete="new-password"
-              placeholder={t('auth.changePassword.confirmPassword')}
+              id="change-password-confirmpassword"
+              label={t('auth.changePassword.confirmPassword')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={submitting}
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:border-primary/50"
             />
             {confirmPassword && newPassword !== confirmPassword && (
               <p className="text-destructive text-xs font-medium mt-1">

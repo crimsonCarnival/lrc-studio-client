@@ -7,6 +7,7 @@ import { Button } from '@ui/button';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authService } from '@/features/auth/services/auth.service';
 import { isApiError } from '@/types';
+import { FloatingInput } from '@ui/floating-input';
 
 export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: () => void }) {
   const { t } = useTranslation();
@@ -92,14 +93,14 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <input
+          <FloatingInput
             type="email"
-            placeholder={t('auth.forgotPasswordForm.placeholder')}
+            id="forgot-password-placeholder"
+            label={t('auth.forgotPasswordForm.placeholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={loading}
-            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:border-primary/50 transition-colors"
           />
           {error && <p className="text-destructive text-xs font-medium mt-1">{error}</p>}
         </div>

@@ -822,7 +822,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       <div className="flex-1 flex flex-col gap-3 overflow-y-auto scrollbar-thin pr-0.5">
                         {/* URL + file input */}
                         <FileDropZone onFile={loadAudioFile} className="rounded-2xl shrink-0">
-                        <div className="flex items-center gap-2 bg-zinc-900/50 p-2 rounded-2xl border border-zinc-800/60 focus-within:border-primary/40 transition-all">
+                        <div className="flex items-center gap-2 bg-field p-2 rounded-2xl border border-hl focus-within:border-primary/40 transition-all">
                           <Tip content={t('setup.uploadAudio')}>
                             <Button
                               variant="outline"

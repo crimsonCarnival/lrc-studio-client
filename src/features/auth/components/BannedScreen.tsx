@@ -198,7 +198,7 @@ export default function BannedScreen() {
                 value={appealText}
                 onChange={(e) => setAppealText(e.target.value)}
                 placeholder={t('admin.banned.placeholder')}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-red-500/50 resize-none h-32 transition-all"
+                className="w-full bg-field border border-hl rounded-xl p-4 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-red-500/50 resize-none h-32 transition-all"
                 maxLength={1000}
               />
             </div>

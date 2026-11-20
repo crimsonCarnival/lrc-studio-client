@@ -402,7 +402,7 @@ export default function AdminUsersTab({
                             min={1}
                             value={xpAmount}
                             onChange={e => setXpAmount(e.target.value)}
-                            className="w-16 h-7 px-2 text-xs rounded-xs bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
+                            className="w-16 h-7 px-2 text-xs rounded-xs bg-field border border-hl text-zinc-200 focus:outline-none focus:border-primary"
                           />
                           <Button
                             variant="outline"

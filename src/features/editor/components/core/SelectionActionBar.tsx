@@ -314,7 +314,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }: { 
               onChange={(e: ChangeEvent<HTMLInputElement>) => setCustom(e.target.value)}
               onKeyDown={(e: KeyboardEvent) => { if (e.key === 'Enter' && custom.trim()) assignName(custom.trim()); }}
               placeholder={t('editor.singerCustomPlaceholder')}
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xs px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
+              className="flex-1 bg-field border border-hl rounded-xs px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
             />
             <button
               type="button"

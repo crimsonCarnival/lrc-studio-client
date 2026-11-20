@@ -248,7 +248,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
                   placeholder={t('setup.tagsSearch')}
                   disabled={atMax && !query}
-                  className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg bg-zinc-800/60 border border-zinc-700/50 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none transition-colors disabled:opacity-50"
+                  className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg bg-field border border-hl text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none transition-colors disabled:opacity-50"
                 />
               </div>
             </div>

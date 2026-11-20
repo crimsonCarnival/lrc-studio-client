@@ -163,7 +163,7 @@ function LineTextEditingForm({
           value={editingText}
           onChange={(e) => setEditingText(e.target.value)}
           placeholder={`${t('editor.primaryText')} — {漢字|よみかた}`}
-          className="w-full bg-zinc-800 border-primary/50 text-xs text-zinc-100 h-7"
+          className="w-full bg-field border-primary/50 text-xs text-zinc-100 h-7"
         />
         {splitParsed && (
           <Tip content={tk('editor.splitAtColon', { name: splitParsed.name })}>
@@ -182,7 +182,7 @@ function LineTextEditingForm({
         value={editingSecondary}
         onChange={(e) => setEditingSecondary(e.target.value)}
         placeholder={t('editor.secondaryText')}
-        className="w-full bg-zinc-800 border-zinc-600/50 text-xs text-zinc-400 h-6"
+        className="w-full bg-field border-hl text-xs text-zinc-400 h-6"
       />
 
       {/* Translation slots */}
@@ -203,7 +203,7 @@ function LineTextEditingForm({
             value={tr.text || ''}
             onChange={(e) => updateTranslation(idx, 'text', e.target.value)}
             placeholder={t('editor.translationText')}
-            className="flex-1 bg-zinc-800 border-zinc-600/50 text-xs text-zinc-500 h-6 italic"
+            className="flex-1 bg-field border-hl text-xs text-zinc-500 h-6 italic"
           />
           <Tip content={t('common.actions.removeTranslation')}>
             <button aria-label={t('common.actions.removeTranslation')} type="button" onClick={() => removeTranslation(idx)} className="text-zinc-600 hover:text-zinc-400 shrink-0 px-0.5">

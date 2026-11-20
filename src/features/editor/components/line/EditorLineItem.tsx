@@ -591,7 +591,7 @@ const EditorLineItem = React.memo(({
                       suggestions={(songArtists ?? []).filter((name) => !editingSingers.includes(name))}
                       placeholder={t('editor.addSinger')}
                       autoFocus
-                      className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-pill px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
+                      className="text-[11px] bg-field border border-hl rounded-pill px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
                       onKeyDown={(e) => {
                         if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
                         e.preventDefault();

@@ -150,7 +150,7 @@ export function ColorPicker({ value, onChange, 'aria-label': ariaLabel, classNam
             setText(v);
             if (isHex6(v)) emit(hexToHsv(v));
           }}
-          className="mt-3 h-8 w-full rounded-lg bg-card px-2 font-mono text-xs text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
+          className="mt-3 h-8 w-full rounded-lg bg-field px-2 font-mono text-xs text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
         />
       </PopoverContent>
     </Popover>

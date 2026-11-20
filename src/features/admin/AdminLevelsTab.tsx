@@ -221,7 +221,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                   <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.levels.modal.levelId')}</span>
                   <Tip content={t('admin.levels.modal.levelIdHint')}>
                     <input
-                      className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                      className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                       placeholder={t('admin.levels.modal.levelIdPlaceholder')}
                       value={form.id}
                       onChange={e => setForm(p => ({ ...p, id: e.target.value }))}
@@ -238,7 +238,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                     {t('admin.levels.modal.titleField')} (EN)
                   </span>
                   <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                     placeholder={t('admin.placeholderEn', { field: t('admin.levels.modal.titleField') })}
                     value={form.title.en}
                     onChange={e => setForm(p => ({ ...p, title: { ...p.title, en: e.target.value } }))}
@@ -251,7 +251,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                   <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.levels.modal.order')}</span>
                   <input
                     type="number"
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
                     value={form.order}
                     onChange={e => setForm(p => ({ ...p, order: e.target.value }))}
                     min={0}
@@ -263,7 +263,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                     {t('admin.levels.modal.titleField')} (ES)
                   </span>
                   <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                    className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                     placeholder={t('admin.placeholderEs', { field: t('admin.levels.modal.titleField') })}
                     value={form.title.es}
                     onChange={e => setForm(p => ({ ...p, title: { ...p.title, es: e.target.value } }))}
@@ -277,7 +277,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                   {t('admin.levels.modal.descriptionField')} (EN)
                 </span>
                 <input
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                  className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                   placeholder={t('admin.placeholderEn', { field: t('admin.levels.modal.descriptionField') })}
                   value={form.description.en}
                   onChange={e => setForm(p => ({ ...p, description: { ...p.description, en: e.target.value } }))}
@@ -290,7 +290,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                   {t('admin.levels.modal.descriptionField')} (ES)
                 </span>
                 <input
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                  className="bg-field border border-hl rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                   placeholder={t('admin.placeholderEs', { field: t('admin.levels.modal.descriptionField') })}
                   value={form.description.es}
                   onChange={e => setForm(p => ({ ...p, description: { ...p.description, es: e.target.value } }))}
@@ -317,7 +317,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                       <input
                         type="number"
                         min={0}
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none placeholder:text-zinc-500"
+                        className="w-full bg-field border border-hl rounded-lg px-2 py-1 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none placeholder:text-zinc-500"
                         placeholder="0"
                         value={form.requirements[f.key] || ''}
                         onChange={e => setReq(f.key, e.target.value)}

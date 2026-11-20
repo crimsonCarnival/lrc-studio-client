@@ -22,7 +22,7 @@ export default function FuriganaDemo() {
           spellCheck={false}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="h-11 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-base text-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="h-11 rounded-lg border border-hl bg-field px-3 text-base text-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         />
       </label>
       <p

@@ -39,7 +39,7 @@ export default function NumberInput({ value, onChange, onKeyDown, min, max, step
   };
 
   return (
-    <div className={`relative flex items-center ${className} overflow-hidden bg-zinc-900 border border-zinc-700 rounded-lg group focus-within:border-primary/50 transition-all`}>
+    <div className={`relative flex items-center ${className} overflow-hidden bg-field border border-hl rounded-lg group focus-within:border-primary/50 transition-all`}>
       <input
         id={id}
         type="number"

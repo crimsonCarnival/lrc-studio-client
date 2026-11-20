@@ -245,7 +245,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
         value={editTitle}
         onChange={(e: ChangeEvent<HTMLInputElement>) => setEditTitle(e.target.value)}
         onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => handleTitleKeyDown(e, upload.id)}
-        className="text-sm font-semibold h-8 px-2 bg-zinc-800 border-zinc-600"
+        className="text-sm font-semibold h-8 px-2 bg-field border-hl"
         disabled={savingTitle}
         aria-label={t('uploads.rename')}
       />

@@ -11,10 +11,10 @@ import {
   DialogTitle,
 } from '@ui/dialog';
 import { Button } from '@ui/button';
-import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Checkbox } from '@ui/checkbox';
 import { DateTimePicker } from '@ui/date-time-picker';
+import { FloatingInput } from '@ui/floating-input';
 
 interface BanUser {
   displayName?: string;
@@ -84,16 +84,13 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }: BanU
 
           <div className="py-4 flex flex-col gap-4">
             <div className="space-y-2">
-              <Label htmlFor="reason" className="text-zinc-300">
-                {t('admin.table.banReasonLabel')}
-              </Label>
-              <Input
+              <FloatingInput label={t('admin.table.banReasonLabel')}
                 id="reason"
                 ref={inputRef}
                 value={form.reason}
                 onChange={(e) => setForm(f => ({ ...f, reason: e.target.value }))}
                 placeholder={t('admin.table.banReasonPlaceholder')}
-                className="bg-zinc-800/50 border-zinc-700 focus-visible:ring-red-500/50"
+                
               />
             </div>
 

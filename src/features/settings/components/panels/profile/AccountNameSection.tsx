@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@ui/input';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { ACCOUNT_NAME_RE } from './useProfileDraft';
+import { FloatingInput } from '@ui/floating-input';
 
 const COOLDOWN_DAYS = 7;
 
@@ -36,18 +36,15 @@ export default function AccountNameSection({ value, error: serverError, onChange
 
   return (
     <div>
-      <label htmlFor={inputId} className="block text-[13px] font-bold text-zinc-100 mb-2">
-        {t('profile.accountName')}
-      </label>
       <div>
-        <Input
+        <FloatingInput label={t('profile.accountName')}
           id={inputId}
           value={value}
           onChange={handleChange}
           placeholder={t('profile.accountNamePlaceholder')}
           disabled={accountNameCooldownDaysLeft > 0}
           maxLength={30}
-          className={`bg-zinc-950 border border-zinc-700 rounded-[calc(var(--radius)*1)] h-11 text-[15px] ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
+          className={`bg-field border border-hl rounded-[calc(var(--radius)*1)] h-11 text-[15px] ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
         />
       </div>
       {error ? (

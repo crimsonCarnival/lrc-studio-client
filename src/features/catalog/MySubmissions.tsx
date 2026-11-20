@@ -9,11 +9,8 @@ import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { Button } from '@ui/button';
 import { CollapsibleSection } from '@ui/collapsible-section';
-import { Input } from '@ui/input';
-import { Label } from '@ui/label';
 import { Skeleton } from '@ui/skeleton';
 import { StatusChip } from '@ui/StatusChip';
-import { Textarea } from '@ui/textarea';
 import { catalogErrorKey, uploadErrorKey } from './catalog-errors';
 import type { CatalogErrorKey } from './catalog-errors';
 import { CatalogPhotoField } from './CatalogPhotoField';
@@ -23,6 +20,8 @@ import { MY_SUBMISSIONS_KEY } from './catalog.queries';
 import { catalogArtistPath } from './catalog-path';
 import { getMySubmissions, updateMyEntry, uploadCatalogImage, withdrawMyEntry } from './catalog.service';
 import type { CatalogAlbum, CatalogArtist, CatalogKind } from './catalog.types';
+import { FloatingInput } from '@ui/floating-input';
+import { FloatingTextarea } from '@ui/floating-textarea';
 
 type ApprovedArtist = { id: string; name: string; slug?: string | null };
 
@@ -194,18 +193,15 @@ function EditForm({ row, onDone }: { row: Row; onDone: () => void }) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`${idBase}-name`}>{isArtist ? t('catalog.submissions.nameLabel') : t('catalog.submissions.titleLabel')}</Label>
-        <Input id={`${idBase}-name`} value={name} maxLength={isArtist ? 300 : 500} onChange={(e) => setName(e.target.value)} />
+        <FloatingInput label={isArtist ? t('catalog.submissions.nameLabel') : t('catalog.submissions.titleLabel')} id={`${idBase}-name`} value={name} maxLength={isArtist ? 300 : 500} onChange={(e) => setName(e.target.value)} />
       </div>
       {isArtist ? (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idBase}-bio`}>{t('catalog.submissions.bioLabel')}</Label>
-          <Textarea id={`${idBase}-bio`} value={bio} maxLength={1000} onChange={(e) => setBio(e.target.value)} />
+          <FloatingTextarea label={t('catalog.submissions.bioLabel')} id={`${idBase}-bio`} value={bio} maxLength={1000} onChange={(e) => setBio(e.target.value)} />
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idBase}-year`}>{t('catalog.submissions.yearLabel')}</Label>
-          <Input id={`${idBase}-year`} value={year} maxLength={4} inputMode="numeric" onChange={(e) => setYear(e.target.value)} />
+          <FloatingInput label={t('catalog.submissions.yearLabel')} id={`${idBase}-year`} value={year} maxLength={4} inputMode="numeric" onChange={(e) => setYear(e.target.value)} />
         </div>
       )}
       <CatalogPhotoField

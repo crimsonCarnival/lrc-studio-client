@@ -4,8 +4,6 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Button } from '@ui/button';
-import { Input } from '@ui/input';
-import { Textarea } from '@ui/textarea';
 import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
 import { Icon } from '@/shared/ui/Icon';
@@ -32,6 +30,8 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { SelectField } from '@ui/select-field';
 import { ColorPicker } from '@ui/color-picker';
+import { FloatingInput } from '@ui/floating-input';
+import { FloatingTextarea } from '@ui/floating-textarea';
 
 const EMPTY_TAGS: string[] = [];
 const EMPTY_ARTISTS: ArtistCredit[] = [];
@@ -384,15 +384,12 @@ export default function ProjectSetupModal({
 
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="song-name" className="text-xs font-semibold text-zinc-300">
-                  {t(isSubtitles ? 'setup.subtitleTitle' : 'setup.songName')}
-                </Label>
-                <Input
+                <FloatingInput label={t(isSubtitles ? 'setup.subtitleTitle' : 'setup.songName')}
                   id="song-name"
                   value={form.songName}
                   onChange={(e) => setForm(f => ({ ...f, songName: e.target.value }))}
                   placeholder={t(isSubtitles ? 'setup.subtitleTitlePlaceholder' : 'setup.songNamePlaceholder')}
-                  className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
+                  
                   aria-invalid={!hasIdentity}
                   aria-describedby="project-identity-hint"
                 />
@@ -405,16 +402,13 @@ export default function ProjectSetupModal({
                 />
                 {!isSubtitles && (
                   <div className="flex flex-col gap-1.5 mt-2">
-                    <Label htmlFor="song-version" className="text-xs font-semibold text-zinc-300">
-                      {t('setup.songVersion')}
-                    </Label>
-                    <Input
+                    <FloatingInput label={t('setup.songVersion')}
                       id="song-version"
                       value={form.songVersion}
                       onChange={(e) => setForm(f => ({ ...f, songVersion: e.target.value }))}
                       placeholder={t('setup.songVersionPlaceholder')}
                       maxLength={100}
-                      className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
+                      
                     />
                   </div>
                 )}
@@ -530,23 +524,17 @@ export default function ProjectSetupModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="song-album" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    {t('setup.songAlbum')}
-                  </Label>
                   <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName} artist={primaryNames(form.artists)[0]} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
-                    <Input
+                    <FloatingInput label={t('setup.songAlbum')}
                       id="song-album"
                       value={form.songAlbum}
                       onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
-                      className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
+                      
                     />
                   </NameCheckSuggestion>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="song-year" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    {t('setup.songYear')}
-                  </Label>
-                  <Input
+                  <FloatingInput label={t('setup.songYear')}
                     id="song-year"
                     value={form.songYear}
                     onChange={(e) => {
@@ -558,7 +546,7 @@ export default function ProjectSetupModal({
                         setForm(f => ({ ...f, songYear: val }));
                       }
                     }}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
+                    
                     maxLength={4}
                   />
                 </div>
@@ -589,10 +577,7 @@ export default function ProjectSetupModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="project-description" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  {t('project.description')}
-                </Label>
-                <Textarea
+                <FloatingTextarea label={t('project.description')}
                   id="project-description"
                   value={form.description}
                   onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
@@ -641,17 +626,14 @@ export default function ProjectSetupModal({
 
               {/* Cover Image */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cover-image" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  {t('setup.coverImage')}
-                </Label>
                 <FileDropZone onFile={(f) => void uploadImage('coverImage', f)} disabled={imageUploading} compact className="rounded-xl">
                 <div className="flex gap-2 items-center">
-                  <Input
+                  <FloatingInput label={t('setup.coverImage')}
                     id="cover-image"
                     value={form.coverImage}
                     onChange={(e) => setForm(f => ({ ...f, coverImage: e.target.value }))}
                     placeholder={t('setup.coverImagePlaceholder')}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9 placeholder:text-zinc-600"
+                    
                   />
                   <Tip content={t('common.actions.uploadImage')}>
                     <Button aria-label={t('common.actions.uploadImage')}

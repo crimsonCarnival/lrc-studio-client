@@ -62,7 +62,7 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
       <label htmlFor={inputId} className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
         {t('setup.singers')}
       </label>
-      <div className="flex flex-wrap items-center gap-1.5 min-h-[40px] p-1.5 bg-zinc-950 border border-zinc-800 rounded-xl focus-within:border-primary/50 transition-colors">
+      <div className="flex flex-wrap items-center gap-1.5 min-h-[40px] p-1.5 bg-field border border-hl rounded-xl focus-within:border-primary/50 transition-colors">
         {value.map((name) => (
           <span
             key={name}

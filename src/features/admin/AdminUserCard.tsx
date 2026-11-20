@@ -155,7 +155,7 @@ export function AdminUserCard({ user, isSelf, online, formatDay, onRefresh, ...r
                   aria-label={t('admin.card.xpAmount')}
                   value={xpAmount}
                   onChange={e => setXpAmount(e.target.value)}
-                  className="h-11 min-w-0 flex-1 rounded-xs border border-zinc-700 bg-zinc-800 px-2 text-sm text-zinc-200 focus:border-primary focus:outline-none"
+                  className="h-11 min-w-0 flex-1 rounded-xs border border-hl bg-field px-2 text-sm text-zinc-200 focus:border-primary focus:outline-none"
                 />
                 <Button variant="outline" size="sm" className="min-h-11 border-amber-500/30 bg-amber-500/15 text-amber-400" onClick={() => { rest.handleAdjustXP('grant', Number(xpAmount), 'user', userId); setXpOpen(false); }}>+XP</Button>
                 <Button variant="destructive" size="sm" className="min-h-11" onClick={() => { rest.handleAdjustXP('revoke', Number(xpAmount), 'user', userId); setXpOpen(false); }}>−XP</Button>

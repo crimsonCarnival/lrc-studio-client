@@ -252,7 +252,7 @@ export default function ExportPanel({
                 value={exportFilename}
                 onChange={(e) => setExportFilename(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleExport()}
-                className="bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-500 focus-visible:ring-primary/25 focus-visible:border-primary/50 select-text"
+                className="select-text"
               />
 
               {/* Metadata tags only exist in LRC */}
@@ -309,7 +309,7 @@ export default function ExportPanel({
                     step={10}
                     value={exportOffset}
                     onChange={(e) => setExportOffset(e.target.value)}
-                    className="w-20 h-9 coarse:h-11 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 font-mono text-sm text-foreground select-text focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
+                    className="w-20 h-9 coarse:h-11 rounded-lg border border-hl bg-field px-2.5 font-mono text-sm text-foreground select-text focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
                   />
                   <span className="text-xs text-foreground/65">ms</span>
                 </span>

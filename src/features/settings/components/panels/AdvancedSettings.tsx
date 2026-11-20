@@ -180,7 +180,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
                 autoComplete="off"
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
-                className="max-w-80 bg-zinc-950 border-zinc-700 rounded-[calc(var(--radius)*1)] h-11"
+                className="max-w-80 bg-field border-hl rounded-[calc(var(--radius)*1)] h-11"
               />
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => { setConfirming(false); setTyped(''); }} className="h-10 rounded-[calc(var(--radius)*1)] border-zinc-700 bg-transparent">

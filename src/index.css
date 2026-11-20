@@ -1027,7 +1027,7 @@ audio::-webkit-media-controls-panel {
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Fill of form fields. Built-in themes: the card well; palette themes: transparent (see themes.ts). */
+  /* Fill of form fields: transparent on dark themes (the panel shows through), a raised fill on light ones (see themes.ts). */
   --color-field: var(--field);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
@@ -1629,7 +1629,8 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --background: #232136;
   --foreground: #f0eeff;
   --card: #1a1826;
-  --field: var(--card);
+  /* Fields show the panel they sit on; their outline marks them out. */
+  --field: transparent;
   --card-foreground: #f0eeff;
   --popover: #2a273f;
   --popover-foreground: #f0eeff;

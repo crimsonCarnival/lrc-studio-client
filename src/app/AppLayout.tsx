@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { artistFieldsFromForm, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
+import { artistDisplay, artistFieldsFromForm, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -24,7 +24,7 @@ import { GuidedTour } from '@/features/editor/components/GuidedTour';
 import { tourStepsFor } from '@/features/editor/tour/tour-steps';
 import { consumeTourReplay, rememberEditorPath } from '@/features/editor/tour/tour-launch';
 import { PhoneEditorChromeContext } from './layout/phone-editor-chrome';
-import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
+import { isEditorPath, isProjectViewPath, projectDisplayName } from '@features/projects/project-path';
 import type { AppState } from '@/app/useAppState';
 import { CollabPresenceProvider } from '@/features/collab/components/CollabPresenceProvider';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -221,6 +221,12 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     [lines],
   );
 
+  // The header names the song the user typed ("castles (Eng Lyrics) – Lil Peep"), never the audio
+  // file's name, which is what a project created from an upload is titled until it is renamed.
+  const headerTitle = useMemo(
+    () => projectDisplayName({ title: mediaTitle, metadata: { ...projectMetadata, songArtist: artistDisplay(projectMetadata) } }),
+    [mediaTitle, projectMetadata],
+  );
   const songSingers = useMemo(() => buildSingerRoster(lines, artistRoster(projectMetadata)), [lines, projectMetadata]);
 
   return (
@@ -284,6 +290,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             isReady={isReady}
             lines={lines}
             mediaTitle={mediaTitle}
+            headerTitle={headerTitle}
             setMediaTitle={setMediaTitle}
             triggerImportSave={triggerImportSave}
             buildProjectPayload={buildProjectPayload}
