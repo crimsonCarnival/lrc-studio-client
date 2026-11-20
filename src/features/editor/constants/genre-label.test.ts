@@ -33,6 +33,21 @@ describe('matchGenreFromTags', () => {
     expect(matchGenreFromTags([])).toBe('');
   });
 
+  it('maps the genre names Apple Music and Deezer return', () => {
+    expect(matchGenreFromTags(['Hip-Hop/Rap'])).toBe('hip_hop');
+    expect(matchGenreFromTags(['R&B/Soul'])).toBe('rnb');
+    expect(matchGenreFromTags(['Singer/Songwriter'])).toBe('singer_songwriter');
+    expect(matchGenreFromTags(['Christian & Gospel'])).toBe('gospel');
+    expect(matchGenreFromTags(["Children's Music"])).toBe('children');
+    expect(matchGenreFromTags(['Música Mexicana'])).toBe('regional_mexican');
+    expect(matchGenreFromTags(['Urbano latino'])).toBe('reggaeton');
+    expect(matchGenreFromTags(['Pop Latino'])).toBe('latin');
+    expect(matchGenreFromTags(['Films/Games'])).toBe('soundtrack');
+    expect(matchGenreFromTags(['Kids'])).toBe('children');
+    expect(matchGenreFromTags(['Electro'])).toBe('electronic');
+    expect(matchGenreFromTags(['Latin Music'])).toBe('latin');
+  });
+
   it('every primary genre has a tag group mapping and a label in each locale', async () => {
     const en = (await import('../../../locales/en/setup.js')).default as { genre: Record<string, string> };
     const es = (await import('../../../locales/es/setup.js')).default as { genre: Record<string, string> };
