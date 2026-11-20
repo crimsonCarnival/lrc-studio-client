@@ -52,6 +52,17 @@ export function lyricAt(lines: EditorLine[] | undefined, time: number): string |
   return best?.text ?? null;
 }
 
+/** The next lyric line to be sung after `time`, for the faded preview under the current one. */
+export function lyricAfter(lines: EditorLine[] | undefined, time: number): string | null {
+  let best: { at: number; text: string } | null = null;
+  for (const line of lines ?? []) {
+    if (line.type === 'section' || line.timestamp == null || line.timestamp <= time) continue;
+    const text = line.text?.trim();
+    if (text && (!best || line.timestamp < best.at)) best = { at: line.timestamp, text };
+  }
+  return best?.text ?? null;
+}
+
 function lineStarts(lines: EditorLine[] | undefined): number[] {
   return (lines ?? [])
     .filter((l) => l.type !== 'section' && l.timestamp != null)

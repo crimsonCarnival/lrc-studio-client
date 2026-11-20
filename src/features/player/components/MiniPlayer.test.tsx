@@ -42,11 +42,13 @@ describe('MiniPlayer', () => {
     show();
     expect(screen.getByText('Song – Band')).toBeInTheDocument();
     expect(screen.getByText('First line')).toBeInTheDocument();
+    expect(screen.getByText('Second line')).toBeInTheDocument();
   });
 
   it('shows the time instead when lyrics are turned off', () => {
     show({}, { settings: { ...settings, lyrics: false } });
     expect(screen.queryByText('First line')).not.toBeInTheDocument();
+    expect(screen.queryByText('Second line')).not.toBeInTheDocument();
   });
 
   it('leads back to the editor', async () => {

@@ -4,9 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { cn } from '@/shared/utils/utils';
-import { formatTime } from '@/shared/utils/format-time';
 import { usePlayer } from '../PlayerContext';
-import { lyricAt, nextLineStart, previousLineStart, type MiniPlayerSettings } from '../mini-player';
+import { lyricAfter, lyricAt, nextLineStart, previousLineStart, type MiniPlayerSettings } from '../mini-player';
 
 type Props = {
   /** The editor page this player leads back to. */
@@ -29,6 +28,12 @@ const CORNER: Record<MiniPlayerSettings['position'], string> = {
   'bottom-left': 'left-4 bottom-4',
   'top-right': 'right-4 top-[4.5rem]',
   'top-left': 'left-4 top-[4.5rem]',
+};
+
+// m:ss. The editor's centiseconds are noise at a glance.
+const clock = (s: number) => {
+  const total = Number.isFinite(s) && s > 0 ? Math.floor(s) : 0;
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 
 const BUTTON = 'grid size-9 shrink-0 place-items-center rounded-pill text-subtle transition-colors hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-focus coarse:size-11';
@@ -54,7 +59,9 @@ export function MiniPlayer({ returnTo, title, settings, aboveNav, onClose }: Pro
     return () => registerVideoStage(null);
   }, [hasPicture, registerVideoStage]);
 
-  const lyric = settings.lyrics ? lyricAt(lines, currentTime) : null;
+  const hasLyrics = (lines ?? []).some((l) => l.type !== 'section' && l.timestamp != null && !!l.text?.trim());
+  const lyric = lyricAt(lines, currentTime);
+  const upcoming = lyricAfter(lines, currentTime);
   const prev = previousLineStart(lines, currentTime);
   const next = nextLineStart(lines, currentTime);
   const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
@@ -93,11 +100,7 @@ export function MiniPlayer({ returnTo, title, settings, aboveNav, onClose }: Pro
 
         <button type="button" onClick={open} className="flex min-w-0 flex-1 flex-col items-start text-left focus-visible:outline-none">
           <span className="w-full truncate text-sm font-semibold text-foreground">{title || t('library.untitled')}</span>
-          {lyric ? (
-            <span className="w-full truncate text-xs text-subtle" aria-live="off">{lyric}</span>
-          ) : (
-            <span className="font-mono text-xs tabular-nums text-subtle">{formatTime(currentTime)} / {formatTime(duration)}</span>
-          )}
+          <span className="font-mono text-xs tabular-nums text-subtle">{clock(currentTime)} / {clock(duration)}</span>
         </button>
 
         <div className="flex shrink-0 flex-col items-end self-start">
@@ -115,6 +118,17 @@ export function MiniPlayer({ returnTo, title, settings, aboveNav, onClose }: Pro
           </div>
         </div>
       </div>
+
+      {/* The lyric is the point of the card, so it gets its own block at reading size. Two lines
+          tall whatever is showing, so the card does not jump as lines change. */}
+      {settings.lyrics && hasLyrics && (
+        <button type="button" onClick={open} className="flex w-full flex-col gap-0.5 px-3 pt-1 pb-1 text-left focus-visible:outline-none">
+          <span className="line-clamp-2 min-h-[2lh] font-heading text-lg leading-snug font-semibold text-foreground" aria-live="off">
+            {lyric ?? <span className="text-subtle">♪</span>}
+          </span>
+          <span className="truncate text-sm text-subtle">{upcoming ?? '\u00a0'}</span>
+        </button>
+      )}
 
       <div className="flex items-center justify-center gap-1 px-2 pb-2">
         <Tip content={t('player.mini.previousLine')}>

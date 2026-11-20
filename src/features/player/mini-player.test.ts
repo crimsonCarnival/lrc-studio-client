@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lyricAt, miniPlayerSettings, nextReturnPath } from './mini-player';
+import { lyricAfter, lyricAt, miniPlayerSettings, nextReturnPath } from './mini-player';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const EDIT = '/ana/projects/band-song-abcdefghij/edit';
@@ -39,6 +39,12 @@ describe('lyricAt', () => {
     expect(lyricAt(lines, 0.5)).toBeNull();
     expect(lyricAt(lines, 2)).toBe('First');
     expect(lyricAt(lines, 10)).toBe('Second');
+  });
+
+  it('previews the line coming next', () => {
+    expect(lyricAfter(lines, 0.5)).toBe('First');
+    expect(lyricAfter(lines, 2)).toBe('Second');
+    expect(lyricAfter(lines, 10)).toBeNull();
   });
 });
 
