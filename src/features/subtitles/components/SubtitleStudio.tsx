@@ -171,6 +171,10 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
     commitTimes(cueIndex, { [edge]: at });
   }, [playerRef, commitTimes]);
 
+  // Every caption in the list, timed or not (a cue exists only once a line has a start time,
+  // so counting cues left a freshly added caption at 0).
+  const captionCount = useMemo(() => lines.filter((l) => l.type !== 'section').length, [lines]);
+  const timedCount = cues.length;
   const untimedCount = useMemo(
     () => lines.filter((l) => l.type !== 'section' && l.timestamp == null && (l.text ?? '').trim() !== '').length,
     [lines],
@@ -299,7 +303,17 @@ export default function SubtitleStudio({ lines, setLines, duration = 0, playerRe
           </div>
           <div className="flex min-h-0 flex-col border-l border-zinc-800">
             <div className="flex items-center justify-between gap-3 px-4 pb-2.5 pt-3.5">
-              <h2 className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-foreground/65">{tx('editor.studio.listTitle', { count: cues.length })}</h2>
+              <div className="flex min-w-0 items-center gap-2">
+                <h2 className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-foreground/65">{tx('editor.studio.listTitle', { count: captionCount })}</h2>
+                {captionCount > 0 && (
+                  <span
+                    data-testid="timed-count"
+                    className={`rounded-pill px-2 py-0.5 text-[11px] font-semibold tabular-nums ${timedCount === captionCount ? 'bg-foam/15 text-foam' : 'bg-zinc-800 text-foreground/65'}`}
+                  >
+                    {tx('editor.studio.timedCount', { timed: timedCount, count: captionCount })}
+                  </span>
+                )}
+              </div>
               <div role="group" aria-label={t('editor.studio.filterLabel')} className="flex gap-1 rounded-[10px] bg-zinc-900 p-[3px]">
                 <button
                   type="button"

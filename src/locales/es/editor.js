@@ -119,6 +119,7 @@ export default {
     cueN: "Subtítulo {{n}}: seleccionar e ir a él",
     hasIssues: "Este subtítulo tiene problemas",
     listTitle: "Subtítulos · {{count}}",
+    timedCount: "{{timed}} de {{count}} sincronizados",
     filterAll: "Todos",
     filterCheck: "Por revisar · {{count}}",
     chipReady: "Listo para YouTube",

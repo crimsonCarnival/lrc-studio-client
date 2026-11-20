@@ -116,6 +116,7 @@ export default {
     cueN: "Subtitle {{n}}: select and jump to it",
     hasIssues: "This subtitle has problems",
     listTitle: "Subtitles · {{count}}",
+    timedCount: "{{timed}} of {{count}} timed",
     filterAll: "All",
     filterCheck: "To check · {{count}}",
     chipReady: "Ready for YouTube",
