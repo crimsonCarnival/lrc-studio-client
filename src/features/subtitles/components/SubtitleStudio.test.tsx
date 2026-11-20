@@ -21,7 +21,7 @@ const line = (text: string, timestamp: number | null, endTime: number | null = n
   ({ id: crypto.randomUUID(), text, timestamp, endTime }) as EditorLine;
 
 const renderStudio = (lines: EditorLine[]) =>
-  render(<SubtitleStudio lines={lines} setLines={vi.fn()} duration={60} playerRef={{ current: null }} />);
+  render(<SubtitleStudio lines={lines} setLines={vi.fn()} duration={60} playerRef={{ current: null }} onSave={vi.fn()} />);
 
 describe('SubtitleStudio counters', () => {
   it('counts every caption, timed or not, and how many are timed', () => {
