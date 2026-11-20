@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@ui/button'
 import { Icon } from '@/shared/ui/Icon'
@@ -8,6 +7,9 @@ import type { EditorLine } from '@/features/editor/editor.types'
 import { useSessionStart } from '../useSessionStart'
 import type { CollabLockInput } from '../collab.types'
 import { SessionSettingsModal } from './SessionSettingsModal'
+import { SessionStartShield } from './SessionStartShield'
+
+export { SessionStartShield }
 
 /** Owner-only: which project the control is for, whether its session is live, and what to do after ending it. */
 export type SessionOwnerControl = {
@@ -25,14 +27,6 @@ type Props = {
    * started over a failed save would silently drop those edits. Resolves whether it saved.
    */
   onBeforeStart?: () => Promise<boolean>
-}
-
-/** Covers the page while a session starts. Portalled: under a transformed ancestor (the reorderable panels) a fixed element would not cover the page. */
-export function SessionStartShield() {
-  return createPortal(
-    <div data-testid="session-starting-shield" className="fixed inset-0 z-[100] cursor-wait" aria-busy="true" />,
-    document.body,
-  )
 }
 
 /** "Start session" on a saved project, "Manage session" (and its modal) inside one. */

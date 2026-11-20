@@ -74,6 +74,8 @@ export default {
   uploadedWhen: "Uploaded {{when}}",
   noProject: "No project",
   createProject: "Create project",
+  createAnotherProject: "Create another project",
+  openProject: "Open project",
   moreOptions: "More options",
   preview: "Play preview",
   pausePreview: "Pause preview",

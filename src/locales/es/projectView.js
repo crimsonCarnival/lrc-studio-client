@@ -208,5 +208,8 @@ export default {
     newPlaylist: 'Proyectos destacados',
     loadingLists: 'Cargando…',
     noLists: 'Sin listas aún',
+    addedToList: 'Añadido a {{name}}',
+    addToListFailed: 'No se pudo añadir a la lista. Inténtalo de nuevo.',
+    openEditor: 'Abrir en el editor',
   },
 };

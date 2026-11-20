@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@ui/context-menu';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/dropdown-menu';
@@ -8,7 +9,11 @@ import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } fr
 import { Icon } from '@/shared/ui/Icon';
 import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Tip } from '@ui/tip';
-import { projectPath, type ProjectPathSource } from '@/features/projects/project-path';
+import { projectEditPath, projectForkPath, projectPath, type ProjectPathSource } from '@/features/projects/project-path';
+import { useSessionStart } from '@/features/collab/useSessionStart';
+import { useMySessions } from '@/features/collab/hooks/useMySessions';
+import { SessionStartShield } from '@/features/collab/components/SessionStartShield';
+import { AddToListSubmenu } from '@/features/playlists/AddToListSubmenu';
 
 /**
  * Only the fields the canonical URL needs are read here, so the shape is
@@ -33,6 +38,29 @@ export type ProjectCardMenuActions = {
 };
 
 /**
+ * "Start live session", or "Open live session" when one is already running. Both run the same
+ * start: the server hands back the live session instead of opening a second one. A component of
+ * its own so the session list is only asked for once a menu is open.
+ */
+function SessionItem({ C, publicId, starting, onStart, className }: {
+  C: MenuComponents;
+  publicId: string;
+  starting: boolean;
+  onStart: () => void;
+  className: string;
+}) {
+  const { t } = useTranslation();
+  const { sessions } = useMySessions();
+  const live = sessions.some((s) => s.publicId === publicId);
+  return (
+    <C.Item onClick={onStart} disabled={starting} className={className}>
+      <Icon name="group" />
+      {starting ? t('collab.settings.starting') : live ? t('collab.menu.open') : t('collab.menu.start')}
+    </C.Item>
+  );
+}
+
+/**
  * The project menu's items, written once and rendered through either the
  * ContextMenu or the DropdownMenu component set. Adding an action means editing
  * this one function, so right-click and the ⋮ button cannot diverge.
@@ -40,14 +68,26 @@ export type ProjectCardMenuActions = {
 function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDelete }: ProjectCardMenuActions) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const signedIn = !!user && !user.isGuest;
+  // Owner-only, and only on a real account: a session is seeded from the stored project and
+  // needs an owner to run it. Editing in it is blocked while it starts, same as the editor's button.
+  const canStartSession = isOwner && signedIn;
+  const { starting, start } = useSessionStart(canStartSession ? project.publicId : undefined);
   // The explicit owner wins; cards in the library don't carry one, and for your
   // own projects that owner is you.
   //
   // Null when it is unknown either way: there is no canonical URL to open or
   // copy, so both link items are left out rather than pointing at a path that
   // would 404.
-  const path = projectPath(project, ownerAccountName ?? (isOwner ? user?.accountName : undefined));
+  const owner = ownerAccountName ?? (isOwner ? user?.accountName : undefined);
+  const path = projectPath(project, owner);
+  const editPath = isOwner ? projectEditPath(project, owner) : null;
+  // The fork route signs a visitor in first and comes back, so it is offered to everyone but the owner.
+  // A project whose owner turned forks off says so with `forksEnabled: false`; cards that do not
+  // carry the field leave the server to decide.
+  const forkPath = !isOwner && project.forksEnabled !== false ? projectForkPath(project, owner) : null;
 
   const handleCopyLink = () => {
     if (!path) return;
@@ -60,8 +100,23 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
   // Below lg the items are touch targets even with a fine pointer (narrow desktop windows).
   const item = 'max-lg:min-h-11';
 
-  return (C: MenuComponents): ReactNode => (
+  const renderItems = (C: MenuComponents): ReactNode => (
     <>
+      {(editPath || canStartSession) && (
+        <>
+          {editPath && (
+            <C.Item onClick={() => navigate(editPath)} className={item}>
+              <Icon name="lyrics" />
+              {t('projectView.actions.openEditor')}
+            </C.Item>
+          )}
+          {canStartSession && (
+            <SessionItem C={C} publicId={project.publicId} starting={starting} onStart={() => void start()} className={item} />
+          )}
+          {path && <C.Separator />}
+        </>
+      )}
+
       {path && (
         <>
           <C.Item asChild className={item}>
@@ -75,6 +130,21 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
             <MorphIcon name={copied ? 'check' : 'link'} size={20} decorative />
             {copied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
           </C.Item>
+        </>
+      )}
+
+      {(forkPath || (signedIn && user?.accountName)) && (
+        <>
+          <C.Separator />
+          {signedIn && user?.accountName && (
+            <AddToListSubmenu C={C} accountName={user.accountName} publicId={project.publicId} className={item} />
+          )}
+          {forkPath && (
+            <C.Item onClick={() => navigate(forkPath)} className={item}>
+              <Icon name="call_split" />
+              {t('projectView.actions.fork')}
+            </C.Item>
+          )}
         </>
       )}
 
@@ -99,24 +169,31 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
       )}
     </>
   );
+
+  return { renderItems, starting };
 }
 
 /** Right-click trigger. `children` must be a SINGLE element — asChild forwards a ref to it. */
 export function ProjectCardMenu({ children, ...actions }: ProjectCardMenuActions & { children: ReactNode }) {
-  const renderItems = useProjectMenuItems(actions);
+  const { renderItems, starting } = useProjectMenuItems(actions);
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent>{renderItems(contextMenuComponents)}</ContextMenuContent>
-    </ContextMenu>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuContent>{renderItems(contextMenuComponents)}</ContextMenuContent>
+      </ContextMenu>
+      {starting && <SessionStartShield />}
+    </>
   );
 }
 
 /** Visible ⋮ trigger — the touch- and keyboard-reachable path to the same items. */
 export function ProjectCardMenuButton({ className, ...actions }: ProjectCardMenuActions & { className?: string }) {
   const { t } = useTranslation();
-  const renderItems = useProjectMenuItems(actions);
+  const { renderItems, starting } = useProjectMenuItems(actions);
   return (
+    <>
+    {starting && <SessionStartShield />}
     <DropdownMenu>
       <Tip content={t('common.moreActions')}>
         <DropdownMenuTrigger asChild>
@@ -151,5 +228,6 @@ export function ProjectCardMenuButton({ className, ...actions }: ProjectCardMenu
         {renderItems(dropdownMenuComponents)}
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }
