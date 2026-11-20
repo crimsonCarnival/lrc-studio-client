@@ -414,167 +414,170 @@ export default function ProjectSetupModal({
                 )}
               </div>
 
-              {/* Song Metadata Fields */}
-              <div className="flex items-center justify-between mt-2 -mb-2">
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  {t('setup.songInformation')}
-                </span>
-                {/* Always rendered so it's discoverable; disabled until name + artist exist. */}
-                <Tip content={form.songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
-                  {/* span keeps the tooltip working while the button is disabled */}
-                  <span className="inline-flex">
-                    <Button
-                      type="button"
-                      variant="sync"
-                      size="sm"
-                      onClick={handleFetchSongInfo}
-                      disabled={metaSearching || !form.songName.trim() || !primaryText.trim()}
-                      className="gap-1.5 font-semibold"
-                    >
-                      {metaSearching ? <LogoLoader size={14} /> : <Icon name="search" size={14} />}
-                      {t('setup.fetchInfo')}
-                    </Button>
+              {/* Song-only fields: a subtitles project has a title, a description, tags and a cover, like its setup. */}
+              {!isSubtitles && (<>
+                {/* Song Metadata Fields */}
+                <div className="flex items-center justify-between mt-2 -mb-2">
+                  <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    {t('setup.songInformation')}
                   </span>
-                </Tip>
-              </div>
-              {songResults && (
-                <SongInfoSuggestions results={songResults} artist={songQuery?.artist ?? primaryText} onPick={handlePickSong} onClose={closeSongs} />
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 flex flex-col gap-3">
-                  <NameCheckSuggestion
-                    field="artist"
-                    value={soleArtistName(form.artists)}
-                    title={form.songName}
-                    onApply={(next) => setForm((f) => ({ ...f, artists: renamePrimary(f.artists, next) }))}
-                  >
-                    {(suggestion) => (
-                      <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} belowPrimaryInput={suggestion} />
-                    )}
-                  </NameCheckSuggestion>
-                  <ArtistImportReview importer={artistImporter} />
+                  {/* Always rendered so it's discoverable; disabled until name + artist exist. */}
+                  <Tip content={form.songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
+                    {/* span keeps the tooltip working while the button is disabled */}
+                    <span className="inline-flex">
+                      <Button
+                        type="button"
+                        variant="sync"
+                        size="sm"
+                        onClick={handleFetchSongInfo}
+                        disabled={metaSearching || !form.songName.trim() || !primaryText.trim()}
+                        className="gap-1.5 font-semibold"
+                      >
+                        {metaSearching ? <LogoLoader size={14} /> : <Icon name="search" size={14} />}
+                        {t('setup.fetchInfo')}
+                      </Button>
+                    </span>
+                  </Tip>
                 </div>
-                <div className="flex flex-col gap-1.5 mt-2">
-                  <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    {t('settings.interface.singerColors')}
-                  </Label>
-                  <p className="text-[11px] text-zinc-500 mb-1">
-                    {t('project.singerColorsDesc')}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from({ length: Math.max(8, songSingers.length) }).map((_, i) => {
-                      const singerName = songSingers[i];
-                      const label = singerName || String(i + 1);
-                      // If we have detected singers, but this slot exceeds the count (and > 8), don't render it (though math.max handles this).
-                      // We only render 8 slots if no singers detected, or slots for all detected singers up to N.
-                      if (!singerName && i >= 8) return null;
+                {songResults && (
+                  <SongInfoSuggestions results={songResults} artist={songQuery?.artist ?? primaryText} onPick={handlePickSong} onClose={closeSongs} />
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 flex flex-col gap-3">
+                    <NameCheckSuggestion
+                      field="artist"
+                      value={soleArtistName(form.artists)}
+                      title={form.songName}
+                      onApply={(next) => setForm((f) => ({ ...f, artists: renamePrimary(f.artists, next) }))}
+                    >
+                      {(suggestion) => (
+                        <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} belowPrimaryInput={suggestion} />
+                      )}
+                    </NameCheckSuggestion>
+                    <ArtistImportReview importer={artistImporter} />
+                  </div>
+                  <div className="flex flex-col gap-1.5 mt-2">
+                    <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                      {t('settings.interface.singerColors')}
+                    </Label>
+                    <p className="text-[11px] text-zinc-500 mb-1">
+                      {t('project.singerColorsDesc')}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from({ length: Math.max(8, songSingers.length) }).map((_, i) => {
+                        const singerName = songSingers[i];
+                        const label = singerName || String(i + 1);
+                        // If we have detected singers, but this slot exceeds the count (and > 8), don't render it (though math.max handles this).
+                        // We only render 8 slots if no singers detected, or slots for all detected singers up to N.
+                        if (!singerName && i >= 8) return null;
                       
-                      return (
-                        <div key={i} className="flex flex-col items-center gap-1">
-                          <Tip content={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}>
-                            <ColorPicker
-                              value={form.singerColors?.[i] || '#888888'}
-                              onChange={(hex) => {
-                                setForm((f) => {
-                                  const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                  newColors[i] = hex;
-                                  return { ...f, singerColors: newColors };
-                                });
-                              }}
-                              aria-label={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
-                            />
-                          </Tip>
-                          <Tip content={label}>
-                            <span className="text-[10px] text-zinc-500 max-w-[60px] truncate">{label}</span>
-                          </Tip>
-                          {form.singerColors?.[i] && (
-                            <Tip content={t('project.resetColor')}>
-                              <Button
-                                type="button"
-                                variant="link"
-                                size={null}
-                                onClick={() => {
+                        return (
+                          <div key={i} className="flex flex-col items-center gap-1">
+                            <Tip content={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}>
+                              <ColorPicker
+                                value={form.singerColors?.[i] || '#888888'}
+                                onChange={(hex) => {
                                   setForm((f) => {
                                     const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                    newColors[i] = '';
+                                    newColors[i] = hex;
                                     return { ...f, singerColors: newColors };
                                   });
                                 }}
-                                className="text-[10px]"
-                                aria-label={t('project.resetColor')}
-                              >
-                                ×
-                              </Button>
+                                aria-label={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
+                              />
                             </Tip>
-                          )}
-                        </div>
-                      );
-                    })}
+                            <Tip content={label}>
+                              <span className="text-[10px] text-zinc-500 max-w-[60px] truncate">{label}</span>
+                            </Tip>
+                            {form.singerColors?.[i] && (
+                              <Tip content={t('project.resetColor')}>
+                                <Button
+                                  type="button"
+                                  variant="link"
+                                  size={null}
+                                  onClick={() => {
+                                    setForm((f) => {
+                                      const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
+                                      newColors[i] = '';
+                                      return { ...f, singerColors: newColors };
+                                    });
+                                  }}
+                                  className="text-[10px]"
+                                  aria-label={t('project.resetColor')}
+                                >
+                                  ×
+                                </Button>
+                              </Tip>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {initialSingers !== undefined && (
-                <SingersInput
-                  value={form.singers}
-                  onChange={(next) => setForm(f => ({ ...f, singers: next }))}
-                  suggestions={songSingers}
-                />
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName} artist={primaryNames(form.artists)[0]} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
-                    <FloatingInput label={t('setup.songAlbum')}
-                      id="song-album"
-                      value={form.songAlbum}
-                      onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
-                      
-                    />
-                  </NameCheckSuggestion>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <FloatingInput label={t('setup.songYear')}
-                    id="song-year"
-                    value={form.songYear}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                      const currentYear = new Date().getFullYear();
-                      if (val.length === 4 && parseInt(val) > currentYear) {
-                        setForm(f => ({ ...f, songYear: currentYear.toString() }));
-                      } else {
-                        setForm(f => ({ ...f, songYear: val }));
-                      }
-                    }}
-                    
-                    maxLength={4}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="song-genre" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  {t('setup.songGenre')}
-                </Label>
-                <SelectField
-                  id="song-genre"
-                  aria-label={t('setup.songGenre')}
-                  className="w-full"
-                  value={form.genre}
-                  onValueChange={(v) => setForm(f => ({ ...f, genre: v }))}
-                  options={[{ value: '', label: '—' }, ...PRIMARY_GENRES.map((g) => ({ value: g, label: t(`setup.genre.${g}`) }))]}
-                />
-                {lyricsSample && (
-                  <DescribeSuggestion
-                    input={{ title: form.songName.trim() || undefined, artist: primaryText.trim() || undefined, lines: lyricsSample }}
-                    onApply={(d) => setForm((f) => {
-                      // No language field here, so only genre and tags are offered. Set both at once.
-                      const tags = [...f.tags, ...d.tags.filter((x) => !f.tags.includes(x))].slice(0, MAX_TAGS);
-                      return { ...f, ...(d.genre ? { genre: d.genre } : {}), tags };
-                    })}
+                {initialSingers !== undefined && (
+                  <SingersInput
+                    value={form.singers}
+                    onChange={(next) => setForm(f => ({ ...f, singers: next }))}
+                    suggestions={songSingers}
                   />
                 )}
-              </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <NameCheckSuggestion field="album" value={form.songAlbum} title={form.songName} artist={primaryNames(form.artists)[0]} onApply={(next) => setForm((f) => ({ ...f, songAlbum: next }))}>
+                      <FloatingInput label={t('setup.songAlbum')}
+                        id="song-album"
+                        value={form.songAlbum}
+                        onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
+                      
+                      />
+                    </NameCheckSuggestion>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <FloatingInput label={t('setup.songYear')}
+                      id="song-year"
+                      value={form.songYear}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        const currentYear = new Date().getFullYear();
+                        if (val.length === 4 && parseInt(val) > currentYear) {
+                          setForm(f => ({ ...f, songYear: currentYear.toString() }));
+                        } else {
+                          setForm(f => ({ ...f, songYear: val }));
+                        }
+                      }}
+                    
+                      maxLength={4}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="song-genre" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    {t('setup.songGenre')}
+                  </Label>
+                  <SelectField
+                    id="song-genre"
+                    aria-label={t('setup.songGenre')}
+                    className="w-full"
+                    value={form.genre}
+                    onValueChange={(v) => setForm(f => ({ ...f, genre: v }))}
+                    options={[{ value: '', label: '—' }, ...PRIMARY_GENRES.map((g) => ({ value: g, label: t(`setup.genre.${g}`) }))]}
+                  />
+                  {lyricsSample && (
+                    <DescribeSuggestion
+                      input={{ title: form.songName.trim() || undefined, artist: primaryText.trim() || undefined, lines: lyricsSample }}
+                      onApply={(d) => setForm((f) => {
+                        // No language field here, so only genre and tags are offered. Set both at once.
+                        const tags = [...f.tags, ...d.tags.filter((x) => !f.tags.includes(x))].slice(0, MAX_TAGS);
+                        return { ...f, ...(d.genre ? { genre: d.genre } : {}), tags };
+                      })}
+                    />
+                  )}
+                </div>
+              </>)}
 
               <div className="space-y-2">
                 <FloatingTextarea label={t('project.description')}

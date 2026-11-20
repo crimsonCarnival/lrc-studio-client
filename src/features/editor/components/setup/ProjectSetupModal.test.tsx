@@ -88,3 +88,21 @@ describe('ProjectSetupModal song search', () => {
     expect(screen.queryByText('setup.songSuggestions.best')).not.toBeInTheDocument();
   });
 });
+
+describe('ProjectSetupModal for subtitles', () => {
+  it('hides the song-only fields and keeps title, description, tags and cover', () => {
+    renderModal({ kind: 'subtitles', initialSingers: [] });
+    expect(screen.queryByText('setup.songInformation')).not.toBeInTheDocument();
+    expect(screen.queryByText('setup.fetchInfo')).not.toBeInTheDocument();
+    expect(screen.queryByText('settings.interface.singerColors')).not.toBeInTheDocument();
+    for (const id of ['song-version', 'song-album', 'song-year', 'song-genre']) expect(document.getElementById(id)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('setup.subtitleTitle')).toBeInTheDocument();
+    for (const id of ['project-description', 'project-tags', 'cover-image']) expect(document.getElementById(id)).toBeInTheDocument();
+  });
+
+  it('still shows them for a song project', () => {
+    renderModal({ initialSingers: [] });
+    expect(screen.getByText('setup.songInformation')).toBeInTheDocument();
+    expect(document.getElementById('song-album')).toBeInTheDocument();
+  });
+});
