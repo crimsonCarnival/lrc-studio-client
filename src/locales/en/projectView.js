@@ -208,5 +208,8 @@ export default {
     newPlaylist: 'Starred Projects',
     loadingLists: 'Loading…',
     noLists: 'No lists yet',
+    addedToList: 'Added to {{name}}',
+    addToListFailed: 'Could not add it to the list. Try again.',
+    openEditor: 'Open in editor',
   },
 };

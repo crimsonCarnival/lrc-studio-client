@@ -221,8 +221,30 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
     navigate(`/project/new?uploadId=${encodeURIComponent(upload.id)}&ref=uploads_library`);
   };
 
-  const renderMenu = (upload: Upload) => (C: MenuComponents): ReactNode => (
+  const renderMenu = (upload: Upload) => (C: MenuComponents): ReactNode => {
+    // Uploads are the signed-in user's own, so their projects are too.
+    const linked = upload.projects?.[0];
+    const linkedPath = linked ? projectEditPath(linked, user?.accountName) : null;
+    const playing = playingId === upload.id;
+    return (
     <>
+      {upload.uploadUrl && (
+        <C.Item onClick={(e: MouseEvent) => handlePreview(e, upload)}>
+          <Icon name={playing ? 'pause' : 'play_arrow'} />
+          {playing ? t('uploads.pausePreview') : t('uploads.preview')}
+        </C.Item>
+      )}
+      {linkedPath && (
+        <C.Item onClick={() => navigate(linkedPath)}>
+          <Icon name="lyrics" />
+          {t('uploads.openProject')}
+        </C.Item>
+      )}
+      <C.Item onClick={(e: SyntheticEvent) => handleCreateProject(e, upload)}>
+        <Icon name="add" />
+        {linked ? t('uploads.createAnotherProject') : t('uploads.createProject')}
+      </C.Item>
+      <C.Separator />
       <C.Item onClick={(e: SyntheticEvent) => handleStartEdit(e, upload)}>
         <Icon name="edit" />
         {t('uploads.rename')}
@@ -236,7 +258,8 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
         {t('common.delete')}
       </C.Item>
     </>
-  );
+    );
+  };
 
   const titleNode = (upload: Upload, className: string) => editingId === upload.id ? (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>

@@ -95,6 +95,11 @@ export default {
     playhead: '{{name}}’s position, click to jump there',
     pointer: '{{name}}’s pointer',
   },
+  // The project menu (right-click or ⋮ on a project in Library and Home).
+  menu: {
+    start: 'Start live session',
+    open: 'Open live session',
+  },
   // Owner controls: start, manage and end a session.
   settings: {
     start: 'Edit this project with someone else',

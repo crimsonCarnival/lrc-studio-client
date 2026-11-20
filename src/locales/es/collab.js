@@ -96,6 +96,11 @@ export default {
     playhead: 'Posición de {{name}}, haz clic para ir allí',
     pointer: 'Puntero de {{name}}',
   },
+  // El menú del proyecto (clic derecho o ⋮ en un proyecto de la biblioteca y el inicio).
+  menu: {
+    start: 'Iniciar sesión en vivo',
+    open: 'Abrir sesión en vivo',
+  },
   // Controles del propietario: iniciar, gestionar y terminar una sesión.
   settings: {
     start: 'Edita este proyecto con alguien más',
