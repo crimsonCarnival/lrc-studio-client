@@ -1,12 +1,11 @@
 import { memo, useState } from 'react';
-import type { Dispatch, SetStateAction, RefObject } from 'react';
+import type { Dispatch, SetStateAction, RefObject, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { ShortcutHint } from '@features/settings/components/ShortcutHint';
 import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
-import LineActionsPopover from './LineActionsPopover';
 import { getSingerOptionsForSelection } from '../../utils/sections';
 import type { PlayerHandle } from '@/features/player/player.types';
 import type { FocusedTimestamp } from '@/features/editor/editor.types';
@@ -48,8 +47,6 @@ interface LineActionToolbarProps {
   onPlayLine?: () => void;
   shiftTime: (lineIndex: number, delta: number) => void;
   handleAddLine: (lineIndex: number) => void;
-  handleClearLine: (lineIndex: number) => void;
-  handleDeleteLine: (lineIndex: number) => void;
   selectedLines: Set<number>;
   isMobile?: boolean;
   onLineMenu?: (lineIndex: number, line: ToolbarLine) => void;
@@ -57,10 +54,11 @@ interface LineActionToolbarProps {
   activeWordIndex: number;
   focusedTimestamp?: FocusedTimestamp | null;
   handleInsertSection?: (index: number) => void;
-  handleMoveToSection?: (indices: number[], sectionIndex: number) => void;
   sectionLines?: ToolbarLine[];
   handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
   songArtists?: string[];
+  /** The line's ⋯ menu (desktop): the same items as its right-click menu. */
+  menuButton?: ReactNode;
 }
 
 const LineActionToolbar = memo(({
@@ -82,8 +80,6 @@ const LineActionToolbar = memo(({
   onPlayLine,
   shiftTime,
   handleAddLine,
-  handleClearLine,
-  handleDeleteLine,
   selectedLines,
   isMobile,
   onLineMenu,
@@ -91,10 +87,10 @@ const LineActionToolbar = memo(({
   activeWordIndex,
   focusedTimestamp,
   handleInsertSection,
-  handleMoveToSection,
   sectionLines,
   handleAssignSinger,
   songArtists,
+  menuButton,
 }: LineActionToolbarProps) => {
   const { t } = useTranslation();
 
@@ -296,15 +292,7 @@ const LineActionToolbar = memo(({
               </Button>
             </Tip>
             {!isMobile ? (
-              <LineActionsPopover
-                lineIndex={lineIndex}
-                line={line}
-                handleAddLine={handleAddLine}
-                handleClearLine={handleClearLine}
-                handleDeleteLine={handleDeleteLine}
-                handleMoveToSection={handleMoveToSection}
-                sectionLines={sectionLines}
-              />
+              menuButton
             ) : (
               <Tip content={t('common.actions.moreActions')}>
                 <Button aria-label={t('common.actions.moreActions')}

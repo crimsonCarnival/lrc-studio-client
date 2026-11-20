@@ -6,6 +6,7 @@ import {
   ContextMenuSub,
   ContextMenuSubTrigger,
   ContextMenuSubContent,
+  ContextMenuCheckboxItem,
 } from './context-menu';
 import {
   DropdownMenuItem,
@@ -14,6 +15,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  DropdownMenuCheckboxItem,
 } from './dropdown-menu';
 
 /**
@@ -46,6 +48,7 @@ export type MenuComponents = {
   Sub: MenuPart;
   SubTrigger: MenuPart;
   SubContent: MenuPart;
+  CheckboxItem: MenuPart;
 };
 
 export const contextMenuComponents: MenuComponents = {
@@ -55,6 +58,7 @@ export const contextMenuComponents: MenuComponents = {
   Sub: ContextMenuSub,
   SubTrigger: ContextMenuSubTrigger,
   SubContent: ContextMenuSubContent,
+  CheckboxItem: ContextMenuCheckboxItem,
 };
 
 export const dropdownMenuComponents: MenuComponents = {
@@ -64,4 +68,5 @@ export const dropdownMenuComponents: MenuComponents = {
   Sub: DropdownMenuSub,
   SubTrigger: DropdownMenuSubTrigger,
   SubContent: DropdownMenuSubContent,
+  CheckboxItem: DropdownMenuCheckboxItem,
 };

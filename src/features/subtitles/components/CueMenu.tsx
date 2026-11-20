@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@ui/context-menu';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/dropdown-menu';
 import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } from '@ui/menu-components';
@@ -36,12 +37,36 @@ type CueMenuTarget = {
 function CueMenuItems({ C, cue, index, hasNext, actions }: CueMenuTarget & { C: MenuComponents }): ReactNode {
   const { t } = useTranslation();
   const tx = t as (key: string, options?: Record<string, unknown>) => string;
-  const { currentTime } = usePlayer();
+  const { currentTime, isPlaying, seek, togglePlay, hasMedia } = usePlayer();
   // Below lg the items are touch targets even with a fine pointer (narrow desktop windows).
   const item = 'max-lg:min-h-11';
+  const text = cue.text.trim();
+
+  const playFrom = () => {
+    seek(cue.start);
+    if (!isPlaying) togglePlay();
+  };
+  const copyText = () => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success(tx('editor.studio.textCopied')))
+      .catch(() => {});
+  };
 
   return (
     <>
+      {hasMedia && (
+        <C.Item className={item} onClick={playFrom}>
+          <Icon name="play_arrow" />
+          {tx('editor.studio.playFrom')}
+        </C.Item>
+      )}
+      {text && (
+        <C.Item className={item} onClick={copyText}>
+          <Icon name="content_copy" />
+          {tx('editor.studio.copyText')}
+        </C.Item>
+      )}
+      {(hasMedia || text) && <C.Separator />}
       <C.Item className={item} onClick={() => actions.onStamp(index, 'start')}>
         <Icon name="arrow_back" />
         {tx('editor.studio.stampIn')}

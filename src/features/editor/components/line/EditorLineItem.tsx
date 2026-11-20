@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { ComponentProps, Dispatch, RefObject, SetStateAction, MouseEvent as ReactMouseEvent } from 'react';
-import { EditorLineContextMenu } from './EditorLineContextMenu';
+import { EditorLineContextMenu, EditorLineMenuButton } from './EditorLineContextMenu';
 import { useTranslation } from 'react-i18next';
 import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/shared/utils/furigana';
 import { Checkbox } from '@ui/checkbox';
@@ -459,6 +459,20 @@ const EditorLineItem = React.memo(({
 
   // The visible way in to the same sheet: long-press is invisible, and a desktop mouse in a
   // narrow window has no hover toolbar to find it on.
+  // Opens the inline editor, as a double-click does. Shared by the line menus.
+  const startEditingLine = () => {
+    setEditingLineIndex(i);
+    setEditingText(serializeToRubyMarkup(line.words) || line.text || '');
+    setEditingSecondary(line.secondary || '');
+    setEditingTranslations(line.translations ? [...line.translations] : []);
+    setEditingSingers([...getSingers(line), '', '', '', ''].slice(0, 4));
+  };
+  const startEditingSection = () => {
+    setEditingLineIndex(i);
+    setEditingText(line.label || '');
+    setEditingSingers(getSingers(line));
+  };
+
   const lineMoreButton = compact && !selectMode && onLineMenu ? (
     <button
       type="button"
@@ -520,6 +534,7 @@ const EditorLineItem = React.memo(({
         deleteDisabled={!!lockHolder}
         handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
         onToggleDepth={onToggleDepth}
+        onEditLine={startEditingSection}
         disabled={compact}
       >
         <div
@@ -714,6 +729,8 @@ const EditorLineItem = React.memo(({
       handleAssignSinger={handleAssignSinger}
       songArtists={songArtists}
       handleToggleCounterpart={handleToggleCounterpart}
+      onPlayLine={handleSeekLine}
+      onEditLine={startEditingLine}
       disabled={compact}
     >
       <div
@@ -1080,7 +1097,6 @@ const EditorLineItem = React.memo(({
           setEditingSingers={setEditingSingers}
           serializeToRubyMarkup={serializeToRubyMarkup}
           handleInsertSection={handleInsertSection}
-          handleMoveToSection={handleMoveToSection as ComponentProps<typeof LineActionToolbar>['handleMoveToSection']}
           sectionLines={sectionLines as ComponentProps<typeof LineActionToolbar>['sectionLines']}
           handleAssignSinger={handleAssignSinger}
           songArtists={songArtists}
@@ -1089,14 +1105,31 @@ const EditorLineItem = React.memo(({
           onPlayLine={handleSeekLine}
           shiftTime={shiftTime}
           handleAddLine={handleAddLine as ComponentProps<typeof LineActionToolbar>['handleAddLine']}
-          handleClearLine={handleClearLine as ComponentProps<typeof LineActionToolbar>['handleClearLine']}
-          handleDeleteLine={handleDeleteLine}
           selectedLines={selectedLines}
           isMobile={isMobile}
           onLineMenu={onLineMenu}
           stampTarget={stampTarget}
           activeWordIndex={activeWordIndex}
           focusedTimestamp={focusedTimestamp}
+          menuButton={
+            <EditorLineMenuButton
+              line={line}
+              lineIndex={i}
+              sectionLines={sectionLines}
+              handleAddLine={handleAddLine as (i: number, line?: EditorLine | null, opts?: { before?: boolean }) => void}
+              handleClearLine={handleClearLine}
+              handleDeleteLine={handleDeleteLine}
+              deleteDisabled={!!lockHolder}
+              handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
+              handleInsertSection={handleInsertSection}
+              handleAssignSinger={handleAssignSinger}
+              songArtists={songArtists}
+              handleToggleCounterpart={handleToggleCounterpart}
+              onPlayLine={handleSeekLine}
+              onEditLine={startEditingLine}
+              className="grid size-7 place-items-center rounded-pill text-zinc-500 transition-colors hover:bg-zinc-700/60 hover:text-zinc-300"
+            />
+          }
         />
         )}
         {lineMoreButton}

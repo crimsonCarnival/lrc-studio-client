@@ -1,5 +1,6 @@
 import { profilePath } from '@/features/profile/profile-path';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -14,6 +15,8 @@ import {
 import { Icon } from '@/shared/ui/Icon';
 import { availableUserActions, useShadowBanActions, type AdminActorAccess, type AdminUserHandlers } from './admin-user-actions';
 import type { AdminUser } from '@/features/admin/admin.types';
+
+const XP_STEPS = [50, 100, 500];
 
 type Props = AdminActorAccess & AdminUserHandlers & {
   children: React.ReactNode;
@@ -42,6 +45,20 @@ export function AdminUserContextMenu({
   const tk = t as (key: string) => string;
 
   const can = availableUserActions(user, { myRank, myPermissions, canAssignRoles, assignableRoles });
+  const userId = user.id || user._id;
+
+  // Support work starts from an identifier: the account name to search, the id for the logs,
+  // the IP for the network blocks.
+  const copyable = [
+    { key: 'accountName', label: t('admin.table.copyAccountName'), value: user.accountName },
+    { key: 'id', label: t('admin.table.copyUserId'), value: userId },
+    { key: 'ip', label: t('admin.table.copyIp'), value: user.lastIp },
+  ].filter((c): c is { key: string; label: string; value: string } => !!c.value);
+  const copy = (value: string) => {
+    navigator.clipboard.writeText(value)
+      .then(() => toast.success(t('admin.table.copied')))
+      .catch(() => {});
+  };
   const { shadowBan, unshadowBan } = useShadowBanActions(onRefresh);
 
   return (
@@ -56,6 +73,23 @@ export function AdminUserContextMenu({
             {t('admin.table.viewProfile')}
           </a>
         </ContextMenuItem>
+
+        {copyable.length > 0 && (
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <Icon name="content_copy" />
+              {t('admin.table.copy')}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              {copyable.map((c) => (
+                <ContextMenuItem key={c.key} onClick={() => copy(c.value)}>
+                  <span className="flex-1">{c.label}</span>
+                  <span className="max-w-40 truncate pl-3 font-mono text-xs text-subtle">{c.value}</span>
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        )}
 
         {can.canAct && (
           <>
@@ -72,20 +106,40 @@ export function AdminUserContextMenu({
                     <ContextMenuItem
                       key={r}
                       onClick={() => handleChangeRole(user, r)}
+                      disabled={user.role === r}
                       data-active={user.role === r}
                     >
                       {tk(`admin.table.${r}`)}
+                      {user.role === r && <Icon name="check" className="ml-auto" />}
                     </ContextMenuItem>
                   ))}
                 </ContextMenuSubContent>
               </ContextMenuSub>
             )}
 
+            {/* An amount is picked, never assumed: a stray click used to grant 100 XP outright. */}
             {can.adjustXp && (
-              <ContextMenuItem onClick={() => handleAdjustXP('grant', 100, 'user', user.id || user._id)}>
-                <Icon name="bolt" />
-                {t('admin.table.adjustXp')}
-              </ContextMenuItem>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger>
+                  <Icon name="bolt" />
+                  {t('admin.table.adjustXp')}
+                </ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                  {XP_STEPS.map((n) => (
+                    <ContextMenuItem key={`grant-${n}`} onClick={() => handleAdjustXP('grant', n, 'user', userId)}>
+                      <Icon name="add" />
+                      {t('admin.table.grantXp', { amount: n })}
+                    </ContextMenuItem>
+                  ))}
+                  <ContextMenuSeparator />
+                  {XP_STEPS.map((n) => (
+                    <ContextMenuItem key={`revoke-${n}`} variant="destructive" onClick={() => handleAdjustXP('revoke', n, 'user', userId)}>
+                      <Icon name="remove" />
+                      {t('admin.table.revokeXp', { amount: n })}
+                    </ContextMenuItem>
+                  ))}
+                </ContextMenuSubContent>
+              </ContextMenuSub>
             )}
 
             <ContextMenuSeparator />
@@ -98,6 +152,7 @@ export function AdminUserContextMenu({
             )}
             {can.reviewAppeal && (
               <ContextMenuItem onClick={() => setAppealModal({ isOpen: true, user })}>
+                <Icon name="info" />
                 {t('admin.table.reviewAppeal')}
               </ContextMenuItem>
             )}
