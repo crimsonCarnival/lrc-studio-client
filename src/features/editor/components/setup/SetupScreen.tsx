@@ -22,7 +22,7 @@ import { parseRawLyricsText } from '@/features/editor/utils/parse-raw-lyrics';
 import { Icon } from '@/shared/ui/Icon';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
-import { lyrics as lyricsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
+import { lyrics as lyricsApi, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
@@ -32,12 +32,14 @@ import { TitleCleanupChip } from '@/features/assist/TitleCleanupChip';
 import { DescribeSuggestion } from '@/features/assist/DescribeSuggestion';
 import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { mergeCredits, primaryArtistText, renamePrimary, soleArtistName } from '@/features/artists/artist-credits';
-import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
+import { featuredNames, formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/editor/components/setup/YoutubeSearchPanel';
 import { YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
 import toast from 'react-hot-toast';
 import MediaLibrary from './MediaLibrary';
+import { SongInfoSuggestions } from './SongInfoSuggestions';
+import { useSongInfoSearch, type TrackSuggestion } from './useSongInfoSearch';
 import SingersInput from './SingersInput';
 import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
@@ -235,7 +237,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   }));
 
   const [musicLibrary, setMusicLibrary] = useState<MusicEntry[]>([]);
-  const [metaSearching, setMetaSearching] = useState(false);
   // Drives the artist editor from the handlers below (lookup, lyrics search, imported file).
   const artistsRef = useRef<ArtistsSectionHandle>(null);
 
@@ -393,42 +394,40 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     });
   }, [musicLibrary, setMetadataState]);
 
-  const handleFetchSongInfo = useCallback(async () => {
+  // "Find song info" lists the tracks it found; nothing changes until the person picks one.
+  const { searching: metaSearching, results: songResults, query: songQuery, search: searchSongs, close: closeSongs } = useSongInfoSearch();
+  // The cover the last pick filled in: a later pick may replace it, a cover the person chose stays.
+  const lookupCoverRef = useRef<string | null>(null);
+
+  const handleFetchSongInfo = useCallback(() => {
     if (!songName.trim() || !primaryText.trim() || metaSearching) return;
-    setMetaSearching(true);
-    try {
-      const meta = await songMetadataApi.lookupTrack(songName.trim(), primaryText.trim()) as {
-        error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string; previewUrl?: string; explicit?: boolean;
-      };
-      if (meta && !meta.error) {
-        const mappedGenre = matchGenreFromTags(meta.genres || []);
-        // The old clip is about to be replaced — stop it so the play button
-        // doesn't end up pointing at audio that's no longer loaded.
-        previewAudioRef.current?.pause();
-        setPreviewPlaying(false);
-        setMetadataState({
-          songName:   meta.name   || songName,
-          songAlbum:  meta.album  || songAlbum,
-          songYear:   meta.releaseYear || songYear,
-          ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
-          ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
-          // Populate coverImage from API art if user hasn't set one
-          ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
-          previewUrl: meta.previewUrl || '',
-          explicit: !!meta.explicit,
-        });
-      } else {
-        toast.error(t('setup.metaSearchFailed'));
-      }
-      // The provider answers with one string ("A, B"); the parser turns it into credits and
-      // anything doubtful waits for a confirmation. The lookup's artists lead, yours stay.
-      if (meta && !meta.error && meta.artist) artistsRef.current?.proposeFromLookup(meta.artist);
-    } catch {
-      toast.error(t('setup.metaSearchFailed'));
-    } finally {
-      setMetaSearching(false);
-    }
-  }, [songName, primaryText, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
+    void searchSongs({ songName: songName.trim(), artist: primaryText.trim(), featured: featuredNames(artists) });
+  }, [songName, primaryText, artists, metaSearching, searchSongs]);
+
+  const handlePickSong = useCallback((meta: TrackSuggestion) => {
+    closeSongs();
+    const mappedGenre = matchGenreFromTags(meta.genres || []);
+    // The old clip is about to be replaced — stop it so the play button
+    // doesn't end up pointing at audio that's no longer loaded.
+    previewAudioRef.current?.pause();
+    setPreviewPlaying(false);
+    const coverIsOurs = !coverImage || coverImage === lookupCoverRef.current;
+    if (coverIsOurs && meta.albumArt) lookupCoverRef.current = meta.albumArt;
+    setMetadataState({
+      songName:   meta.name   || songName,
+      songAlbum:  meta.album  || songAlbum,
+      songYear:   meta.releaseYear || songYear,
+      ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
+      ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
+      ...(meta.trackNumber      ? { trackNumber: String(meta.trackNumber) } : {}),
+      ...(coverIsOurs && meta.albumArt ? { coverImage: meta.albumArt } : {}),
+      previewUrl: meta.previewUrl || '',
+      explicit: !!meta.explicit,
+    });
+    // The provider answers with one string ("A, B"); the parser turns it into credits and
+    // anything doubtful waits for a confirmation. The lookup's artists lead, yours stay.
+    if (meta.artist) artistsRef.current?.proposeFromLookup(meta.artist);
+  }, [songName, songAlbum, songYear, coverImage, setMetadataState, closeSongs]);
 
   const handleProceed = () => {
     let finalLines = parsedLines;
@@ -565,6 +564,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   onChange={(next) => setMetadataState({ artists: next })}
                   belowPrimaryInput={suggestion}
                   afterPrimary={(
+                    <div className="flex flex-col gap-2">
                     <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
                       {/* span keeps the tooltip working while the button is disabled */}
                       <span className="block">
@@ -580,6 +580,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         </Button>
                       </span>
                     </Tip>
+                    {songResults && (
+                      <SongInfoSuggestions results={songResults} artist={songQuery?.artist ?? primaryText} onPick={handlePickSong} onClose={closeSongs} />
+                    )}
+                    </div>
                   )}
                 />
                 )}

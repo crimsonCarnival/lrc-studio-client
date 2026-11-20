@@ -24,7 +24,7 @@ vi.mock('@/app/api', () => ({
     deleteMedia: vi.fn(),
   },
   lyrics: { parse: vi.fn() },
-  songMetadata: { lookupTrack: vi.fn() },
+  songMetadata: { lookupTrack: vi.fn(), searchTracks: vi.fn() },
 }));
 vi.mock('@/shared/hooks/useReducedMotion', () => ({ useReducedMotion: () => true }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }) }));
