@@ -151,7 +151,8 @@ export default function useYouTubePlayer({
     }
   }, [containerRef]);
 
-  const loadYouTube = useCallback((urlOverride?: string) => {
+  // `keepProjectTitle`: hydrating a saved project's own video must not rename the project.
+  const loadYouTube = useCallback((urlOverride?: string, { keepProjectTitle = false }: { keepProjectTitle?: boolean } = {}) => {
     const urlToLoad = (typeof urlOverride === 'string') ? urlOverride : ytUrl;
     const videoId = extractVideoId(urlToLoad);
     if (!videoId) {
@@ -211,7 +212,7 @@ export default function useYouTubePlayer({
             updateDuration(d);
             e.target.setVolume(settings.playback?.muted ? 0 : (settings.playback?.volume * 100));
             const title = e.target.getVideoData()?.title;
-            if (title) onTitleChange?.(title);
+            if (title && !keepProjectTitle) onTitleChange?.(title);
             onMediaChange?.(true);
             onYtUrlChangeRef.current?.(urlToLoad);
             onTrackLoadRef.current?.({ url: urlToLoad, title: title ?? '', type: 'youtube' });

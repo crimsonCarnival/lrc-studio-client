@@ -244,7 +244,8 @@ export default function useLocalAudio({
     seek,
     setSpeed,
     getCurrentTime,
-    loadFromUrl: useCallback((url: string, title?: string) => {
+    // `keepProjectTitle`: hydrating a saved project's own media must not rename the project.
+    loadFromUrl: useCallback((url: string, title?: string, { keepProjectTitle = false }: { keepProjectTitle?: boolean } = {}) => {
       // Abort any pending Cloudinary upload
       uploadAbortRef.current = true;
       // The previous track's File no longer matches what's playing — drop it so
@@ -256,7 +257,7 @@ export default function useLocalAudio({
       setIsVideo(false);
       setIsPlaying(false);
       setCurrentTime(0);
-      if (title) onTitleChange?.(title);
+      if (title && !keepProjectTitle) onTitleChange?.(title);
       onMediaChange?.(true);
       onTrackLoad?.({ url, title: title ?? '', type: 'url' });
     }, [blobRef, setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onTrackLoad]),
