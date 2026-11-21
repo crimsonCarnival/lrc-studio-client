@@ -53,3 +53,11 @@ export function karaokeFillGlowClass(style: KaraokeFillStyle): string {
 export function karaokeFillTiming(easing: KaraokeFillEasing): string {
   return easing === 'ease-in-out' ? 'ease-in-out' : 'linear';
 }
+
+export type KaraokeFillTrack = 'main' | 'secondary' | 'both';
+
+/** Which line of a pair fills (editor.display.karaokeFillTrack): main by default. */
+export function karaokeFillTrack(display: { karaokeFillTrack?: unknown } | null | undefined): KaraokeFillTrack {
+  const v = display?.karaokeFillTrack;
+  return v === 'secondary' || v === 'both' ? v : 'main';
+}
