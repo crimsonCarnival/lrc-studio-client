@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isSwipeAway, lineBoundsAt, loadMiniPlayer, lyricAfter, lyricAt, miniPlayerSettings, nearestCorner, nextReturnPath, restoredEditorMatches, saveMiniPlayer } from './mini-player';
+import { isSwipeAway, karaokeWords, lineBoundsAt, loadMiniPlayer, lyricAfter, lyricAt, miniPlayerSettings, nearestCorner, nextReturnPath, restoredEditorMatches, saveMiniPlayer } from './mini-player';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const EDIT = '/ana/projects/band-song-abcdefghij/edit';
@@ -109,5 +109,37 @@ describe('restoredEditorMatches', () => {
     expect(restoredEditorMatches(EDIT, 'zzzzzzzzzz')).toBe(false);
     expect(restoredEditorMatches('/session/abcdefghij', 'abcdefghij')).toBe(false);
     expect(restoredEditorMatches(EDIT, null)).toBe(false);
+  });
+});
+
+describe('karaokeWords', () => {
+  const line = {
+    id: 'k', text: 'one two three', timestamp: 10,
+    words: [{ word: 'one', time: 10 }, { word: 'two', time: 11 }, { word: 'three', time: 12, end: 13 }],
+  } as EditorLine;
+
+  it('fills each word across its own span', () => {
+    const at = (t: number) => karaokeWords(line, t)!.map((w) => Math.round(w.fill * 100));
+    expect(at(10)).toEqual([0, 0, 0]);
+    expect(at(10.5)).toEqual([50, 0, 0]);
+    expect(at(11.25)).toEqual([100, 25, 0]);
+    expect(at(12.5)).toEqual([100, 100, 50]);
+    expect(at(20)).toEqual([100, 100, 100]);
+  });
+
+  it('spaces words as the preview does, with none after the last', () => {
+    expect(karaokeWords(line, 10)!.map((w) => w.spaceAfter)).toEqual([true, true, false]);
+  });
+
+  it('shares a gap between untimed words', () => {
+    const gap = { ...line, words: [{ word: 'a', time: 10 }, { word: 'b' }, { word: 'c', time: 13 }] } as EditorLine;
+    // "a" runs to "c" (10 to 13); "b", after a timed word, takes the second half of that gap.
+    const fills = karaokeWords(gap, 12.25)!.map((w) => Math.round(w.fill * 100));
+    expect(fills).toEqual([75, 50, 0]);
+  });
+
+  it('is never invented for a line without word times', () => {
+    expect(karaokeWords({ id: 'p', text: 'plain', timestamp: 1 } as EditorLine, 2)).toBeNull();
+    expect(karaokeWords({ id: 'p', text: 'x', timestamp: 1, words: [{ word: 'x' }] } as EditorLine, 2)).toBeNull();
   });
 });

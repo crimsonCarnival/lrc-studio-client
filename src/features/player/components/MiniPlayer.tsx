@@ -7,9 +7,10 @@ import { cn } from '@/shared/utils/utils';
 import { useSettings } from '@/features/settings/useSettings';
 import { sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { usePlayer } from '../PlayerContext';
-import { lineBoundsAt, lyricAfter, lyricAt, nextLineStart, previousLineStart, type MiniPlayerPosition, type MiniPlayerSettings } from '../mini-player';
+import { karaokeWords, lineAt, lineBoundsAt, lyricAfter, lyricAt, nextLineStart, previousLineStart, type MiniPlayerPosition, type MiniPlayerSettings } from '../mini-player';
 import { useCornerDrag, useMediaSession, useMiniPlayerShortcuts } from '../hooks/useMiniPlayerControls';
 import { MiniPlayerSessionMembers } from './MiniPlayerSessionMembers';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 type Props = {
   /** The page this player leads back to: the editor, or the public project view it came from. */
@@ -76,6 +77,7 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
   const timedLines = (lines ?? []).filter((l) => l.type !== 'section' && l.timestamp != null && !!l.text?.trim());
   const hasLyrics = timedLines.length > 0;
   const lyric = lyricAt(lines, currentTime);
+  const sungLine = lineAt(lines, currentTime);
   const upcoming = lyricAfter(lines, currentTime);
   const prev = previousLineStart(lines, currentTime);
   const next = nextLineStart(lines, currentTime);
@@ -204,7 +206,7 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
         // tall whatever is showing, so the card does not jump as lines change. Opens the lyrics.
         <button type="button" onClick={() => setView('lyrics')} aria-label={t('player.mini.showLyrics')} className="flex w-full flex-col gap-0.5 px-3 pt-1 pb-1 text-left focus-visible:outline-none">
           <span className="line-clamp-2 min-h-[2lh] font-heading text-lg leading-snug font-semibold text-foreground" aria-live="off">
-            {lyric ?? <span className="text-subtle">♪</span>}
+            {sungLine ? <KaraokeText line={sungLine} time={currentTime} /> : <span className="text-subtle">♪</span>}
           </span>
           <span className="truncate text-sm text-subtle">{upcoming ?? ' '}</span>
         </button>
@@ -277,10 +279,42 @@ function LyricsList({ lines, current, onSeek, label, currentTime }: { lines: Tim
               i === active ? 'text-lg font-semibold text-foreground' : 'text-base text-subtle',
             )}
           >
-            {l.text}
+            {i === active ? <KaraokeText line={l as EditorLine} time={currentTime} /> : l.text}
           </button>
         </li>
       ))}
     </ol>
+  );
+}
+
+/**
+ * The line being sung, its words filling in as they are sung, as in the preview. Plain text
+ * when the line has no word times: a fill is never guessed from the text.
+ */
+function KaraokeText({ line, time }: { line: EditorLine; time: number }) {
+  const words = karaokeWords(line, time);
+  if (!words) return <>{line.text}</>;
+  return (
+    <>
+      <span className="sr-only">{line.text}</span>
+      <span aria-hidden="true">
+      {words.map((w, i) => (
+        <span key={i}>
+          <span className="relative inline-block">
+            <span className="text-foreground/50">{w.text}</span>
+            {w.fill > 0 && (
+              <span
+                className="pointer-events-none absolute inset-0 whitespace-nowrap text-primary-ink" data-karaoke-fill
+                style={{ clipPath: `inset(0 ${(1 - w.fill) * 100}% 0 0)` }}
+              >
+                {w.text}
+              </span>
+            )}
+          </span>
+          {w.spaceAfter ? ' ' : null}
+        </span>
+      ))}
+      </span>
+    </>
   );
 }

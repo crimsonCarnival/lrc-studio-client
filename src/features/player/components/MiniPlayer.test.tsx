@@ -131,4 +131,15 @@ describe('MiniPlayer', () => {
     show({}, { returnTo: '/session/abc123' });
     expect(screen.getByText('members:abc123')).toBeInTheDocument();
   });
+
+  it('fills the words of the line as they are sung', () => {
+    const karaoke = [{ id: 'k', text: 'Hello world', timestamp: 1, words: [{ word: 'Hello', time: 1 }, { word: 'world', time: 2, end: 3 }] }];
+    show({ lines: karaoke as PlayerContextValue['lines'], currentTime: 2.5 });
+    const fills = [...document.querySelectorAll('[data-karaoke-fill]')] as HTMLElement[];
+    expect(fills.map((f) => f.textContent)).toEqual(['Hello', 'world']);
+    expect(fills[0].style.clipPath).toBe('inset(0 0% 0 0)');
+    expect(fills[1].style.clipPath).toBe('inset(0 50% 0 0)');
+    // Read out once, as the whole line.
+    expect(screen.getByText('Hello world')).toHaveClass('sr-only');
+  });
 });

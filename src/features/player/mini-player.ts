@@ -1,5 +1,7 @@
 import { isEditorPath, isProjectEditorPath, isProjectPath, publicIdFromSlugId } from '@/features/projects/project-path';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { tailWordEnd, wordFillEnd } from '@/features/editor/utils/line-span';
+import { needsSpaceAfter } from '@/shared/utils/furigana';
 
 export type MiniPlayerPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 export const MINI_PLAYER_POSITIONS: MiniPlayerPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
@@ -42,14 +44,72 @@ export function nextReturnPath(prev: string, next: string, current: string | nul
 }
 
 /** The lyric line playing at `time`: the latest timed, non-section line that has started. */
-export function lyricAt(lines: EditorLine[] | undefined, time: number): string | null {
-  let best: { at: number; text: string } | null = null;
+export function lineAt(lines: EditorLine[] | undefined, time: number): EditorLine | null {
+  let best: EditorLine | null = null;
   for (const line of lines ?? []) {
-    if (line.type === 'section' || line.timestamp == null || line.timestamp > time) continue;
-    const text = line.text?.trim();
-    if (text && (!best || line.timestamp >= best.at)) best = { at: line.timestamp, text };
+    if (line.type === 'section' || line.timestamp == null || line.timestamp > time || !line.text?.trim()) continue;
+    if (!best || line.timestamp >= (best.timestamp as number)) best = line;
   }
-  return best?.text ?? null;
+  return best;
+}
+
+/** That line's text. */
+export function lyricAt(lines: EditorLine[] | undefined, time: number): string | null {
+  return lineAt(lines, time)?.text?.trim() ?? null;
+}
+
+export type KaraokeWord = { text: string; fill: number; spaceAfter: boolean };
+
+/**
+ * The line's words with how much of each is sung at `time` (0 to 1), for the karaoke fill.
+ * The same timing as the preview's: a timed word runs to its own end or the next timed word;
+ * untimed words share the gap between their timed neighbours; the last word runs to the line's
+ * end, else an estimate. Null when no word has a time: the fill is never invented from text.
+ */
+export function karaokeWords(line: EditorLine | null, time: number): KaraokeWord[] | null {
+  const words = line?.words ?? [];
+  const timed = words.filter((w) => w.time != null);
+  if (!line || timed.length === 0) return null;
+
+  const lastTimed = timed[timed.length - 1].time as number;
+  const tail = tailWordEnd(line);
+  const lineEnd = tail
+    ?? (line.endTime != null && line.endTime > lastTimed ? line.endTime : null)
+    ?? (timed.length >= 2 ? lastTimed + (lastTimed - (timed[0].time as number)) / (timed.length - 1) : lastTimed + 0.8);
+
+  return words.map((w, i) => {
+    let start = w.time ?? null;
+    let end: number | null;
+    if (start == null) {
+      let prev = line.timestamp ?? 0;
+      let fromWord = false;
+      let before = 0;
+      for (let j = i - 1; j >= 0; j--) {
+        if (words[j].time != null) { prev = words[j].time as number; fromWord = true; break; }
+        before++;
+      }
+      let next: number = lineEnd;
+      let after = 0;
+      for (let j = i + 1; j < words.length; j++) {
+        if (words[j].time != null) { next = words[j].time as number; break; }
+        after++;
+      }
+      const gap = Math.max(0.1, next - prev);
+      const slots = before + after + 1 + (fromWord ? 1 : 0);
+      const slice = gap / slots;
+      const offset = before + (fromWord ? 1 : 0);
+      start = prev + slice * offset;
+      end = start + slice;
+    } else {
+      end = wordFillEnd(words, i, lineEnd);
+    }
+    const span = Math.max(0.01, (end ?? start + 0.5) - start);
+    return {
+      text: w.word,
+      fill: Math.max(0, Math.min(1, (time - start) / span)),
+      spaceAfter: needsSpaceAfter(w.word, words[i + 1]?.word) && i < words.length - 1,
+    };
+  });
 }
 
 /** The next lyric line to be sung after `time`, for the faded preview under the current one. */
