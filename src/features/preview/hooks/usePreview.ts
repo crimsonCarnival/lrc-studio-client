@@ -7,14 +7,13 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { downloadBlob, downloadLRC } from '@/shared/utils/lrc';
 import { artistDisplay, creditsOf } from '@/features/artists/artist-credits';
-import { useIncludeFeaturedInTitle } from '@/features/artists/include-featured-setting';
 import { lyrics } from '@/app/api';
 import { applyGlobalOffset } from '@/features/editor/services/editor.service';
 import { matchKey } from '@/shared/utils/keyboard';
 import { buildCues, validateCues, YOUTUBE_RULES } from '@/features/subtitles/subtitle-cues';
 import { serializeCues } from '@/features/subtitles/subtitle-formats';
 import { buildSubtitleFiles, translationSlots } from '@/features/subtitles/subtitle-bundle';
-import type { CueIssue, SubtitleFormat } from '@/features/subtitles/subtitles.types';
+import { isSubtitleFormat, type CueIssue, type SubtitleFormat } from '@/features/subtitles/subtitles.types';
 import { computeCurrentIndex } from '../lyrics-position';
 import {
   REVIEW_ACTIVE_FONT_SIZES, REVIEW_INACTIVE_FONT_SIZES,
@@ -183,7 +182,8 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   const [followPlayback, setFollowPlayback] = useState(true);
 
   const credits = useMemo(() => creditsOf(projectMetadata as Parameters<typeof creditsOf>[0]), [projectMetadata]);
-  const [includeFeaturedInTitle, setIncludeFeaturedInTitle] = useIncludeFeaturedInTitle();
+  const includeFeaturedInTitle = settings.export?.includeFeaturedInTitle === true;
+  const setIncludeFeaturedInTitle = useCallback((value: boolean) => updateSetting('export.includeFeaturedInTitle', value), [updateSetting]);
 
   // Build LRC metadata automatically from projectMetadata
   const metadata = useMemo(() => {
@@ -374,9 +374,10 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     updateSetting('export.downloadFormat', format);
   }, [updateSetting]);
 
-  // Which subtitle file the SRT card writes. Session-only: the persisted export settings
-  // only know lrc/srt/txt, and VTT and SBV are the same cues in another container.
-  const [subtitleFormat, setSubtitleFormat] = useState<SubtitleFormat>('srt');
+  // Which subtitle file the SRT card writes: the export setting, so the last one picked is the
+  // next default. Updates skip the server's enum check, so an unknown stored value reads as SRT.
+  const subtitleFormat: SubtitleFormat = isSubtitleFormat(settings.export?.subtitleFormat) ? settings.export.subtitleFormat : 'srt';
+  const setSubtitleFormat = useCallback((format: SubtitleFormat) => updateSetting('export.subtitleFormat', format), [updateSetting]);
   const fileExtension = exportFormat === 'srt' ? subtitleFormat : 'lrc';
   const exportBaseName = exportFilename.trim() || 'lyrics';
 
@@ -384,6 +385,8 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   const wordPrecision = settings.export?.wordTimestampPrecision;
   const precision = settings.editor?.timestampPrecision;
   const srtConfig = settings.editor?.srt;
+  // TTML's xml:lang. The project's song language, when set.
+  const songLanguage = (projectMetadata as { songLanguage?: string } | undefined)?.songLanguage || undefined;
 
   const subtitleLines = useMemo(() => {
     const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
@@ -411,10 +414,10 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
         base: exportBaseName,
         format: subtitleFormat,
         cues: { duration, minGap: srtConfig?.minSubtitleGap, defaultDuration: srtConfig?.defaultSubtitleDuration },
-        serialize: { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf' },
+        serialize: { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf', language: songLanguage },
       })
       : []
-  ), [hasTranslatedSubtitles, subtitleLines, exportBaseName, subtitleFormat, duration, srtConfig, lineEndings]);
+  ), [hasTranslatedSubtitles, subtitleLines, exportBaseName, subtitleFormat, duration, srtConfig, lineEndings, songLanguage]);
   const bundled = subtitleFiles.length > 0;
   const exportFileName = bundled ? `${exportBaseName}.zip` : `${exportBaseName}.${fileExtension}`;
 
@@ -424,7 +427,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     if (exportFormat === 'srt') {
       // A bundle previews its first file (the original); the others are listed beside it.
       if (bundled) return subtitleFiles[0].content;
-      return serializeCues(exportCues, subtitleFormat, { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf' });
+      return serializeCues(exportCues, subtitleFormat, { lineEndings: lineEndings === 'crlf' ? 'crlf' : 'lf', language: songLanguage });
     }
     const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
     const exportLines = shiftExportLines(applyIncludeFlags(prepareExportLines(lines)), offsetSeconds);
@@ -442,7 +445,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     })) as { output: string };
     return result.output;
   }, [
-    lines, exportFormat, subtitleFormat, exportCues, bundled, subtitleFiles, exportOffset, includeTranslations,
+    lines, exportFormat, subtitleFormat, songLanguage, exportCues, bundled, subtitleFiles, exportOffset, includeTranslations,
     includeSecondary, includeMetadata, metadata, credits, includeFeaturedInTitle, lineEndings, wordPrecision,
     precision, applyIncludeFlags, prepareExportLines, activeTranslationIndex,
   ]);

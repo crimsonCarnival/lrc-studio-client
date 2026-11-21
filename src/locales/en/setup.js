@@ -26,7 +26,7 @@ export default {
   pasteLyrics: "Paste lyrics",
   pasteLyricsDesc: "Type or paste your lyrics here, one line per line...",
   importFile: "Import file",
-  importFileDesc: "Import from .lrc, .srt, or .txt file",
+  importFileDesc: "Import from a .lrc, .srt, .vtt, .sbv, .ass or .txt file",
   next: "Next",
   back: "Back",
   projectName: "Project name",

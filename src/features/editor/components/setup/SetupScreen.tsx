@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { IMPORT_ACCEPT, SUBTITLE_ACCEPT, isImportExtension, isTimedSubtitleFile } from '@/shared/utils/import-formats';
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -307,13 +308,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!['lrc', 'srt', 'txt'].includes(ext)) { toast.error(t('import.unsupportedFormat')); return; }
+    if (!isImportExtension(ext)) { toast.error(t('import.unsupportedFormat')); return; }
     if (file.size > MAX_IMPORT_FILE_SIZE) { toast.error(t('import.tooLarge')); return; }
     try {
       const text = await file.text();
       const { lines, metadata: header } = await lyricsApi.parse(text, file.name) as { lines: EditorLine[]; metadata?: { ti?: string; ar?: string } };
       if (lines.length === 0) { toast.error(t('import.noLines')); return; }
-      setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: ext === 'srt' ? 'srt' : 'lrc', text: '' });
+      setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: isTimedSubtitleFile(file.name) ? 'srt' : 'lrc', text: '' });
       // The file's [ar:] / [ti:] header: offered as artists, confirmed first (the parser flags doubtful splits).
       if (header?.ar?.trim()) artistsRef.current?.offer({ title: header.ti ?? '', artist: header.ar }, 'import');
     } catch { toast.error(t('import.failed')); }
@@ -990,7 +991,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                           <Icon name="upload" size={16} className="text-zinc-500 group-hover:text-primary transition-colors" />
                           <span className="text-sm font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('setup.importFile')}</span>
                           <span className="text-[10px] text-zinc-500 ml-1 hidden sm:inline">.lrc, .srt, .txt</span>
-                          <input ref={lyricsInputRef} id="setup-lyrics-input" type="file" accept=".lrc,.srt,.txt" onChange={handleLyricsFile} className="hidden" />
+                          <input ref={lyricsInputRef} id="setup-lyrics-input" type="file" accept={IMPORT_ACCEPT} onChange={handleLyricsFile} className="hidden" />
                         </label>
                       </>
                     )}
@@ -1049,7 +1050,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       <Icon name="upload" size={16} className="text-zinc-500 group-hover:text-primary transition-colors" />
                       <span className="text-sm font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('setup.importCaptions')}</span>
                       <span className="text-[10px] text-zinc-500 ml-1 hidden sm:inline">.srt, .txt</span>
-                      <input ref={lyricsInputRef} id="setup-script-input" type="file" accept=".srt,.txt" onChange={handleLyricsFile} className="hidden" />
+                      <input ref={lyricsInputRef} id="setup-script-input" type="file" accept={SUBTITLE_ACCEPT} onChange={handleLyricsFile} className="hidden" />
                     </label>
                   </>
                 )}

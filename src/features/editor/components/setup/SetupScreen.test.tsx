@@ -109,7 +109,7 @@ describe('SetupScreen', () => {
     expect(screen.getByLabelText('setup.tabScript')).toBeInTheDocument();
     // No lyrics search, no singer syntax bar, and no .lrc import.
     expect(screen.queryByText('lyricsSearch.tabLabel')).not.toBeInTheDocument();
-    expect(document.getElementById('setup-script-input')).toHaveAttribute('accept', '.srt,.txt');
+    expect(document.getElementById('setup-script-input')).toHaveAttribute('accept', '.srt,.vtt,.sbv,.ass,.ssa,.txt');
   });
 
   it('lets a subtitles project start with no script', () => {

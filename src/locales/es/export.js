@@ -50,6 +50,8 @@ export default {
   containerSrt: "SRT",
   containerVtt: "WebVTT",
   containerSbv: "SBV",
+  containerAss: "ASS",
+  containerTtml: "TTML",
   cuesTitle: "Revisión de subtítulos",
   cueIssue: {
     invalid_range_one: "{{count}} subtítulo termina en o antes de su inicio.",

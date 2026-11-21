@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { isImportExtension, isTimedSubtitleFile } from '@/shared/utils/import-formats';
 import type { ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
@@ -40,7 +41,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
     if (replaceAllBlocked?.()) return null;
 
     setLines(parsed);
-    const isSrt = filename.toLowerCase().endsWith('.srt');
+    const isSrt = isTimedSubtitleFile(filename);
     const hasWords = !isSrt && parsed.some(l => (l.words?.length ?? 0) > 0);
     setEditorMode(isSrt ? 'srt' : hasWords ? 'words' : 'lrc');
     // Park the cursor on the first unsynced line so syncing can start immediately.
@@ -55,7 +56,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
     if (!file) return;
 
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!ext || !['lrc', 'srt', 'txt'].includes(ext)) {
+    if (!ext || !isImportExtension(ext)) {
       toast.error(t('import.unsupportedFormat'));
       e.target.value = '';
       return;

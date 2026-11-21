@@ -50,6 +50,8 @@ export default {
   containerSrt: "SRT",
   containerVtt: "WebVTT",
   containerSbv: "SBV",
+  containerAss: "ASS",
+  containerTtml: "TTML",
   cuesTitle: "Subtitle checks",
   cueIssue: {
     invalid_range_one: "{{count}} cue ends at or before its start.",

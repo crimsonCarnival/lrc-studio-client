@@ -1,4 +1,13 @@
-export type SubtitleFormat = 'srt' | 'vtt' | 'sbv';
+/**
+ * The subtitle files the app writes. srt/vtt/sbv are what YouTube Studio takes with timing; ass is
+ * for subtitle editors (Aegisub) and video editors; ttml (DFXP) for broadcast and streaming pipelines.
+ */
+export type SubtitleFormat = 'srt' | 'vtt' | 'sbv' | 'ass' | 'ttml';
+
+export const SUBTITLE_FORMATS: readonly SubtitleFormat[] = ['srt', 'vtt', 'sbv', 'ass', 'ttml'];
+
+export const isSubtitleFormat = (value: unknown): value is SubtitleFormat =>
+  typeof value === 'string' && (SUBTITLE_FORMATS as readonly string[]).includes(value);
 
 /** One displayed caption. Times are seconds; `lineIndex` points back into the editor's flat lines. */
 export type Cue = {

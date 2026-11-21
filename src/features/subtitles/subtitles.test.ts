@@ -31,6 +31,11 @@ describe('buildCues', () => {
     expect(cues[1].end).toBe(6); // min(4 + 5, 6)
   });
 
+  it('honours a minimum gap of 0 instead of falling back to the default', () => {
+    const cues = buildCues([line('a', 1), line('b', 4)], { minGap: 0 });
+    expect(cues[0].end).toBe(4);
+  });
+
   it('caps a cue that outlasts the media, but not one that starts after it', () => {
     const cues = buildCues([line('a', 58, { endTime: 65 }), line('b', 70, { endTime: 75 })], { duration: 60 });
     expect(cues.map((c) => c.end)).toEqual([60, 75]);
@@ -486,5 +491,37 @@ describe('translation slots in the studio', () => {
     expect(out[1].translations).toEqual([{ text: 'uno', language: '' }]);
     expect(out[2]).toBe(base[2]);
     expect(setLineTranslation(base, 2, 0, 'DOS')[2].translations).toEqual([{ text: 'DOS', language: 'Spanish' }]);
+  });
+});
+
+describe('serializeCues: ASS and TTML', () => {
+  it('writes an ASS script: centisecond clocks, \\N breaks, braces and backslashes defused, counterparts on layer 1', () => {
+    const out = serializeCues([
+      { start: 1.234, end: 3.5, text: 'two\nrows {not a tag} a\\b', lineIndex: 0 },
+      { start: 3661.005, end: 3662, text: 'echo', lineIndex: 1, counterpart: true },
+    ], 'ass');
+    expect(out.startsWith('[Script Info]')).toBe(true);
+    expect(out).toContain('[Events]');
+    expect(out).toContain('Dialogue: 0,0:00:01.23,0:00:03.50,Default,,0,0,0,,two\\Nrows (not a tag) a\u29F5b');
+    expect(out).toContain('Dialogue: 1,1:01:01.01,1:01:02.00,Default,,0,0,0,,echo');
+  });
+
+  it('never writes an ASS event that ends where it starts', () => {
+    const out = serializeCues([{ start: 1, end: 1.002, text: 'x', lineIndex: 0 }], 'ass');
+    expect(out).toContain('0:00:01.00,0:00:01.01');
+  });
+
+  it('writes a TTML document with escaped text, <br/> line breaks and the language', () => {
+    const out = serializeCues([{ start: 1, end: 2.5, text: 'R&B <3\n"quote"', lineIndex: 0 }], 'ttml', { language: 'es' });
+    expect(out).toContain('<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="es">');
+    expect(out).toContain('<p begin="00:00:01.000" end="00:00:02.500">R&amp;B &lt;3<br/>&quot;quote&quot;</p>');
+  });
+
+  it('round-trips through the import parser for ASS (text and timing)', async () => {
+    const { parseSubtitleCues } = await import('@/shared/utils/subtitle-parse');
+    const cues = [{ start: 1.25, end: 2.5, text: 'a, b\nc', lineIndex: 0 }];
+    expect(parseSubtitleCues(serializeCues(cues, 'ass'), 'ass')).toEqual([{ start: 1.25, end: 2.5, text: 'a, b\nc' }]);
+    expect(parseSubtitleCues(serializeCues(cues, 'vtt'), 'vtt')).toEqual([{ start: 1.25, end: 2.5, text: 'a, b\nc' }]);
+    expect(parseSubtitleCues(serializeCues(cues, 'sbv'), 'sbv')).toEqual([{ start: 1.25, end: 2.5, text: 'a, b\nc' }]);
   });
 });

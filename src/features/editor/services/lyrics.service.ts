@@ -8,6 +8,8 @@ import {
   compileSRT as localCompileSRT,
   inferEndTimes as localInferEndTimes,
 } from '@/shared/utils/lrc';
+import { parseSubtitleCues, subtitleImportFormat } from '@/shared/utils/subtitle-parse';
+import { isTimedSubtitleFile } from '@/shared/utils/import-formats';
 
 // ——— Lyrics (parse/compile) — falls back to local utils when server is unreachable ———
 
@@ -68,8 +70,13 @@ export const lyricsService = {
       });
     } catch (err) {
       if (isNetworkError(err)) {
-        const lines = localParse(content, filename, options);
-        return { lines, detectedFormat: filename.toLowerCase().endsWith('.srt') ? 'srt' : 'lrc', count: lines.length };
+        const subtitle = subtitleImportFormat(filename);
+        const lines = subtitle
+          ? parseSubtitleCues(content, subtitle).map((cue) => ({
+            text: cue.text, timestamp: cue.start, endTime: cue.end, secondary: '', translation: '', id: crypto.randomUUID(),
+          }))
+          : localParse(content, filename, options);
+        return { lines, detectedFormat: isTimedSubtitleFile(filename) ? 'srt' : 'lrc', count: lines.length };
       }
       throw err;
     }

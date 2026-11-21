@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { IMPORT_ACCEPT } from '@/shared/utils/import-formats';
 import type { ChangeEventHandler, RefObject, SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@ui/textarea';
@@ -129,7 +130,7 @@ export default function EditorPasteArea({
         <div className="flex gap-2">
           <input
             type="file"
-            accept=".lrc,.srt,.txt"
+            accept={IMPORT_ACCEPT}
             className="hidden"
             ref={fileInputRef}
             onChange={handleFileUpload}

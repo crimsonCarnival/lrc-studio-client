@@ -105,7 +105,7 @@ export default {
   sections: {
     start: {
       title: "Start a project",
-      body1: "Pick your audio (a local file or a YouTube link), then add lyrics: paste raw text, search for them by title and artist, or drop in an existing .lrc, .srt or .txt file. Timestamps and section tags already present in the file are preserved.",
+      body1: "Pick your audio (a local file or a YouTube link), then add lyrics: paste raw text, search for them by title and artist, or drop in an existing .lrc, .srt, .vtt, .sbv, .ass or .txt file. Timestamps and section tags already present in the file are preserved.",
       body2: "Not sure what to type? Search by title and artist. Results marked \"Synced\" already carry timestamps, so you can import them as they are and only adjust what is off.",
       body3: "Choose whether the project is a song or subtitles. A song gives you lyric lines to time against audio; subtitles give you caption blocks with a start and an end for video.",
     },

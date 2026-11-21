@@ -16,6 +16,8 @@ const CONTAINERS: { value: SubtitleFormat; labelKey: string }[] = [
   { value: 'srt', labelKey: 'export.containerSrt' },
   { value: 'vtt', labelKey: 'export.containerVtt' },
   { value: 'sbv', labelKey: 'export.containerSbv' },
+  { value: 'ass', labelKey: 'export.containerAss' },
+  { value: 'ttml', labelKey: 'export.containerTtml' },
 ];
 
 interface ExportPanelProps {
@@ -220,7 +222,7 @@ export default function ExportPanel({
             {exportFormat === 'srt' && (
               <div className="flex flex-col gap-2">
                 <span id={`${id}-container`} className={SECTION_LABEL}>{t('export.subtitleFile')}</span>
-                <div role="radiogroup" aria-labelledby={`${id}-container`} className="grid grid-cols-3 gap-2">
+                <div role="radiogroup" aria-labelledby={`${id}-container`} className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {CONTAINERS.map((c) => {
                     const selected = subtitleFormat === c.value;
                     return (

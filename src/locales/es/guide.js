@@ -105,7 +105,7 @@ export default {
   sections: {
     start: {
       title: "Empieza un proyecto",
-      body1: "Elige tu audio (un archivo local o un enlace de YouTube) y añade la letra: pega texto sin formato, búscala por título y artista, o suelta un archivo .lrc, .srt o .txt existente. Las marcas de tiempo y etiquetas de sección que ya tenga el archivo se conservan.",
+      body1: "Elige tu audio (un archivo local o un enlace de YouTube) y añade la letra: pega texto sin formato, búscala por título y artista, o suelta un archivo .lrc, .srt, .vtt, .sbv, .ass o .txt existente. Las marcas de tiempo y etiquetas de sección que ya tenga el archivo se conservan.",
       body2: "¿No sabes qué escribir? Busca por título y artista. Los resultados marcados como \"Sincronizada\" ya traen marcas de tiempo, así que puedes importarlos tal cual y ajustar solo lo que falle.",
       body3: "Elige si el proyecto es una canción o subtítulos. Una canción te da líneas de letra para sincronizar con el audio; los subtítulos te dan bloques con inicio y fin para vídeo.",
     },

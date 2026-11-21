@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { isImportExtension, isTimedSubtitleFile } from '@/shared/utils/import-formats';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { lyrics } from '@/app/api';
@@ -81,7 +82,7 @@ export function useDragAndDrop({
 
       const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
 
-      if (['lrc', 'srt', 'txt'].includes(extension)) {
+      if (isImportExtension(extension)) {
         if (file.size > MAX_IMPORT_FILE_SIZE) {
           toast.error(t('import.tooLarge'));
           return;
@@ -98,7 +99,7 @@ export function useDragAndDrop({
 
           const applyImport = () => {
             setLines(parsedLines);
-            setEditorMode(extension === 'srt' ? 'srt' : 'lrc');
+            setEditorMode(isTimedSubtitleFile(file.name) ? 'srt' : 'lrc');
             toast.success(
               (t as unknown as (k: string, o?: Record<string, unknown>) => string)('import.success', { count: parsedLines.length }) ||
                 `Imported ${parsedLines.length} lines`,
