@@ -40,7 +40,7 @@ function cleanCueText(raw: string): string {
  * ends up empty are dropped (an empty cue is invalid in every subtitle format).
  */
 export function buildCues(lines: EditorLine[], opts: BuildCuesOptions = {}): Cue[] {
-  const minGap = opts.minGap || 0.05;
+  const minGap = opts.minGap ?? 0.05;
   const defaultDuration = opts.defaultDuration || 5;
   const translationIndex = opts.translationIndex ?? 0;
 

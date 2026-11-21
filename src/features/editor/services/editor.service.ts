@@ -502,7 +502,7 @@ function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex
           ...updated[lastSyncedIndex],
           endTime: Math.max(
             updated[lastSyncedIndex].timestamp ?? 0,
-            time - (settings.srt?.minSubtitleGap || 0),
+            time - (settings.srt?.minSubtitleGap ?? 0.05),
           ),
         };
       }

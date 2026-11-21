@@ -293,7 +293,7 @@ function formatSrtTimestamp(seconds: number | null | undefined): string {
  * Compiles an array of { text, timestamp } into a valid .srt string
  */
 export function compileSRT(lines: EditorLine[], duration?: number, includeTranslations = false, lineEndings = 'lf', srtConfig: SrtConfig = {}, includeSecondary = false, exportTranslationIndex = 0): string {
-  const minGap = srtConfig.minSubtitleGap || 0.05;
+  const minGap = srtConfig.minSubtitleGap ?? 0.05;
   const defaultDur = srtConfig.defaultSubtitleDuration || 5;
 
   // Section markers are skipped in SRT
@@ -557,7 +557,7 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
  * Uses the next line's start time (minus a tiny gap) or a default duration for the last line.
  */
 export function inferEndTimes(lines: EditorLine[], duration?: number, srtConfig: SrtConfig = {}): EditorLine[] {
-  const minGap = srtConfig.minSubtitleGap || 0.05;
+  const minGap = srtConfig.minSubtitleGap ?? 0.05;
   const defaultDur = srtConfig.defaultSubtitleDuration || 5;
 
   return lines.map((line, i) => {
