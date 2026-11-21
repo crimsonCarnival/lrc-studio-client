@@ -67,6 +67,10 @@ const PAGES_BY_GROUP: Record<GroupId, readonly string[]> = { editor: ['editor'],
 const PAGES_BY_ID: Record<string, readonly string[]> = { togglePlayer: ['editor', 'view'], loopLine: ['editor'] };
 const pagesOf = (id: string) => PAGES_BY_ID[id] ?? PAGES_BY_GROUP[SHORTCUTS.find((s) => s.id === id)!.group];
 const sharePage = (a: string, b: string) => pagesOf(a).some((p) => pagesOf(b).includes(p));
+// Single keys are matched case-insensitively (a recorded L and the stored l are one key).
+const sameKey = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+// Keys the app handles itself and never lets a shortcut take: undo/redo and save.
+const RESERVED = ['Ctrl+Z', 'Ctrl+Y', 'Ctrl+Shift+Z', 'Ctrl+S'];
 
 const KEY_GLYPHS: Record<string, string> = {
   ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Backspace: '⌫', Escape: 'Esc',
@@ -77,10 +81,9 @@ interface ShortcutsSettingsProps {
   settings: { shortcuts?: Record<string, string[] | undefined>; editor?: { nudge?: { default?: number; fine?: number } }; playback?: { seekTime?: number }; [key: string]: any };
   updateSetting: (path: string, value: unknown) => void;
   searchTerm?: string;
-  validateShortcut: (value: string, key: string) => boolean;
 }
 
-export default function ShortcutsSettings({ settings, updateSetting, searchTerm, validateShortcut }: ShortcutsSettingsProps) {
+export default function ShortcutsSettings({ settings, updateSetting, searchTerm }: ShortcutsSettingsProps) {
   const { t, i18n } = useTranslation();
   const tk = t as (key: string, opts?: Record<string, unknown>) => string;
   const { handleShortcutChange } = useShortcutsSettings(updateSetting);
@@ -109,7 +112,7 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
     const byValue: Record<string, string[]> = {};
     for (const id of COMBO_IDS) {
       const v = settings.shortcuts?.[id]?.[0] || SHORTCUTS.find((s) => s.id === id)!.fallback;
-      (byValue[v] ??= []).push(id);
+      (byValue[v.toLowerCase()] ??= []).push(id);
     }
     const out: Record<string, string> = {};
     for (const ids of Object.values(byValue)) {
@@ -159,7 +162,11 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
       if (e.shiftKey) parts.push('Shift');
       parts.push(keyName);
       next = parts.join('+');
-      if (!validateShortcut(next, def.id)) { setRejected(def.id); setRecording(null); return; }
+      // Refused only when another shortcut live on the same page already has it; one on another
+      // page may share it (the editor's L and the project view's L), as the conflict flags assume.
+      const taken = RESERVED.some((r) => sameKey(r, next))
+        || SHORTCUTS.some((s) => !s.modifier && s.id !== def.id && sameKey(valueOf(s), next) && sharePage(def.id, s.id));
+      if (taken) { setRejected(def.id); setRecording(null); return; }
     }
     handleShortcutChange(def.id)(next);
     setRejected(null);

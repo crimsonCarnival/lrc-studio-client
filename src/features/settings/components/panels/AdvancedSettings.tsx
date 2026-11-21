@@ -8,24 +8,12 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
-const COMMON_TIMEZONES = [
-  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-  'America/Bogota', 'America/Sao_Paulo', 'America/Argentina/Buenos_Aires', 'America/Mexico_City',
-  'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Moscow',
-  'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Asia/Seoul', 'Asia/Dubai',
-  'Australia/Sydney', 'Pacific/Auckland', 'Africa/Cairo', 'Africa/Nairobi',
-];
-
 interface AdvancedSettingsProps {
   settings: {
     advanced?: {
       autoSave?: { enabled?: boolean; timeInterval?: number };
       autoSaveIndicator?: string;
       confirmDestructive?: boolean;
-      timezone?: string;
-      hourCycle?: string;
-      dateStyle?: string;
-      showUtcOffset?: boolean;
     };
   };
   updateSetting: (path: string, value: unknown) => void;
@@ -43,7 +31,6 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
     handleAutoSaveToggle,
     handleAutoSaveTimeIntervalChange,
     handleConfirmDestructiveChange,
-    handleTimezoneChange,
   } = useAdvancedSettings(updateSetting);
 
   const handle = user?.accountName ?? '';
@@ -109,51 +96,6 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
 
         <SettingRow label={t('settings.advanced.confirmDestructive')} description={t('settings.advanced.confirmDestructiveDesc')}>
           <Toggle id="toggle-confirm-destructive" label={t('settings.advanced.confirmDestructive')} checked={settings.advanced?.confirmDestructive ?? true} onChange={handleConfirmDestructiveChange} />
-        </SettingRow>
-      </Section>
-
-      <Section title={t('settings.advanced.regionSection')} searchTerm={searchTerm}>
-        <SettingRow label={t('settings.advanced.timezone')} description={t('settings.advanced.timezoneDesc')}>
-          <SettingSelect
-            label={t('settings.advanced.timezone')}
-            className="max-w-[260px]"
-            value={settings.advanced?.timezone ?? 'auto'}
-            onValueChange={(val) => handleTimezoneChange({ target: { value: val } })}
-          >
-            <SettingOption value="auto">
-              {t('settings.advanced.timezoneAuto')} · {Intl.DateTimeFormat().resolvedOptions().timeZone}
-            </SettingOption>
-            {COMMON_TIMEZONES.map((tz) => (
-              <SettingOption key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SettingOption>
-            ))}
-          </SettingSelect>
-        </SettingRow>
-
-        <SettingRow label={t('settings.advanced.hourCycle')} description={t('settings.advanced.hourCycleDesc')}>
-          <SettingSelect
-            label={t('settings.advanced.hourCycle')}
-            value={settings.advanced?.hourCycle ?? 'auto'}
-            onValueChange={(val) => updateSetting('advanced.hourCycle', val)}
-          >
-            <SettingOption value="auto">{t('settings.advanced.hourCycleAuto')}</SettingOption>
-            <SettingOption value="12">{t('settings.advanced.hourCycle12')}</SettingOption>
-            <SettingOption value="24">{t('settings.advanced.hourCycle24')}</SettingOption>
-          </SettingSelect>
-        </SettingRow>
-
-        <SettingRow label={t('settings.advanced.dateStyle')} description={t('settings.advanced.dateStyleDesc')}>
-          <SettingSelect
-            label={t('settings.advanced.dateStyle')}
-            value={settings.advanced?.dateStyle ?? 'long'}
-            onValueChange={(val) => updateSetting('advanced.dateStyle', val)}
-          >
-            <SettingOption value="long">{t('settings.advanced.dateStyleLong')}</SettingOption>
-            <SettingOption value="short">{t('settings.advanced.dateStyleShort')}</SettingOption>
-          </SettingSelect>
-        </SettingRow>
-
-        <SettingRow label={t('settings.advanced.showUtcOffset')} description={t('settings.advanced.showUtcOffsetDesc')}>
-          <Toggle id="toggle-show-utc-offset" label={t('settings.advanced.showUtcOffset')} checked={settings.advanced?.showUtcOffset ?? true} onChange={(v: boolean) => updateSetting('advanced.showUtcOffset', v)} />
         </SettingRow>
       </Section>
 

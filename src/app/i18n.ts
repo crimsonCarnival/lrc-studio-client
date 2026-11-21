@@ -40,6 +40,29 @@ const RESOURCE_LOADERS: Record<SupportedLanguage, () => Promise<{ default: { tra
 
 const initialLanguage = detectInitialLanguage();
 
+/**
+ * True when this page load's `?hl=` picked a language other than the one this browser last used:
+ * a link chose it, not the user. Read before i18next caches the language, because afterwards
+ * every URL carries `?hl=` (useThemeSync writes it) and the two can no longer be told apart.
+ * Settings then neither overrides it with the account's language nor saves it as the account's.
+ */
+export const languageFromLink: boolean = (() => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const qs = new URLSearchParams(window.location.search).get('hl');
+    if (!isSupported(qs)) return false;
+    return window.localStorage.getItem('i18nextLng')?.split('-')[0] !== qs;
+  } catch {
+    return false;
+  }
+})();
+
+/** The supported base language of an i18next code (`es-ES` → `es`), or null. */
+export function supportedLanguage(lng: string | null | undefined): SupportedLanguage | null {
+  const base = lng?.split('-')[0];
+  return isSupported(base) ? base : null;
+}
+
 // Keyed by language, not a boolean flag: a flag only records that loading *started*, so a
 // second caller arriving while the first load is still in flight (the idle preload below
 // racing a user-triggered switch, or two switches back to back) would see "already claimed"

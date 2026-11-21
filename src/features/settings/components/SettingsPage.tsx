@@ -15,6 +15,9 @@ import InterfaceSettings from './panels/InterfaceSettings';
 import ShortcutsSettings from './panels/ShortcutsSettings';
 import AdvancedSettings from './panels/AdvancedSettings';
 import AutoStampSettings from './panels/AutoStampSettings';
+import LyricsDisplaySettings from './panels/LyricsDisplaySettings';
+import LanguageRegionSettings from './panels/LanguageRegionSettings';
+import SubtitleSettings from './panels/SubtitleSettings';
 import ProfileSettings from './panels/ProfileSettings';
 import SecuritySettings from './panels/SecuritySettings';
 import StatsSettings from './panels/StatsSettings';
@@ -36,14 +39,13 @@ interface PanelContentProps {
   activeTab: string;
   settings: Settings;
   updateSetting: (key: string, value: unknown) => void;
-  validateShortcut: (newKey: string, currentKeyName: string) => boolean;
   isGuest: boolean;
   userId?: string;
   focusCard?: string | null;
   searchTerm?: string;
 }
 
-function SettingsPanelContent({ activeTab, settings, updateSetting, validateShortcut, isGuest, userId, focusCard, searchTerm }: PanelContentProps) {
+function SettingsPanelContent({ activeTab, settings, updateSetting, isGuest, userId, focusCard, searchTerm }: PanelContentProps) {
   switch (activeTab) {
     case 'profile': return <ProfileSettings key={userId} searchTerm={searchTerm} />;
     case 'badges': return <BadgesSettings key={userId} searchTerm={searchTerm} />;
@@ -54,7 +56,10 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
     case 'editor': return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'export': return <ExportSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'interface': return <InterfaceSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
-    case 'shortcuts': return <ShortcutsSettings settings={settings} updateSetting={updateSetting} validateShortcut={validateShortcut} searchTerm={searchTerm} />;
+    case 'display': return <LyricsDisplaySettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'region': return <LanguageRegionSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'subtitles': return <SubtitleSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'shortcuts': return <ShortcutsSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'advanced': return <AdvancedSettings settings={settings} updateSetting={updateSetting} isGuest={isGuest} searchTerm={searchTerm} />;
     case 'autoStamp': return <AutoStampSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     default: return null;
@@ -80,10 +85,14 @@ const TABS: TabMeta[] = [
   { id: 'privacy', labelKey: 'profile.sections.privacy', iconName: 'shield', authOnly: true, group: 'account', searchable: true },
 
   // App Preferences
+  // The id stays 'interface' (it is the URL, /settings/interface); the tab now holds appearance only.
+  { id: 'interface', labelKey: 'settings.interface.label', iconName: 'palette', group: 'preferences', searchable: true },
+  { id: 'region', labelKey: 'settings.pages.region.title', iconName: 'language', group: 'preferences', searchable: true },
   { id: 'playback', labelKey: 'settings.playback.label', iconName: 'headphones', group: 'preferences', searchable: true },
   { id: 'editor', labelKey: 'settings.editor.label', iconName: 'description', group: 'preferences', searchable: true },
+  { id: 'display', labelKey: 'settings.pages.display.title', iconName: 'lyrics', group: 'preferences', searchable: true },
+  { id: 'subtitles', labelKey: 'settings.pages.subtitles.title', iconName: 'subtitles', group: 'preferences', searchable: true },
   { id: 'export', labelKey: 'settings.export.label', iconName: 'download', group: 'preferences', searchable: true },
-  { id: 'interface', labelKey: 'settings.interface.label', iconName: 'desktop_windows', group: 'preferences', searchable: true },
   { id: 'autoStamp', labelKey: 'settings.autoStamp.title', iconName: 'auto_awesome', group: 'preferences', searchable: true },
 
   // Advanced
@@ -93,22 +102,18 @@ const TABS: TabMeta[] = [
 
 // Panels whose header offers "reset to defaults": the dotted setting paths each page owns.
 const RESET_PATHS: Record<string, string[]> = {
-  playback: ['playback.speedBounds', 'playback.speedPresets', 'playback.autoRewindOnPause', 'playback.seekTime', 'playback.seekPlays', 'playback.showWaveform', 'playback.waveformSnap'],
+  playback: ['playback.speedBounds', 'playback.speedPresets', 'playback.autoRewindOnPause', 'playback.seekTime', 'playback.seekPlays', 'playback.showWaveform', 'playback.waveformSnap', 'interface.miniPlayer', 'interface.miniPlayerPosition', 'interface.miniPlayerKeepPlaying', 'interface.miniPlayerLyrics'],
   autoStamp: ['autoStamp'],
-  editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt', 'interface.editorTourEnabled'],
-  export: ['export'],
+  editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'interface.editorTourEnabled'],
+  subtitles: ['editor.srt', 'export.subtitleFormat'],
+  export: ['export.lineEndings', 'export.copyFormat', 'export.downloadFormat', 'export.wordTimestampPrecision', 'export.defaultFilenamePattern', 'export.includeMetadata', 'export.includeFeaturedInTitle', 'export.stripEmptyLines', 'export.normalizeTimestamps'],
   shortcuts: ['shortcuts'],
-  advanced: ['advanced'],
-  interface: ['interface.fontSize', 'interface.fontWeight', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.autoHideHeader', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'interface.miniPlayer', 'interface.miniPlayerPosition', 'interface.miniPlayerKeepPlaying', 'interface.miniPlayerLyrics', 'editor.display', 'editor.scroll'],
+  advanced: ['advanced.autoSave', 'advanced.autoSaveIndicator', 'advanced.confirmDestructive'],
+  interface: ['interface.fontWeight', 'interface.autoHideHeader', 'interface.toastPosition', 'interface.keepThemeOnSignOut'],
+  display: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'editor.display', 'editor.scroll'],
+  region: ['advanced.timezone', 'advanced.hourCycle', 'advanced.dateStyle', 'advanced.showUtcOffset'],
 };
 
-const SHORTCUT_KEYS = [
-  'mark', 'nudgeLeft', 'nudgeRight', 'addLine', 'deleteLine', 'clearTimestamp',
-  'switchMode', 'nudgeLeftFine', 'nudgeRightFine', 'deselect', 'showHelp',
-  'playPause', 'seekForward', 'seekBackward', 'mute', 'speedUp', 'speedDown',
-  'addSecondary', 'addTranslation', 'toggleTranslation', 'captureAdLib',
-  'alignLeft', 'alignCenter', 'alignRight', 'toggleVisualizer', 'openVisualizer', 'toggleFullLyrics', 'togglePlayer',
-];
 
 export default function SettingsPage() {
   const { tab } = useParams();
@@ -177,7 +182,8 @@ export default function SettingsPage() {
       return next;
     });
 
-    if (key === 'interface.theme' || key === 'interface.customTheme' || key === 'interface.fontWeight') {
+    // Applied on screen the moment they are picked, so they are committed at once, not staged.
+    if (key === 'interface.theme' || key === 'interface.customTheme' || key === 'interface.fontWeight' || key === 'interface.defaultLanguage') {
       globalUpdateSetting(key, value);
       savedSettingsRef.current = {
         ...savedSettingsRef.current,
@@ -216,14 +222,6 @@ export default function SettingsPage() {
     setHasResults(sections ? sections.length > 0 : true);
   }, [searchTerm]);
 
-  const validateShortcut = useCallback((newKey: string, currentKeyName: string) => {
-    const reserved = ['Ctrl+Z', 'Ctrl+Y', 'Ctrl+Shift+Z'];
-    if (reserved.some(r => r.toLowerCase() === newKey.toLowerCase())) return false;
-    for (const k of SHORTCUT_KEYS) {
-      if (k !== currentKeyName && new Set(settings.shortcuts?.[k] || []).has(newKey)) return false;
-    }
-    return true;
-  }, [settings.shortcuts]);
 
   const handleApply = () => {
     const toApply = {
@@ -233,6 +231,8 @@ export default function SettingsPage() {
         theme: globalSettings?.interface?.theme ?? settings.interface?.theme,
         customTheme: globalSettings?.interface?.customTheme ?? settings.interface?.customTheme,
         fontWeight: globalSettings?.interface?.fontWeight ?? settings.interface?.fontWeight,
+        // Switched from the header while this page was open: the draft never heard of it.
+        defaultLanguage: globalSettings?.interface?.defaultLanguage ?? settings.interface?.defaultLanguage,
       },
     };
     updateAllSettings(toApply);
@@ -463,7 +463,6 @@ export default function SettingsPage() {
                         },
                       }}
                       updateSetting={updateSetting}
-                      validateShortcut={validateShortcut}
                       isGuest={isGuest}
                       userId={user?.id}
                       focusCard={focusCard}

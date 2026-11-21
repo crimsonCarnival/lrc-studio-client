@@ -10,6 +10,7 @@ import { settings as settingsApi, getAccessToken } from '@/app/api';
 import type { AppSettings, SettingsContextValue } from './settings.types';
 import i18next from 'i18next';
 import { deepMerge, pushSettingsChanges } from './settings-merge';
+import { languageFromLink, supportedLanguage } from '@/app/i18n';
 
 const STORAGE_KEY = 'lrc-syncer-settings';
 // Appearance choices the server has not acknowledged yet. The server copy wins on every sync, so
@@ -17,6 +18,17 @@ const STORAGE_KEY = 'lrc-syncer-settings';
 // overwritten by the older one the account still had.
 const PENDING_KEY = 'lrc-syncer-settings-pending';
 const APPEARANCE_KEYS = ['theme', 'customTheme', 'fontWeight'] as const;
+// "Featured artists in [ti:]" was kept per browser before the server stored it. Read once, folded
+// into settings (and so up to the account), then dropped.
+const LEGACY_FEATURED_KEY = 'lrc:export:includeFeaturedInTitle';
+
+function takeLegacyFeatured(): boolean {
+  try {
+    const on = localStorage.getItem(LEGACY_FEATURED_KEY) === '1';
+    localStorage.removeItem(LEGACY_FEATURED_KEY);
+    return on;
+  } catch { return false; }
+}
 
 function readPending(): Record<string, string> {
   try {
@@ -46,15 +58,18 @@ function clearAcked(serverInterface: Record<string, unknown> | undefined): void 
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
+    let initial: AppSettings = structuredClone(DEFAULT_SETTINGS);
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return deepMerge(DEFAULT_SETTINGS, JSON.parse(stored));
-      }
+      if (stored) initial = deepMerge(DEFAULT_SETTINGS, JSON.parse(stored));
     } catch (e) {
       console.error('Failed to load settings', e);
     }
-    return structuredClone(DEFAULT_SETTINGS);
+    if (takeLegacyFeatured()) {
+      initial = { ...initial, export: { ...initial.export, includeFeaturedInTitle: true } };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(initial)); } catch { /* storage unavailable */ }
+    }
+    return initial;
   });
 
   // Track the last version saved to server to compute diffs
@@ -199,6 +214,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // A language picked anywhere (header, drawer, user menu, sign-in page, settings) is the user's
+  // choice: keep it in settings so it follows the account. Listening here rather than at each
+  // switcher means a new switcher can't forget. The sync's own switch writes the same value.
+  const languageRef = useRef(settings.interface?.defaultLanguage);
+  useLayoutEffect(() => { languageRef.current = settings.interface?.defaultLanguage; }, [settings.interface?.defaultLanguage]);
+  useEffect(() => {
+    const onChange = (lng: string) => {
+      const lang = supportedLanguage(lng);
+      if (lang && lang !== languageRef.current) {
+        languageRef.current = lang;
+        updateSetting('interface.defaultLanguage', lang);
+      }
+    };
+    i18next.on('languageChanged', onChange);
+    return () => i18next.off('languageChanged', onChange);
+  }, [updateSetting]);
+
   const updateSettings = useCallback((updates: Record<string, unknown>) => {
     setSettings((prev: any) => {
       const next = { ...prev };
@@ -246,6 +278,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       // earlier push failed) is the user's choice, not a stale leftover: keep it and send it up,
       // instead of letting the server's silence reset it to the default on every reload.
       const carried: Record<string, string> = {};
+      let carryFeatured = false;
       try {
         const localUi = (JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as { interface?: Record<string, unknown> } | null)?.interface;
         const remoteUi = (remote as { interface?: Record<string, unknown> } | null)?.interface;
@@ -253,7 +286,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           const local = localUi?.[key];
           if (typeof local === 'string' && local && (remoteUi?.[key] === null || remoteUi?.[key] === undefined)) carried[key] = local;
         }
+        // Same for the featured-in-title export choice this browser held before the account could.
+        const localExport = (JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as { export?: Record<string, unknown> } | null)?.export;
+        const remoteExport = (remote as { export?: Record<string, unknown> } | null)?.export;
+        carryFeatured = localExport?.includeFeaturedInTitle === true && remoteExport?.includeFeaturedInTitle == null;
       } catch { /* unreadable local settings: nothing to carry */ }
+      // An account that never stored a language: the setting mirrors the one on screen, in the
+      // snapshot too, so it is neither pushed up as a choice nor shown as English when it isn't.
+      const shownLang = supportedLanguage(i18next.language);
+      if (!(remote as { interface?: Record<string, unknown> } | null)?.interface?.defaultLanguage && shownLang) {
+        merged.interface = { ...merged.interface, defaultLanguage: shownLang };
+      }
       const serverState = structuredClone(merged);
       // Appearance picked here but not yet acknowledged by the server beats the server's older copy.
       const pending = readPending();
@@ -267,15 +310,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
       clearAcked((remote as { interface?: Record<string, unknown> } | null)?.interface);
       if (Object.keys(carried).length > 0) merged.interface = { ...merged.interface, ...carried };
+      if (carryFeatured) merged.export = { ...merged.export, includeFeaturedInTitle: true };
       // Persist immediately (save effect is suppressed via isSyncingRef)
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
       // Update last saved snapshot since we just synced from server
       lastSavedToServerRef.current = serverState;
       prevSettingsRef.current = merged;
       setSettings(() => merged);
-      if (Object.keys(carried).length > 0) {
+      if (Object.keys(carried).length > 0 || carryFeatured) {
         // On failure the snapshot still lacks the theme, so the next settings change diffs it and retries.
-        void settingsApi.patch({ interface: carried }).then(() => {
+        void settingsApi.patch({
+          ...(Object.keys(carried).length > 0 && { interface: carried }),
+          ...(carryFeatured && { export: { includeFeaturedInTitle: true } }),
+        }).then(() => {
           lastSavedToServerRef.current = structuredClone(merged);
           clearAcked(merged.interface);
         }).catch(() => { /* retried by the next diff */ });
@@ -284,10 +331,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       // i18next's detection order is querystring -> localStorage -> navigator,
       // so it never consults the account. Without this, a language chosen on one
       // device is stored on the server and then ignored on every other one.
-      // An explicit ?hl= still wins: useThemeSync applies it and we defer here.
-      const accountLang = (merged as AppSettings)?.interface?.defaultLanguage;
-      const hasHlParam = new URLSearchParams(window.location.search).has('hl');
-      if (accountLang && !hasHlParam && i18next.language !== accountLang) {
+      // Only a language the account stored applies (the default 'en' is not a choice), and a
+      // link's ?hl= still wins. `?hl=` alone can't tell that apart: every URL carries it.
+      const accountLang = supportedLanguage((remote as { interface?: Record<string, unknown> } | null)?.interface?.defaultLanguage as string | undefined);
+      if (accountLang && !languageFromLink && supportedLanguage(i18next.language) !== accountLang) {
         void i18next.changeLanguage(accountLang);
       }
       // Clear the sync flag after React processes the state update

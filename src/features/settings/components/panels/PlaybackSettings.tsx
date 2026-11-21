@@ -4,6 +4,11 @@ import { usePlaybackSettings } from '../../hooks/usePlaybackSettings';
 import { DEFAULT_SETTINGS } from '../../settings-defaults';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { Tip } from '@ui/tip';
+import { cn } from '@/shared/utils/utils';
+import { miniPlayerSettings, MINI_PLAYER_POSITIONS } from '@/features/player/mini-player';
+
+// 'bottom-right' -> 'bottomRight', the key settings.options.positions uses.
+const positionKey = (p: string) => p.replace(/-(?:[a-z])/, (m) => m.slice(1).toUpperCase());
 
 const MAX_PRESETS = 6;
 // Offered in this order when "Add" is pressed: the first one not already present and inside
@@ -20,6 +25,8 @@ interface PlaybackSettingsProps {
 
 export default function PlaybackSettings({ settings, updateSetting, searchTerm }: PlaybackSettingsProps) {
   const { t } = useTranslation();
+  const tk = t as (key: string) => string;
+  const mini = miniPlayerSettings(settings.interface);
   const {
     handleAutoRewindChange,
     handleMinSpeedChange,
@@ -155,6 +162,47 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
             checked={settings.playback?.waveformSnap ?? false}
             onChange={handleWaveformSnapChange}
           />
+        </SettingRow>
+      </Section>
+
+      <Section title={t('settings.interface.miniPlayerSection')} searchTerm={searchTerm}>
+        <SettingRow label={t('settings.interface.miniPlayer')} description={t('settings.interface.miniPlayerDesc')}>
+          <Toggle id="toggle-mini-player" label={t('settings.interface.miniPlayer')} checked={mini.enabled} onChange={(v: boolean) => updateSetting('interface.miniPlayer', v)} />
+        </SettingRow>
+        <SettingRow label={t('settings.interface.miniPlayerPosition')} description={tk(`settings.options.positions.${positionKey(mini.position)}`)}>
+          {/* A miniature screen: the lit corner is where the player sits. */}
+          <div
+            role="radiogroup"
+            aria-label={t('settings.interface.miniPlayerPosition')}
+            aria-disabled={!mini.enabled}
+            className={cn('grid grid-cols-2 gap-1 w-[120px] h-[72px] p-1 rounded-[calc(var(--radius)*1)] border border-zinc-700 bg-zinc-950', !mini.enabled && 'opacity-50')}
+          >
+            {MINI_PLAYER_POSITIONS.map((p) => {
+              const on = mini.position === p;
+              const label = tk(`settings.options.positions.${positionKey(p)}`);
+              return (
+                <Tip key={p} content={label}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    aria-label={label}
+                    disabled={!mini.enabled}
+                    onClick={() => updateSetting('interface.miniPlayerPosition', p)}
+                    className={cn('flex p-1 rounded-md', p.startsWith('top') ? 'items-start' : 'items-end', p.endsWith('left') ? 'justify-start' : 'justify-end', on ? 'bg-zinc-800' : 'hover:bg-zinc-900')}
+                  >
+                    <span className={cn('block w-[22px] h-3 rounded-[calc(var(--radius)*0.3)]', on ? 'bg-primary' : 'bg-zinc-700')} />
+                  </button>
+                </Tip>
+              );
+            })}
+          </div>
+        </SettingRow>
+        <SettingRow label={t('settings.interface.miniPlayerKeepPlaying')} description={t('settings.interface.miniPlayerKeepPlayingDesc')}>
+          <Toggle id="toggle-mini-player-keep-playing" label={t('settings.interface.miniPlayerKeepPlaying')} checked={mini.keepPlaying} disabled={!mini.enabled} onChange={(v: boolean) => updateSetting('interface.miniPlayerKeepPlaying', v)} />
+        </SettingRow>
+        <SettingRow label={t('settings.interface.miniPlayerLyrics')} description={t('settings.interface.miniPlayerLyricsDesc')}>
+          <Toggle id="toggle-mini-player-lyrics" label={t('settings.interface.miniPlayerLyrics')} checked={mini.lyrics} disabled={!mini.enabled} onChange={(v: boolean) => updateSetting('interface.miniPlayerLyrics', v)} />
         </SettingRow>
       </Section>
     </>

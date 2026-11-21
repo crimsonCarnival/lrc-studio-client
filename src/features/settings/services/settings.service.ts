@@ -46,12 +46,13 @@ const GET_SETTINGS = /* GraphQL */ `
         lineEndings
         copyFormat
         downloadFormat
-        timestampPrecision
         defaultFilenamePattern
         includeMetadata
+        includeFeaturedInTitle
         stripEmptyLines
         normalizeTimestamps
         wordTimestampPrecision
+        subtitleFormat
       }
       interface {
         defaultLanguage
@@ -62,11 +63,6 @@ const GET_SETTINGS = /* GraphQL */ `
         customTheme
         previewAlignment
         focusContrast
-        focusMode
-        layoutSwap
-        playerTop
-        editorWidth
-        lockLayout
         autoHideHeader
         mobileTab
         toastPosition
@@ -83,7 +79,7 @@ const GET_SETTINGS = /* GraphQL */ `
         addLine deleteLine clearTimestamp switchMode deselect showHelp
         rangeSelect toggleSelect loopClick playPause seekForward seekBackward mute
         speedUp speedDown addSecondary addTranslation toggleTranslation
-        focusSync focusPreview focusPlayback captureAdLib
+        captureAdLib
         alignLeft alignCenter alignRight toggleVisualizer openVisualizer toggleFullLyrics togglePlayer
         searchLyrics loopLine prevLine nextLine duplicateLine
       }

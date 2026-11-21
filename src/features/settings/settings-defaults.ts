@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS = {
     overlapThreshold: 0.05,
     srt: {
       defaultSubtitleDuration: 5,
-      minSubtitleGap: 0,
+      minSubtitleGap: 0.05,
       snapToNextLine: false
     },
     history: {
@@ -55,8 +55,12 @@ export const DEFAULT_SETTINGS = {
     wordTimestampPrecision: 'hundredths',
     defaultFilenamePattern: 'fixed',
     includeMetadata: true,
+    // Appends "(feat. …)" to [ti:] in LRC exports; [ar:] always lists every artist.
+    includeFeaturedInTitle: false,
     stripEmptyLines: false,
-    normalizeTimestamps: false
+    normalizeTimestamps: false,
+    // Which subtitle file the SRT export writes: srt | vtt | sbv | ass | ttml.
+    subtitleFormat: 'srt'
   },
   interface: {
     defaultLanguage: 'en',
@@ -68,11 +72,6 @@ export const DEFAULT_SETTINGS = {
     spacing: 'normal',
     previewAlignment: 'left',
     focusContrast: 'medium',
-    focusMode: 'default',
-    layoutSwap: false,
-    playerTop: false,
-    editorWidth: 50,
-    lockLayout: false,
     // Every page but the editor: the header slides away and returns when the pointer reaches the top edge.
     autoHideHeader: false,
     mobileTab: 'editor',
@@ -115,10 +114,6 @@ export const DEFAULT_SETTINGS = {
     addSecondary: ['Shift+H'],
     addTranslation: ['Shift+T'],
     toggleTranslation: ['t'],
-    // Focus modes
-    focusSync: ['Ctrl+1'],
-    focusPreview: ['Ctrl+2'],
-    focusPlayback: ['Ctrl+3'],
     // Public project view
     alignLeft: ['Shift+L'],
     alignCenter: ['Shift+C'],

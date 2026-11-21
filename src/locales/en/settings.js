@@ -13,12 +13,15 @@ export default {
   levelShort: "Lv. {{level}}",
   pages: {
     shortcuts: { title: "Keyboard shortcuts", lead: "Click a shortcut and press the new combination. Press", leadEnd: "in the editor to see them." },
-    advanced: { title: "Advanced", lead: "Saving, confirmations, time zone and your account." },
+    advanced: { title: "Advanced", lead: "Saving, confirmations and your account." },
     stats: { title: "Stats & activity", lead: "Only you can see this page." },
     security: { title: "Sign-in", lead: "How you sign in and where you're signed in." },
     editor: { title: "Editor", lead: "How you stamp, adjust and see each line's timing." },
     export: { title: "Export", lead: "How the files you download or copy are generated." },
-    interface: { title: "Interface", lead: "Language, editor appearance and how lyrics look." },
+    interface: { title: "Appearance", lead: "Theme, type weight, the header and notifications." },
+    region: { title: "Language & region", lead: "The app's language and how dates and times are written." },
+    display: { title: "Lyrics display", lead: "How lyrics look and move in the editor and the preview." },
+    subtitles: { title: "Subtitles", lead: "Subtitle timing and the file format subtitle exports write." },
     profile: { title: "Public profile", lead: "What others see when they visit your profile." },
     badges: { title: "Showcase & badges", lead: "Pick up to {{slots}} achievements to show on your profile." },
     privacy: { title: "Privacy", lead: "Control what others can see. Changes are saved instantly." },
@@ -31,6 +34,20 @@ export default {
     account: 'Account',
     preferences: 'Preferences',
     advanced: 'Advanced',
+  },
+
+  region: { languageSection: "Language" },
+
+  subtitles: {
+    fileSection: "Subtitle file",
+    format: "Default format",
+    formatDesc: {
+      srt: "SubRip: plays almost everywhere, and YouTube takes it.",
+      vtt: "WebVTT: for web players; YouTube takes it.",
+      sbv: "YouTube's own SubViewer format.",
+      ass: "Advanced SubStation Alpha: for Aegisub and video editors, with one plain style.",
+      ttml: "TTML (DFXP): XML captions for broadcast and streaming pipelines.",
+    },
   },
 
   connections: {
@@ -179,7 +196,7 @@ export default {
     previewNow: "[Line playing now]",
     previewNext: "[Next lyrics line]",
     resetColors: "Reset",
-    label: "Interface",
+    label: "Appearance",
     theme: "Color Theme",
     themeDesc: "Change the visual appearance of the application",
     language: "Display Language",
@@ -231,8 +248,6 @@ export default {
     fillStylePlain: "Plain (fill colour only, no background)",
     readingFormat: "Reading Format",
     readingFormatDesc: "Select the preferred script for pronunciation aids",
-    lockLayout: "Lock Workspace Layout",
-    lockLayoutDesc: "Freeze panels and the player bar in place to prevent accidental reordering or resizing",
     autoHideHeader: "Auto-hide the header",
     autoHideHeaderDesc: "Hide the header on every page except the editor. Move the pointer to the top of the page to bring it back",
     toastPosition: "Notification Position",

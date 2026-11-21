@@ -150,34 +150,6 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           <Toggle id="toggle-preserve-empty-lines" label={t('settings.editor.preserveEmptyLines')} checked={editor?.preserveEmptyLines ?? false} onChange={handlePreserveEmptyLinesChange} />
         </SettingRow>
       </Section>
-
-      <Section title={t('settings.editor.srtSection')} searchTerm={searchTerm}>
-        <SettingRow label={t('settings.editor.srtDuration')} description={t('settings.editor.srtDurationDesc')}>
-          <UnitInput
-            label={t('settings.editor.srtDuration')}
-            unit="s"
-            min={0.5}
-            max={30}
-            step={0.5}
-            value={editor?.srt?.defaultSubtitleDuration ?? 5}
-            onChange={(v) => updateSetting('editor.srt.defaultSubtitleDuration', Math.min(30, Math.max(0.5, v || 5)))}
-          />
-        </SettingRow>
-        <SettingRow label={t('settings.editor.srtGap')} description={t('settings.editor.srtGapDesc')}>
-          <UnitInput
-            label={t('settings.editor.srtGap')}
-            unit="s"
-            min={0}
-            max={5}
-            step={0.1}
-            value={editor?.srt?.minSubtitleGap ?? 0}
-            onChange={(v) => updateSetting('editor.srt.minSubtitleGap', Math.min(5, Math.max(0, v || 0)))}
-          />
-        </SettingRow>
-        <SettingRow label={t('settings.editor.srtSnap')} description={t('settings.editor.srtSnapDesc')}>
-          <Toggle id="toggle-srt-snap" label={t('settings.editor.srtSnap')} checked={editor?.srt?.snapToNextLine ?? false} onChange={(v) => updateSetting('editor.srt.snapToNextLine', v)} />
-        </SettingRow>
-      </Section>
     </>
   );
 }

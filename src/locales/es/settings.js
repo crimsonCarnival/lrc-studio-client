@@ -13,12 +13,15 @@ export default {
   levelShort: "Nv. {{level}}",
   pages: {
     shortcuts: { title: "Atajos de teclado", lead: "Haz clic en un atajo y pulsa la nueva combinación. Pulsa", leadEnd: "en el editor para verlos." },
-    advanced: { title: "Avanzado", lead: "Guardado, confirmaciones, zona horaria y tu cuenta." },
+    advanced: { title: "Avanzado", lead: "Guardado, confirmaciones y tu cuenta." },
     stats: { title: "Estadísticas y actividad", lead: "Solo tú ves esta página." },
     security: { title: "Inicio de sesión", lead: "Cómo entras a tu cuenta y dónde tienes la sesión abierta." },
     editor: { title: "Editor", lead: "Cómo marcas, ajustas y ves los tiempos de cada línea." },
     export: { title: "Exportar", lead: "Cómo se generan los archivos que descargas o copias." },
-    interface: { title: "Interfaz", lead: "Idioma, apariencia del editor y cómo se ve la letra." },
+    interface: { title: "Apariencia", lead: "Tema, grosor de letra, el encabezado y las notificaciones." },
+    region: { title: "Idioma y región", lead: "El idioma de la app y cómo se escriben fechas y horas." },
+    display: { title: "Visualización de letra", lead: "Cómo se ve y se mueve la letra en el editor y la vista previa." },
+    subtitles: { title: "Subtítulos", lead: "Los tiempos de los subtítulos y el formato de archivo que se exporta." },
     profile: { title: "Perfil público", lead: "Lo que ven los demás cuando visitan tu perfil." },
     badges: { title: "Vitrina e insignias", lead: "Elige hasta {{slots}} logros para mostrar en tu perfil." },
     privacy: { title: "Privacidad", lead: "Controla qué ven los demás. Los cambios se guardan al instante." },
@@ -31,6 +34,20 @@ export default {
     account: 'Cuenta',
     preferences: 'Preferencias',
     advanced: 'Avanzado',
+  },
+
+  region: { languageSection: "Idioma" },
+
+  subtitles: {
+    fileSection: "Archivo de subtítulos",
+    format: "Formato predeterminado",
+    formatDesc: {
+      srt: "SubRip: se reproduce casi en cualquier sitio y YouTube lo acepta.",
+      vtt: "WebVTT: para reproductores web; YouTube lo acepta.",
+      sbv: "El formato SubViewer propio de YouTube.",
+      ass: "Advanced SubStation Alpha: para Aegisub y editores de video, con un estilo simple.",
+      ttml: "TTML (DFXP): subtítulos XML para flujos de televisión y streaming.",
+    },
   },
 
   connections: {
@@ -179,7 +196,7 @@ export default {
     previewNow: "[Línea que suena ahora]",
     previewNext: "[Línea siguiente de la letra]",
     resetColors: "Restablecer",
-    label: "Interfaz",
+    label: "Apariencia",
     theme: "Tema de color",
     themeDesc: "Cambia la apariencia visual de la aplicación",
     language: "Idioma",
@@ -229,8 +246,6 @@ export default {
     fillStylePlain: "Simple (solo el color del relleno, sin fondo)",
     readingFormat: "Formato de lectura",
     readingFormatDesc: "Selecciona el sistema de escritura para ayudas de pronunciación",
-    lockLayout: "Bloquear diseño",
-    lockLayoutDesc: "Fija los paneles y el reproductor para evitar reordenamientos o cambios de tamaño accidentales",
     autoHideHeader: "Ocultar el encabezado automáticamente",
     autoHideHeaderDesc: "Oculta el encabezado en todas las páginas excepto el editor. Mueve el puntero a la parte superior de la página para mostrarlo",
     toastPosition: "Posición de notificaciones",
