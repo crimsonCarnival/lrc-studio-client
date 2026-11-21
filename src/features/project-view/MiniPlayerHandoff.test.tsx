@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, renderHook } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({ settings: {} as Record<string, unknown> }));
-vi.mock('@features/player/PlayerContext', () => ({ usePlayer: () => ({ currentTime: 33, isPlaying: true, hasMedia: true }) }));
+vi.mock('@features/player/PlayerContext', () => ({ usePlayer: () => ({ currentTime: 33, isPlaying: true, hasMedia: true, playbackSpeed: 0.75 }) }));
 vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { interface: m.settings } }) }));
 
 import MiniPlayerHandoff from './MiniPlayerHandoff';
@@ -28,7 +28,7 @@ beforeEach(() => {
 
 describe('MiniPlayerHandoff', () => {
   it('hands the playback over, at its position, when the view is left for another page', () => {
-    expect(leaveTo('/library')).toMatchObject({ returnTo: VIEW, time: 33, playing: true, title: 'Song – Band' });
+    expect(leaveTo('/library')).toMatchObject({ returnTo: VIEW, time: 33, playing: true, speed: 0.75, title: 'Song – Band' });
   });
 
   it('hands nothing to a page that plays it itself', () => {

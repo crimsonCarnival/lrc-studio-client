@@ -196,6 +196,8 @@ export type ViewSnapshot = {
   media: { type: string; url?: string; id?: string; [key: string]: unknown };
   time: number;
   playing: boolean;
+  /** The view's playback speed. Optional: a tab saved before speed was carried has none (1×). */
+  speed?: number;
   lines: EditorLine[];
   metadata: Record<string, unknown>;
 };

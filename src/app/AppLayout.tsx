@@ -502,7 +502,7 @@ function HandoffMiniPlayer({ snapshot, settings, aboveNav, onPositionChange }: {
     <PlayerEngineProvider
       initialMedia={snapshot.media as Parameters<typeof PlayerEngineProvider>[0]['initialMedia']}
       initialSeek={snapshot.time}
-      initialSpeed={1}
+      initialSpeed={snapshot.speed ?? 1}
       lines={snapshot.lines as Parameters<typeof PlayerEngineProvider>[0]['lines']}
       syncMode={false}
       projectMetadata={snapshot.metadata}
@@ -523,13 +523,14 @@ function HandoffMiniPlayer({ snapshot, settings, aboveNav, onPositionChange }: {
   );
 }
 
-/** Writes the handed-over player's position as the tab unloads, so a reload resumes there. */
+/** Writes the handed-over player's position and speed as the tab unloads, so a reload resumes there. */
 function HandoffPersist({ snapshot }: { snapshot: ViewSnapshot }) {
-  const { currentTime } = usePlayer();
+  const { currentTime, playbackSpeed } = usePlayer();
   const time = useRef(currentTime);
-  useEffect(() => { time.current = currentTime; });
+  const speed = useRef(playbackSpeed);
+  useEffect(() => { time.current = currentTime; speed.current = playbackSpeed; });
   useEffect(() => {
-    const save = () => saveMiniPlayer({ kind: 'view', snapshot: { ...snapshot, time: time.current, playing: false } });
+    const save = () => saveMiniPlayer({ kind: 'view', snapshot: { ...snapshot, time: time.current, speed: speed.current, playing: false } });
     window.addEventListener('pagehide', save);
     return () => window.removeEventListener('pagehide', save);
   }, [snapshot]);
