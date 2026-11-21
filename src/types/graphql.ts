@@ -449,28 +449,22 @@ export type DetectedArtist = {
 
 export type DisplaySettings = {
   activeHighlight?: Maybe<Scalars['String']['output']>;
-  dualLine?: Maybe<Scalars['Boolean']['output']>;
   karaokeFillEasing?: Maybe<Scalars['String']['output']>;
   /** How the sung part of a karaoke line looks: glow (soft halo, default) or plain (colour only). */
   karaokeFillStyle?: Maybe<Scalars['String']['output']>;
   karaokeFillTrack?: Maybe<Scalars['String']['output']>;
-  languageLayout?: Maybe<Scalars['String']['output']>;
   readingFormat?: Maybe<Scalars['String']['output']>;
-  showNextLine?: Maybe<Scalars['Boolean']['output']>;
   singerColors?: Maybe<Array<Scalars['String']['output']>>;
   translationLayout?: Maybe<Scalars['String']['output']>;
 };
 
 export type DisplaySettingsInput = {
   activeHighlight?: InputMaybe<Scalars['String']['input']>;
-  dualLine?: InputMaybe<Scalars['Boolean']['input']>;
   karaokeFillEasing?: InputMaybe<Scalars['String']['input']>;
   /** How the sung part of a karaoke line looks: glow (soft halo, default) or plain (colour only). */
   karaokeFillStyle?: InputMaybe<Scalars['String']['input']>;
   karaokeFillTrack?: InputMaybe<Scalars['String']['input']>;
-  languageLayout?: InputMaybe<Scalars['String']['input']>;
   readingFormat?: InputMaybe<Scalars['String']['input']>;
-  showNextLine?: InputMaybe<Scalars['Boolean']['input']>;
   singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
   translationLayout?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1577,13 +1571,11 @@ export type NotificationPreferencesInput = {
 };
 
 export type NudgeSettings = {
-  coarse?: Maybe<Scalars['Float']['output']>;
   default?: Maybe<Scalars['Float']['output']>;
   fine?: Maybe<Scalars['Float']['output']>;
 };
 
 export type NudgeSettingsInput = {
-  coarse?: InputMaybe<Scalars['Float']['input']>;
   default?: InputMaybe<Scalars['Float']['input']>;
   fine?: InputMaybe<Scalars['Float']['input']>;
 };
