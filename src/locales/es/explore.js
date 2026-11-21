@@ -20,6 +20,8 @@ export default {
     forks_other: '{{count}} bifurcaciones',
     views_one: '{{count}} vista',
     views_other: '{{count}} vistas',
+    shares_one: '{{count}} compartido',
+    shares_other: '{{count}} compartidos',
   },
   playlists: {
     title: 'Listas populares',
