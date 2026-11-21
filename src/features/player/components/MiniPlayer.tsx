@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { cn } from '@/shared/utils/utils';
+import { karaokeClipStyle } from '@/shared/utils/karaoke-clip';
 import { useSettings } from '@/features/settings/useSettings';
 import { sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { usePlayer } from '../PlayerContext';
@@ -304,8 +305,8 @@ function KaraokeText({ line, time }: { line: EditorLine; time: number }) {
             <span className="text-foreground/50">{w.text}</span>
             {w.fill > 0 && (
               <span
-                className="pointer-events-none absolute inset-0 whitespace-nowrap text-primary-ink" data-karaoke-fill
-                style={{ clipPath: `inset(0 ${(1 - w.fill) * 100}% 0 0)` }}
+                className="karaoke-fill-glow pointer-events-none absolute inset-0 whitespace-nowrap text-primary-ink" data-karaoke-fill
+                style={karaokeClipStyle(w.fill)}
               >
                 {w.text}
               </span>

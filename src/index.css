@@ -480,9 +480,14 @@ body,
 }
 
 /* Seamless karaoke fill overlay */
+/* How far a karaoke fill's clip reaches past the word's box (see karaokeClipPath): enough for
+   any glyph that draws outside it and for the whole of the glow's blur, so neither is cut off. */
+:root { --karaoke-bleed: calc(-0.35em - 32px); }
+
 .karaoke-fill-glow {
-  /* Glow only on sung text, in the colour it is sung in (redesign sheet 12). */
-  text-shadow: 0 0 22px color-mix(in srgb, currentColor 45%, transparent);
+  /* Glow only on sung text, in the colour it is sung in (redesign sheet 12). Wide and faint,
+     so it reads as a soft halo rather than a highlight behind the word. */
+  text-shadow: 0 0 28px color-mix(in srgb, currentColor 30%, transparent);
 }
 
 .karaoke-fill-mask {
@@ -1169,11 +1174,11 @@ button,
 /* Karaoke fill: a copy of the word in the accent colour is unmasked left to right across
    the span the word is sung (redesign sheet 04). Duration and delay are set inline. */
 @keyframes karaoke-fill {
-  from { width: 0; }
-  to   { width: 100%; }
+  from { clip-path: inset(var(--karaoke-bleed) 100% var(--karaoke-bleed) var(--karaoke-bleed)); }
+  to   { clip-path: inset(var(--karaoke-bleed) var(--karaoke-bleed) var(--karaoke-bleed) var(--karaoke-bleed)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .karaoke-fill { animation: none !important; width: 60%; }
+  .karaoke-fill { animation: none !important; clip-path: inset(var(--karaoke-bleed) 40% var(--karaoke-bleed) var(--karaoke-bleed)); }
 }
 
 /* Equalizer bars: the app's indeterminate loader (redesign sheets 02 and 08).

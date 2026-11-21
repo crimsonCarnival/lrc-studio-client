@@ -137,8 +137,9 @@ describe('MiniPlayer', () => {
     show({ lines: karaoke as PlayerContextValue['lines'], currentTime: 2.5 });
     const fills = [...document.querySelectorAll('[data-karaoke-fill]')] as HTMLElement[];
     expect(fills.map((f) => f.textContent)).toEqual(['Hello', 'world']);
-    expect(fills[0].style.clipPath).toBe('inset(0 0% 0 0)');
-    expect(fills[1].style.clipPath).toBe('inset(0 50% 0 0)');
+    // A sung word's clip reaches past its box on every side; a half-sung one stops at half.
+    expect(fills[0].style.clipPath).toBe('inset(var(--karaoke-bleed) var(--karaoke-bleed) var(--karaoke-bleed) var(--karaoke-bleed))');
+    expect(fills[1].style.clipPath).toBe('inset(var(--karaoke-bleed) 50% var(--karaoke-bleed) var(--karaoke-bleed))');
     // Read out once, as the whole line.
     expect(screen.getByText('Hello world')).toHaveClass('sr-only');
   });

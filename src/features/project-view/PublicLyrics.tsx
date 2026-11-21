@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
+import { karaokeClipStyle } from '@/shared/utils/karaoke-clip';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
@@ -428,8 +429,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                     style={{
                       color: fillHighlightColor,
                       textShadow: `0 0 22px color-mix(in srgb, ${fillHighlightColor} 45%, transparent)`,
-                      clipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
-                      WebkitClipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
+                      ...karaokeClipStyle(heldEnded ? 1 : progress),
                       opacity: heldEnded ? 0 : 1,
                       transition: 'opacity 700ms ease-out',
                       direction: 'ltr',

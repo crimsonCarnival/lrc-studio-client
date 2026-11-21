@@ -71,7 +71,7 @@ function KaraokeFill({ label, start, end }: { label: string; start: number; end:
   return (
     <span
       aria-hidden="true"
-      className="karaoke-fill absolute left-0 top-0 overflow-hidden whitespace-nowrap text-primary-ink"
+      className="karaoke-fill pointer-events-none absolute left-0 top-0 whitespace-nowrap text-primary-ink"
       style={{ animation: `karaoke-fill ${Math.max(end - start, 0.05) / speed}s linear forwards`, animationDelay: `${-offset / speed}s` }}
     >
       {label}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { karaokeClipStyle } from '@/shared/utils/karaoke-clip';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle, needsSpaceAfter } from '@/shared/utils/furigana';
@@ -613,8 +614,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
                     className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? fillColorClass : '')}`}
                     style={{
                       ...(customHex ? getCustomColorStyle(customHex, true) : {}),
-                      clipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
-                      WebkitClipPath: `inset(0 ${(heldEnded ? 0 : 1 - progress) * 100}% 0 0)`,
+                      ...karaokeClipStyle(heldEnded ? 1 : progress),
                       opacity: heldEnded ? 0 : 1,
                       transition: 'opacity 700ms ease-out',
                       direction: 'ltr',
@@ -769,8 +769,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
                 <span
                   className="absolute left-0 top-0 h-full w-full text-foreground/85 whitespace-nowrap pointer-events-none"
                   style={{
-                    clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
-                    WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                    ...karaokeClipStyle(progress),
                     direction: 'ltr',
                     textAlign: 'left',
                     unicodeBidi: 'plaintext',
