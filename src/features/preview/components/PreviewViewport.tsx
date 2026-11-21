@@ -70,7 +70,7 @@ interface PreviewViewportProps {
 }
 
 // ────────────────────────────────────────────────────────
-// Virtualized preview viewport — handles both normal and dual-line modes
+// Virtualized preview viewport
 // containerRef and activeRef are created HERE so they're non-null when
 // useVirtualizer mounts and sets up its ResizeObserver.
 // ────────────────────────────────────────────────────────
@@ -109,8 +109,6 @@ export default function PreviewViewport({
   // a non-null element on mount for its ResizeObserver to attach properly.
   const containerRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
-  const isDualLine = settings.editor?.display?.dualLine;
-  const showNextLine = settings.editor?.display?.showNextLine !== false;
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
   const isReview = variant === 'review';
@@ -228,33 +226,9 @@ export default function PreviewViewport({
     [lines]
   );
 
-  // Compute display lines for dual-line mode
-  const dualDisplayLines = useMemo(() => {
-    if (!isDualLine) return null;
-    let result: { line: PreviewLineData; originalIndex: number }[];
-    if (currentIndex === -1) {
-      const firstSynced = lines.findIndex((l) => l.timestamp != null);
-      result = firstSynced !== -1
-        ? [{ line: lines[firstSynced], originalIndex: firstSynced }]
-        : [{ line: lines[0], originalIndex: 0 }];
-      if (showNextLine && result[0].originalIndex + 1 < lines.length) {
-        const idx = result[0].originalIndex + 1;
-        result.push({ line: lines[idx], originalIndex: idx });
-      }
-    } else {
-      result = [{ line: lines[currentIndex], originalIndex: currentIndex }];
-      if (showNextLine) {
-        let nextIdx = currentIndex + 1;
-        while (nextIdx < lines.length && lines[nextIdx].timestamp == null) nextIdx++;
-        if (nextIdx < lines.length) result.push({ line: lines[nextIdx], originalIndex: nextIdx });
-      }
-    }
-    return result;
-  }, [isDualLine, lines, currentIndex, showNextLine]);
-
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
-    count: isDualLine ? 0 : visibleLines.length,
+    count: visibleLines.length,
     getScrollElement: () => containerRef.current,
     estimateSize: () => 52,
     overscan: 5,
@@ -269,7 +243,7 @@ export default function PreviewViewport({
 
   // Auto-scroll to active line (virtual)
   useEffect(() => {
-    if (isDualLine || !followPlayback || scrollAlignment === 'none' || mappedActiveIndex < 0) return;
+    if (!followPlayback || scrollAlignment === 'none' || mappedActiveIndex < 0) return;
 
     // Use requestAnimationFrame to ensure the virtualizer has painted items before scrolling
     const raf = requestAnimationFrame(() => {
@@ -280,11 +254,11 @@ export default function PreviewViewport({
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mappedActiveIndex, isDualLine, followPlayback, scrollAlignment, scrollMode]);
+  }, [mappedActiveIndex, followPlayback, scrollAlignment, scrollMode]);
 
   // Explicit jump (e.g. "go to the first untimed line")
   useEffect(() => {
-    if (!jumpRequest || isDualLine) return;
+    if (!jumpRequest) return;
     const target = visibleLines.findIndex((v) => v.originalIndex === jumpRequest.index);
     if (target < 0) return;
     const raf = requestAnimationFrame(() => {
@@ -317,54 +291,6 @@ export default function PreviewViewport({
         <p className="text-zinc-600 text-xs sm:text-sm italic text-center px-4">
           {t('preview.placeholder')}
         </p>
-      </div>
-    );
-  } else if (isDualLine) {
-    content = (
-      <div
-        ref={containerRef}
-        className={`h-full overflow-y-auto overflow-x-hidden scroll-smooth mask-edges rounded-lg ${reservesRuby ? 'cjk-reserve-preview' : ''}`}
-      >
-        <div className="h-full flex flex-col justify-center items-center gap-4 sm:gap-8 overflow-x-hidden px-1 sm:px-0">
-          {dualDisplayLines!.map(({ line, originalIndex: i }) => (
-            <PreviewLine
-              key={i}
-              line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
-              nextTimestamp={nextTimestamps[i] ?? null}
-              originalIndex={i}
-              hasMultipleSingers={hasMultipleSingers}
-              sectionNumbers={sectionNumbers}
-              displayedActiveIndex={currentIndex}
-              lockedLineIndex={null}
-              isDualLine
-              displayLines={dualDisplayLines}
-              playbackPosition={playbackPosition}
-              activeRef={activeRef}
-              handleLineClick={handleLineClick}
-              handleLineHover={() => { }}
-              handleLineHoverEnd={() => { }}
-              showTranslationsInPreview={showTranslationsInPreview}
-              showFuriganaInPreview={showFuriganaInPreview}
-              activeTranslationIndex={activeTranslationIndex}
-              isPlaying={isPlaying}
-              playbackSpeed={playbackSpeed}
-              sizeOption={sizeOption}
-              spacingOption={spacingOption}
-              activeSecondarySizes={activeSecondarySizes}
-              inactiveSecondarySizes={inactiveSecondarySizes}
-              activeFontSizes={activeFontSizes}
-              inactiveFontSizes={inactiveFontSizes}
-              activeMargin={activeMargin}
-              distanceFromActive={currentIndex >= 0 ? Math.abs(i - currentIndex) : null}
-              totalLines={lines.length}
-              editorMode={editorMode}
-              hasMedia={hasMedia}
-              roster={songSingers}
-              singerColors={singerColors}
-              wordHighlight={wordHighlight}
-            />
-          ))}
-        </div>
       </div>
     );
   } else {
@@ -407,8 +333,6 @@ export default function PreviewViewport({
                   sectionNumbers={sectionNumbers}
                   displayedActiveIndex={currentIndex}
                   lockedLineIndex={null}
-                  isDualLine={false}
-                  displayLines={null}
                   // A line whose last word is held over the next one is still being sung, so it keeps the position too.
                   playbackPosition={i === currentIndex || isSoundingCounterpart(line, nextTimestamps[i] ?? null, playbackPosition) || isHeldAt(line, nextTimestamps[i], playbackPosition) ? playbackPosition : null}
                   activeRef={i === currentIndex ? activeRef : null}
@@ -417,6 +341,7 @@ export default function PreviewViewport({
                   handleLineHoverEnd={() => { }}
                   showTranslationsInPreview={showTranslationsInPreview}
                   showFuriganaInPreview={showFuriganaInPreview}
+                  activeTranslationIndex={activeTranslationIndex}
                   isPlaying={isPlaying}
                   playbackSpeed={playbackSpeed}
                   sizeOption={sizeOption}

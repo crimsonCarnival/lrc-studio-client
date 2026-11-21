@@ -5,7 +5,7 @@ import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { uploads as uploadsApi } from '@/app/api';
-import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
+import { formatInTimezone, getRelativeTime, withHourCycle } from '@/shared/utils/date';
 import { useSettings } from '@/features/settings/useSettings';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
@@ -314,7 +314,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
     ? getRelativeTime(upload.createdAt, t, timezone, locale)
     : '';
   const whenTip = (upload: Upload, child: ReactNode) => upload.createdAt ? (
-    <Tip content={formatInTimezone(upload.createdAt, timezone, { dateStyle: 'full', timeStyle: 'long' }, locale)}>
+    <Tip content={formatInTimezone(upload.createdAt, timezone, withHourCycle({ dateStyle: 'full', timeStyle: 'long' }, settings.advanced?.hourCycle), locale)}>
       {child as React.ReactElement}
     </Tip>
   ) : child;

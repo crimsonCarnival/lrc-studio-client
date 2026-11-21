@@ -51,7 +51,6 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
   const tk = t as (key: string, opts?: Record<string, unknown>) => string;
   const {
     handleLineEndingsChange,
-    handleCopyFormatChange,
     handleDownloadFormatChange,
     handleWordTimestampPrecisionChange,
     handleFilenamePatternChange,
@@ -103,11 +102,6 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
       <Section title={t('settings.export.formatSection')} searchTerm={searchTerm}>
         <SettingRow label={t('settings.export.downloadFormat')} description={t('settings.export.downloadFormatDesc')}>
           <SettingSelect label={t('settings.export.downloadFormat')} value={downloadFormat} onValueChange={(val) => handleDownloadFormatChange({ target: { value: val } })}>
-            {formatOptions}
-          </SettingSelect>
-        </SettingRow>
-        <SettingRow label={t('settings.export.copyFormat')} description={t('settings.export.copyFormatDesc')}>
-          <SettingSelect label={t('settings.export.copyFormat')} value={exp?.copyFormat ?? 'lrc'} onValueChange={(val) => handleCopyFormatChange({ target: { value: val } })}>
             {formatOptions}
           </SettingSelect>
         </SettingRow>

@@ -3,10 +3,12 @@ import type { UpdateSetting, ChangeLike } from '@/features/settings/settings.typ
 export function useExportSettings(updateSetting: UpdateSetting) {
   const handleLineEndingsChange = (e: ChangeLike) => updateSetting('export.lineEndings', e.target.value);
 
-  const handleCopyFormatChange = (e: ChangeLike) => updateSetting('export.copyFormat', e.target.value);
-
-  const handleDownloadFormatChange = (e: ChangeLike) =>
+  // Copy and download both produce the file the export dialog previews, so the two formats
+  // move together (as they do from the dialog and on an editor mode change).
+  const handleDownloadFormatChange = (e: ChangeLike) => {
+    updateSetting('export.copyFormat', e.target.value);
     updateSetting('export.downloadFormat', e.target.value);
+  };
 
   const handleTimestampPrecisionChange = (e: ChangeLike) =>
     updateSetting('editor.timestampPrecision', e.target.value);
@@ -19,7 +21,6 @@ export function useExportSettings(updateSetting: UpdateSetting) {
 
   return {
     handleLineEndingsChange,
-    handleCopyFormatChange,
     handleDownloadFormatChange,
     handleTimestampPrecisionChange,
     handleWordTimestampPrecisionChange,

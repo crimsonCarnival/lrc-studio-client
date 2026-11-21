@@ -32,11 +32,6 @@ const UNTIMED_TIMESTAMP = '--:--.--';
 type SizeMap = Record<string, string>;
 type ReadingFmt = (r?: string) => string | undefined;
 
-interface DisplayLine {
-  originalIndex: number;
-  [key: string]: unknown;
-}
-
 function getLineSingers(line: EditorLine): string[] {
   return line.singers || [];
 }
@@ -49,8 +44,6 @@ interface PreviewLineProps {
   sectionNumbers?: Map<string | number | undefined, number> | null;
   displayedActiveIndex: number;
   lockedLineIndex: number;
-  isDualLine: boolean;
-  displayLines: DisplayLine[];
   playbackPosition?: number | null;
   activeRef?: Ref<HTMLButtonElement>;
   handleLineClick: (line: EditorLine, i: number) => void;
@@ -87,8 +80,6 @@ export default function PreviewLine({
   sectionNumbers = null,
   displayedActiveIndex,
   lockedLineIndex,
-  isDualLine,
-  displayLines,
   playbackPosition,
   activeRef,
   handleLineClick,
@@ -208,7 +199,7 @@ export default function PreviewLine({
   // stays lit, and its last word goes on filling, until that word ends.
   const isHeldActive = isHeldAt(line, nextTimestamp, playbackPosition);
 
-  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isCounterpartActive || isHeldActive;
+  const isActive = i === displayedActiveIndex || isCounterpartActive || isHeldActive;
   const isPast = effectiveTimestamp != null && i < displayedActiveIndex && !isHeldActive;
   // A line held over the next one goes on sounding beside it, so its end is not hidden behind the
   // next line lighting up: its fill fades out instead of vanishing the moment its last word ends.
@@ -381,7 +372,7 @@ export default function PreviewLine({
   const inner = (
     <button
       type="button"
-      ref={isActive && !isDualLine ? activeRef : null}
+      ref={isActive ? activeRef : null}
       onClick={hasMedia ? () => handleLineClick(line, i) : undefined}
       onMouseEnter={hasMedia ? () => handleLineHover(i) : undefined}
       onMouseLeave={hasMedia ? handleLineHoverEnd : undefined}

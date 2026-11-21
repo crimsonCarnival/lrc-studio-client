@@ -25,8 +25,6 @@ function renderLine(playbackPosition: number | null, words = line.words) {
         originalIndex={0}
         displayedActiveIndex={1}
         lockedLineIndex={-1}
-        isDualLine={false}
-        displayLines={[]}
         playbackPosition={playbackPosition}
         nextTimestamp={24.42}
         handleLineClick={() => {}}

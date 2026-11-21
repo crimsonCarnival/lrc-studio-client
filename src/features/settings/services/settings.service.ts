@@ -18,7 +18,7 @@ const GET_SETTINGS = /* GraphQL */ `
       }
       editor {
         autoPauseOnMark
-        nudge { fine coarse default }
+        nudge { fine default }
         autoAdvance { enabled skipBlank mode }
         showShiftAll
         shiftAllAmount
@@ -33,9 +33,6 @@ const GET_SETTINGS = /* GraphQL */ `
         history { limit groupingThresholdMs }
         display {
           activeHighlight
-          showNextLine
-          dualLine
-          languageLayout
           translationLayout
           readingFormat
           karaokeFillTrack

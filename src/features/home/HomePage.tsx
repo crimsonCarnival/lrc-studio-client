@@ -5,7 +5,8 @@ import type { TFunction } from 'i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
-import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
+import { formatInTimezone, getRelativeTime, withHourCycle } from '@/shared/utils/date';
+import { useSettings } from '@/features/settings/useSettings';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
@@ -177,7 +178,10 @@ export default function HomePage() {
     if (dest) navigate(dest);
   };
   const greetingName = user?.displayName || user?.accountName || 'Creator';
-  const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
+  // The live settings, not the profile snapshot on `user`: a change in Settings shows here at once, guests included.
+  const { settings } = useSettings();
+  const timezone: string = settings.advanced?.timezone || 'auto';
+  const hourCycle: string | undefined = settings.advanced?.hourCycle;
   const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
 
   const newProjectButton = (
@@ -260,7 +264,7 @@ export default function HomePage() {
                         style={{ width: `${lastProject.lineCount ? Math.min(100, Math.round(((lastProject.syncedLineCount || 0) / lastProject.lineCount) * 100)) : 0}%` }}
                       />
                     </div>
-                    <Tip content={`${t('home.created')} ${formatInTimezone(lastProject.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, locale)}`}>
+                    <Tip content={`${t('home.created')} ${formatInTimezone(lastProject.createdAt, timezone, withHourCycle({ dateStyle: 'short', timeStyle: 'short' }, hourCycle), locale)}`}>
                       <span className="shrink-0 font-mono text-xs font-medium text-subtle">
                         {(lastProject.syncedLineCount || 0)}/{(lastProject.lineCount || 0)} · {t('home.edited')} {getRelativeTime(projectEditedAt(lastProject), t, timezone, locale)}
                       </span>

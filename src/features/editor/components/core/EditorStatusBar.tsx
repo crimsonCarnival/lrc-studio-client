@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tip } from '@ui/tip';
+import { useDateTimeFormat } from '@/shared/hooks/useDateTimeFormat';
 import { formatTime } from '@/shared/utils/format-time';
 
 interface EditorStatusBarProps {
@@ -48,6 +49,7 @@ function savedAgo(iso: string, now: number, locale: string): string | null {
  */
 function LastSaved({ at, dirty, local }: { at: string | null; dirty: boolean; local?: boolean }) {
   const { t, i18n } = useTranslation();
+  const { formatDateTime } = useDateTimeFormat();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!at) return;
@@ -57,7 +59,7 @@ function LastSaved({ at, dirty, local }: { at: string | null; dirty: boolean; lo
   if (local) return <Cell tip={t('editor.statusBar.localTip')}>{t('editor.statusBar.local')}</Cell>;
   if (!at) return <Cell>{t('editor.statusBar.neverSaved')}</Cell>;
   const ago = savedAgo(at, now, i18n.language);
-  const exact = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(at));
+  const exact = formatDateTime(at, { dateStyle: 'medium', timeStyle: 'short' });
   return (
     <Cell tip={t('editor.statusBar.savedAt', { time: exact })}>
       <span aria-hidden className={`size-1.5 rounded-full ${dirty ? 'bg-gold' : 'bg-foam'}`} />

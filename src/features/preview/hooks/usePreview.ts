@@ -169,7 +169,8 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   const [includeTranslations, setIncludeTranslations] = useState(false);
   const [includeSecondary, setIncludeSecondary] = useState(true);
   const [includeWordTimestamps, setIncludeWordTimestamps] = useState(true);
-  const [includeMetadata, setIncludeMetadata] = useState(true);
+  // Seeded from Settings → Export → Include Metadata; the dialog's toggle overrides it for this export only.
+  const [includeMetadata, setIncludeMetadata] = useState<boolean>(() => settings.export?.includeMetadata ?? true);
   const [showTranslationsInPreview, setShowTranslationsInPreview] = useState(true);
   const [activeTranslationIndex, setActiveTranslationIndex] = useState(0);
   const [showFuriganaInPreview, setShowFuriganaInPreview] = useState(true);

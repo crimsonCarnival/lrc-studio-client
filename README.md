@@ -163,7 +163,6 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 - **Furigana / Ruby markup** — Annotate CJK characters with readings using `{字|じ}` syntax. The editor renders ruby markup above the character inline.
 - **CJK-aware tokenization** — Japanese, Chinese, and Korean text is automatically split character-by-character for per-character timing; Latin runs are kept as whole-word tokens.
 - **Reading format** — Toggle between Hiragana and Katakana for phonetic reading display.
-- **Dual-line display** — Optionally show the next line below the active line during sync for better readability.
 
 ### Import
 

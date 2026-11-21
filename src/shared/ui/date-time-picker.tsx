@@ -6,7 +6,7 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
 import { useSettings } from '@/features/settings/useSettings';
-import { formatInTimezone } from '@/shared/utils/date';
+import { formatInTimezone, withHourCycle } from '@/shared/utils/date';
 import {
   addDays,
   addMonths,
@@ -58,7 +58,12 @@ export function DateTimePicker({
   const locale = i18n.resolvedLanguage || i18n.language || 'en';
   const timezone = settings.advanced?.timezone;
   const zoneLabel = resolveTimeZone(timezone) ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const twelveHour = useMemo(() => uses12HourClock(locale), [locale]);
+  const hourCycle: string | undefined = settings.advanced?.hourCycle;
+  // Settings → Advanced → Clock wins; 'auto' follows the language.
+  const twelveHour = useMemo(
+    () => (hourCycle === '12' ? true : hourCycle === '24' ? false : uses12HourClock(locale)),
+    [hourCycle, locale],
+  );
   const weekStart = useMemo(() => firstDayOfWeek(locale), [locale]);
 
   const [open, setOpen] = useState(false);
@@ -146,7 +151,7 @@ export function DateTimePicker({
       .format(new Date(Date.UTC(d.year, d.month - 1, d.day)));
 
   const triggerText = selected && selectedParts
-    ? formatInTimezone(selected, timezone, dateOnly ? { dateStyle: 'medium' } : { dateStyle: 'medium', timeStyle: 'short' }, locale)
+    ? formatInTimezone(selected, timezone, dateOnly ? { dateStyle: 'medium' } : withHourCycle({ dateStyle: 'medium', timeStyle: 'short' }, hourCycle), locale)
     : '';
 
   const hour12 = draft.hour % 12 === 0 ? 12 : draft.hour % 12;

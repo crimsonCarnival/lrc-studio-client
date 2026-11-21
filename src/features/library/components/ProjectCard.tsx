@@ -9,7 +9,8 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
 import useConfirm from '@/shared/hooks/useConfirm';
-import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
+import { formatInTimezone, getRelativeTime, withHourCycle } from '@/shared/utils/date';
+import { useSettings } from '@/features/settings/useSettings';
 import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
@@ -89,6 +90,7 @@ function ProjectCard({
   ownerAccountName
 }: ProjectCardProps) {
   const { t } = useTranslation();
+  const hourCycle: string | undefined = useSettings().settings.advanced?.hourCycle;
   const { trigger: haptic } = useHapticFeedback();
   const [requestConfirm, confirmModal] = useConfirm();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -277,10 +279,10 @@ function ProjectCard({
               )}
             </div>
 
-            <Tip content={formatInTimezone(projectEditedAt(project), timezone, {
+            <Tip content={formatInTimezone(projectEditedAt(project), timezone, withHourCycle({
               dateStyle: 'full',
               timeStyle: 'long'
-            }, i18n?.resolvedLanguage || i18n?.language)}>
+            }, hourCycle), i18n?.resolvedLanguage || i18n?.language)}>
               <span className="text-[10px] text-zinc-600 mt-1 block">
                 {getRelativeTime(projectEditedAt(project), t, timezone, i18n?.resolvedLanguage || i18n?.language)}
               </span>
@@ -445,9 +447,9 @@ function ProjectCard({
             <Tip
               content={
                 <span className="flex flex-col gap-0.5">
-                  <span>{t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
+                  <span>{t('home.created')} {formatInTimezone(project.createdAt, timezone, withHourCycle({ dateStyle: 'short', timeStyle: 'short' }, hourCycle), (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
                   {(projectEditedAt(project) && projectEditedAt(project) !== project.createdAt) && (
-                    <span>{t('home.edited')} {formatInTimezone(projectEditedAt(project), timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
+                    <span>{t('home.edited')} {formatInTimezone(projectEditedAt(project), timezone, withHourCycle({ dateStyle: 'short', timeStyle: 'short' }, hourCycle), (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
                   )}
                 </span>
               }

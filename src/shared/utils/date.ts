@@ -79,3 +79,13 @@ export function getRelativeTime(dateStr, t, timezone, locale = 'en') {
     day: 'numeric'
   }, locale);
 }
+
+/**
+ * Applies the `settings.advanced.hourCycle` choice to Intl options: '12' and '24' force that
+ * clock, anything else ('auto') leaves the language's own. Safe alongside `timeStyle`.
+ */
+export function withHourCycle(options: Intl.DateTimeFormatOptions, hourCycle?: string): Intl.DateTimeFormatOptions {
+  if (hourCycle === '12') return { ...options, hourCycle: 'h12' };
+  if (hourCycle === '24') return { ...options, hourCycle: 'h23' };
+  return options;
+}

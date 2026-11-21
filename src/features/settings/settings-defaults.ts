@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS = {
   },
   editor: {
     autoPauseOnMark: false,
-    nudge: { fine: 0.01, coarse: 0.1, default: 0.1 },
+    nudge: { fine: 0.01, default: 0.1 },
     autoAdvance: { enabled: true, skipBlank: false, mode: 'next' },
     preserveEmptyLines: false,
     showShiftAll: true,
@@ -36,9 +36,6 @@ export const DEFAULT_SETTINGS = {
     },
     display: {
       activeHighlight: 'glow',
-      showNextLine: true,
-      dualLine: false,
-      languageLayout: 'stacked',
       translationLayout: 'side-by-side',
       readingFormat: 'hiragana',
       karaokeFillTrack: 'main',

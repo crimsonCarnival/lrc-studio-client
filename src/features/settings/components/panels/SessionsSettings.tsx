@@ -5,7 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Section, IconRow, Chip } from '../shared';
 import { Button } from '@ui/button';
 import { auth } from '@/app/api';
-import { formatInTimezone } from '@/shared/utils/date';
+import { useDateTimeFormat } from '@/shared/hooks/useDateTimeFormat';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -34,7 +34,7 @@ function DeviceIcon({ deviceType, className = 'size-4 text-zinc-400' }: { device
 }
 
 export default function SessionsSettings() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [revokingId, setRevokingId] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export default function SessionsSettings() {
     );
   };
 
-  const locale = i18n.language || 'en';
+  const { formatDateTime } = useDateTimeFormat();
   const [shownIps, setShownIps] = useState<Set<string>>(() => new Set());
   const toggleIp = (id: string) => setShownIps((prev) => {
     const next = new Set(prev);
@@ -152,7 +152,7 @@ export default function SessionsSettings() {
                     )}
                     {session.isCurrent ? t('profile.sessions.activeNow') : session.lastUsedAt && (
                       <>{t('profile.sessions.lastActive')}{' '}
-                        {formatInTimezone(session.lastUsedAt, 'auto', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }, locale)}
+                        {formatDateTime(session.lastUsedAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </>
                     )}
                   </>

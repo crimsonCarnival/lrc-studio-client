@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { formatInTimezone } from '@/shared/utils/date';
+import { useDateTimeFormat } from '@/shared/hooks/useDateTimeFormat';
 import { getUsage } from './assist.service';
 import type { HeavyUsage } from './assist.types';
 
@@ -18,7 +18,8 @@ type ErrorShape = { code?: string; body?: { resetsAt?: unknown } };
  * failures into `reportError`, which toasts a message for the error code.
  */
 export function useHeavyUsage(enabled: boolean) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { formatDateTime } = useDateTimeFormat();
   const [usage, setUsage] = useState<HeavyUsage | null>(null);
   const [capped, setCapped] = useState(false);
   const fetched = useRef(false);
@@ -46,14 +47,14 @@ export function useHeavyUsage(enabled: boolean) {
     if (code === 'assist_daily_cap') {
       setCapped(true);
       const at = typeof body?.resetsAt === 'string' ? body.resetsAt : undefined;
-      const time = at ? formatInTimezone(at, undefined, { hour: '2-digit', minute: '2-digit' }, i18n.language) : '';
+      const time = at ? formatDateTime(at, { hour: '2-digit', minute: '2-digit' }) : '';
       toast.error(time ? t('editor.assist.errors.dailyCap', { time }) : t('editor.assist.errors.dailyCapNoTime'));
     } else if (code === 'assist_unavailable') {
       toast.error(t('editor.assist.errors.unavailable'));
     } else {
       toast.error(t('editor.assist.errors.upstream'));
     }
-  }, [t, i18n.language]);
+  }, [t, formatDateTime]);
 
   return { usage, setUsage: update, exhausted: capped || usage?.remaining === 0, reportError };
 }

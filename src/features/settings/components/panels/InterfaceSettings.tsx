@@ -65,7 +65,6 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
   const highlight = display.activeHighlight ?? 'glow';
   const toastLabel = tk(`settings.options.positions.${TOAST_POSITIONS.find((p) => p.value === toastPosition)?.labelKey ?? 'bottomRight'}`);
   const mini = miniPlayerSettings(ui);
-  const dualLine = display.dualLine ?? false;
   const singerColors: string[] = display.singerColors ?? [];
 
   const seg = (key: string, value: string, items: [string, string][], onChange: (v: string) => void) => (
@@ -272,14 +271,6 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
       </Section>
 
       <Section title={t('settings.interface.lyricsSection')} searchTerm={searchTerm}>
-        <SettingRow label={t('settings.interface.dualLine')} description={t('settings.interface.dualLineDesc')}>
-          <Toggle id="toggle-dual-line" label={t('settings.interface.dualLine')} checked={dualLine} onChange={(v: boolean) => updateSetting('editor.display.dualLine', v)} />
-        </SettingRow>
-        {dualLine && (
-          <SettingRow nested label={t('settings.interface.showNextLine')} description={t('settings.interface.showNextLineDesc')}>
-            <Toggle id="toggle-show-next-line" label={t('settings.interface.showNextLine')} checked={display.showNextLine ?? true} onChange={(v: boolean) => updateSetting('editor.display.showNextLine', v)} />
-          </SettingRow>
-        )}
         <SettingRow label={t('settings.interface.translationLayout')} description={t('settings.interface.translationLayoutDesc')}>
           <SettingSelect label={t('settings.interface.translationLayout')} value={display.translationLayout ?? 'side-by-side'} onValueChange={(val) => handleTranslationLayoutChange({ target: { value: val } })}>
             <SettingOption value="stacked">{t('settings.interface.layoutStacked')}</SettingOption>

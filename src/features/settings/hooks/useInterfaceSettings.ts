@@ -26,9 +26,6 @@ export function useInterfaceSettings(updateSetting: UpdateSetting) {
 
   const handleSpacingChange = (e: ChangeLike) => updateSetting('interface.spacing', e.target.value);
 
-  const handleLanguageLayoutChange = (e: ChangeLike) =>
-    updateSetting('editor.display.languageLayout', e.target.value);
-
   const handleTranslationLayoutChange = (e: ChangeLike) =>
     updateSetting('editor.display.translationLayout', e.target.value);
 
@@ -43,7 +40,6 @@ export function useInterfaceSettings(updateSetting: UpdateSetting) {
     handlePreviewAlignmentChange,
     handleFontSizeChange,
     handleSpacingChange,
-    handleLanguageLayoutChange,
     handleTranslationLayoutChange,
     handleToastPositionChange,
   };
