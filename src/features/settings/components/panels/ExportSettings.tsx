@@ -4,7 +4,6 @@ import { Icon } from '@/shared/ui/Icon';
 import { Section, SettingRow, Toggle, SegmentedControl, SettingSelect, SettingOption } from '../shared';
 import { useExportSettings } from '../../hooks/useExportSettings';
 import { cn } from '@/shared/utils/utils';
-import { useIncludeFeaturedInTitle } from '@/features/artists/include-featured-setting';
 
 interface ExportSettingsProps {
   settings: {
@@ -18,6 +17,7 @@ interface ExportSettingsProps {
       defaultFilenamePattern?: string;
       stripEmptyLines?: boolean;
       includeMetadata?: boolean;
+      includeFeaturedInTitle?: boolean;
     };
   };
   updateSetting: (path: string, value: unknown) => void;
@@ -46,8 +46,6 @@ function buildPreview(format: string, includeMetadata: boolean, stripEmpty: bool
 export default function ExportSettings({ settings, updateSetting, searchTerm }: ExportSettingsProps) {
   const { t } = useTranslation();
   const tr = t as (k: string) => string;
-  // Kept in this browser until the server's user settings carry the field (docs/server-export-artist-setting.md).
-  const [includeFeaturedInTitle, setIncludeFeaturedInTitle] = useIncludeFeaturedInTitle();
   const tk = t as (key: string, opts?: Record<string, unknown>) => string;
   const {
     handleLineEndingsChange,
@@ -152,7 +150,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
           <Toggle id="toggle-include-metadata" label={t('settings.export.includeMetadata')} checked={exp?.includeMetadata ?? true} onChange={(v) => updateSetting('export.includeMetadata', v)} />
         </SettingRow>
         <SettingRow label={tr('artists.export.includeFeaturedInTitle')} description={tr('artists.export.includeFeaturedInTitleHint')}>
-          <Toggle id="toggle-include-featured-in-title" label={tr('artists.export.includeFeaturedInTitle')} checked={includeFeaturedInTitle} onChange={setIncludeFeaturedInTitle} />
+          <Toggle id="toggle-include-featured-in-title" label={tr('artists.export.includeFeaturedInTitle')} checked={exp?.includeFeaturedInTitle === true} onChange={(v) => updateSetting('export.includeFeaturedInTitle', v)} />
         </SettingRow>
         <SettingRow label={t('settings.export.stripEmptyLines')} description={t('settings.export.stripEmptyLinesDesc')}>
           <Toggle id="toggle-strip-empty" label={t('settings.export.stripEmptyLines')} checked={exp?.stripEmptyLines ?? false} onChange={(v) => updateSetting('export.stripEmptyLines', v)} />

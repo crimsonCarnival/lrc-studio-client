@@ -12,6 +12,7 @@ import { projectsService } from '@features/projects/services/projects.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { ReportDialog } from '@features/reports/ReportDialog';
 import { downloadProjectExport } from './project-export';
+import { useSettings } from '@/features/settings/useSettings';
 import { Tip } from '@ui/tip';
 
 interface Playlist {
@@ -189,6 +190,8 @@ export function ProjectViewActions({
   triggerClassName = 'size-8 rounded-full shrink-0',
 }: ProjectViewActionsProps) {
   const { t } = useTranslation();
+  const { settings } = useSettings();
+  const featuredInTitle = settings.export?.includeFeaturedInTitle === true;
   const [linkCopied, setLinkCopied] = useState(false);
 
   const handleCopyLink = async () => {
@@ -251,8 +254,8 @@ export function ProjectViewActions({
 
         {/* Export — all users */}
         <MenuItem iconName="download" label={t('projectView.actions.export')}>
-          <MenuItem iconName="description" label="LRC (.lrc)" onClick={() => downloadProjectExport('lrc', project, lines ?? [])} />
-          <MenuItem iconName="code" label="SRT (.srt)" onClick={() => downloadProjectExport('srt', project, lines ?? [])} />
+          <MenuItem iconName="description" label="LRC (.lrc)" onClick={() => downloadProjectExport('lrc', project, lines ?? [], featuredInTitle)} />
+          <MenuItem iconName="code" label="SRT (.srt)" onClick={() => downloadProjectExport('srt', project, lines ?? [], featuredInTitle)} />
         </MenuItem>
 
         {/* Share — all users */}

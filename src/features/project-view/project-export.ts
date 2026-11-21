@@ -1,7 +1,6 @@
 import { compileLRC, compileSRT } from '@/shared/utils/lrc';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { artistDisplay, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
-import { getIncludeFeaturedInTitle } from '@/features/artists/include-featured-setting';
 
 export type ProjectExportFormat = 'lrc' | 'srt';
 
@@ -16,6 +15,8 @@ export function downloadProjectExport(
   format: ProjectExportFormat,
   project: ExportableProject | null | undefined,
   lines: EditorLine[],
+  /** The viewer's export setting: credits in `[ti:]` as well as `[ar:]`. */
+  includeFeaturedInTitle = false,
 ): void {
   const slug = (project?.metadata?.songName || project?.title || 'lyrics')
     .replace(/[^a-z0-9]/gi, '-')
@@ -30,7 +31,7 @@ export function downloadProjectExport(
       }, 'lf', false, undefined, 0, true, {
         // `[ar:]` comes from the credits; `[ti:]` only carries them when the export option is on.
         artists: creditsOf(project?.metadata),
-        includeFeaturedInTitle: getIncludeFeaturedInTitle(),
+        includeFeaturedInTitle,
       })
       : compileSRT(lines, 0, false, 'lf', {}, false, 0);
     const url = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
