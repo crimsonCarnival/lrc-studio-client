@@ -26,6 +26,8 @@ export interface ExploreProject {
   metadata?: { songName?: string | null; songArtist?: string | null } | null;
   starCount?: number | null;
   forkCount?: number | null;
+  viewCount?: number | null;
+  shareCount?: number | null;
 }
 
 export type KindFilter = 'all' | ProjectKind;
@@ -63,8 +65,14 @@ function Stats({ project, long = false }: { project: ExploreProject; long?: bool
   const { t } = useTranslation();
   const stars = project.starCount ?? 0;
   const forks = project.forkCount ?? 0;
+  const views = project.viewCount ?? 0;
+  const shares = project.shareCount ?? 0;
   return (
     <div className={cn('flex items-center gap-3.5 text-subtle', long ? 'text-[13px]' : 'text-xs')}>
+      <span className="flex items-center gap-1" aria-label={t('explore.trending.views', { count: views })}>
+        <Icon name="visibility" size={long ? 15 : 13} />
+        {long ? t('explore.trending.views', { count: views }) : views}
+      </span>
       <span className="flex items-center gap-1" aria-label={t('explore.trending.stars', { count: stars })}>
         <Icon name="star" size={long ? 15 : 13} />
         {long ? t('explore.trending.stars', { count: stars }) : stars}
@@ -72,6 +80,10 @@ function Stats({ project, long = false }: { project: ExploreProject; long?: bool
       <span className="flex items-center gap-1" aria-label={t('explore.trending.forks', { count: forks })}>
         <Icon name="call_split" size={long ? 15 : 13} />
         {long ? t('explore.trending.forks', { count: forks }) : forks}
+      </span>
+      <span className="flex items-center gap-1" aria-label={t('explore.trending.shares', { count: shares })}>
+        <Icon name="share" size={long ? 15 : 13} />
+        {long ? t('explore.trending.shares', { count: shares }) : shares}
       </span>
     </div>
   );

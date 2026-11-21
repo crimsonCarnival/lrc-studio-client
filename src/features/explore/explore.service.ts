@@ -15,6 +15,8 @@ const TRENDING_PROJECTS = /* GraphQL */ `
         trendingScore
         starCount
         forkCount
+        viewCount
+        shareCount
         metadata { songName songArtist }
         user { id accountName displayName avatarUrl staffRole nameTag { id label { en es } description { en es } icon color } }
       }

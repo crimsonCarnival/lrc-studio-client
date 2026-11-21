@@ -18,6 +18,10 @@ export default {
     stars_other: '{{count}} estrellas',
     forks_one: '{{count}} bifurcación',
     forks_other: '{{count}} bifurcaciones',
+    views_one: '{{count}} vista',
+    views_other: '{{count}} vistas',
+    shares_one: '{{count}} compartido',
+    shares_other: '{{count}} compartidos',
   },
   playlists: {
     title: 'Listas populares',

@@ -18,6 +18,10 @@ export default {
     stars_other: '{{count}} stars',
     forks_one: '{{count}} fork',
     forks_other: '{{count}} forks',
+    views_one: '{{count}} view',
+    views_other: '{{count}} views',
+    shares_one: '{{count}} share',
+    shares_other: '{{count}} shares',
   },
   playlists: {
     title: 'Popular Playlists',
