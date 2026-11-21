@@ -451,6 +451,8 @@ export type DisplaySettings = {
   activeHighlight?: Maybe<Scalars['String']['output']>;
   dualLine?: Maybe<Scalars['Boolean']['output']>;
   karaokeFillEasing?: Maybe<Scalars['String']['output']>;
+  /** How the sung part of a karaoke line looks: glow (soft halo, default) or plain (colour only). */
+  karaokeFillStyle?: Maybe<Scalars['String']['output']>;
   karaokeFillTrack?: Maybe<Scalars['String']['output']>;
   languageLayout?: Maybe<Scalars['String']['output']>;
   readingFormat?: Maybe<Scalars['String']['output']>;
@@ -463,6 +465,8 @@ export type DisplaySettingsInput = {
   activeHighlight?: InputMaybe<Scalars['String']['input']>;
   dualLine?: InputMaybe<Scalars['Boolean']['input']>;
   karaokeFillEasing?: InputMaybe<Scalars['String']['input']>;
+  /** How the sung part of a karaoke line looks: glow (soft halo, default) or plain (colour only). */
+  karaokeFillStyle?: InputMaybe<Scalars['String']['input']>;
   karaokeFillTrack?: InputMaybe<Scalars['String']['input']>;
   languageLayout?: InputMaybe<Scalars['String']['input']>;
   readingFormat?: InputMaybe<Scalars['String']['input']>;

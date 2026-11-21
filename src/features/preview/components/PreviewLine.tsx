@@ -1,5 +1,5 @@
 import React from 'react';
-import { karaokeClipStyle } from '@/shared/utils/karaoke-clip';
+import { easeKaraokeFill, karaokeClipStyle, karaokeFillGlowClass, karaokeFillPrefs } from '@/shared/utils/karaoke-clip';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle, needsSpaceAfter } from '@/shared/utils/furigana';
@@ -489,6 +489,7 @@ interface MainTrackProps {
 // across the whole line as if evenly spaced, which is not what was recorded.
 function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode: _editorMode, review = false, muted = false, heldEnded = false }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
+  const fillPrefs = karaokeFillPrefs(settings.editor?.display);
   const skipMainFill = isActive && fillTrack === 'secondary';
 
   const words = line.words || [];
@@ -602,7 +603,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           let progress = 0;
           if (isActive && startTime != null && endTime != null && playbackPosition != null) {
             const dur = Math.max(0.01, endTime - startTime);
-            progress = Math.max(0, Math.min(1, (playbackPosition - startTime) / dur));
+            progress = easeKaraokeFill((playbackPosition - startTime) / dur, fillPrefs.easing);
           }
 
           return (
@@ -611,7 +612,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
                 <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-300' : 'text-zinc-500 transition-colors duration-300') : ''}>{wordContent}</span>
                 {((isActive && progress > 0) || heldEnded) && (
                   <span
-                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? fillColorClass : '')}`}
+                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none ${karaokeFillGlowClass(fillPrefs.style)} ${wordSingerColorClass || (!customHex ? fillColorClass : '')}`}
                     style={{
                       ...(customHex ? getCustomColorStyle(customHex, true) : {}),
                       ...karaokeClipStyle(heldEnded ? 1 : progress),
@@ -683,6 +684,7 @@ interface SecondaryTrackParams {
 
 function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, wordHighlight }: SecondaryTrackParams) {
   const fillTrack = settings?.editor?.display?.karaokeFillTrack ?? 'main';
+  const fillEasing = karaokeFillPrefs(settings?.editor?.display).easing;
   const hasSecondaryStamps = line.secondaryWords?.some((w) => w.time != null);
   const doFill = wordHighlight && isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
   // secondary stays dim (inactive style) when fillTrack is 'main' — no active styling applied
@@ -758,7 +760,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
         let progress = 0;
         if (isActive && startTime != null && endTime != null && playbackPosition != null) {
           const dur = Math.max(0.01, endTime - startTime);
-          progress = Math.max(0, Math.min(1, (playbackPosition - startTime) / dur));
+          progress = easeKaraokeFill((playbackPosition - startTime) / dur, fillEasing);
         }
         
         return (

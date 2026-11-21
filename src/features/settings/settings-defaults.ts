@@ -42,7 +42,9 @@ export const DEFAULT_SETTINGS = {
       translationLayout: 'side-by-side',
       readingFormat: 'hiragana',
       karaokeFillTrack: 'main',
-      karaokeFillEasing: 'linear'
+      karaokeFillEasing: 'linear',
+      // `glow`: a soft halo behind the sung part; `plain`: the fill colour only.
+      karaokeFillStyle: 'glow'
     },
     scroll: {
       mode: 'smooth',

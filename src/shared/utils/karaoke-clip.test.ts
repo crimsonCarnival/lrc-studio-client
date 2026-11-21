@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { karaokeClipPath } from './karaoke-clip';
+import { easeKaraokeFill, karaokeClipPath, karaokeFillGlowClass, karaokeFillPrefs } from './karaoke-clip';
 
 const B = 'var(--karaoke-bleed)';
 
@@ -16,5 +16,27 @@ describe('karaokeClipPath', () => {
     expect(karaokeClipPath(-1)).toBe(`inset(${B} 100% ${B} ${B})`);
     expect(karaokeClipPath(2)).toBe(`inset(${B} ${B} ${B} ${B})`);
     expect(karaokeClipPath(NaN)).toBe(`inset(${B} 100% ${B} ${B})`);
+  });
+});
+
+describe('karaoke fill preferences', () => {
+  it('defaults to a glowing, linear fill', () => {
+    expect(karaokeFillPrefs(undefined)).toEqual({ style: 'glow', easing: 'linear' });
+    expect(karaokeFillPrefs({ karaokeFillStyle: 'neon', karaokeFillEasing: 'bounce' })).toEqual({ style: 'glow', easing: 'linear' });
+    expect(karaokeFillPrefs({ karaokeFillStyle: 'plain', karaokeFillEasing: 'ease-in-out' })).toEqual({ style: 'plain', easing: 'ease-in-out' });
+  });
+
+  it('drops the halo for the plain style', () => {
+    expect(karaokeFillGlowClass('glow')).toBe('karaoke-fill-glow');
+    expect(karaokeFillGlowClass('plain')).toBe('');
+  });
+
+  it('eases the fill in and out across a word, ending where linear does', () => {
+    expect(easeKaraokeFill(0.5, 'linear')).toBe(0.5);
+    expect(easeKaraokeFill(0, 'ease-in-out')).toBeCloseTo(0);
+    expect(easeKaraokeFill(0.25, 'ease-in-out')).toBeLessThan(0.25);
+    expect(easeKaraokeFill(0.5, 'ease-in-out')).toBeCloseTo(0.5);
+    expect(easeKaraokeFill(0.75, 'ease-in-out')).toBeGreaterThan(0.75);
+    expect(easeKaraokeFill(1, 'ease-in-out')).toBeCloseTo(1);
   });
 });

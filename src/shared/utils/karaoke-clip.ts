@@ -20,3 +20,36 @@ export function karaokeClipStyle(fill: number): { clipPath: string; WebkitClipPa
   const clip = karaokeClipPath(fill);
   return { clipPath: clip, WebkitClipPath: clip };
 }
+
+export type KaraokeFillStyle = 'glow' | 'plain';
+export type KaraokeFillEasing = 'linear' | 'ease-in-out';
+
+/** The viewer's fill preferences (editor.display), with the defaults for anything unset or unknown. */
+export function karaokeFillPrefs(display: { karaokeFillStyle?: unknown; karaokeFillEasing?: unknown } | null | undefined): {
+  style: KaraokeFillStyle;
+  easing: KaraokeFillEasing;
+} {
+  return {
+    style: display?.karaokeFillStyle === 'plain' ? 'plain' : 'glow',
+    easing: display?.karaokeFillEasing === 'ease-in-out' ? 'ease-in-out' : 'linear',
+  };
+}
+
+/**
+ * How far across a word the fill has moved, from how far through the word the song is. Linear
+ * keeps pace with the singing; ease-in-out starts and lands gently on each word.
+ */
+export function easeKaraokeFill(progress: number, easing: KaraokeFillEasing): number {
+  const p = Number.isFinite(progress) ? Math.max(0, Math.min(1, progress)) : 0;
+  return easing === 'ease-in-out' ? 0.5 - Math.cos(Math.PI * p) / 2 : p;
+}
+
+/** The class that gives the sung part its halo, or none for the plain style. */
+export function karaokeFillGlowClass(style: KaraokeFillStyle): string {
+  return style === 'plain' ? '' : 'karaoke-fill-glow';
+}
+
+/** The CSS timing function for fills drawn by a CSS animation (the editor's words mode). */
+export function karaokeFillTiming(easing: KaraokeFillEasing): string {
+  return easing === 'ease-in-out' ? 'ease-in-out' : 'linear';
+}

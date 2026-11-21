@@ -10,7 +10,8 @@ vi.mock('react-i18next', () => ({
 }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => m.navigate }));
 vi.mock('../PlayerContext', () => ({ usePlayer: () => m.player }));
-vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { shortcuts: {}, playback: { seekTime: 5 } } }) }));
+const prefs = vi.hoisted(() => ({ display: {} as Record<string, unknown> }));
+vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { shortcuts: {}, playback: { seekTime: 5 }, editor: { display: prefs.display } } }) }));
 vi.mock('./MiniPlayerSessionMembers', () => ({ MiniPlayerSessionMembers: ({ publicId }: { publicId: string }) => <div>members:{publicId}</div> }));
 
 import { MiniPlayer } from './MiniPlayer';
@@ -38,7 +39,7 @@ function show(over: Partial<PlayerContextValue> = {}, props: Partial<Omit<Parame
   return { onClose, player: m.player };
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => { vi.clearAllMocks(); prefs.display = {}; });
 
 describe('MiniPlayer', () => {
   it('shows the song and the line being sung', () => {
@@ -142,5 +143,21 @@ describe('MiniPlayer', () => {
     expect(fills[1].style.clipPath).toBe('inset(var(--karaoke-bleed) 50% var(--karaoke-bleed) var(--karaoke-bleed))');
     // Read out once, as the whole line.
     expect(screen.getByText('Hello world')).toHaveClass('sr-only');
+  });
+
+  it('follows the fill style and easing settings', () => {
+    const karaoke = [{ id: 'k', text: 'Hello world', timestamp: 1, words: [{ word: 'Hello', time: 1 }, { word: 'world', time: 2, end: 3 }] }];
+    show({ lines: karaoke as PlayerContextValue['lines'], currentTime: 2.25 });
+    let fills = [...document.querySelectorAll('[data-karaoke-fill]')] as HTMLElement[];
+    expect(fills[1]).toHaveClass('karaoke-fill-glow');
+    expect(fills[1].style.clipPath).toContain(' 75% ');
+    document.body.innerHTML = '';
+
+    prefs.display = { karaokeFillStyle: 'plain', karaokeFillEasing: 'ease-in-out' };
+    show({ lines: karaoke as PlayerContextValue['lines'], currentTime: 2.25 });
+    fills = [...document.querySelectorAll('[data-karaoke-fill]')] as HTMLElement[];
+    expect(fills[1]).not.toHaveClass('karaoke-fill-glow');
+    // A quarter of the way through the word, an eased fill is behind a linear one (~15% vs 25%).
+    expect(fills[1].style.clipPath).toMatch(/ 8\d\.\d+% /);
   });
 });

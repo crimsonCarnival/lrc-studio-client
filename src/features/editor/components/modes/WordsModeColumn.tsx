@@ -4,6 +4,7 @@ import type { MouseEvent, WheelEvent } from 'react';
 import { hasCJK } from '@/shared/utils/furigana';
 import { formatTime } from '@/shared/utils/format-time';
 import { usePlayer } from '@/features/player/PlayerContext';
+import { karaokeFillPrefs, karaokeFillTiming, type KaraokeFillEasing } from '@/shared/utils/karaoke-clip';
 import { wordSpan } from '../../utils/word-span';
 import { Tip } from '@ui/tip';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
@@ -63,7 +64,8 @@ function shortTime(time: number): string {
  * Keyed per word by the caller, so each word mounts a fresh fill; the offset into the
  * word is read once on mount (a seek lands on a different word, which remounts).
  */
-function KaraokeFill({ label, start, end }: { label: string; start: number; end: number }) {
+// No halo here whatever the fill style: the chips are editing controls, already a plain fill.
+function KaraokeFill({ label, start, end, easing }: { label: string; start: number; end: number; easing: KaraokeFillEasing }) {
   const { currentTime, playbackSpeed } = usePlayer();
   const [offset] = useState(() => Math.max(0, currentTime - start));
   // Media seconds -> wall-clock seconds at the current playback speed.
@@ -72,7 +74,7 @@ function KaraokeFill({ label, start, end }: { label: string; start: number; end:
     <span
       aria-hidden="true"
       className="karaoke-fill pointer-events-none absolute left-0 top-0 whitespace-nowrap text-primary-ink"
-      style={{ animation: `karaoke-fill ${Math.max(end - start, 0.05) / speed}s linear forwards`, animationDelay: `${-offset / speed}s` }}
+      style={{ animation: `karaoke-fill ${Math.max(end - start, 0.05) / speed}s ${karaokeFillTiming(easing)} forwards`, animationDelay: `${-offset / speed}s` }}
     >
       {label}
     </span>
@@ -223,6 +225,7 @@ export function WordsModeChips({
   const roster = songSingers ?? [];
   const appliedSingers = activeSingers || line.singers;
   const settingsSingerColors = settings?.editor?.display?.singerColors;
+  const fillPrefs = karaokeFillPrefs(settings?.editor?.display);
   const chipSize = isActive ? CHIP_LARGE : CHIP_COMPACT;
 
   // The romaji layer can only be paired chip-for-chip when both layers tokenize to
@@ -263,7 +266,7 @@ export function WordsModeChips({
           like "low-key" break at its hyphen would spill it out of the box. */}
       <span className={`${isActive ? 'font-heading text-[18px] font-bold leading-none whitespace-nowrap' : ''} ${extras.fill ? 'relative whitespace-nowrap' : ''}`}>
         {face}
-        {extras.fill && <KaraokeFill key={extras.fill.start} label={face} start={extras.fill.start} end={extras.fill.end} />}
+        {extras.fill && <KaraokeFill key={extras.fill.start} label={face} start={extras.fill.start} end={extras.fill.end} easing={fillPrefs.easing} />}
       </span>
       {reservesRomaji && (
         // Rendered even when empty: the reserved row is what keeps the chip the

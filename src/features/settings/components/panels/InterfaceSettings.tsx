@@ -299,6 +299,12 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             <SettingOption value="ease-in-out">{t('settings.interface.fillEasingEaseInOut')}</SettingOption>
           </SettingSelect>
         </SettingRow>
+        <SettingRow label={t('settings.interface.karaokeFillStyle')} description={t('settings.interface.karaokeFillStyleDesc')}>
+          <SettingSelect label={t('settings.interface.karaokeFillStyle')} value={display.karaokeFillStyle === 'plain' ? 'plain' : 'glow'} onValueChange={(val) => updateSetting('editor.display.karaokeFillStyle', val)}>
+            <SettingOption value="glow">{t('settings.interface.fillStyleGlow')}</SettingOption>
+            <SettingOption value="plain">{t('settings.interface.fillStylePlain')}</SettingOption>
+          </SettingSelect>
+        </SettingRow>
         <SettingRow label={t('settings.interface.readingFormat')} description={t('settings.interface.readingFormatDesc')}>
           <SettingSelect label={t('settings.interface.readingFormat')} value={display.readingFormat ?? 'hiragana'} onValueChange={(val) => updateSetting('editor.display.readingFormat', val)}>
             <SettingOption value="hiragana">{t('editor.readingFormat.hiragana')}</SettingOption>

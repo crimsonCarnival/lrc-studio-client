@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
-import { karaokeClipStyle } from '@/shared/utils/karaoke-clip';
+import { easeKaraokeFill, karaokeClipStyle, karaokeFillGlowClass, karaokeFillPrefs, type KaraokeFillEasing, type KaraokeFillStyle } from '@/shared/utils/karaoke-clip';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
@@ -146,6 +146,9 @@ interface ImmersiveLineProps {
   alignment?: LyricsAlignment;
   /** Settings.editor.display.activeHighlight — the same preference PreviewLine reads. */
   activeHighlight?: string;
+  /** Settings.editor.display.karaokeFillStyle / karaokeFillEasing: how the sung part looks and moves. */
+  fillStyle?: KaraokeFillStyle;
+  fillEasing?: KaraokeFillEasing;
   /** Settings.editor.display.readingFormat — script used for furigana. */
   readingFormat?: string;
   /** Settings.interface.fontSize — same setting PreviewLine reads. */
@@ -173,6 +176,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     singerColors = [],
     alignment = 'left',
     activeHighlight,
+    fillStyle = 'glow',
+    fillEasing = 'linear',
     readingFormat,
     baseFontRem = BASE_FONT_REM.normal,
     focusStep,
@@ -406,7 +411,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
             let progress = 0;
             if (isWordFilled && playbackPosition != null) {
               const dur = Math.max(0.01, endTime! - startTime!);
-              progress = Math.max(0, Math.min(1, (playbackPosition - startTime!) / dur));
+              progress = easeKaraokeFill((playbackPosition - startTime!) / dur, fillEasing);
             }
 
             return (
@@ -425,7 +430,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                 </span>
                 {((isWordFilled && progress > 0) || heldEnded) && (
                   <span
-                    className="absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow"
+                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none ${karaokeFillGlowClass(fillStyle)}`}
                     style={{
                       color: fillHighlightColor,
                       textShadow: `0 0 22px color-mix(in srgb, ${fillHighlightColor} 45%, transparent)`,
@@ -611,6 +616,7 @@ export default function PublicLyrics({
   // of a display preference.
   const { settings } = useSettings();
   const activeHighlight = settings.editor?.display?.activeHighlight;
+  const fillPrefs = karaokeFillPrefs(settings.editor?.display);
   const [zoom, setZoom] = useState(readStoredZoom);
   useEffect(() => { storeZoom(zoom); }, [zoom]);
   // Zoom rides on the base size every line already derives from, so the focus stage,
@@ -833,6 +839,8 @@ export default function PublicLyrics({
                   singerColors={singerColors}
                   alignment={alignment}
                   activeHighlight={activeHighlight}
+                  fillStyle={fillPrefs.style}
+                  fillEasing={fillPrefs.easing}
                   readingFormat={settings.editor?.display?.readingFormat}
                   baseFontRem={baseFontRem}
                 />
@@ -906,6 +914,8 @@ export default function PublicLyrics({
                 singerColors={singerColors}
                 alignment={alignment}
                 activeHighlight={activeHighlight}
+                  fillStyle={fillPrefs.style}
+                  fillEasing={fillPrefs.easing}
                 readingFormat={settings.editor?.display?.readingFormat}
                 baseFontRem={baseFontRem}
               />

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { cn } from '@/shared/utils/utils';
-import { karaokeClipStyle } from '@/shared/utils/karaoke-clip';
+import { easeKaraokeFill, karaokeClipStyle, karaokeFillGlowClass, karaokeFillPrefs, type KaraokeFillEasing, type KaraokeFillStyle } from '@/shared/utils/karaoke-clip';
 import { useSettings } from '@/features/settings/useSettings';
 import { sessionPublicIdFromPath } from '@/features/projects/project-path';
 import { usePlayer } from '../PlayerContext';
@@ -60,6 +60,7 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { settings: appSettings } = useSettings();
+  const fillPrefs = karaokeFillPrefs(appSettings.editor?.display);
   const {
     isPlaying, togglePlay, seek, currentTime, duration, source, local, lines, hasMedia,
     registerVideoStage, projectCoverImage, thumbnail, loopA, loopB, setLoop, clearLoop,
@@ -201,13 +202,13 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
       </div>
 
       {view === 'lyrics' && hasLyrics ? (
-        <LyricsList lines={timedLines} current={lyric} onSeek={seek} label={t('player.mini.lyrics')} currentTime={currentTime} />
+        <LyricsList lines={timedLines} current={lyric} onSeek={seek} label={t('player.mini.lyrics')} currentTime={currentTime} prefs={fillPrefs} />
       ) : settings.lyrics && hasLyrics && (
         // The lyric is the point of the card, so it gets its own block at reading size. Two lines
         // tall whatever is showing, so the card does not jump as lines change. Opens the lyrics.
         <button type="button" onClick={() => setView('lyrics')} aria-label={t('player.mini.showLyrics')} className="flex w-full flex-col gap-0.5 px-3 pt-1 pb-1 text-left focus-visible:outline-none">
           <span className="line-clamp-2 min-h-[2lh] font-heading text-lg leading-snug font-semibold text-foreground" aria-live="off">
-            {sungLine ? <KaraokeText line={sungLine} time={currentTime} /> : <span className="text-subtle">♪</span>}
+            {sungLine ? <KaraokeText line={sungLine} time={currentTime} prefs={fillPrefs} /> : <span className="text-subtle">♪</span>}
           </span>
           <span className="truncate text-sm text-subtle">{upcoming ?? ' '}</span>
         </button>
@@ -253,7 +254,7 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
 type TimedLine = { id?: string; text?: string; timestamp?: number | null };
 
 /** Every timed line, the one being sung lit and kept in view. A tap jumps to that line. */
-function LyricsList({ lines, current, onSeek, label, currentTime }: { lines: TimedLine[]; current: string | null; onSeek: (t: number) => void; label: string; currentTime: number }) {
+function LyricsList({ lines, current, onSeek, label, currentTime, prefs }: { lines: TimedLine[]; current: string | null; onSeek: (t: number) => void; label: string; currentTime: number; prefs: FillPrefs }) {
   const listRef = useRef<HTMLOListElement>(null);
   // The playing line: the last whose start has passed. Matched by index, not text (choruses repeat).
   let active = -1;
@@ -280,7 +281,7 @@ function LyricsList({ lines, current, onSeek, label, currentTime }: { lines: Tim
               i === active ? 'text-lg font-semibold text-foreground' : 'text-base text-subtle',
             )}
           >
-            {i === active ? <KaraokeText line={l as EditorLine} time={currentTime} /> : l.text}
+            {i === active ? <KaraokeText line={l as EditorLine} time={currentTime} prefs={prefs} /> : l.text}
           </button>
         </li>
       ))}
@@ -292,7 +293,9 @@ function LyricsList({ lines, current, onSeek, label, currentTime }: { lines: Tim
  * The line being sung, its words filling in as they are sung, as in the preview. Plain text
  * when the line has no word times: a fill is never guessed from the text.
  */
-function KaraokeText({ line, time }: { line: EditorLine; time: number }) {
+type FillPrefs = { style: KaraokeFillStyle; easing: KaraokeFillEasing };
+
+function KaraokeText({ line, time, prefs }: { line: EditorLine; time: number; prefs: FillPrefs }) {
   const words = karaokeWords(line, time);
   if (!words) return <>{line.text}</>;
   return (
@@ -305,8 +308,8 @@ function KaraokeText({ line, time }: { line: EditorLine; time: number }) {
             <span className="text-foreground/50">{w.text}</span>
             {w.fill > 0 && (
               <span
-                className="karaoke-fill-glow pointer-events-none absolute inset-0 whitespace-nowrap text-primary-ink" data-karaoke-fill
-                style={karaokeClipStyle(w.fill)}
+                className={cn('pointer-events-none absolute inset-0 whitespace-nowrap text-primary-ink', karaokeFillGlowClass(prefs.style))} data-karaoke-fill
+                style={karaokeClipStyle(easeKaraokeFill(w.fill, prefs.easing))}
               >
                 {w.text}
               </span>
