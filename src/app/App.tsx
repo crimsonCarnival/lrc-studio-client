@@ -10,7 +10,7 @@ import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { matchKey } from '@/shared/utils/keyboard';
 import { artistFieldsFromForm, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
-import { projectEditPath, isEditorPath, isProjectPath } from '@features/projects/project-path';
+import { projectEditPath, isEditorPath } from '@features/projects/project-path';
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
 
@@ -76,7 +76,6 @@ function AppInner() {
   const {
     pendingProject,
     resetAppState,
-    playerRef,
     setLines,
     setEditorMode,
     setSyncMode,
@@ -288,16 +287,7 @@ function AppInner() {
     return () => window.removeEventListener('keydown', handler);
   }, [settings.shortcuts, focusMode, setFocusMode, setHideEditor, setHidePreview]);
 
-  // Pause player when navigating away
-  useEffect(() => {
-    const onProjectRoute =
-      isProjectPath(routerLocation.pathname) ||
-      isEditorPath(routerLocation.pathname) ||
-      routerLocation.pathname === '/project/new';
-    if (!onProjectRoute) {
-      playerRef.current?.pause?.();
-    }
-  }, [routerLocation.pathname, playerRef]);
+  // Leaving the editor stops playback unless the mini player carries it: see AppLayout.
 
   // Reset load errors when navigating
   useEffect(() => {

@@ -40,6 +40,7 @@ const GET_SETTINGS = /* GraphQL */ `
           readingFormat
           karaokeFillTrack
           karaokeFillEasing
+          karaokeFillStyle
           singerColors
         }
         scroll { mode alignment }
@@ -73,6 +74,10 @@ const GET_SETTINGS = /* GraphQL */ `
         mobileTab
         toastPosition
         keepThemeOnSignOut
+        miniPlayer
+        miniPlayerPosition
+        miniPlayerKeepPlaying
+        miniPlayerLyrics
         editorTourShown
         editorTourEnabled
       }

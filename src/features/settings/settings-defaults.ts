@@ -42,7 +42,9 @@ export const DEFAULT_SETTINGS = {
       translationLayout: 'side-by-side',
       readingFormat: 'hiragana',
       karaokeFillTrack: 'main',
-      karaokeFillEasing: 'linear'
+      karaokeFillEasing: 'linear',
+      // `glow`: a soft halo behind the sung part; `plain`: the fill colour only.
+      karaokeFillStyle: 'glow'
     },
     scroll: {
       mode: 'smooth',
@@ -79,6 +81,11 @@ export const DEFAULT_SETTINGS = {
     mobileTab: 'editor',
     toastPosition: 'bottom-right',
     keepThemeOnSignOut: true,
+    // The floating player after leaving the editor with media loaded.
+    miniPlayer: true,
+    miniPlayerPosition: 'bottom-right',
+    miniPlayerKeepPlaying: true,
+    miniPlayerLyrics: true,
     editorTourShown: 0,
     editorTourEnabled: true
   },

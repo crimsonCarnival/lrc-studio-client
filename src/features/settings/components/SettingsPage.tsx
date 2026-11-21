@@ -99,7 +99,7 @@ const RESET_PATHS: Record<string, string[]> = {
   export: ['export'],
   shortcuts: ['shortcuts'],
   advanced: ['advanced'],
-  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.autoHideHeader', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'editor.display', 'editor.scroll'],
+  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.autoHideHeader', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'interface.miniPlayer', 'interface.miniPlayerPosition', 'interface.miniPlayerKeepPlaying', 'interface.miniPlayerLyrics', 'editor.display', 'editor.scroll'],
 };
 
 const SHORTCUT_KEYS = [

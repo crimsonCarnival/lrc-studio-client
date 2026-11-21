@@ -451,6 +451,8 @@ export type DisplaySettings = {
   activeHighlight?: Maybe<Scalars['String']['output']>;
   dualLine?: Maybe<Scalars['Boolean']['output']>;
   karaokeFillEasing?: Maybe<Scalars['String']['output']>;
+  /** How the sung part of a karaoke line looks: glow (soft halo, default) or plain (colour only). */
+  karaokeFillStyle?: Maybe<Scalars['String']['output']>;
   karaokeFillTrack?: Maybe<Scalars['String']['output']>;
   languageLayout?: Maybe<Scalars['String']['output']>;
   readingFormat?: Maybe<Scalars['String']['output']>;
@@ -463,6 +465,8 @@ export type DisplaySettingsInput = {
   activeHighlight?: InputMaybe<Scalars['String']['input']>;
   dualLine?: InputMaybe<Scalars['Boolean']['input']>;
   karaokeFillEasing?: InputMaybe<Scalars['String']['input']>;
+  /** How the sung part of a karaoke line looks: glow (soft halo, default) or plain (colour only). */
+  karaokeFillStyle?: InputMaybe<Scalars['String']['input']>;
   karaokeFillTrack?: InputMaybe<Scalars['String']['input']>;
   languageLayout?: InputMaybe<Scalars['String']['input']>;
   readingFormat?: InputMaybe<Scalars['String']['input']>;
@@ -639,6 +643,14 @@ export type InterfaceSettings = {
   keepThemeOnSignOut?: Maybe<Scalars['Boolean']['output']>;
   layoutSwap?: Maybe<Scalars['Boolean']['output']>;
   lockLayout?: Maybe<Scalars['Boolean']['output']>;
+  /** Show the floating mini player after leaving the editor with media loaded. Default true. */
+  miniPlayer?: Maybe<Scalars['Boolean']['output']>;
+  /** Keep playing when leaving the editor; off, the mini player opens paused. Default true. */
+  miniPlayerKeepPlaying?: Maybe<Scalars['Boolean']['output']>;
+  /** Show the current lyric line in the mini player. Default true. */
+  miniPlayerLyrics?: Maybe<Scalars['Boolean']['output']>;
+  /** Corner of the mini player: bottom-right (default), bottom-left, top-right or top-left. */
+  miniPlayerPosition?: Maybe<Scalars['String']['output']>;
   mobileTab?: Maybe<Scalars['String']['output']>;
   playerTop?: Maybe<Scalars['Boolean']['output']>;
   previewAlignment?: Maybe<Scalars['String']['output']>;
@@ -665,6 +677,14 @@ export type InterfaceSettingsInput = {
   keepThemeOnSignOut?: InputMaybe<Scalars['Boolean']['input']>;
   layoutSwap?: InputMaybe<Scalars['Boolean']['input']>;
   lockLayout?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Show the floating mini player after leaving the editor with media loaded. Default true. */
+  miniPlayer?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Keep playing when leaving the editor; off, the mini player opens paused. Default true. */
+  miniPlayerKeepPlaying?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Show the current lyric line in the mini player. Default true. */
+  miniPlayerLyrics?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Corner of the mini player: bottom-right (default), bottom-left, top-right or top-left. */
+  miniPlayerPosition?: InputMaybe<Scalars['String']['input']>;
   mobileTab?: InputMaybe<Scalars['String']['input']>;
   playerTop?: InputMaybe<Scalars['Boolean']['input']>;
   previewAlignment?: InputMaybe<Scalars['String']['input']>;
