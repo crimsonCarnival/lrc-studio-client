@@ -158,11 +158,6 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return <AppLoadingScreen />;
   }
 
-  // Logged-in users landing on root should go to the home dashboard.
-  if (user && !onAdminHost && location.pathname === '/') {
-    return <Navigate to="/home" replace />;
-  }
-
   // Default-deny access control. Source of truth: app/route-access.ts.
   // `auth` means any session (including guest sessions, which some pages such
   // as Settings intentionally support); only fully-anonymous visitors are

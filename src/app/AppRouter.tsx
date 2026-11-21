@@ -802,11 +802,14 @@ export function AppRouter({
           <SettingsPage />
         </Suspense>
       } />
-      <Route index element={
+      {/* Signed-in users go to the home dashboard. Redirected here, inside App, rather than
+          above it: a redirect wrapped around App unmounts it for a render, which drops the
+          editor's player and the mini player still playing it. */}
+      <Route index element={user ? <Navigate to="/home" replace /> : (
         <Suspense fallback={<RouteFallback />}>
           <GuestLanding />
         </Suspense>
-      } />
+      )} />
       <Route path="verify-email" element={
         <Suspense fallback={<RouteFallback />}>
           <VerifyEmailPage />

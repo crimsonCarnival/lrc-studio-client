@@ -4,7 +4,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { miniPlayerSettings, ownsPlayer, type ViewSnapshot } from '@features/player/mini-player';
 import { publishHandoff } from '@features/player/mini-handoff';
 
-type Props = Omit<ViewSnapshot, 'time' | 'playing'>;
+type Props = Omit<ViewSnapshot, 'time' | 'playing' | 'speed'>;
 
 /**
  * Hands the view's playback to the mini player when the view is left for a page that does not
@@ -12,18 +12,18 @@ type Props = Omit<ViewSnapshot, 'time' | 'playing'>;
  * read the position at the moment of leaving.
  */
 export default function MiniPlayerHandoff(props: Props) {
-  const { currentTime, isPlaying, hasMedia } = usePlayer();
+  const { currentTime, isPlaying, hasMedia, playbackSpeed } = usePlayer();
   const { settings } = useSettings();
-  const latest = useRef({ props, currentTime, isPlaying, hasMedia, enabled: true });
+  const latest = useRef({ props, currentTime, isPlaying, hasMedia, playbackSpeed, enabled: true });
   useEffect(() => {
-    latest.current = { props, currentTime, isPlaying, hasMedia, enabled: miniPlayerSettings(settings.interface as Record<string, unknown> | undefined).enabled };
+    latest.current = { props, currentTime, isPlaying, hasMedia, playbackSpeed, enabled: miniPlayerSettings(settings.interface as Record<string, unknown> | undefined).enabled };
   });
 
   useEffect(() => () => {
-    const { props: p, currentTime: time, isPlaying: playing, hasMedia: loaded, enabled } = latest.current;
+    const { props: p, currentTime: time, isPlaying: playing, hasMedia: loaded, playbackSpeed: speed, enabled } = latest.current;
     // The router has already moved on when this runs, so the URL is where the user went.
     if (!enabled || !loaded || ownsPlayer(window.location.pathname)) return;
-    publishHandoff({ ...p, time, playing });
+    publishHandoff({ ...p, time, playing, speed });
   }, []);
 
   return null;
