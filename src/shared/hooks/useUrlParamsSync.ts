@@ -10,18 +10,13 @@ interface UrlAppState {
 }
 
 interface UrlLayoutState {
-  focusMode: string;
-  setFocusMode: (mode: string) => void;
   mobileTab: string;
   setMobileTab: (tab: string) => void;
-  layoutSwap: boolean;
-  setLayoutSwap: (swap: boolean) => void;
   isReady: boolean;
   [key: string]: unknown;
 }
 
 const EDITOR_MODES = ['lrc', 'srt', 'words'];
-const FOCUS_MODES = ['default', 'sync', 'playback'];
 const MOBILE_TABS = ['editor', 'preview'];
 
 /**
@@ -29,7 +24,7 @@ const MOBILE_TABS = ['editor', 'preview'];
  *
  * Two rules keep this hook from trampling other pages' parameters:
  *
- * 1. **Ownership.** `mode`, `focus`, `view` and `swap` belong to the project
+ * 1. **Ownership.** `mode` and `view` belong to the project
  *    pages, so they are only read and written while `layoutState.isReady` is
  *    true. This hook is mounted for every route under `/*`, and writing those
  *    keys unconditionally is what deleted `?view=public` on profiles and
@@ -52,15 +47,7 @@ export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutSt
 
   const { editorMode, setEditorMode } = appState;
 
-  const {
-    focusMode,
-    setFocusMode,
-    mobileTab,
-    setMobileTab,
-    layoutSwap,
-    setLayoutSwap,
-    isReady,
-  } = layoutState;
+  const { mobileTab, setMobileTab, isReady } = layoutState;
 
   // 1. Initialization from URL on mount
   useEffect(() => {
@@ -78,26 +65,14 @@ export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutSt
     if (!isReady) return;
 
     const mode = searchParams.get('mode');
-    const focus = searchParams.get('focus');
     const view = searchParams.get('view');
-    const swap = searchParams.get('swap');
 
     if (mode && EDITOR_MODES.includes(mode) && editorMode !== mode) {
       setEditorMode(mode);
     }
 
-    if (focus && FOCUS_MODES.includes(focus) && focusMode !== focus) {
-      setFocusMode(focus);
-    }
-
     if (view && MOBILE_TABS.includes(view) && mobileTab !== view) {
       setMobileTab(view);
-    }
-
-    // `1` is the current form; `true` is accepted so links shared before the
-    // boolean convention landed keep working.
-    if ((swap === '1' || swap === 'true') && !layoutSwap) {
-      setLayoutSwap(true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -127,9 +102,10 @@ export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutSt
 
     if (isReady) {
       updateParam('mode', editorMode, 'lrc');
-      updateParam('focus', focusMode, 'default');
       updateParam('view', mobileTab, 'editor');
-      updateParam('swap', layoutSwap ? '1' : null, null);
+      // Focus modes and the swapped split layout are gone; drop them from links made before.
+      updateParam('focus', null, null);
+      updateParam('swap', null, null);
     } else {
       // Off the project pages these keys are not ours. Leave whatever the
       // owning page put there untouched.
@@ -143,5 +119,5 @@ export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutSt
     }
     // replaceSearch is stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i18n.language, editorMode, focusMode, mobileTab, layoutSwap, searchParams, isReady]);
+  }, [i18n.language, editorMode, mobileTab, searchParams, isReady]);
 }

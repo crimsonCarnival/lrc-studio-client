@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -7,7 +7,6 @@ import { getAccessToken } from '@/app/api';
 import { useSettings } from '@/features/settings/useSettings';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
-import { matchKey } from '@/shared/utils/keyboard';
 import { artistFieldsFromForm, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
 import { projectEditPath, isEditorPath } from '@features/projects/project-path';
@@ -56,8 +55,6 @@ interface SetupCompleteData {
 }
 
 interface UiState {
-  hideEditor: boolean;
-  hidePreview: boolean;
   unsavedModalTarget: unknown;
   isPlaying: boolean;
   playbackSpeed: number;
@@ -120,12 +117,6 @@ function AppInner() {
   const isPlayerMounted = isProjectPage || isSetupPage;
 
   // Layout-specific state
-  const rawFocusMode = settings.interface?.focusMode || 'default';
-  const focusMode = ['default', 'sync', 'playback'].includes(rawFocusMode) ? rawFocusMode : 'default';
-  const layoutSwap = settings.interface?.layoutSwap || false;
-  const playerTop = settings.interface?.playerTop || false;
-  const editorWidth = settings.interface?.editorWidth ?? 50;
-  const lockLayout = settings.interface?.lockLayout || false;
   const mobileTab = settings.interface?.mobileTab || 'editor';
 
   // Dynamic player height — fed by ResizeObserver in AppPlayer
@@ -133,17 +124,13 @@ function AppInner() {
 
   // Layout-specific state
   const [ui, setUi] = useState<UiState>({
-    hideEditor: false,
-    hidePreview: false,
     unsavedModalTarget: null,
     isPlaying: false,
     playbackSpeed: 1,
     showNamingModal: false,
   });
 
-  const { hideEditor, hidePreview, unsavedModalTarget, isPlaying, playbackSpeed, showNamingModal } = ui;
-  const setHideEditor = useCallback((val: boolean | ((p: boolean) => boolean)) => setUi(prev => ({ ...prev, hideEditor: typeof val === 'function' ? val(prev.hideEditor) : val })), []);
-  const setHidePreview = useCallback((val: boolean | ((p: boolean) => boolean)) => setUi(prev => ({ ...prev, hidePreview: typeof val === 'function' ? val(prev.hidePreview) : val })), []);
+  const { unsavedModalTarget, isPlaying, playbackSpeed, showNamingModal } = ui;
   const setUnsavedModalTarget = useCallback((val: unknown) => setUi(prev => ({ ...prev, unsavedModalTarget: val })), []);
   const setIsPlaying = useCallback((val: boolean) => setUi(prev => ({ ...prev, isPlaying: val })), []);
   const setPlaybackSpeed = useCallback((val: number) => setUi(prev => ({ ...prev, playbackSpeed: val })), []);
@@ -244,48 +231,7 @@ function AppInner() {
     navigate('/project/local');
   }, [setLines, setEditorMode, setSyncMode, setMediaTitle, handleYtUrlChange, handleMediaUpload, appState, navigate, user]);
 
-  const setFocusMode = useCallback((mode: string) => {
-    updateSetting('interface.focusMode', mode);
-  }, [updateSetting]);
 
-  const setLayoutSwap = useCallback((swap: boolean) => {
-    updateSetting('interface.layoutSwap', swap);
-  }, [updateSetting]);
-
-  const setPlayerTop = useCallback((top: boolean) => {
-    updateSetting('interface.playerTop', top);
-  }, [updateSetting]);
-
-  const setEditorWidth = useCallback((width: number) => {
-    updateSetting('interface.editorWidth', width);
-  }, [updateSetting]);
-
-  // Focus mode keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-
-      if (matchKey(e, settings.shortcuts?.focusSync?.[0] || 'Ctrl+1')) {
-        e.preventDefault();
-        setFocusMode(focusMode === 'sync' ? 'default' : 'sync');
-      } else if (matchKey(e, settings.shortcuts?.focusPreview?.[0] || 'Ctrl+2')) {
-        e.preventDefault();
-        if (focusMode === 'playback') {
-          setFocusMode('default');
-          setHideEditor(false);
-        } else {
-          setHideEditor(h => !h);
-          setHidePreview(false);
-        }
-      } else if (matchKey(e, settings.shortcuts?.focusPlayback?.[0] || 'Ctrl+3')) {
-        e.preventDefault();
-        setFocusMode(focusMode === 'playback' ? 'default' : 'playback');
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [settings.shortcuts, focusMode, setFocusMode, setHideEditor, setHidePreview]);
 
   // Leaving the editor stops playback unless the mini player carries it: see AppLayout.
 
@@ -308,45 +254,14 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routerLocation.pathname, (routerLocation.state as { prefill?: unknown } | null)?.prefill]);
 
-  // Grid column classes
-  const editorColClass = useMemo(() => ((({
-    default: 'lg:col-span-7',
-    sync: 'lg:col-span-8',
-    playback: 'hidden',
-  } as Record<string, string>)[focusMode]) || 'lg:col-span-7'), [focusMode]);
-
-  const previewColClass = useMemo(() => ((hideEditor || focusMode === 'playback')
-    ? 'lg:col-span-12'
-    : (({ default: 'lg:col-span-5', sync: 'lg:col-span-4' } as Record<string, string>)[focusMode] || 'lg:col-span-5')), [hideEditor, focusMode]);
-
-  const showEditor = focusMode !== 'playback' && !hideEditor;
-  const showPreview = !hidePreview;
 
   const layoutState = {
-    focusMode,
-    setFocusMode,
-    hideEditor,
-    setHideEditor,
-    hidePreview,
-    setHidePreview,
     unsavedModalTarget,
     setUnsavedModalTarget,
     mobileTab,
     setMobileTab: useCallback((tab: string) => updateSetting('interface.mobileTab', tab), [updateSetting]),
     isReady,
     isPlayerMounted,
-    editorColClass,
-    previewColClass,
-    showEditor,
-    showPreview,
-    layoutSwap,
-    setLayoutSwap,
-    playerTop,
-    setPlayerTop,
-    editorWidth,
-    setEditorWidth,
-    lockLayout,
-    setLockLayout: useCallback((lock: boolean) => updateSetting('interface.lockLayout', lock), [updateSetting]),
     showNamingModal,
     setShowNamingModal,
     playerHeight,

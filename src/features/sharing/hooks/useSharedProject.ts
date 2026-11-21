@@ -3,7 +3,6 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { projects } from '@/app/api';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
-import { useSettings } from '@/features/settings/useSettings';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { useProjectSocket } from './useProjectSocket';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
@@ -37,7 +36,6 @@ export function useSharedProject({
   uploadedAudio,
 }) {
   const { t } = useTranslation();
-  const { updateSetting } = useSettings();
 
   const [isSharedProject, setIsSharedProject] = useState(false);
   const [sharedReadOnly, setSharedReadOnly] = useState(true);
@@ -91,7 +89,6 @@ export function useSharedProject({
       setSharedReadOnly(ro);
       sharedReadOnlyRef.current = ro;
       setIsSharedProject(true);
-      updateSetting('interface.focusMode', 'playback');
       localStorage.setItem(STORAGE_KEYS.SHARED_PROJECT, JSON.stringify(parsed));
     };
 
