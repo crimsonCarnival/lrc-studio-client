@@ -579,10 +579,12 @@ function PlayerEngineInner(
     if (key === hydratedMediaKeyRef.current) return;
     hydratedMediaKeyRef.current = key;
 
+    // The project's title is already restored (possibly empty, when it derives from the song
+    // name); letting the media's name fill it would make a freshly loaded project look edited.
     if (initialMedia.type === 'youtube') {
-      yt.loadYouTube(initialMedia.url);
+      yt.loadYouTube(initialMedia.url, { keepProjectTitle: true });
     } else if (initialMedia.type === 'cloudinary') {
-      local.loadFromUrl(initialMedia.url!, initialMedia.title || initialMedia.fileName);
+      local.loadFromUrl(initialMedia.url!, initialMedia.title || initialMedia.fileName, { keepProjectTitle: true });
       onMediaUpload?.({
         id: initialMedia.id,
         uploadUrl: initialMedia.url,

@@ -92,7 +92,8 @@ export function useProjectActions({
       }
       if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
       if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
-      if (project.title) setMediaTitle(project.title);
+      // Always set, even to '': a skipped write keeps the previous project's title.
+      setMediaTitle(project.title || '');
       setProjectMetadata?.(project.metadata || {});
       setProjectCoverImage?.(project.coverImage || '');
       setProjectVisibility?.(publicId, project.public === true, project.listed !== false);
