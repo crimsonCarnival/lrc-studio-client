@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
-import { easeKaraokeFill, karaokeClipStyle, karaokeFillGlowClass, karaokeFillPrefs, type KaraokeFillEasing, type KaraokeFillStyle } from '@/shared/utils/karaoke-clip';
+import { easeKaraokeFill, karaokeClipStyle, karaokeFillGlowClass, karaokeFillPrefs, karaokeFillTrack, type KaraokeFillEasing, type KaraokeFillStyle, type KaraokeFillTrack } from '@/shared/utils/karaoke-clip';
+import { karaokeWords } from '@features/player/mini-player';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
@@ -38,6 +39,7 @@ export interface DisplayLine {
   singers?: string[];
   mode?: string;
   words?: DisplayWord[];
+  secondaryWords?: DisplayWord[];
   [key: string]: unknown;
 }
 
@@ -149,6 +151,8 @@ interface ImmersiveLineProps {
   /** Settings.editor.display.karaokeFillStyle / karaokeFillEasing: how the sung part looks and moves. */
   fillStyle?: KaraokeFillStyle;
   fillEasing?: KaraokeFillEasing;
+  /** Settings.editor.display.karaokeFillTrack: which line fills, the main, the secondary or both. */
+  fillTrack?: KaraokeFillTrack;
   /** Settings.editor.display.readingFormat — script used for furigana. */
   readingFormat?: string;
   /** Settings.interface.fontSize — same setting PreviewLine reads. */
@@ -178,6 +182,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     activeHighlight,
     fillStyle = 'glow',
     fillEasing = 'linear',
+    fillTrack = 'main',
     readingFormat,
     baseFontRem = BASE_FONT_REM.normal,
     focusStep,
@@ -279,7 +284,13 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     })()
     : w.word;
   const hasWordTimestamps = words.some(w => w.time != null);
-  const effectiveHasWordTimestamps = (hasWordTimestamps || (isWordsMode && line.timestamp != null && words.length > 0));
+  // With the fill on the secondary track only, the sung main line is plain text, as in the preview.
+  const mainFills = !(isActive && fillTrack === 'secondary');
+  const effectiveHasWordTimestamps = mainFills && (hasWordTimestamps || (isWordsMode && line.timestamp != null && words.length > 0));
+  // The secondary line fills on its own word times, when the setting asks for it and it has some.
+  const secondaryFill = isActive && fillTrack !== 'main' && line.secondary
+    ? karaokeWords({ ...line, words: line.secondaryWords } as Parameters<typeof karaokeWords>[0], playbackPosition)
+    : null;
 
   let lastWordFillEnd: number | null = null;
   if (effectiveHasWordTimestamps) {
@@ -433,7 +444,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                     className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none ${karaokeFillGlowClass(fillStyle)}`}
                     style={{
                       color: fillHighlightColor,
-                      textShadow: `0 0 22px color-mix(in srgb, ${fillHighlightColor} 45%, transparent)`,
+                      // The halo in the word's own colour (a singer's, a counterpart's); none for the plain style.
+                      textShadow: fillStyle === 'plain' ? 'none' : `0 0 28px color-mix(in srgb, ${fillHighlightColor} 30%, transparent)`,
                       ...karaokeClipStyle(heldEnded ? 1 : progress),
                       opacity: heldEnded ? 0 : 1,
                       transition: 'opacity 700ms ease-out',
@@ -472,7 +484,23 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
             fontWeight: 400,
           }}
         >
-          {line.secondary}
+          {secondaryFill ? secondaryFill.map((w, i) => (
+            <Fragment key={i}>
+              <span className="relative inline-block">
+                <span style={{ opacity: 0.55 }}>{w.text}</span>
+                {w.fill > 0 && (
+                  <span
+                    data-secondary-fill
+                    className="absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none"
+                    style={{ color: FG, ...karaokeClipStyle(easeKaraokeFill(w.fill, fillEasing)), direction: 'ltr', textAlign: 'left', unicodeBidi: 'plaintext' }}
+                  >
+                    {w.text}
+                  </span>
+                )}
+              </span>
+              {w.spaceAfter ? ' ' : null}
+            </Fragment>
+          )) : line.secondary}
         </div>
       )}
 
@@ -617,6 +645,7 @@ export default function PublicLyrics({
   const { settings } = useSettings();
   const activeHighlight = settings.editor?.display?.activeHighlight;
   const fillPrefs = karaokeFillPrefs(settings.editor?.display);
+  const fillTrack = karaokeFillTrack(settings.editor?.display);
   const [zoom, setZoom] = useState(readStoredZoom);
   useEffect(() => { storeZoom(zoom); }, [zoom]);
   // Zoom rides on the base size every line already derives from, so the focus stage,
@@ -841,6 +870,7 @@ export default function PublicLyrics({
                   activeHighlight={activeHighlight}
                   fillStyle={fillPrefs.style}
                   fillEasing={fillPrefs.easing}
+                  fillTrack={fillTrack}
                   readingFormat={settings.editor?.display?.readingFormat}
                   baseFontRem={baseFontRem}
                 />
@@ -916,6 +946,7 @@ export default function PublicLyrics({
                 activeHighlight={activeHighlight}
                   fillStyle={fillPrefs.style}
                   fillEasing={fillPrefs.easing}
+                  fillTrack={fillTrack}
                 readingFormat={settings.editor?.display?.readingFormat}
                 baseFontRem={baseFontRem}
               />
