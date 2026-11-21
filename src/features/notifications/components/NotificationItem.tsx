@@ -314,7 +314,8 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
     );
   }
   if ((type === 'report' || type === 'report_reviewed') && REPORT_TARGET_TYPES.has(notification.meta?.targetType ?? '')) {
-    const label = notification.meta?.targetLabel ?? '';
+    // A comment's text is never shown (older rows still carry it as the label).
+    const label = notification.meta?.targetType === 'wall_comment' ? '' : notification.meta?.targetLabel ?? '';
     const group = type === 'report'
       ? 'notifications.report'
       : notification.meta?.outcome === 'actioned' ? 'notifications.reportActioned' : 'notifications.reportDismissed';

@@ -70,7 +70,7 @@ describe('report notification text and links', () => {
     expect(text(filed('user', 'sam'))).toBe('ann reported an account (sam)');
     expect(text(filed('project', 'Creep'))).toBe('ann reported a project (Creep)');
     expect(text(filed('playlist', 'Mix'))).toBe('ann reported a playlist (Mix)');
-    expect(text(filed('wall_comment', 'hey'))).toBe('ann reported a comment (hey)');
+    expect(text(filed('wall_comment', 'hey'))).toBe('ann reported a comment');
     expect(text(filed('project'))).toBe('ann reported a project');
     expect(notificationDestination(filed('user', 'sam'))).toBe('/admin/reports');
   });
@@ -79,6 +79,7 @@ describe('report notification text and links', () => {
     expect(text(reviewed('project', 'actioned', 'Creep'))).toBe('A moderator removed a project you reported (Creep)');
     expect(text(reviewed('user', 'actioned', 'sam'))).toBe('A moderator took action on an account you reported (sam)');
     expect(text(reviewed('playlist', 'dismissed', 'Mix'))).toBe('A moderator reviewed your report of a playlist (Mix) and left it up');
+    expect(text(reviewed('wall_comment', 'actioned', 'rude'))).toBe('A moderator removed a comment you reported');
     expect(text(reviewed('wall_comment', 'dismissed', ''))).toBe('A moderator reviewed your report of a comment and left it up');
     expect(notificationDestination(reviewed('user', 'dismissed'))).toBe('/reports');
   });
