@@ -218,13 +218,19 @@ export const uploadsService = {
     return data.deleteMedia;
   },
 
-  // updateMedia has no GQL equivalent yet — keep REST
-  async updateMedia(id: string, patchData: Record<string, unknown>): Promise<unknown> {
-    const result = await request(`/uploads/media/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify(patchData),
-    });
+  async updateMedia(id: string, input: { title?: string; fileName?: string; duration?: number }): Promise<{ upload: Upload }> {
+    const data = await gqlRequest<{ updateMedia: Upload }>(/* GraphQL */ `
+      mutation UpdateMedia($id: ID!, $input: UpdateMediaInput!) {
+        updateMedia(id: $id, input: $input) {
+          id
+          source
+          fileName
+          title
+          duration
+        }
+      }
+    `, { id, input });
     uploadsChanged();
-    return result;
+    return { upload: data.updateMedia };
   },
 };
