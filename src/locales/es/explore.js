@@ -53,10 +53,6 @@ export default {
     users_other: '{{count}} creadores',
     playlists: '{{count}} lista',
     playlists_other: '{{count}} listas',
-    views_one: '{{count}} vista',
-    views_other: '{{count}} vistas',
-    stars_one: '{{count}} estrella',
-    stars_other: '{{count}} estrellas',
   },
   page: {
     title: 'Explorar',

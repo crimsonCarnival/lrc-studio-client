@@ -60,7 +60,7 @@ const SUGGESTED_USERS = /* GraphQL */ `
 
 const EXPLORE_STATS = /* GraphQL */ `
   query ExploreStats {
-    exploreStats { totalProjects totalUsers totalPlaylists totalViews totalStars }
+    exploreStats { totalProjects totalUsers totalPlaylists }
   }
 `;
 

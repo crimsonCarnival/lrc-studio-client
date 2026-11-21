@@ -47,8 +47,6 @@ export default function ExplorePage() {
                     t('explore.stats.projects', { count: stats.totalProjects }),
                     t('explore.stats.users', { count: stats.totalUsers }),
                     t('explore.stats.playlists', { count: stats.totalPlaylists }),
-                    t('explore.stats.views', { count: stats.totalViews }),
-                    t('explore.stats.stars', { count: stats.totalStars }),
                   ].join(' · ')}
                 </p>
               )}
