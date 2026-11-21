@@ -100,7 +100,7 @@ export default function PreviewLine({
   isPlaying,
   playbackSpeed = 1,
   roster: propRoster,
-  singerColors,
+  singerColors: projectSingerColors,
   nextTimestamp,
   editorMode,
   variant = 'stage',
@@ -110,6 +110,13 @@ export default function PreviewLine({
   const { settings } = useSettings();
   const { t } = useTranslation();
   const roster = propRoster ?? [];
+  // The project's own colours, then the user's global ones (Settings), as the editor resolves them.
+  const globalSingerColors = settings.editor?.display?.singerColors as string[] | undefined;
+  const singerColors = React.useMemo(() => {
+    if (!globalSingerColors?.length) return projectSingerColors;
+    const n = Math.max(projectSingerColors?.length ?? 0, globalSingerColors.length);
+    return Array.from({ length: n }, (_, i) => projectSingerColors?.[i] || globalSingerColors[i] || '');
+  }, [projectSingerColors, globalSingerColors]);
   const isReview = variant === 'review';
 
   const getCustomColorStyle = (hex: string, active: boolean) => ({
