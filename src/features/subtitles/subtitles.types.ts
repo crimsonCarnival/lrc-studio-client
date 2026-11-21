@@ -17,7 +17,17 @@ export type Cue = {
   lineIndex: number;
   /** A counterpart sits over a main line, so edits treat the two kinds as separate. */
   counterpart?: boolean;
+  /**
+   * The line's own text split where its timed words start, for the formats that carry word
+   * timing (ASS karaoke tags, WebVTT inline timestamps). Joined, the pieces' text is exactly the
+   * start of `text`; rows appended after it (secondary, translation) stay untimed. Absent when the
+   * line has no word times or its words no longer match its text.
+   */
+  karaoke?: KaraokePiece[];
 };
+
+/** A run of cue text that starts when its word does. `end` is set when the word stops before the next one starts. */
+export type KaraokePiece = { text: string; time: number; end?: number };
 
 /**
  * One row of the studio's list, in the order of the lyrics. A line with a time is a `cue` (its

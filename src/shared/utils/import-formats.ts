@@ -13,6 +13,16 @@ export const extensionOf = (filename: string): string => filename.split('.').pop
 
 export const isImportExtension = (ext: string): boolean => (IMPORT_EXTENSIONS as readonly string[]).includes(ext);
 
-/** Whether an imported file opens in SRT mode (it has cue end times). */
+/** Whether an imported file carries cue end times (SRT, VTT, SBV, ASS/SSA). */
 export const isTimedSubtitleFile = (filename: string): boolean =>
   extensionOf(filename) === 'srt' || subtitleImportFormat(filename) !== null;
+
+/**
+ * The editor mode an import opens in. Word timing wins (enhanced LRC, VTT inline timestamps, ASS
+ * karaoke): words mode is the only one that shows it, and the lines keep their end times anyway.
+ * Otherwise a subtitle file opens in SRT mode for its end times, and anything else in LRC mode.
+ */
+export function importEditorMode(filename: string, lines: readonly { words?: readonly unknown[] }[]): 'words' | 'srt' | 'lrc' {
+  if (lines.some((l) => (l.words?.length ?? 0) > 0)) return 'words';
+  return isTimedSubtitleFile(filename) ? 'srt' : 'lrc';
+}

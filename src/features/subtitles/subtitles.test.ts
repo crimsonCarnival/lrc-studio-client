@@ -525,3 +525,49 @@ describe('serializeCues: ASS and TTML', () => {
     expect(parseSubtitleCues(serializeCues(cues, 'sbv'), 'sbv')).toEqual([{ start: 1.25, end: 2.5, text: 'a, b\nc' }]);
   });
 });
+
+describe('word timing in subtitle files', () => {
+  const sung = line('Hello,  world!', 1, {
+    endTime: 3,
+    words: [{ word: 'Hello,', time: 1.2 }, { word: 'world!', time: 1.5, end: 2 }],
+    translations: [{ text: 'Hola', language: 'es' }],
+  });
+
+  it('splits the line text at each timed word, keeping its spacing', () => {
+    expect(buildCues([sung])[0].karaoke).toEqual([
+      { text: 'Hello,  ', time: 1.2 },
+      { text: 'world!', time: 1.5, end: 2 },
+    ]);
+  });
+
+  it('leaves word timing out when the words no longer match the text, or when writing a translation alone', () => {
+    expect(buildCues([{ ...sung, text: 'Goodbye' }])[0].karaoke).toBeUndefined();
+    expect(buildCues([sung], { onlyTranslationIndex: 0 })[0].karaoke).toBeUndefined();
+  });
+
+  it('writes ASS karaoke lengths: a lead-in pause, a word that stops early, untimed rows after', () => {
+    const [c] = buildCues([sung], { includeTranslations: true });
+    expect(serializeCues([c], 'ass').trimEnd().split('\n').pop()).toBe(
+      'Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,{\\k20}{\\kf30}Hello,  {\\kf50}world!{\\k100}\\NHola',
+    );
+  });
+
+  it('writes WebVTT inline timestamps only inside the cue', () => {
+    const [c] = buildCues([{ ...sung, words: [{ word: 'Hello,', time: 1 }, { word: 'world!', time: 1.5 }] }]);
+    expect(serializeCues([c], 'vtt')).toBe('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nHello,  <00:00:01.500>world!\n');
+  });
+
+  it('reads back the word times it writes', async () => {
+    const { parseSubtitleCues } = await import('@/shared/utils/subtitle-parse');
+    const cues = buildCues([sung]);
+    expect(parseSubtitleCues(serializeCues(cues, 'ass'), 'ass')[0].words).toEqual([
+      { word: 'Hello,', time: 1.2 },
+      { word: 'world!', time: 1.5, end: 2 },
+    ]);
+    // VTT keeps the starts but has no way to say a word stops early.
+    expect(parseSubtitleCues(serializeCues(cues, 'vtt'), 'vtt')[0].words).toEqual([
+      { word: 'Hello,', time: 1.2 },
+      { word: 'world!', time: 1.5 },
+    ]);
+  });
+});

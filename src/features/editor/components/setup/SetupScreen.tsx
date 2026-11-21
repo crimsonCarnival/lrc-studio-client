@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { IMPORT_ACCEPT, SUBTITLE_ACCEPT, isImportExtension, isTimedSubtitleFile } from '@/shared/utils/import-formats';
+import { IMPORT_ACCEPT, SUBTITLE_ACCEPT, isImportExtension, importEditorMode } from '@/shared/utils/import-formats';
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -314,7 +314,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
       const text = await file.text();
       const { lines, metadata: header } = await lyricsApi.parse(text, file.name) as { lines: EditorLine[]; metadata?: { ti?: string; ar?: string } };
       if (lines.length === 0) { toast.error(t('import.noLines')); return; }
-      setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: isTimedSubtitleFile(file.name) ? 'srt' : 'lrc', text: '' });
+      setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: importEditorMode(file.name, lines), text: '' });
       // The file's [ar:] / [ti:] header: offered as artists, confirmed first (the parser flags doubtful splits).
       if (header?.ar?.trim()) artistsRef.current?.offer({ title: header.ti ?? '', artist: header.ar }, 'import');
     } catch { toast.error(t('import.failed')); }

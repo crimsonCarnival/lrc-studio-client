@@ -74,6 +74,7 @@ export const lyricsService = {
         const lines = subtitle
           ? parseSubtitleCues(content, subtitle).map((cue) => ({
             text: cue.text, timestamp: cue.start, endTime: cue.end, secondary: '', translation: '', id: crypto.randomUUID(),
+            ...(cue.words && { words: cue.words }),
           }))
           : localParse(content, filename, options);
         return { lines, detectedFormat: isTimedSubtitleFile(filename) ? 'srt' : 'lrc', count: lines.length };

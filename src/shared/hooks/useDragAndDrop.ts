@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { isImportExtension, isTimedSubtitleFile } from '@/shared/utils/import-formats';
+import { isImportExtension, importEditorMode } from '@/shared/utils/import-formats';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { lyrics } from '@/app/api';
@@ -99,7 +99,7 @@ export function useDragAndDrop({
 
           const applyImport = () => {
             setLines(parsedLines);
-            setEditorMode(isTimedSubtitleFile(file.name) ? 'srt' : 'lrc');
+            setEditorMode(importEditorMode(file.name, parsedLines as { words?: unknown[] }[]));
             toast.success(
               (t as unknown as (k: string, o?: Record<string, unknown>) => string)('import.success', { count: parsedLines.length }) ||
                 `Imported ${parsedLines.length} lines`,

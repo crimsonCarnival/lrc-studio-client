@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { isImportExtension, isTimedSubtitleFile } from '@/shared/utils/import-formats';
+import { isImportExtension, importEditorMode } from '@/shared/utils/import-formats';
 import type { ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
@@ -41,9 +41,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
     if (replaceAllBlocked?.()) return null;
 
     setLines(parsed);
-    const isSrt = isTimedSubtitleFile(filename);
-    const hasWords = !isSrt && parsed.some(l => (l.words?.length ?? 0) > 0);
-    setEditorMode(isSrt ? 'srt' : hasWords ? 'words' : 'lrc');
+    setEditorMode(importEditorMode(filename, parsed));
     // Park the cursor on the first unsynced line so syncing can start immediately.
     setActiveLineIndex(Math.max(0, parsed.findIndex((l) => l.timestamp == null)));
     setSyncMode(true);

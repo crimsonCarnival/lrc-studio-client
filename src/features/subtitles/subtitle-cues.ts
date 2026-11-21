@@ -1,6 +1,6 @@
 import { buildSecondaryText } from '@/shared/utils/lrc';
-import type { EditorLine } from '@/features/editor/editor.types';
-import type { BuildCuesOptions, Cue, CueIssue, CueRules, StudioRow } from './subtitles.types';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
+import type { BuildCuesOptions, Cue, CueIssue, CueRules, KaraokePiece, StudioRow } from './subtitles.types';
 
 /** Defaults for caption readability. Not limits YouTube enforces; see `CueRules`. */
 export const YOUTUBE_RULES: CueRules = {
@@ -32,6 +32,37 @@ function cleanCueText(raw: string): string {
     .map((l) => l.trim())
     .filter(Boolean)
     .join('\n');
+}
+
+/**
+ * Splits a line's text where each timed word starts, finding the words in order in the text so
+ * its spacing and punctuation survive (CJK words are single characters with no space between).
+ * An untimed word runs on inside the piece before it. Returns undefined when no word has a time,
+ * or when a word is no longer in the text: then the cue is written without word timing rather
+ * than with times on the wrong syllables.
+ */
+function karaokePieces(main: string, words: EditorWord[] | undefined): KaraokePiece[] | undefined {
+  if (!main || !words?.some((w) => w.time != null)) return undefined;
+  const starts: { at: number; time: number; end?: number }[] = [];
+  let from = 0;
+  for (const w of words) {
+    const token = w.word?.trim();
+    if (!token) continue;
+    const at = main.indexOf(token, from);
+    if (at === -1) return undefined;
+    from = at + token.length;
+    if (w.time == null) continue;
+    // Times must rise through the line; a word stamped before the one ahead of it is left untimed.
+    if (starts.length && w.time <= starts[starts.length - 1].time) continue;
+    starts.push({ at, time: w.time, ...(w.end != null && w.end > w.time && { end: w.end }) });
+  }
+  if (starts.length === 0) return undefined;
+  return starts.map((s, i) => ({
+    // Text before the first timed word belongs to it, so the pieces cover the line from its start.
+    text: main.slice(i === 0 ? 0 : s.at, starts[i + 1]?.at ?? main.length),
+    time: s.time,
+    ...(s.end != null && { end: s.end }),
+  }));
 }
 
 /**
@@ -79,7 +110,9 @@ export function buildCues(lines: EditorLine[], opts: BuildCuesOptions = {}): Cue
     }
 
     const text = cleanCueText(parts.join('\n'));
-    if (text) cues.push({ start, end, text, lineIndex, counterpart: line.adLibOf != null });
+    if (!text) return;
+    const karaoke = opts.onlyTranslationIndex == null ? karaokePieces(cleanCueText(line.text ?? ''), line.words) : undefined;
+    cues.push({ start, end, text, lineIndex, counterpart: line.adLibOf != null, ...(karaoke && { karaoke }) });
   });
 
   // Array.prototype.sort is stable, so cues starting together keep their line order.
