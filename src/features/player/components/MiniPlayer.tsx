@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import { cn } from '@/shared/utils/utils';
 import { easeKaraokeFill, karaokeClipStyle, karaokeFillGlowClass, karaokeFillPrefs, type KaraokeFillEasing, type KaraokeFillStyle } from '@/shared/utils/karaoke-clip';
 import { useSettings } from '@/features/settings/useSettings';
@@ -11,6 +12,7 @@ import { usePlayer } from '../PlayerContext';
 import { karaokeWords, lineAt, lineBoundsAt, lyricAfter, lyricAt, nextLineStart, previousLineStart, type MiniPlayerPosition, type MiniPlayerSettings } from '../mini-player';
 import { useCornerDrag, useMediaSession, useMiniPlayerShortcuts } from '../hooks/useMiniPlayerControls';
 import { MiniPlayerSessionMembers } from './MiniPlayerSessionMembers';
+import SpeedControl from './SpeedControl';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 type Props = {
@@ -64,6 +66,7 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
   const {
     isPlaying, togglePlay, seek, currentTime, duration, source, local, lines, hasMedia,
     registerVideoStage, projectCoverImage, thumbnail, loopA, loopB, setLoop, clearLoop,
+    playbackSpeed, applySpeed, speedPresets, MIN_SPEED, MAX_SPEED,
   } = usePlayer();
   const [view, setView] = useState<View>('card');
   const pictureRef = useRef<HTMLDivElement>(null);
@@ -240,6 +243,33 @@ export function MiniPlayer({ returnTo, title, artist, settings, aboveNav, onClos
             <Icon name="lyrics" size={18} />
           </button>
         </Tip>
+        {/* The speed the card plays at belongs to whichever player it carries (the editor's,
+            or the one handed over from a public view), so it is set here, not only there.
+            The pill opens the full control, as on the phone strip: the row has no room for it. */}
+        <Popover>
+          <Tip content={t('player.speed')}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={`${t('player.speed')}: ${playbackSpeed}×`}
+                className={cn(BUTTON, 'w-auto min-w-11 px-2 font-mono text-xs font-semibold tabular-nums', playbackSpeed !== 1 && 'text-primary-ink')}
+              >
+                {playbackSpeed}×
+              </button>
+            </PopoverTrigger>
+          </Tip>
+          {/* Portalled, but React still bubbles its pointer events up to the card: without
+              data-no-drag, selecting the custom speed's text would drag the card away. */}
+          <PopoverContent side="top" align="end" className="w-auto p-2" data-no-drag>
+            <SpeedControl
+              playbackSpeed={playbackSpeed}
+              applySpeed={applySpeed}
+              MIN_SPEED={MIN_SPEED}
+              MAX_SPEED={MAX_SPEED}
+              SPEED_PRESETS={speedPresets}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {sessionId && <MiniPlayerSessionMembers publicId={sessionId} />}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@ui/tooltip';
 import type { PlayerContextValue } from '../PlayerContext';
@@ -28,6 +28,7 @@ function show(over: Partial<PlayerContextValue> = {}, props: Partial<Omit<Parame
     hasMedia: true, isPlaying: true, currentTime: 2, duration: 100, source: 'local', local: { isVideo: false },
     lines: lines as PlayerContextValue['lines'], togglePlay: vi.fn(), seek: vi.fn(), registerVideoStage: vi.fn(),
     loopA: null, loopB: null, setLoop: vi.fn(), clearLoop: vi.fn(),
+    playbackSpeed: 1, applySpeed: vi.fn(), speedPresets: [0.5, 0.75, 1, 1.25], MIN_SPEED: 0.25, MAX_SPEED: 2,
     ...over,
   };
   const onClose = vi.fn();
@@ -67,6 +68,25 @@ describe('MiniPlayer', () => {
     expect(player.togglePlay).toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: named('player.mini.nextLine') }));
     expect(player.seek).toHaveBeenCalledWith(5);
+  });
+
+  it('shows the speed it plays at and changes it', async () => {
+    const { player } = show({ playbackSpeed: 0.75 });
+    await userEvent.click(screen.getByRole('button', { name: 'player.speed: 0.75×' }));
+    await userEvent.click(screen.getByRole('button', { name: 'player.increaseSpeed' }));
+    expect(player.applySpeed).toHaveBeenCalledWith(0.8);
+  });
+
+  it('changes speed even when the press moves a little (it is not a drag of the card)', async () => {
+    const { player } = show({ playbackSpeed: 1 });
+    await userEvent.click(screen.getByRole('button', { name: 'player.speed: 1×' }));
+    const plus = screen.getByRole('button', { name: 'player.increaseSpeed' });
+    // The popover is portalled, but React bubbles its pointer events to the draggable card.
+    fireEvent.pointerDown(plus, { button: 0, pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(plus, { pointerId: 1, clientX: 120, clientY: 100 });
+    fireEvent.pointerUp(plus, { pointerId: 1, clientX: 120, clientY: 100 });
+    fireEvent.click(plus);
+    expect(player.applySpeed).toHaveBeenCalledWith(1.05);
   });
 
   it('closes', async () => {
