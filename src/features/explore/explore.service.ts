@@ -15,6 +15,7 @@ const TRENDING_PROJECTS = /* GraphQL */ `
         trendingScore
         starCount
         forkCount
+        viewCount
         metadata { songName songArtist }
         user { id accountName displayName avatarUrl staffRole nameTag { id label { en es } description { en es } icon color } }
       }
@@ -59,7 +60,7 @@ const SUGGESTED_USERS = /* GraphQL */ `
 
 const EXPLORE_STATS = /* GraphQL */ `
   query ExploreStats {
-    exploreStats { totalProjects totalUsers totalPlaylists }
+    exploreStats { totalProjects totalUsers totalPlaylists totalViews totalStars }
   }
 `;
 

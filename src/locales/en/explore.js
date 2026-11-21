@@ -18,6 +18,8 @@ export default {
     stars_other: '{{count}} stars',
     forks_one: '{{count}} fork',
     forks_other: '{{count}} forks',
+    views_one: '{{count}} view',
+    views_other: '{{count}} views',
   },
   playlists: {
     title: 'Popular Playlists',
@@ -51,6 +53,10 @@ export default {
     users_other: '{{count}} creators',
     playlists: '{{count}} playlist',
     playlists_other: '{{count}} playlists',
+    views_one: '{{count}} view',
+    views_other: '{{count}} views',
+    stars_one: '{{count}} star',
+    stars_other: '{{count}} stars',
   },
   page: {
     title: 'Explore',

@@ -529,7 +529,9 @@ export type ExploreEventType =
 export type ExploreStats = {
   totalPlaylists: Scalars['Int']['output'];
   totalProjects: Scalars['Int']['output'];
+  totalStars: Scalars['Int']['output'];
   totalUsers: Scalars['Int']['output'];
+  totalViews: Scalars['Int']['output'];
 };
 
 export type ExportSettings = {
