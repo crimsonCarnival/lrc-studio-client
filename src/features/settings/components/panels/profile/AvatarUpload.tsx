@@ -15,10 +15,10 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
-// Matches the server's avatar-signature transformation (c_fill,w_256,h_256) — the crop
+// Matches the server's avatar-signature transformation (c_fill,w_512,h_512) — the crop
 // step resizes to this before upload so the Cloudinary transform is a no-op safety net,
 // not the thing doing the actual framing.
-const AVATAR_OUTPUT_SIZE = 256;
+const AVATAR_OUTPUT_SIZE = 512;
 
 type AvatarUploadProps = {
   avatarUrl: string | null;

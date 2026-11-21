@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { enlargeAvatarUrl } from '@/shared/utils/avatar-url';
 
 interface ImageLightboxProps {
   /** Lightbox is open iff this is non-null. */
@@ -47,10 +48,10 @@ export function ImageLightbox({ src, alt = '', onClose }: ImageLightboxProps) {
         </button>
       </Tip>
       <img
-        src={src}
+        src={enlargeAvatarUrl(src)}
         alt={alt}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-[0_20px_60px_rgba(0,0,0,.6)]"
+        className="min-h-[min(80vw,420px)] min-w-[min(80vw,420px)] max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-[0_20px_60px_rgba(0,0,0,.6)]"
       />
     </div>,
     document.body,
