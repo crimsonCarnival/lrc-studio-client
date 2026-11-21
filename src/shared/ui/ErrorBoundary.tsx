@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import i18n from 'i18next';
+import { isChunkLoadError, reloadForNewBuild } from '@/shared/utils/chunk-reload';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -8,34 +9,32 @@ interface ErrorBoundaryProps {
 
 interface ErrorBoundaryState {
   error: Error | null;
+  /** A stale-chunk error after a deploy: render nothing while the page reloads. */
+  reloading: boolean;
 }
 
 export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, reloading: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { error };
+    // Decide during render, so the crash screen never paints for a chunk error, even for a frame.
+    return { error, reloading: isChunkLoadError(error) };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info);
     // Chunk load failures happen when a new deploy invalidates old hashed assets.
-    // Auto-reload silently to fetch the fresh bundle.
-    const msg = error?.message || '';
-    const isChunkError =
-      msg.includes('dynamically imported module') ||
-      msg.includes('Failed to fetch') ||
-      msg.includes('Importing a module script failed') ||
-      msg.includes('Unable to preload');
-    if (isChunkError) {
-      window.location.reload();
+    // Reload silently to fetch the fresh bundle; if we already reloaded recently, show the crash screen.
+    if (isChunkLoadError(error) && !reloadForNewBuild()) {
+      this.setState({ reloading: false });
     }
   }
 
   render() {
+    if (this.state.reloading) return null;
     if (this.state.error) {
       return (
         <div
